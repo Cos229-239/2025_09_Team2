@@ -16,7 +16,7 @@ class StudyPalsAIProvider with ChangeNotifier {
   String _lastRecommendation = '';
   String _lastPetMessage = '';
   String? _lastError;
-  List<FlashCard> _aiGeneratedCards = [];
+  final List<FlashCard> _aiGeneratedCards = [];
   
   // Getters
   bool get isAIEnabled => _isAIEnabled && _aiService.isConfigured;

@@ -161,7 +161,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                 
                 // Provider selection
                 DropdownButtonFormField<String>(
-                  value: _selectedProvider,
+                  initialValue: _selectedProvider,
                   decoration: const InputDecoration(
                     labelText: 'AI Provider',
                     border: OutlineInputBorder(),

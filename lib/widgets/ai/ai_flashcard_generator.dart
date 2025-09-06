@@ -230,7 +230,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
                     // Subject dropdown
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedSubject,
+                        initialValue: _selectedSubject,
                         decoration: const InputDecoration(
                           labelText: 'Subject',
                           border: OutlineInputBorder(),
