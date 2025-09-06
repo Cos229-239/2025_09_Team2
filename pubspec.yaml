@@ -1,0 +1,32 @@
+name: studypals
+description: A comprehensive study companion app with flashcards, task management, and virtual pets.
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.0.5
+  sqflite: ^2.3.0
+  sqflite_common_ffi_web: ^0.4.2+1
+  path: ^1.8.3
+  flutter_markdown: ^0.6.18
+  shared_preferences: ^2.2.2
+  uuid: ^4.2.1
+  intl: ^0.18.1
+  fl_chart: ^0.66.0
+  cupertino_icons: ^1.0.2
+  crypto: ^3.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
