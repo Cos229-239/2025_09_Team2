@@ -273,11 +273,21 @@ flutter build windows
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Full Sail University Academic License - see the [LICENSE](LICENSE) file for details.
+
+**Academic Project**: This software is developed as part of an academic project at Full Sail University for educational purposes.
+
+## 🎓 Academic Information
+
+- **Institution**: Full Sail University
+- **Project**: StudyPals - AI-Powered Study Companion  
+- **Course**: Software Development
+- **Team**: Cos229-239/2025_09_Team2
+- **Year**: 2025
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read the contributing guidelines before submitting pull requests.
+This is an academic project. For educational collaboration and questions, please follow Full Sail University's academic policies.
 
 ## 📞 Support
 
