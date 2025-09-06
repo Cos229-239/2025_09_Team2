@@ -7,6 +7,10 @@ import 'package:studypals/widgets/dashboard/pet_widget.dart';        // Virtual 
 import 'package:studypals/widgets/dashboard/today_tasks_widget.dart'; // Today's tasks overview
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart';   // Flashcards due for review
 import 'package:studypals/widgets/dashboard/quick_stats_widget.dart'; // Study statistics summary
+// Import AI widgets for intelligent study features
+import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
+import 'package:studypals/widgets/ai/ai_tutor_chat.dart';          // AI study assistant chat
+import 'package:studypals/widgets/ai/ai_settings_widget.dart';     // AI configuration settings
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/app_state.dart';      // Global app state for authentication
 import 'package:studypals/providers/task_provider.dart';  // Task management state
@@ -227,6 +231,27 @@ class DashboardHome extends StatelessWidget {
             
             // Quick stats widget - displays study progress and statistics
             QuickStatsWidget(),
+            
+            // Spacing between widgets
+            SizedBox(height: 20),
+            
+            // AI flashcard generator - create cards using AI
+            AIFlashcardGenerator(),
+            
+            // Spacing between widgets
+            SizedBox(height: 20),
+            
+            // AI tutor chat - study assistant
+            SizedBox(
+              height: 300,
+              child: AITutorChat(),
+            ),
+            
+            // Spacing between widgets
+            SizedBox(height: 20),
+            
+            // AI settings - configure AI features
+            AISettingsWidget(),
           ],
         ),
       ),
