@@ -1,0 +1,12 @@
+{
+    "dart.flutterSdkPath": "C:\\Users\\isolo\\source\\repos\\flutter",
+    "dart.debugExternalPackageLibraries": false,
+    "dart.debugSdkLibraries": false,
+    "dart.showInspectorNotificationsForWidgetErrors": true,
+    "flutter.experiments": {
+        "enable-android-view-debugging": true
+    },
+    "files.associations": {
+        "*.dart": "dart"
+    }
+}

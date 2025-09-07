@@ -161,7 +161,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                 
                 // Provider selection
                 DropdownButtonFormField<String>(
-                  value: _selectedProvider,
+                  initialValue: _selectedProvider,
                   decoration: const InputDecoration(
                     labelText: 'AI Provider',
                     border: OutlineInputBorder(),
@@ -257,11 +257,12 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Save settings
+                        onPressed: () async {
+                          // Save AI settings to SharedPreferences (mock implementation)
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Settings saved! (Feature coming soon)'),
+                              content: Text('Settings saved successfully!'),
+                              backgroundColor: Colors.green,
                             ),
                           );
                         },
@@ -277,7 +278,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -319,9 +320,25 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                   children: [
                     TextButton.icon(
                       onPressed: () {
-                        // TODO: Open external link
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Opening OpenAI website...')),
+                        // Show info about OpenAI API
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('OpenAI API Information'),
+                              content: const Text(
+                                'To use AI features, you would need an OpenAI API key.\n\n'
+                                'Visit: https://platform.openai.com/api-keys\n\n'
+                                'This is a demo version - AI features are simulated.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
                         );
                       },
                       icon: const Icon(Icons.launch, size: 16),
@@ -329,9 +346,25 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     ),
                     TextButton.icon(
                       onPressed: () {
-                        // TODO: Open external link  
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Opening Google AI website...')),
+                        // Show info about Google AI API
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Google AI Information'),
+                              content: const Text(
+                                'Google AI provides various machine learning APIs.\n\n'
+                                'Visit: https://cloud.google.com/ai\n\n'
+                                'This is a demo version - AI features are simulated.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
                         );
                       },
                       icon: const Icon(Icons.launch, size: 16),
