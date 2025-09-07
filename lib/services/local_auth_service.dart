@@ -17,6 +17,11 @@ class LocalAuthService {
   static const String _devEmail = 'test@studypals.com';
   static const String _devPassword = 'password123';
   static const String _devName = 'Test User';
+  
+  // Demo account for the new UI
+  static const String _demoEmail = 'demo@studypals.com';
+  static const String _demoPassword = 'password';
+  static const String _demoName = 'Demo User';
 
   // Debug logging helper
   void _debugLog(String message) {
@@ -32,6 +37,7 @@ class LocalAuthService {
     final usersJson = await _getWebSafeString(_usersKey) ?? '{}';
     final users = Map<String, dynamic>.from(json.decode(usersJson));
     
+    // Create test account
     if (!users.containsKey(_devEmail)) {
       _debugLog('DEV MODE: Creating test account...');
       final devUser = User(
@@ -44,6 +50,21 @@ class LocalAuthService {
       
       await _saveUser(devUser, _devPassword);
       _debugLog('DEV MODE: Test account created - Email: $_devEmail, Password: $_devPassword');
+    }
+    
+    // Create demo account
+    if (!users.containsKey(_demoEmail)) {
+      _debugLog('DEV MODE: Creating demo account...');
+      final demoUser = User(
+        id: 'demo_user_001',
+        name: _demoName,
+        email: _demoEmail,
+        isEmailVerified: true,
+        createdAt: DateTime.now(),
+      );
+      
+      await _saveUser(demoUser, _demoPassword);
+      _debugLog('DEV MODE: Demo account created - Email: $_demoEmail, Password: $_demoPassword');
     }
   }
 

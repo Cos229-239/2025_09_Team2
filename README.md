@@ -271,6 +271,28 @@ flutter build windows
 - **Accessibility**: Screen reader support and high contrast
 - **Internationalization**: Multi-language support
 
+## 🤖 AI Development Tools
+
+This project utilized modern development tools including AI assistance to demonstrate current software development practices.
+
+### Development Tools Used
+- **GitHub Copilot** (Claude-3.5-Sonnet by Anthropic)
+- **Role**: Coding assistant for specific programming challenges
+- **Scope**: Occasional syntax suggestions and documentation formatting
+- **Primary Developer**: Human-led development with AI as supplementary tool
+
+### AI Assistance Areas
+- Syntax suggestions for complex Flutter widgets
+- Documentation formatting and markdown structure
+- Debugging assistance for specific coding challenges
+- Code completion for routine programming tasks
+
+### Development Approach
+The application architecture, design decisions, feature implementation, and overall project direction were completed by the human developer. AI served as a coding assistant tool, similar to advanced IDE features, while maintaining human responsibility for all major development decisions and code logic.
+
+### Transparency Statement
+All AI assistance is documented in `AI_USAGE_CITATION.md` for academic integrity. The AI tool provided supplementary coding support while the developer maintained full responsibility for project design, implementation quality, and final deliverables.
+
 ## 📄 License
 
 This project is licensed under the Full Sail University Academic License - see the [LICENSE](LICENSE) file for details.
