@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 
-// Web-specific import for localStorage
-import 'dart:html' as html show window;
+// Conditional import - only available on web platform
+import 'stub_html.dart' if (dart.library.html) 'dart:html';
 
 class LocalAuthService {
   static const String _usersKey = 'registered_users';
@@ -73,15 +73,15 @@ class LocalAuthService {
     if (kIsWeb) {
       // Use localStorage directly for web to ensure persistence
       try {
-        html.window.localStorage[key] = value;
+        window.localStorage[key] = value;
         _debugLog('Saved to localStorage: $key');
         
         // Verify it was saved
-        final verified = html.window.localStorage[key];
+        final verified = window.localStorage[key];
         _debugLog('Verification - localStorage[$key] = ${verified != null ? "found" : "null"}');
         
         // Also try sessionStorage as backup for debug sessions
-        html.window.sessionStorage[key] = value;
+        window.sessionStorage[key] = value;
         _debugLog('Also saved to sessionStorage: $key');
       } catch (e) {
         _debugLog('Error saving to localStorage: $e');
@@ -101,18 +101,18 @@ class LocalAuthService {
     if (kIsWeb) {
       try {
         // Try localStorage first
-        var value = html.window.localStorage[key];
+        var value = window.localStorage[key];
         if (value != null) {
           _debugLog('Read from localStorage: $key = found');
           return value;
         }
         
         // Try sessionStorage as backup
-        value = html.window.sessionStorage[key];
+        value = window.sessionStorage[key];
         if (value != null) {
           _debugLog('Read from sessionStorage: $key = found');
           // Copy back to localStorage for persistence
-          html.window.localStorage[key] = value;
+          window.localStorage[key] = value;
           return value;
         }
         
@@ -124,7 +124,7 @@ class LocalAuthService {
         if (value != null) {
           _debugLog('Fallback: read from SharedPreferences: $key = found');
           // Copy to localStorage for future access
-          html.window.localStorage[key] = value;
+          window.localStorage[key] = value;
         }
         return value;
       } catch (e) {
@@ -144,8 +144,8 @@ class LocalAuthService {
     if (kIsWeb) {
       try {
         // Use localStorage with string conversion for web
-        html.window.localStorage[key] = value.toString();
-        html.window.sessionStorage[key] = value.toString();
+        window.localStorage[key] = value.toString();
+        window.sessionStorage[key] = value.toString();
         _debugLog('Saved bool to localStorage and sessionStorage: $key = $value');
       } catch (e) {
         _debugLog('Error saving bool to localStorage: $e');
@@ -164,7 +164,7 @@ class LocalAuthService {
     if (kIsWeb) {
       try {
         // Try localStorage first
-        var value = html.window.localStorage[key];
+        var value = window.localStorage[key];
         if (value != null) {
           final result = value == 'true';
           _debugLog('Read bool from localStorage: $key = $result');
@@ -172,12 +172,12 @@ class LocalAuthService {
         }
         
         // Try sessionStorage as backup
-        value = html.window.sessionStorage[key];
+        value = window.sessionStorage[key];
         if (value != null) {
           final result = value == 'true';
           _debugLog('Read bool from sessionStorage: $key = $result');
           // Copy back to localStorage
-          html.window.localStorage[key] = value;
+          window.localStorage[key] = value;
           return result;
         }
         
@@ -200,8 +200,8 @@ class LocalAuthService {
     if (kIsWeb) {
       try {
         // Remove from both localStorage and sessionStorage
-        html.window.localStorage.remove(key);
-        html.window.sessionStorage.remove(key);
+        window.localStorage.remove(key);
+        window.sessionStorage.remove(key);
         _debugLog('Removed from localStorage and sessionStorage: $key');
       } catch (e) {
         _debugLog('Error removing from localStorage: $e');
@@ -514,8 +514,8 @@ class LocalAuthService {
     if (kIsWeb) {
       try {
         // For web, check localStorage directly
-        final localStorage = html.window.localStorage;
-        final sessionStorage = html.window.sessionStorage;
+        final localStorage = window.localStorage;
+        final sessionStorage = window.sessionStorage;
         final localKeys = localStorage.keys.toList();
         final sessionKeys = sessionStorage.keys.toList();
         

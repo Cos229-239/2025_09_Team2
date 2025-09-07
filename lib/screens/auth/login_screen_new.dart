@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            child: Container(
+            child: SizedBox(
               height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
               child: Column(
                 children: [
@@ -85,10 +85,10 @@ class _LoginScreenState extends State<LoginScreen> {
           width: 140,
           height: 140,
           decoration: BoxDecoration(
-            color: const Color(0xFF4A6B7C).withOpacity(0.3),
+            color: const Color(0xFF4A6B7C).withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: const Color(0xFF5A7A8B).withOpacity(0.5),
+              color: const Color(0xFF5A7A8B).withValues(alpha: 0.5),
               width: 2,
             ),
           ),
@@ -104,10 +104,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.center,
                     children: [
                       // Headphones
-                      Icon(
+                      const Icon(
                         Icons.headset,
                         size: 50,
-                        color: const Color(0xFF7FA8B8),
+                        color: Color(0xFF7FA8B8),
                       ),
                       // Cat face
                       Container(
@@ -216,7 +216,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'STUDYPALS',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontSize: 18,
             fontWeight: FontWeight.w300,
             letterSpacing: 2.0,
@@ -229,10 +229,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildEmailField() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF4A6B7C).withOpacity(0.3),
+        color: const Color(0xFF4A6B7C).withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFF5A7A8B).withOpacity(0.3),
+          color: const Color(0xFF5A7A8B).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -242,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: InputDecoration(
           hintText: 'EMAIL',
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 14,
             fontWeight: FontWeight.w300,
             letterSpacing: 1.0,
@@ -267,10 +267,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildPasswordField() {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF4A6B7C).withOpacity(0.3),
+        color: const Color(0xFF4A6B7C).withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFF5A7A8B).withOpacity(0.3),
+          color: const Color(0xFF5A7A8B).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -281,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: InputDecoration(
           hintText: 'PASSWORD',
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.6),
+            color: Colors.white.withValues(alpha: 0.6),
             fontSize: 14,
             fontWeight: FontWeight.w300,
             letterSpacing: 1.0,
@@ -361,7 +361,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 'SIGN UP',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 12,
                   fontWeight: FontWeight.w300,
                   letterSpacing: 1.0,
@@ -373,7 +373,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 'FORGOT PASSWORD?',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 12,
                   fontWeight: FontWeight.w300,
                   letterSpacing: 1.0,
@@ -386,10 +386,10 @@ class _LoginScreenState extends State<LoginScreen> {
         // Guest login option
         TextButton(
           onPressed: _handleGuestLogin,
-          child: Text(
+          child: const Text(
             'Continue as Guest',
             style: TextStyle(
-              color: const Color(0xFF16A085),
+              color: Color(0xFF16A085),
               fontSize: 14,
               fontWeight: FontWeight.w400,
             ),
@@ -459,17 +459,17 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Text(
               'Registration feature coming soon!',
-              style: TextStyle(color: Colors.white.withOpacity(0.8)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
             ),
             const SizedBox(height: 16),
             Text(
               'For now, you can:',
-              style: TextStyle(color: Colors.white.withOpacity(0.6)),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               '• Continue as Guest\n• Use demo@studypals.com / password',
-              style: TextStyle(color: const Color(0xFF16A085), fontSize: 14),
+              style: TextStyle(color: Color(0xFF16A085), fontSize: 14),
             ),
           ],
         ),

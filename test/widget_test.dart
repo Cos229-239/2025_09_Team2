@@ -13,7 +13,7 @@ import 'package:studypals/main.dart';
 void main() {
   testWidgets('StudyPals app smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const StudyPalsApp());
+    await tester.pumpWidget(const MyApp());
 
     // Verify that the app starts properly
     expect(find.byType(MaterialApp), findsOneWidget);

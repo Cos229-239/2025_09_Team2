@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
@@ -83,7 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Cat with headphones and glasses
-                Container(
+                SizedBox(
                   width: 80,
                   height: 80,
                   child: Stack(
@@ -150,9 +150,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Container(
                           width: 12,
                           height: 18,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1a2332),
-                            borderRadius: const BorderRadius.only(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1a2332),
+                            borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(12),
                               topRight: Radius.circular(6),
                             ),
@@ -165,9 +165,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Container(
                           width: 12,
                           height: 18,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1a2332),
-                            borderRadius: const BorderRadius.only(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1a2332),
+                            borderRadius: BorderRadius.only(
                               topLeft: Radius.circular(6),
                               topRight: Radius.circular(12),
                             ),
@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Glasses frame
                       Positioned(
                         top: 32,
-                        child: Container(
+                        child: SizedBox(
                           width: 38,
                           height: 14,
                           child: Row(
@@ -289,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'STUDYPALS',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.85),
+            color: Colors.white.withValues(alpha: 0.85),
             fontSize: 16,
             fontWeight: FontWeight.w300,
             letterSpacing: 2.5,
@@ -327,7 +327,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: InputDecoration(
           hintText: 'EMAIL',
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             fontSize: 13,
             fontWeight: FontWeight.w400,
             letterSpacing: 1.2,
@@ -363,7 +363,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: InputDecoration(
           hintText: 'PASSWORD',
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             fontSize: 13,
             fontWeight: FontWeight.w400,
             letterSpacing: 1.2,
@@ -445,7 +445,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 'SIGN UP',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   letterSpacing: 1.2,
@@ -462,7 +462,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text(
                 'FORGOT PASSWORD?',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withValues(alpha: 0.7),
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                   letterSpacing: 1.2,
@@ -480,10 +480,10 @@ class _LoginScreenState extends State<LoginScreen> {
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          child: Text(
+          child: const Text(
             'Continue as Guest',
             style: TextStyle(
-              color: const Color(0xFF4ecdc4),
+              color: Color(0xFF4ecdc4),
               fontSize: 14,
               fontWeight: FontWeight.w400,
             ),
@@ -555,17 +555,17 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Text(
               'Registration feature coming soon!',
-              style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 16),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 16),
             ),
             const SizedBox(height: 16),
             Text(
               'For now, you can:',
-              style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               '• Continue as Guest\n• Use demo@studypals.com / password',
-              style: TextStyle(color: const Color(0xFF4ecdc4), fontSize: 14),
+              style: TextStyle(color: Color(0xFF4ecdc4), fontSize: 14),
             ),
           ],
         ),

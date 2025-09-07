@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../providers/deck_provider.dart';
 import '../../models/deck.dart';
+import 'ai_settings_widget.dart';
 
 /// AI-Powered Flashcard Generator
 class AIFlashcardGenerator extends StatefulWidget {
@@ -158,10 +159,15 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      // TODO: Navigate to AI settings
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('AI configuration coming soon!'),
+                      // Navigate to AI settings
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => Scaffold(
+                            appBar: AppBar(
+                              title: const Text('AI Settings'),
+                            ),
+                            body: const AISettingsWidget(),
+                          ),
                         ),
                       );
                     },
@@ -230,7 +236,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
                     // Subject dropdown
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _selectedSubject,
+                        initialValue: _selectedSubject,
                         decoration: const InputDecoration(
                           labelText: 'Subject',
                           border: OutlineInputBorder(),
@@ -326,7 +332,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
