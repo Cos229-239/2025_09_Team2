@@ -10,49 +10,120 @@ import 'package:studypals/models/user.dart';
 /// Modern login screen with cat mascot design
 /// Matches the beautiful UI provided in the design mockup
 class LoginScreen extends StatefulWidget {
+  // Defines a stateless widget for the login screen
   const LoginScreen({super.key});
+  // Constructor with optional key for widget identification
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
+  // Creates the mutable state for this widget
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // State class for LoginScreen to manage mutable data
   final _formKey = GlobalKey<FormState>();
+  // Unique key for the form to validate input fields
   final _emailController = TextEditingController();
+  // Controller for the email input field
   final _passwordController = TextEditingController();
+  // Controller for the password input field
   bool _isLoading = false;
+  // Tracks if a login operation is in progress
   bool _obscurePassword = true;
+  // Toggles visibility of the password field
 
   @override
   Widget build(BuildContext context) {
+    // Builds the UI for the login screen
     return Scaffold(
+      // Provides basic app structure with app bar and body
       body: Container(
+        // Main container for the screen content
         decoration: const BoxDecoration(
+          // Applies a gradient background
           gradient: LinearGradient(
+            // Linear gradient from top to bottom
             begin: Alignment.topCenter,
+            // Start point of the gradient
             end: Alignment.bottomCenter,
+            // End point of the gradient
             colors: [
               Color(0xFF1a2332), // Very dark blue-gray
-              Color(0xFF253142), // Dark blue-gray  
+              Color(0xFF253142), // Dark blue-gray
               Color(0xFF2a3543), // Slightly lighter dark blue-gray
             ],
+            // Gradient color stops
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40.0),
-            child: Column(
-              children: [
-                const SizedBox(height: 80),
-                // Cat mascot and branding
-                _buildMascotSection(),
-                const Spacer(),
-                // Login form
-                _buildLoginForm(),
-                const SizedBox(height: 40),
-                _buildBottomLinks(),
-                const SizedBox(height: 40),
-              ],
+          // Ensures content is within safe screen boundaries
+          child: Container(
+            // Outer container for thick border - fills entire safe area
+            decoration: const BoxDecoration(
+              // Styling for the thick outer border
+              color: Color(0xFF365069), // Thick border color from Figma
+            ),
+            child: Padding(
+              // Adds padding for the thick border effect - INCREASED
+              padding: const EdgeInsets.all(32.0), // Increased padding for thicker space between border and edge
+              child: Container(
+                // Inner container for form and mascot
+                decoration: BoxDecoration(
+                  // Styling for the inner container
+                  color: Colors.transparent, // Transparent to show gradient background
+                  border: Border.all(
+                    // Adds the original orange border
+                    color: const Color(0xFFe67e22), // Orange border
+                    width: 2,
+                    // Border thickness
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  // Rounded corners for the container
+                ),
+                child: Container(
+                  // Container to apply gradient background inside the borders
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF1a2332), // Very dark blue-gray
+                        Color(0xFF253142), // Dark blue-gray
+                        Color(0xFF2a3543), // Slightly lighter dark blue-gray
+                      ],
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(10)), // Slightly smaller radius to fit inside orange border
+                  ),
+                  child: Padding(
+                    // Adds padding inside the container
+                    padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                    // Horizontal padding for content
+                    child: Column(
+                      // Column to stack UI elements vertically
+                      children: [
+                        const SizedBox(height: 60), // Reduced top spacing to accommodate larger mascot
+                        // Cat mascot and branding
+                        Expanded(
+                          flex: 2, // Give more space to the mascot section
+                          child: _buildMascotSection(),
+                        ),
+                        // Builds the cat mascot section
+                        const Spacer(),
+                        // Flexible spacer to distribute space
+                        // Login form
+                        _buildLoginForm(),
+                        // Builds the login form section
+                        const SizedBox(height: 40),
+                        // Spacer between form and links
+                        _buildBottomLinks(),
+                        // Builds the bottom navigation links
+                        const SizedBox(height: 40),
+                        // Spacer at the bottom
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -61,238 +132,75 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildMascotSection() {
+    // Builds the cat mascot and app branding section
     return Column(
+      // Column to stack mascot and text
       children: [
-        // Cat mascot container - exactly like the image
+        // Cat mascot container with the provided image
         Container(
-          width: 120,
-          height: 120,
+          // Container for the mascot graphic
+          width: 200,  // Reduced size to fit better on screen
+          height: 200, // Reduced size to fit better on screen
           decoration: BoxDecoration(
-            color: const Color(0xFF3d4a5c), // Medium blue-gray for container
+            // Styling for the mascot container
+            color: const Color(0xFF3d4a5c), // Medium blue-gray for container background
             borderRadius: BorderRadius.circular(20),
+            // Rounded corners
+            border: Border.all(
+              color: const Color.fromARGB(255, 202, 199, 199).withOpacity(0.9),  // Slightly grayish white
+              width: 12.0,                           // Border thickness
+            ),
             boxShadow: [
+              // Shadow for depth
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.3),
+                // Shadow color with transparency
                 blurRadius: 10,
+                // Blur radius for shadow
                 offset: const Offset(0, 5),
+                // Shadow offset
               ),
             ],
           ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Cat with headphones and glasses
-                SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Headphones band (top)
-                      Positioned(
-                        top: 8,
-                        child: Container(
-                          width: 65,
-                          height: 6,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF5a6b7d),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                      ),
-                      
-                      // Left headphone cup
-                      Positioned(
-                        top: 14,
-                        left: 8,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF5a6b7d),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      
-                      // Right headphone cup
-                      Positioned(
-                        top: 14,
-                        right: 8,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF5a6b7d),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                      
-                      // Cat head (main body)
-                      Positioned(
-                        top: 20,
-                        child: Container(
-                          width: 50,
-                          height: 45,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1a2332), // Dark cat color
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                        ),
-                      ),
-                      
-                      // Cat ears
-                      Positioned(
-                        top: 12,
-                        left: 20,
-                        child: Container(
-                          width: 12,
-                          height: 18,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF1a2332),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(12),
-                              topRight: Radius.circular(6),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 12,
-                        right: 20,
-                        child: Container(
-                          width: 12,
-                          height: 18,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF1a2332),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(6),
-                              topRight: Radius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ),
-                      
-                      // Glasses frame
-                      Positioned(
-                        top: 32,
-                        child: SizedBox(
-                          width: 38,
-                          height: 14,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Left lens
-                              Container(
-                                width: 14,
-                                height: 14,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xFFe67e22), width: 2),
-                                  borderRadius: BorderRadius.circular(7),
-                                ),
-                              ),
-                              // Bridge
-                              Container(
-                                width: 4,
-                                height: 2,
-                                margin: const EdgeInsets.symmetric(horizontal: 3),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFe67e22),
-                                  borderRadius: BorderRadius.circular(1),
-                                ),
-                              ),
-                              // Right lens
-                              Container(
-                                width: 14,
-                                height: 14,
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: const Color(0xFFe67e22), width: 2),
-                                  borderRadius: BorderRadius.circular(7),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      
-                      // Cat eyes (small dots inside glasses)
-                      Positioned(
-                        top: 37,
-                        left: 30,
-                        child: Container(
-                          width: 2,
-                          height: 2,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 37,
-                        right: 30,
-                        child: Container(
-                          width: 2,
-                          height: 2,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(1),
-                          ),
-                        ),
-                      ),
-                      
-                      // Cat nose (small triangle)
-                      Positioned(
-                        top: 48,
-                        child: Container(
-                          width: 3,
-                          height: 2,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4ecdc4),
-                            borderRadius: BorderRadius.circular(1.5),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 8),
-                
-                // Book/study element (small teal rectangle at bottom)
-                Container(
-                  width: 18,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4ecdc4),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: 12,
-                      height: 2,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1a2332),
-                        borderRadius: BorderRadius.circular(1),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          child: ClipRRect(
+            // Clips the image to the container's rounded corners
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              // Add padding around the image
+              padding: const EdgeInsets.all(11.0),
+              child: Image.asset(
+                // Display the cat mascot image
+                'FirstStudyPal.png', // Path to your cat image asset
+                fit: BoxFit.contain, // Maintain aspect ratio while fitting in container
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback if image fails to load
+                  return const Icon(
+                    Icons.pets,
+                    size: 80,
+                    color: Color(0xFF4ecdc4),
+                  );
+                },
+              ),
             ),
           ),
         ),
         const SizedBox(height: 32),
+        // Spacer below mascot
         // App name
         Text(
+          // Text widget for app name
           'STUDYPALS',
+          // App name text
           style: TextStyle(
+            // Styling for text
             color: Colors.white.withValues(alpha: 0.85),
-            fontSize: 16,
-            fontWeight: FontWeight.w300,
+            // Text color with transparency
+            fontSize: 40, // Increased font size to 40
+            // Font size
+            fontWeight: FontWeight.bold,
+            // Bold text
             letterSpacing: 2.5,
+            // Letter spacing
           ),
         ),
       ],
@@ -300,129 +208,435 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginForm() {
+    // Builds the login form with email, password, and login button
     return Form(
+      // Form widget for input validation
       key: _formKey,
+      // Associates form with global key
       child: Column(
+        // Column to stack form fields
         children: [
           _buildEmailField(),
+          // Email input field
           const SizedBox(height: 16),
+          // Spacer between fields
           _buildPasswordField(),
+          // Password input field
           const SizedBox(height: 32),
+          // Spacer before button
           _buildLoginButton(),
+          // Login button
         ],
       ),
     );
   }
 
   Widget _buildEmailField() {
+    // Builds the email input field
+    final FocusNode emailFocusNode = FocusNode();
+    // Focus node to track email field focus
     return Container(
+      // Container for email field styling
       height: 50,
+      // Fixed height
       decoration: BoxDecoration(
-        color: const Color(0xFF3d4a5c), // Medium blue-gray like the container
+        // Styling for container
+        color: const Color(0xFF3d4a5c), // Medium blue-gray
         borderRadius: BorderRadius.circular(8),
+        // Rounded corners
+        border: Border.all(color: Colors.white, width: 1), // White border
+        boxShadow: [
+          // Shadows for depth
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            blurRadius: 10,
+            // Blur radius
+            spreadRadius: 1,
+            // Spread radius
+            offset: const Offset(2, 2),
+            // Shadow offset
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            blurRadius: 8,
+            // Blur radius
+            spreadRadius: -2,
+            // Negative spread for inner shadow
+            offset: const Offset(0, 0),
+            // No offset
+          ),
+        ],
       ),
       child: TextFormField(
+        // Text input field for email
         controller: _emailController,
+        // Associates with email controller
+        focusNode: emailFocusNode,
+        // Associates with focus node
         style: const TextStyle(color: Colors.white, fontSize: 14),
+        // Text style
+        textAlign: emailFocusNode.hasFocus ? TextAlign.right : TextAlign.center,
+        // Aligns text based on focus
         decoration: InputDecoration(
+          // Input field styling
           hintText: 'EMAIL',
+          // Placeholder text
           hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
+            // Styling for hint text
+            color: Colors.white, // Bright white
+            fontSize: 12,
+            // Font size
+            fontWeight: FontWeight.bold,
+            // Bold text
             letterSpacing: 1.2,
+            // Letter spacing
+            shadows: [
+              // Shadows for hint text
+              Shadow(
+                color: Colors.black.withOpacity(0.4), // Drop shadow
+                blurRadius: 8,
+                // Blur radius
+                offset: const Offset(1.5, 1.5),
+                // Shadow offset
+              ),
+              Shadow(
+                color: Colors.black.withOpacity(0.3), // Inner shadow
+                blurRadius: 6,
+                // Blur radius
+                offset: const Offset(0, 0),
+                // No offset
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(0.5, 0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(-0.5, -0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(0.5, -0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(-0.5, 0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+            ],
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          // No default border
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          // Padding inside field
         ),
         keyboardType: TextInputType.emailAddress,
+        // Optimizes keyboard for email input
         validator: (value) {
+          // Validates email input
           if (value == null || value.isEmpty) {
+            // Checks if field is empty
             return 'Please enter your email';
+            // Error message for empty field
           }
           if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+            // Validates email format
             return 'Please enter a valid email address';
+            // Error message for invalid email
           }
           return null;
+          // No error if valid
         },
+        onTap: () => setState(() {}),
+        // Updates UI on tap
+        onEditingComplete: () => setState(() {}),
+        // Updates UI on editing complete
       ),
     );
   }
 
   Widget _buildPasswordField() {
+    // Builds the password input field
+    final FocusNode passwordFocusNode = FocusNode();
+    // Focus node to track password field focus
     return Container(
+      // Container for password field styling
       height: 50,
+      // Fixed height
       decoration: BoxDecoration(
-        color: const Color(0xFF3d4a5c), // Medium blue-gray like the container
+        // Styling for container
+        color: const Color(0xFF3d4a5c), // Medium blue-gray
         borderRadius: BorderRadius.circular(8),
+        // Rounded corners
+        border: Border.all(color: Colors.white, width: 1), // White border
+        boxShadow: [
+          // Shadows for depth
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            blurRadius: 10,
+            // Blur radius
+            spreadRadius: 1,
+            // Spread radius
+            offset: const Offset(2, 2),
+            // Shadow offset
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            blurRadius: 8,
+            // Blur radius
+            spreadRadius: -2,
+            // Negative spread for inner shadow
+            offset: const Offset(0, 0),
+            // No offset
+          ),
+        ],
       ),
       child: TextFormField(
+        // Text input field for password
         controller: _passwordController,
+        // Associates with password controller
+        focusNode: passwordFocusNode,
+        // Associates with focus node
         obscureText: _obscurePassword,
+        // Hides password text
         style: const TextStyle(color: Colors.white, fontSize: 14),
+        // Text style
+        textAlign: passwordFocusNode.hasFocus ? TextAlign.right : TextAlign.center,
+        // Aligns text based on focus
         decoration: InputDecoration(
+          // Input field styling
           hintText: 'PASSWORD',
+          // Placeholder text
           hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.5),
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
+            // Styling for hint text
+            color: Colors.white, // Bright white
+            fontSize: 12,
+            // Font size
+            fontWeight: FontWeight.bold,
+            // Bold text
             letterSpacing: 1.2,
+            // Letter spacing
+            shadows: [
+              // Shadows for hint text
+              Shadow(
+                color: Colors.black.withOpacity(0.4), // Drop shadow
+                blurRadius: 8,
+                // Blur radius
+                offset: const Offset(1.5, 1.5),
+                // Shadow offset
+              ),
+              Shadow(
+                color: Colors.black.withOpacity(0.3), // Inner shadow
+                blurRadius: 6,
+                // Blur radius
+                offset: const Offset(0, 0),
+                // No offset
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(0.5, 0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(-0.5, -0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(0.5, -0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+              const Shadow(
+                color: Colors.black, // Thin black outline
+                offset: Offset(-0.5, 0.5),
+                // Outline offset
+                blurRadius: 0.5,
+                // Minimal blur
+              ),
+            ],
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          // No default border
+          contentPadding: const EdgeInsets.only(left: 40, right: 16, top: 16, bottom: 16), // Slightly increased left offset
           suffixIcon: IconButton(
+            // Button to toggle password visibility
             icon: Icon(
+              // Icon for visibility toggle
               _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-              color: const Color(0xFF4ecdc4), // Teal color like in the image
+              // Switches icon based on visibility
+              color: const Color(0xFF4ecdc4), // Teal color
               size: 18,
+              // Icon size
             ),
             onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            // Toggles password visibility
           ),
         ),
         validator: (value) {
+          // Validates password input
           if (value == null || value.isEmpty) {
+            // Checks if field is empty
             return 'Please enter your password';
+            // Error message for empty field
           }
           return null;
+          // No error if valid
         },
+        onTap: () => setState(() {}),
+        // Updates UI on tap
+        onEditingComplete: () => setState(() {}),
+        // Updates UI on editing complete
       ),
     );
   }
 
   Widget _buildLoginButton() {
+    // Builds the login button
     return Container(
+      // Container for button styling
       width: double.infinity,
+      // Full width
       height: 50,
+      // Fixed height
       decoration: BoxDecoration(
-        color: const Color(0xFF4ecdc4), // Teal color exactly like the image
+        // Styling for container
+        color: const Color(0xFF69ACBD),
+        // Button color
         borderRadius: BorderRadius.circular(8),
+        // Rounded corners
+        border: Border.all(color: Colors.white, width: 1), // White border
+        boxShadow: [
+          // Shadows for depth
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            blurRadius: 10,
+            // Blur radius
+            spreadRadius: 1,
+            // Spread radius
+            offset: const Offset(2, 2),
+            // Shadow offset
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            blurRadius: 8,
+            // Blur radius
+            spreadRadius: -2,
+            // Negative spread for inner shadow
+            offset: const Offset(0, 0),
+            // No offset
+          ),
+        ],
       ),
       child: ElevatedButton(
+        // Button widget for login
         onPressed: _isLoading ? null : _handleLogin,
+        // Disables button during loading
         style: ElevatedButton.styleFrom(
+          // Custom button styling
           backgroundColor: Colors.transparent,
+          // Transparent background
           shadowColor: Colors.transparent,
+          // No shadow
           elevation: 0,
+          // No elevation
           shape: RoundedRectangleBorder(
+            // Button shape
             borderRadius: BorderRadius.circular(8),
+            // Rounded corners
           ),
         ),
         child: _isLoading
             ? const SizedBox(
+                // Loading indicator
                 height: 20,
+                // Indicator height
                 width: 20,
+                // Indicator width
                 child: CircularProgressIndicator(
+                  // Circular loading animation
                   strokeWidth: 2,
+                  // Line thickness
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  // White color
                 ),
               )
-            : const Text(
+            : Text(
+                // Button text
                 'LOGIN',
+                // Text content
                 style: TextStyle(
-                  color: Colors.white,
+                  // Text styling
+                  color: const Color.fromARGB(255, 255, 140, 0),
+                  // Orange text
                   fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  // Font size
+                  fontWeight: FontWeight.bold,
+                  // Bold text
                   letterSpacing: 1.5,
+                  // Letter spacing
+                  shadows: [
+                    // Shadows for text
+                    Shadow(
+                      color: Colors.black.withOpacity(0.4), // Drop shadow
+                      blurRadius: 8,
+                      // Blur radius
+                      offset: const Offset(1.5, 1.5),
+                      // Shadow offset
+                    ),
+                    Shadow(
+                      color: Colors.black.withOpacity(0.3), // Inner shadow
+                      blurRadius: 6,
+                      // Blur radius
+                      offset: const Offset(0, 0),
+                      // No offset
+                    ),
+                    const Shadow(
+                      color: Colors.black, // Thin black outline
+                      offset: Offset(0.5, 0.5),
+                      // Outline offset
+                      blurRadius: 0.5,
+                      // Minimal blur
+                    ),
+                    const Shadow(
+                      color: Colors.black, // Thin black outline
+                      offset: Offset(-0.5, -0.5),
+                      // Outline offset
+                      blurRadius: 0.5,
+                      // Minimal blur
+                    ),
+                    const Shadow(
+                      color: Colors.black, // Thin black outline
+                      offset: Offset(0.5, -0.5),
+                      // Outline offset
+                      blurRadius: 0.5,
+                      // Minimal blur
+                    ),
+                    const Shadow(
+                      color: Colors.black, // Thin black outline
+                      offset: Offset(-0.5, 0.5),
+                      // Outline offset
+                      blurRadius: 0.5,
+                      // Minimal blur
+                    ),
+                  ],
                 ),
               ),
       ),
@@ -430,62 +644,105 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildBottomLinks() {
+    // Builds the bottom navigation links
     return Column(
+      // Column to stack links
       children: [
         Row(
+          // Row to arrange links side by side
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Spaces links evenly
           children: [
             TextButton(
+              // Button for sign-up
               onPressed: _handleSignUp,
+              // Handles sign-up action
               style: TextButton.styleFrom(
+                // Custom button styling
                 padding: EdgeInsets.zero,
+                // No padding
                 minimumSize: Size.zero,
+                // Minimal size
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                // Shrinks tap target
               ),
               child: Text(
+                // Sign-up text
                 'SIGN UP',
+                // Text content
                 style: TextStyle(
+                  // Text styling
                   color: Colors.white.withValues(alpha: 0.7),
+                  // White text with transparency
                   fontSize: 13,
-                  fontWeight: FontWeight.w400,
+                  // Font size
+                  fontWeight: FontWeight.bold,
+                  // Bold text
                   letterSpacing: 1.2,
+                  // Letter spacing
                 ),
               ),
             ),
             TextButton(
+              // Button for forgot password
               onPressed: _handleForgotPassword,
+              // Handles forgot password action
               style: TextButton.styleFrom(
+                // Custom button styling
                 padding: EdgeInsets.zero,
+                // No padding
                 minimumSize: Size.zero,
+                // Minimal size
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                // Shrinks tap target
               ),
               child: Text(
+                // Forgot password text
                 'FORGOT PASSWORD?',
+                // Text content
                 style: TextStyle(
+                  // Text styling
                   color: Colors.white.withValues(alpha: 0.7),
+                  // White text with transparency
                   fontSize: 13,
-                  fontWeight: FontWeight.w400,
+                  // Font size
+                  fontWeight: FontWeight.bold,
+                  // Bold text
                   letterSpacing: 1.2,
+                  // Letter spacing
                 ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 20),
+        // Spacer between rows
         // Guest login option
         TextButton(
+          // Button for guest login
           onPressed: _handleGuestLogin,
+          // Handles guest login action
           style: TextButton.styleFrom(
+            // Custom button styling
             padding: EdgeInsets.zero,
+            // No padding
             minimumSize: Size.zero,
+            // Minimal size
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            // Shrinks tap target
           ),
           child: const Text(
+            // Guest login text
             'Continue as Guest',
+            // Text content
             style: TextStyle(
+              // Text styling
               color: Color(0xFF4ecdc4),
+              // Teal color
               fontSize: 14,
+              // Font size
               fontWeight: FontWeight.w400,
+              // Regular weight
             ),
           ),
         ),
@@ -494,87 +751,138 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    // Handles the login process
     if (_formKey.currentState!.validate()) {
+      // Validates form inputs
       setState(() => _isLoading = true);
-      
+      // Sets loading state to true
       try {
         final appState = Provider.of<AppState>(context, listen: false);
+        // Accesses app state without listening
         final user = await appState.signInUser(
+          // Attempts to sign in user
           email: _emailController.text.trim(),
+          // Email input
           password: _passwordController.text,
+          // Password input
         );
-        
         if (!mounted) return;
-        
+        // Checks if widget is still mounted
         if (user != null) {
+          // If login successful
           ScaffoldMessenger.of(context).showSnackBar(
+            // Shows success message
             SnackBar(content: Text('Welcome back, ${user.name}!')),
           );
         } else {
+          // If login fails
           final error = appState.error;
+          // Gets error from app state
           if (error != null) {
+            // If error exists
             ScaffoldMessenger.of(context).showSnackBar(
+              // Shows error message
               SnackBar(
                 content: Text(error),
+                // Error text
                 backgroundColor: Colors.red,
+                // Red background
               ),
             );
             appState.clearError();
+            // Clears error from app state
           }
         }
       } catch (e) {
+        // Handles any errors
         if (!mounted) return;
+        // Checks if widget is still mounted
         ScaffoldMessenger.of(context).showSnackBar(
+          // Shows error message
           SnackBar(
             content: Text(e.toString()),
+            // Error text
             backgroundColor: Colors.red,
+            // Red background
           ),
         );
       } finally {
+        // Ensures loading state is reset
         if (mounted) {
+          // Checks if widget is still mounted
           setState(() => _isLoading = false);
+          // Resets loading state
         }
       }
     }
   }
 
   void _handleSignUp() {
+    // Handles the sign-up action
     // For now, show a simple dialog for registration
     showDialog(
+      // Shows a dialog box
       context: context,
+      // Current context
       builder: (context) => AlertDialog(
+        // Dialog widget
         backgroundColor: const Color(0xFF2a3543),
+        // Dialog background color
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        // Rounded dialog corners
         title: const Text(
+          // Dialog title
           'Sign Up',
+          // Title text
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+          // Title styling
         ),
         content: Column(
+          // Column for dialog content
           mainAxisSize: MainAxisSize.min,
+          // Minimal column size
           crossAxisAlignment: CrossAxisAlignment.start,
+          // Aligns content to start
           children: [
             Text(
+              // Info text
               'Registration feature coming soon!',
+              // Text content
               style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 16),
+              // Text styling
             ),
             const SizedBox(height: 16),
+            // Spacer
             Text(
+              // Additional info text
               'For now, you can:',
+              // Text content
               style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
+              // Text styling
             ),
             const SizedBox(height: 8),
+            // Spacer
             const Text(
+              // Options text
               '• Continue as Guest\n• Use demo@studypals.com / password',
+              // Text content
               style: TextStyle(color: Color(0xFF4ecdc4), fontSize: 14),
+              // Text styling
             ),
           ],
         ),
         actions: [
+          // Dialog actions
           TextButton(
+            // OK button
             onPressed: () => Navigator.pop(context),
+            // Closes dialog
             child: const Text(
+              // Button text
               'OK',
+              // Text content
               style: TextStyle(color: Color(0xFF4ecdc4), fontWeight: FontWeight.w500),
+              // Text styling
             ),
           ),
         ],
@@ -583,45 +891,67 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleForgotPassword() async {
+    // Handles the forgot password action
     final email = _emailController.text.trim();
-    
+    // Gets trimmed email input
     if (email.isEmpty) {
+      // Checks if email is empty
       ScaffoldMessenger.of(context).showSnackBar(
+        // Shows error message
         SnackBar(
           content: const Text('Please enter your email address first'),
+          // Error text
           backgroundColor: const Color(0xFF4ecdc4),
+          // Teal background
           behavior: SnackBarBehavior.floating,
+          // Floating snackbar
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          // Rounded corners
         ),
       );
       return;
+      // Exits if email is empty
     }
-
     ScaffoldMessenger.of(context).showSnackBar(
+      // Shows info message
       SnackBar(
         content: const Text('Password reset feature coming soon!'),
+        // Info text
         backgroundColor: const Color(0xFF4ecdc4),
+        // Teal background
         behavior: SnackBarBehavior.floating,
+        // Floating snackbar
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        // Rounded corners
       ),
     );
   }
 
   void _handleGuestLogin() {
+    // Handles the guest login action
     final guestUser = User(
+      // Creates a guest user object
       id: 'guest',
+      // User ID
       email: 'guest@studypals.com',
+      // Guest email
       name: 'Guest User',
+      // Guest name
       isEmailVerified: false,
+      // Email verification status
     );
-    
     Provider.of<AppState>(context, listen: false).login(guestUser);
+    // Logs in the guest user
   }
 
   @override
   void dispose() {
+    // Cleans up resources
     _emailController.dispose();
+    // Disposes email controller
     _passwordController.dispose();
+    // Disposes password controller
     super.dispose();
+    // Calls parent dispose
   }
 }
