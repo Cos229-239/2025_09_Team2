@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 // Import Provider package for accessing state management across widgets
 import 'package:provider/provider.dart';
+// Import screen for flashcard study interface
+import 'package:studypals/screens/flashcard_study_screen.dart';    // Flashcard study interface
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/pet_widget.dart';        // Virtual pet display and interactions
 import 'package:studypals/widgets/dashboard/today_tasks_widget.dart'; // Today's tasks overview
@@ -329,36 +331,146 @@ class NotesScreen extends StatelessWidget {
   }
 }
 
-/// Placeholder screen for flashcard deck management
-/// Will be replaced with deck creation, editing, and organization interface
+/// Flashcard deck management screen
+/// Shows all created decks including AI-generated ones
 class DecksScreen extends StatelessWidget {
   // Constructor with optional key for widget identification
   const DecksScreen({super.key});
 
-  /// Builds placeholder content indicating feature is coming soon
+  /// Builds the deck list interface
   /// @param context - Build context containing theme information
-  /// @return Widget tree showing placeholder content
+  /// @return Widget tree showing user's flashcard decks
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       // App bar with descriptive screen title
       appBar: AppBar(title: const Text('Flashcard Decks')),
       
-      // Centered placeholder content
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,   // Center content vertically
-          children: [
-            // Large deck icon to indicate flashcard functionality
-            const Icon(Icons.style, size: 64, color: Colors.grey),
-            
-            // Spacing between icon and text
-            const SizedBox(height: 16),
-            
-            // Coming soon message with appropriate text style
-            Text('Decks coming soon!', style: Theme.of(context).textTheme.headlineSmall),
-          ],
-        ),
+      // Consumer to listen to deck provider changes
+      body: Consumer<DeckProvider>(
+        builder: (context, deckProvider, child) {
+          final decks = deckProvider.decks;
+          
+          if (decks.isEmpty) {
+            // Show empty state when no decks exist
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.style, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No decks yet!', 
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Create flashcards using the AI Generator\nin the dashboard.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          // Show list of decks
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: decks.length,
+            itemBuilder: (context, index) {
+              final deck = decks[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    child: const Icon(Icons.style, color: Colors.white),
+                  ),
+                  title: Text(
+                    deck.title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${deck.cards.length} cards'),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 4,
+                        children: deck.tags.map((tag) => Chip(
+                          label: Text(
+                            tag,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        )).toList(),
+                      ),
+                    ],
+                  ),
+                  isThreeLine: true,
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () {
+                    // Debug: Show deck content in a dialog first
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(deck.title),
+                        content: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Cards: ${deck.cards.length}'),
+                              const SizedBox(height: 8),
+                              if (deck.cards.isNotEmpty)
+                                ...deck.cards.take(3).map((card) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Card(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text('Q: ${card.front}'),
+                                          const SizedBox(height: 4),
+                                          Text('A: ${card.back}'),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                )).toList()
+                              else
+                                const Text('No cards found in this deck.'),
+                            ],
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('Close'),
+                          ),
+                          if (deck.cards.isNotEmpty)
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => FlashcardStudyScreen(deck: deck),
+                                  ),
+                                );
+                              },
+                              child: const Text('Study'),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

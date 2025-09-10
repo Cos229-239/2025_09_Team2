@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../providers/deck_provider.dart';
 import '../../models/deck.dart';
+import '../../utils/dialog_utils.dart';
+import '../../mixins/loading_state_mixin.dart';
 import 'ai_settings_widget.dart';
 
 /// AI-Powered Flashcard Generator
@@ -13,12 +15,12 @@ class AIFlashcardGenerator extends StatefulWidget {
   State<AIFlashcardGenerator> createState() => _AIFlashcardGeneratorState();
 }
 
-class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
+class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> 
+    with LoadingStateMixin {
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
   String _selectedSubject = 'General';
   int _cardCount = 5;
-  bool _isGenerating = false;
   String? _generationError;
   
   final List<String> _subjects = [
@@ -103,12 +105,82 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
     }
   }
 
+  Future<void> _debugAI() async {
+    if (_topicController.text.trim().isEmpty) {
+      setState(() {
+        _generationError = 'Please enter a topic first.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isGenerating = true;
+      _generationError = null;
+    });
+
+    try {
+      final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
+      final response = await aiProvider.aiService.debugFlashcardGeneration(
+        _topicController.text.trim(),
+        _selectedSubject,
+      );
+      
+      // Show the raw response in a dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Raw AI Response'),
+            content: SingleChildScrollView(
+              child: Text(response),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _generationError = 'Debug failed: $e';
+      });
+    } finally {
+      setState(() {
+        _isGenerating = false;
+      });
+    }
+  }
+
   void _showSuccessDialog(int cardCount) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Success!'),
-        content: Text('Generated $cardCount flashcards successfully!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Generated $cardCount flashcards successfully!'),
+            const SizedBox(height: 12),
+            const Text(
+              'Your new deck has been created and can be found in:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            const Text('📚 Dashboard → "Decks" Tab (4th tab at bottom)'),
+            const SizedBox(height: 8),
+            Text(
+              'Deck Name: "AI Generated: ${_topicController.text}"',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -122,6 +194,14 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
               });
             },
             child: const Text('OK'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // Navigate back to dashboard to see the deck
+              Navigator.of(context).pop(); // Close the flashcard generator
+            },
+            child: const Text('View Deck'),
           ),
         ],
       ),
@@ -323,6 +403,20 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
                     label: Text(_isGenerating ? 'Generating...' : 'Generate Flashcards'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                
+                // Debug button
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isGenerating ? null : _debugAI,
+                    icon: const Icon(Icons.bug_report),
+                    label: const Text('Debug AI Response'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
                   ),
                 ),

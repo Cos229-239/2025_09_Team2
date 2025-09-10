@@ -47,27 +47,46 @@ class AIService {
   Future<List<FlashCard>> generateFlashcardsFromText(String content, String subject, {int count = 5}) async {
     try {
       final prompt = '''
-      Create $count flashcards from this study material about $subject:
-      
-      $content
-      
-      Return as JSON array with format:
-      [{"question": "...", "answer": "...", "hint": "..."}]
+Create exactly $count flashcards about $subject. Topic: $content
+
+You MUST respond with ONLY a valid JSON array. No explanation, no extra text.
+
+Format:
+[
+  {"question": "What is...", "answer": "The answer is..."},
+  {"question": "Define...", "answer": "It means..."}
+]
+
+Make questions clear and answers concise. Focus on key concepts.
       ''';
       
       final response = await _callAI(prompt);
-      final cardsData = json.decode(response) as List;
+      
+      // Clean the response to extract JSON
+      String cleanResponse = response.trim();
+      
+      // Find JSON array in the response
+      int startIndex = cleanResponse.indexOf('[');
+      int endIndex = cleanResponse.lastIndexOf(']');
+      
+      if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+        cleanResponse = cleanResponse.substring(startIndex, endIndex + 1);
+      }
+      
+      // Parse JSON
+      final cardsData = json.decode(cleanResponse) as List;
       
       return cardsData.map((cardJson) => FlashCard(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         deckId: 'ai_generated',
         type: CardType.basic,
-        front: cardJson['question'],
-        back: cardJson['answer'],
+        front: cardJson['question'] ?? 'Question',
+        back: cardJson['answer'] ?? 'Answer',
       )).toList();
       
     } catch (e) {
       debugPrint('AI flashcard generation error: $e');
+      debugPrint('Raw response might not be valid JSON');
       return [];
     }
   }
@@ -187,8 +206,10 @@ class AIService {
   /// Google AI (Gemini) API call
   Future<String> _callGoogleAI(String prompt) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/models/gemini-pro:generateContent?key=$_apiKey'),
-      headers: {'Content-Type': 'application/json'},
+      Uri.parse('$_baseUrl/models/gemini-1.5-flash:generateContent?key=$_apiKey'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: json.encode({
         'contents': [
           {
@@ -196,13 +217,21 @@ class AIService {
               {'text': prompt}
             ]
           }
-        ]
+        ],
+        'generationConfig': {
+          'temperature': 0.7,
+          'maxOutputTokens': 300,
+        }
       }),
     );
     
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['candidates'][0]['content']['parts'][0]['text'].trim();
+      if (data['candidates'] != null && data['candidates'].isNotEmpty) {
+        return data['candidates'][0]['content']['parts'][0]['text'].trim();
+      } else {
+        throw Exception('No response from Google AI');
+      }
     } else {
       throw Exception('Google AI API call failed: ${response.statusCode} - ${response.body}');
     }
@@ -281,14 +310,43 @@ class AIService {
   }
   
   /// Get AI service status
+  /// Test AI connection
   Future<bool> testConnection() async {
     if (!isConfigured) return false;
     
     try {
-      await _callAI('Test connection');
+      await _callAI('Hello, this is a test. Please respond with "Connection successful".');
       return true;
     } catch (e) {
+      debugPrint('AI Connection test failed: $e');
       return false;
+    }
+  }
+
+  /// Debug method to see raw AI responses
+  Future<String> debugFlashcardGeneration(String content, String subject) async {
+    try {
+      final prompt = '''
+Create exactly 2 flashcards about $subject. Topic: $content
+
+You MUST respond with ONLY a valid JSON array. No explanation, no extra text.
+
+Format:
+[
+  {"question": "What is...", "answer": "The answer is..."},
+  {"question": "Define...", "answer": "It means..."}
+]
+
+Make questions clear and answers concise. Focus on key concepts.
+      ''';
+      
+      final response = await _callAI(prompt);
+      debugPrint('Raw AI Response for debugging: $response');
+      return response;
+      
+    } catch (e) {
+      debugPrint('Debug generation error: $e');
+      return 'Error: $e';
     }
   }
 }

@@ -4,9 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 
-// Conditional import - only available on web platform
-import 'stub_html.dart' if (dart.library.html) 'dart:html';
-
 class LocalAuthService {
   static const String _usersKey = 'registered_users';
   static const String _currentUserKey = 'current_user';
@@ -68,157 +65,37 @@ class LocalAuthService {
     }
   }
 
-  // Web-safe storage methods that use localStorage directly on web
+  // Web-safe storage methods using SharedPreferences
   Future<void> _setWebSafeString(String key, String value) async {
-    if (kIsWeb) {
-      // Use localStorage directly for web to ensure persistence
-      try {
-        window.localStorage[key] = value;
-        _debugLog('Saved to localStorage: $key');
-        
-        // Verify it was saved
-        final verified = window.localStorage[key];
-        _debugLog('Verification - localStorage[$key] = ${verified != null ? "found" : "null"}');
-        
-        // Also try sessionStorage as backup for debug sessions
-        window.sessionStorage[key] = value;
-        _debugLog('Also saved to sessionStorage: $key');
-      } catch (e) {
-        _debugLog('Error saving to localStorage: $e');
-        // Fallback to SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(key, value);
-        _debugLog('Fallback: saved to SharedPreferences');
-      }
-    } else {
-      // Use SharedPreferences for mobile/desktop
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(key, value);
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(key, value);
+    _debugLog('Saved to SharedPreferences: $key');
   }
 
   Future<String?> _getWebSafeString(String key) async {
-    if (kIsWeb) {
-      try {
-        // Try localStorage first
-        var value = window.localStorage[key];
-        if (value != null) {
-          _debugLog('Read from localStorage: $key = found');
-          return value;
-        }
-        
-        // Try sessionStorage as backup
-        value = window.sessionStorage[key];
-        if (value != null) {
-          _debugLog('Read from sessionStorage: $key = found');
-          // Copy back to localStorage for persistence
-          window.localStorage[key] = value;
-          return value;
-        }
-        
-        _debugLog('Read from localStorage: $key = null');
-        
-        // Fallback to SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        value = prefs.getString(key);
-        if (value != null) {
-          _debugLog('Fallback: read from SharedPreferences: $key = found');
-          // Copy to localStorage for future access
-          window.localStorage[key] = value;
-        }
-        return value;
-      } catch (e) {
-        _debugLog('Error reading from localStorage: $e');
-        // Fallback to SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        return prefs.getString(key);
-      }
-    } else {
-      // Use SharedPreferences for mobile/desktop
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(key);
-    }
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString(key);
+    _debugLog('Read from SharedPreferences: $key = ${value != null ? "found" : "null"}');
+    return value;
   }
 
   Future<void> _setWebSafeBool(String key, bool value) async {
-    if (kIsWeb) {
-      try {
-        // Use localStorage with string conversion for web
-        window.localStorage[key] = value.toString();
-        window.sessionStorage[key] = value.toString();
-        _debugLog('Saved bool to localStorage and sessionStorage: $key = $value');
-      } catch (e) {
-        _debugLog('Error saving bool to localStorage: $e');
-        // Fallback to SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool(key, value);
-      }
-    } else {
-      // Use SharedPreferences for mobile/desktop
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(key, value);
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+    _debugLog('Saved bool to SharedPreferences: $key = $value');
   }
 
   Future<bool> _getWebSafeBool(String key) async {
-    if (kIsWeb) {
-      try {
-        // Try localStorage first
-        var value = window.localStorage[key];
-        if (value != null) {
-          final result = value == 'true';
-          _debugLog('Read bool from localStorage: $key = $result');
-          return result;
-        }
-        
-        // Try sessionStorage as backup
-        value = window.sessionStorage[key];
-        if (value != null) {
-          final result = value == 'true';
-          _debugLog('Read bool from sessionStorage: $key = $result');
-          // Copy back to localStorage
-          window.localStorage[key] = value;
-          return result;
-        }
-        
-        _debugLog('Read bool from localStorage: $key = false (default)');
-        return false;
-      } catch (e) {
-        _debugLog('Error reading bool from localStorage: $e');
-        // Fallback to SharedPreferences
-        final prefs = await SharedPreferences.getInstance();
-        return prefs.getBool(key) ?? false;
-      }
-    } else {
-      // Use SharedPreferences for mobile/desktop
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(key) ?? false;
-    }
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getBool(key) ?? false;
+    _debugLog('Read bool from SharedPreferences: $key = $value');
+    return value;
   }
 
   Future<void> _removeWebSafeKey(String key) async {
-    if (kIsWeb) {
-      try {
-        // Remove from both localStorage and sessionStorage
-        window.localStorage.remove(key);
-        window.sessionStorage.remove(key);
-        _debugLog('Removed from localStorage and sessionStorage: $key');
-      } catch (e) {
-        _debugLog('Error removing from localStorage: $e');
-      }
-      
-      // Also remove from SharedPreferences as fallback cleanup
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove(key);
-      } catch (e) {
-        _debugLog('Error removing from SharedPreferences: $e');
-      }
-    } else {
-      // Use SharedPreferences for mobile/desktop
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(key);
-    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(key);
+    _debugLog('Removed from SharedPreferences: $key');
   }
 
   // Hash password for storage
@@ -511,51 +388,13 @@ class LocalAuthService {
 
   // Debug method: Check SharedPreferences keys
   Future<void> debugStorageState() async {
-    if (kIsWeb) {
-      try {
-        // For web, check localStorage directly
-        final localStorage = window.localStorage;
-        final sessionStorage = window.sessionStorage;
-        final localKeys = localStorage.keys.toList();
-        final sessionKeys = sessionStorage.keys.toList();
-        
-        _debugLog('LocalStorage keys: $localKeys');
-        _debugLog('SessionStorage keys: $sessionKeys');
-        
-        final usersJson = localStorage[_usersKey];
-        _debugLog('Users data (localStorage): $usersJson');
-        
-        final currentUserJson = localStorage[_currentUserKey];
-        _debugLog('Current user (localStorage): $currentUserJson');
-        
-        final isLoggedIn = localStorage[_isLoggedInKey];
-        _debugLog('Is logged in (localStorage): $isLoggedIn');
-        
-        // Test localStorage persistence
-        const testKey = 'localStorage_test';
-        const testValue = 'test_persistence';
-        localStorage[testKey] = testValue;
-        final testResult = localStorage[testKey];
-        _debugLog('LocalStorage persistence test: ${testResult == testValue ? "PASS" : "FAIL"}');
-        localStorage.remove(testKey);
-        
-      } catch (e) {
-        _debugLog('Error accessing localStorage: $e');
-      }
-    } else {
-      // For mobile/desktop, use SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final keys = prefs.getKeys();
-      _debugLog('SharedPreferences keys: $keys');
-      
-      final usersJson = prefs.getString(_usersKey);
-      _debugLog('Users data: $usersJson');
-      
-      final currentUserJson = prefs.getString(_currentUserKey);
-      _debugLog('Current user: $currentUserJson');
-      
-      final isLoggedIn = prefs.getBool(_isLoggedInKey);
-      _debugLog('Is logged in: $isLoggedIn');
-    }
+    _debugLog('=== Debug Storage State ===');
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    _debugLog('SharedPreferences keys: $keys');
+    _debugLog('Users: ${await _getWebSafeString(_usersKey)}');
+    _debugLog('Current User: ${await _getWebSafeString(_currentUserKey)}');
+    _debugLog('Is Logged In: ${await _getWebSafeBool(_isLoggedInKey)}');
+    _debugLog('========================');
   }
 }
