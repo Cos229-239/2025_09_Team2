@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../providers/deck_provider.dart';
 import '../../models/deck.dart';
+<<<<<<< HEAD
 import '../../utils/dialog_utils.dart';
 import '../../mixins/loading_state_mixin.dart';
+=======
+>>>>>>> backend-features
 import 'ai_settings_widget.dart';
 
 /// AI-Powered Flashcard Generator

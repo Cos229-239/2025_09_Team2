@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../services/ai_service.dart';
-import '../models/card.dart';
-import '../models/user.dart';
+import 'package:studypals/services/ai_service.dart';
+import 'package:studypals/models/card.dart';
+import 'package:studypals/models/user.dart';
 
 /// StudyPals AI Provider for managing intelligent study features
 class StudyPalsAIProvider with ChangeNotifier {

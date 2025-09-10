@@ -19,6 +19,10 @@ import 'package:studypals/providers/task_provider.dart';  // Task management sta
 import 'package:studypals/providers/deck_provider.dart';  // Flashcard deck state
 import 'package:studypals/providers/pet_provider.dart';   // Virtual pet state
 import 'package:studypals/providers/srs_provider.dart';   // Spaced repetition system state
+// Import models for deck and card data
+import 'package:studypals/models/deck.dart';              // Deck model for flashcard collections
+// Import flashcard study screen for studying decks
+//import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
 
 /// Main dashboard screen with bottom navigation between different app sections
 /// This is a StatefulWidget because it manages navigation state and data loading
@@ -411,6 +415,7 @@ class DecksScreen extends StatelessWidget {
                   isThreeLine: true,
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
+<<<<<<< HEAD
                     // Debug: Show deck content in a dialog first
                     showDialog(
                       context: context,
@@ -465,6 +470,25 @@ class DecksScreen extends StatelessWidget {
                         ],
                       ),
                     );
+=======
+                    // Navigate to a simple flashcard viewer
+                    if (deck.cards.isNotEmpty) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return SimpleFlashcardViewer(deck: deck);
+                          },
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Deck "${deck.title}" has no cards to study'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+>>>>>>> backend-features
                   },
                 ),
               );
@@ -504,6 +528,115 @@ class ProgressScreen extends StatelessWidget {
             
             // Coming soon message with appropriate text style
             Text('Progress tracking coming soon!', style: Theme.of(context).textTheme.headlineSmall),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Simple flashcard viewer for studying decks
+class SimpleFlashcardViewer extends StatefulWidget {
+  final Deck deck;
+
+  const SimpleFlashcardViewer({
+    super.key,
+    required this.deck,
+  });
+
+  @override
+  State<SimpleFlashcardViewer> createState() => _SimpleFlashcardViewerState();
+}
+
+class _SimpleFlashcardViewerState extends State<SimpleFlashcardViewer> {
+  int _currentCardIndex = 0;
+  bool _showAnswer = false;
+
+  void _nextCard() {
+    setState(() {
+      if (_currentCardIndex < widget.deck.cards.length - 1) {
+        _currentCardIndex++;
+        _showAnswer = false;
+      }
+    });
+  }
+
+  void _previousCard() {
+    setState(() {
+      if (_currentCardIndex > 0) {
+        _currentCardIndex--;
+        _showAnswer = false;
+      }
+    });
+  }
+
+  void _toggleAnswer() {
+    setState(() {
+      _showAnswer = !_showAnswer;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final card = widget.deck.cards[_currentCardIndex];
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('${widget.deck.title} - ${_currentCardIndex + 1}/${widget.deck.cards.length}'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: Card(
+                  elevation: 8,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _showAnswer ? 'Answer:' : 'Question:',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          _showAnswer ? card.back : card.front,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: _toggleAnswer,
+                          child: Text(_showAnswer ? 'Show Question' : 'Show Answer'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: _currentCardIndex > 0 ? _previousCard : null,
+                  child: const Text('Previous'),
+                ),
+                Text(
+                  '${_currentCardIndex + 1} / ${widget.deck.cards.length}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                ElevatedButton(
+                  onPressed: _currentCardIndex < widget.deck.cards.length - 1 ? _nextCard : null,
+                  child: const Text('Next'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),

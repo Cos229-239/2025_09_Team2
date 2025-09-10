@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/ai_provider.dart';
-import '../../services/ai_service.dart';
+import 'package:studypals/providers/ai_provider.dart';
+import 'package:studypals/services/ai_service.dart';
 
 /// AI Configuration and Settings Widget
 class AISettingsWidget extends StatefulWidget {
