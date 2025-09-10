@@ -5,9 +5,38 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "sp",
+            "name": "StudyPals (Debug)",
             "request": "launch",
-            "type": "dart"
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "debug"
+        },
+        {
+            "name": "StudyPals (Chrome)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "debug",
+            "deviceId": "chrome",
+            "args": [
+                "--web-hostname=localhost",
+                "--web-port=8080"
+            ]
+        },
+        {
+            "name": "StudyPals (Windows)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "debug",
+            "deviceId": "windows"
+        },
+        {
+            "name": "StudyPals (Release)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "release"
         }
     ]
 }

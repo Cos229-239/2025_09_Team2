@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../providers/deck_provider.dart';
 import '../../models/deck.dart';
+import 'ai_settings_widget.dart';
 
 /// AI-Powered Flashcard Generator
 class AIFlashcardGenerator extends StatefulWidget {
@@ -102,12 +103,82 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
     }
   }
 
+  Future<void> _debugAI() async {
+    if (_topicController.text.trim().isEmpty) {
+      setState(() {
+        _generationError = 'Please enter a topic first.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isGenerating = true;
+      _generationError = null;
+    });
+
+    try {
+      final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
+      final response = await aiProvider.aiService.debugFlashcardGeneration(
+        _topicController.text.trim(),
+        _selectedSubject,
+      );
+      
+      // Show the raw response in a dialog
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Raw AI Response'),
+            content: SingleChildScrollView(
+              child: Text(response),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _generationError = 'Debug failed: $e';
+      });
+    } finally {
+      setState(() {
+        _isGenerating = false;
+      });
+    }
+  }
+
   void _showSuccessDialog(int cardCount) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Success!'),
-        content: Text('Generated $cardCount flashcards successfully!'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Generated $cardCount flashcards successfully!'),
+            const SizedBox(height: 12),
+            const Text(
+              'Your new deck has been created and can be found in:',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            const Text('📚 Dashboard → "Decks" Tab (4th tab at bottom)'),
+            const SizedBox(height: 8),
+            Text(
+              'Deck Name: "AI Generated: ${_topicController.text}"',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -121,6 +192,14 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
               });
             },
             child: const Text('OK'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // Navigate back to dashboard to see the deck
+              Navigator.of(context).pop(); // Close the flashcard generator
+            },
+            child: const Text('View Deck'),
           ),
         ],
       ),
@@ -158,10 +237,15 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      // TODO: Navigate to AI settings
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('AI configuration coming soon!'),
+                      // Navigate to AI settings
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => Scaffold(
+                            appBar: AppBar(
+                              title: const Text('AI Settings'),
+                            ),
+                            body: const AISettingsWidget(),
+                          ),
                         ),
                       );
                     },
@@ -321,12 +405,26 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> {
                   ),
                 ),
                 
+                // Debug button
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _isGenerating ? null : _debugAI,
+                    icon: const Icon(Icons.bug_report),
+                    label: const Text('Debug AI Response'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+                
                 // Tips
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(

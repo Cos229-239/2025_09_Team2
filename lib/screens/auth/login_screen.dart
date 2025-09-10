@@ -7,74 +7,51 @@ import 'package:studypals/providers/app_state.dart';
 // Import User model for creating user objects
 import 'package:studypals/models/user.dart';
 
-/// Enhanced login/registration screen with email verification support
-/// Supports both user registration and login with proper validation
+/// Modern login screen with cat mascot design
+/// Matches the beautiful UI provided in the design mockup
 class LoginScreen extends StatefulWidget {
-  // Constructor with optional key for widget identification
   const LoginScreen({super.key});
 
-  /// Creates the mutable state object for this widget
-  /// @return State object that manages the login screen's dynamic behavior
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-/// Private state class managing login/registration form data and user interactions
-/// Handles form validation, authentication logic, loading states, and mode switching
 class _LoginScreenState extends State<LoginScreen> {
-  // Form key for validation - uniquely identifies the form for validation methods
   final _formKey = GlobalKey<FormState>();
-  
-  // Text controllers for form input fields
-  final _emailController = TextEditingController();     // Email input management
-  final _passwordController = TextEditingController();  // Password input management
-  final _nameController = TextEditingController();      // Name input for registration
-  final _confirmPasswordController = TextEditingController(); // Password confirmation
-  
-  // UI state management
-  bool _isLoading = false;        // Loading state during auth operations
-  bool _isLoginMode = true;       // Toggle between login (true) and register (false) modes
-  bool _obscurePassword = true;   // Toggle password visibility
-  bool _obscureConfirmPassword = true; // Toggle confirm password visibility
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscurePassword = true;
 
-  /// Builds the enhanced login/registration screen with mode switching
-  /// @param context - Build context containing theme and navigation information
-  /// @return Widget tree representing the authentication screen
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView( // Allow scrolling for smaller screens
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF1a2332), // Very dark blue-gray
+              Color(0xFF253142), // Dark blue-gray  
+              Color(0xFF2a3543), // Slightly lighter dark blue-gray
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // App branding section
+                const SizedBox(height: 80),
+                // Cat mascot and branding
+                _buildMascotSection(),
+                const Spacer(),
+                // Login form
+                _buildLoginForm(),
                 const SizedBox(height: 40),
-                _buildAppBranding(),
-                const SizedBox(height: 48),
-                
-                // Mode toggle tabs (Login/Register)
-                _buildModeToggle(),
-                const SizedBox(height: 32),
-                
-                // Form fields based on current mode
-                _buildFormFields(),
-                const SizedBox(height: 24),
-                
-                // Primary action button (Login/Register)
-                _buildPrimaryButton(),
-                const SizedBox(height: 16),
-                
-                // Secondary actions
-                _buildSecondaryActions(),
-                const SizedBox(height: 24),
-                
-                // Guest login option
-                _buildGuestLogin(),
+                _buildBottomLinks(),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -83,270 +60,432 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// Builds the app logo and branding section
-  Widget _buildAppBranding() {
+  Widget _buildMascotSection() {
     return Column(
       children: [
-        Icon(
-          Icons.school,
-          size: 80,
-          color: Theme.of(context).primaryColor,
+        // Cat mascot container - exactly like the image
+        Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: const Color(0xFF3d4a5c), // Medium blue-gray for container
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Cat with headphones and glasses
+                SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Headphones band (top)
+                      Positioned(
+                        top: 8,
+                        child: Container(
+                          width: 65,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5a6b7d),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                      ),
+                      
+                      // Left headphone cup
+                      Positioned(
+                        top: 14,
+                        left: 8,
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5a6b7d),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      
+                      // Right headphone cup
+                      Positioned(
+                        top: 14,
+                        right: 8,
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF5a6b7d),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      
+                      // Cat head (main body)
+                      Positioned(
+                        top: 20,
+                        child: Container(
+                          width: 50,
+                          height: 45,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1a2332), // Dark cat color
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                        ),
+                      ),
+                      
+                      // Cat ears
+                      Positioned(
+                        top: 12,
+                        left: 20,
+                        child: Container(
+                          width: 12,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1a2332),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(12),
+                              topRight: Radius.circular(6),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 20,
+                        child: Container(
+                          width: 12,
+                          height: 18,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1a2332),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(6),
+                              topRight: Radius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      // Glasses frame
+                      Positioned(
+                        top: 32,
+                        child: SizedBox(
+                          width: 38,
+                          height: 14,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Left lens
+                              Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color(0xFFe67e22), width: 2),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                              ),
+                              // Bridge
+                              Container(
+                                width: 4,
+                                height: 2,
+                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFe67e22),
+                                  borderRadius: BorderRadius.circular(1),
+                                ),
+                              ),
+                              // Right lens
+                              Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: const Color(0xFFe67e22), width: 2),
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      
+                      // Cat eyes (small dots inside glasses)
+                      Positioned(
+                        top: 37,
+                        left: 30,
+                        child: Container(
+                          width: 2,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 37,
+                        right: 30,
+                        child: Container(
+                          width: 2,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ),
+                      
+                      // Cat nose (small triangle)
+                      Positioned(
+                        top: 48,
+                        child: Container(
+                          width: 3,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF4ecdc4),
+                            borderRadius: BorderRadius.circular(1.5),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Book/study element (small teal rectangle at bottom)
+                Container(
+                  width: 18,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4ecdc4),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 12,
+                      height: 2,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1a2332),
+                        borderRadius: BorderRadius.circular(1),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
+        // App name
         Text(
-          'StudyPals',
-          style: Theme.of(context).textTheme.headlineLarge,
-          textAlign: TextAlign.center,
-        ),
-        Text(
-          'Your AI-powered study companion',
-          style: Theme.of(context).textTheme.bodyLarge,
-          textAlign: TextAlign.center,
+          'STUDYPALS',
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.85),
+            fontSize: 16,
+            fontWeight: FontWeight.w300,
+            letterSpacing: 2.5,
+          ),
         ),
       ],
     );
   }
 
-  /// Builds the login/register mode toggle
-  Widget _buildModeToggle() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Row(
+  Widget _buildLoginForm() {
+    return Form(
+      key: _formKey,
+      child: Column(
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isLoginMode = true),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: _isLoginMode ? Theme.of(context).primaryColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: Text(
-                  'Login',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _isLoginMode ? Colors.white : null,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isLoginMode = false),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: !_isLoginMode ? Theme.of(context).primaryColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                child: Text(
-                  'Register',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: !_isLoginMode ? Colors.white : null,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          _buildEmailField(),
+          const SizedBox(height: 16),
+          _buildPasswordField(),
+          const SizedBox(height: 32),
+          _buildLoginButton(),
         ],
       ),
     );
   }
 
-  /// Builds form fields based on current mode (login vs register)
-  Widget _buildFormFields() {
-    return Column(
-      children: [
-        // Name field (only for registration)
-        if (!_isLoginMode) ...[
-          TextFormField(
-            controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Full Name',
-              prefixIcon: Icon(Icons.person),
-            ),
-            validator: (value) {
-              if (!_isLoginMode && (value == null || value.trim().isEmpty)) {
-                return 'Please enter your full name';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-        
-        // Email field
-        TextFormField(
-          controller: _emailController,
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            prefixIcon: Icon(Icons.email),
-          ),
-          keyboardType: TextInputType.emailAddress,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your email';
-            }
-            if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-              return 'Please enter a valid email address';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        
-        // Password field
-        TextFormField(
-          controller: _passwordController,
-          decoration: InputDecoration(
-            labelText: 'Password',
-            prefixIcon: const Icon(Icons.lock),
-            suffixIcon: IconButton(
-              icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-            ),
-          ),
-          obscureText: _obscurePassword,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your password';
-            }
-            if (!_isLoginMode && value.length < 6) {
-              return 'Password must be at least 6 characters';
-            }
-            return null;
-          },
-        ),
-        
-        // Confirm password field (only for registration)
-        if (!_isLoginMode) ...[
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _confirmPasswordController,
-            decoration: InputDecoration(
-              labelText: 'Confirm Password',
-              prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-              ),
-            ),
-            obscureText: _obscureConfirmPassword,
-            validator: (value) {
-              if (!_isLoginMode) {
-                if (value == null || value.isEmpty) {
-                  return 'Please confirm your password';
-                }
-                if (value != _passwordController.text) {
-                  return 'Passwords do not match';
-                }
-              }
-              return null;
-            },
-          ),
-        ],
-      ],
-    );
-  }
-
-  /// Builds the primary action button (Login/Register)
-  Widget _buildPrimaryButton() {
-    return ElevatedButton(
-      onPressed: _isLoading ? null : _handlePrimaryAction,
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+  Widget _buildEmailField() {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: const Color(0xFF3d4a5c), // Medium blue-gray like the container
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: _isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Text(_isLoginMode ? 'Login' : 'Create Account'),
+      child: TextFormField(
+        controller: _emailController,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'EMAIL',
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.2,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+        keyboardType: TextInputType.emailAddress,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your email';
+          }
+          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+            return 'Please enter a valid email address';
+          }
+          return null;
+        },
+      ),
     );
   }
 
-  /// Builds secondary action links (forgot password, etc.)
-  Widget _buildSecondaryActions() {
-    return Column(
-      children: [
-        if (_isLoginMode) ...[
-          TextButton(
-            onPressed: _isLoading ? null : _handleForgotPassword,
-            child: const Text('Forgot Password?'),
+  Widget _buildPasswordField() {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        color: const Color(0xFF3d4a5c), // Medium blue-gray like the container
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: TextFormField(
+        controller: _passwordController,
+        obscureText: _obscurePassword,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'PASSWORD',
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.5),
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.2,
           ),
-        ] else ...[
-          Text(
-            'By creating an account, you agree to our Terms of Service and Privacy Policy.',
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              color: const Color(0xFF4ecdc4), // Teal color like in the image
+              size: 18,
+            ),
+            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
           ),
-        ],
-      ],
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your password';
+          }
+          return null;
+        },
+      ),
     );
   }
 
-  /// Builds the guest login option
-  Widget _buildGuestLogin() {
+  Widget _buildLoginButton() {
+    return Container(
+      width: double.infinity,
+      height: 50,
+      decoration: BoxDecoration(
+        color: const Color(0xFF4ecdc4), // Teal color exactly like the image
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleLogin,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Text(
+                'LOGIN',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 1.5,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildBottomLinks() {
     return Column(
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Expanded(child: Divider()),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            TextButton(
+              onPressed: _handleSignUp,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
               child: Text(
-                'OR',
-                style: Theme.of(context).textTheme.bodySmall,
+                'SIGN UP',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
-            const Expanded(child: Divider()),
+            TextButton(
+              onPressed: _handleForgotPassword,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'FORGOT PASSWORD?',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
+        // Guest login option
         TextButton(
           onPressed: _handleGuestLogin,
-          child: const Text('Continue as Guest'),
-        ),
-        const SizedBox(height: 8),
-        TextButton(
-          onPressed: () async {
-            final appState = Provider.of<AppState>(context, listen: false);
-            await appState.resetAllUserData();
-            
-            // Clear form fields too
-            setState(() {
-              _emailController.clear();
-              _passwordController.clear();
-              _nameController.clear();
-              _confirmPasswordController.clear();
-              _isLoginMode = true;
-            });
-            
-            // Check if the widget is still mounted before using context
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('✅ All user data cleared! You can now register fresh accounts.'),
-                  backgroundColor: Colors.green,
-                  duration: Duration(seconds: 3),
-                ),
-              );
-            }
-          },
-          child: Text(
-            'Clear All User Data',
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const Text(
+            'Continue as Guest',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.error,
-              fontSize: 12,
+              color: Color(0xFF4ecdc4),
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
             ),
           ),
         ),
@@ -354,79 +493,33 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// Handles the primary action (login or registration) based on current mode
-  Future<void> _handlePrimaryAction() async {
+  Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       
       try {
         final appState = Provider.of<AppState>(context, listen: false);
+        final user = await appState.signInUser(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
         
-        if (_isLoginMode) {
-          // Handle login
-          final user = await appState.signInUser(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
+        if (!mounted) return;
+        
+        if (user != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Welcome back, ${user.name}!')),
           );
-          
-          if (!mounted) return;
-          
-          if (user != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Welcome back, ${user.name}!')),
-            );
-          } else {
-            // Show error from AppState if login failed
-            final error = appState.error;
-            if (error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(error),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              appState.clearError();
-            }
-          }
         } else {
-          // Handle registration
-          final user = await appState.registerUser(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            name: _nameController.text.trim(),
-          );
-          
-          if (!mounted) return;
-          
-          if (user != null) {
+          final error = appState.error;
+          if (error != null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Registration successful! You can now log in immediately. (In production, you would need to verify your email first.)'
-                ),
-                duration: Duration(seconds: 5),
-                backgroundColor: Colors.green,
+              SnackBar(
+                content: Text(error),
+                backgroundColor: Colors.red,
               ),
             );
-            
-            // Switch to login mode after successful registration
-            setState(() {
-              _isLoginMode = true;
-              _passwordController.clear();
-              _confirmPasswordController.clear();
-            });
-          } else {
-            // Show error from AppState if registration failed
-            final error = appState.error;
-            if (error != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(error),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              appState.clearError();
-            }
+            appState.clearError();
           }
         }
       } catch (e) {
@@ -435,7 +528,6 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             content: Text(e.toString()),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
           ),
         );
       } finally {
@@ -446,45 +538,76 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// Handles forgot password functionality
+  void _handleSignUp() {
+    // For now, show a simple dialog for registration
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF2a3543),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Sign Up',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Registration feature coming soon!',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'For now, you can:',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '• Continue as Guest\n• Use demo@studypals.com / password',
+              style: TextStyle(color: Color(0xFF4ecdc4), fontSize: 14),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: Color(0xFF4ecdc4), fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
     
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter your email address first'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text('Please enter your email address first'),
+          backgroundColor: const Color(0xFF4ecdc4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
       return;
     }
 
-    try {
-      final appState = Provider.of<AppState>(context, listen: false);
-      await appState.resetPassword(email: email);
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password reset instructions sent to your email'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Password reset feature coming soon!'),
+        backgroundColor: const Color(0xFF4ecdc4),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
   }
 
-  /// Handles guest login for users who want to try the app without creating an account
   void _handleGuestLogin() {
-    // Import User model for guest creation
     final guestUser = User(
       id: 'guest',
       email: 'guest@studypals.com',
@@ -495,14 +618,10 @@ class _LoginScreenState extends State<LoginScreen> {
     Provider.of<AppState>(context, listen: false).login(guestUser);
   }
 
-  /// Cleanup method called when widget is disposed
-  /// Properly disposes all text controllers to prevent memory leaks
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _nameController.dispose();
-    _confirmPasswordController.dispose();
     super.dispose();
   }
 }

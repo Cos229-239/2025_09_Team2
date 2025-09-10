@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../services/ai_service.dart';
-import '../models/card.dart';
-import '../models/user.dart';
+import 'package:studypals/services/ai_service.dart';
+import 'package:studypals/models/card.dart';
+import 'package:studypals/models/user.dart';
 
 /// StudyPals AI Provider for managing intelligent study features
 class StudyPalsAIProvider with ChangeNotifier {
@@ -26,6 +26,7 @@ class StudyPalsAIProvider with ChangeNotifier {
   String? get lastError => _lastError;
   List<FlashCard> get aiGeneratedCards => _aiGeneratedCards;
   AIProvider get currentProvider => _currentProvider;
+  AIService get aiService => _aiService; // Added getter for AI service
   
   /// Configure AI service
   Future<void> configureAI({

@@ -9,7 +9,7 @@
 /// - Theme configuration
 /// - Authentication wrapper
 /// 
-/// @author StudyPals Development Team
+/// @author StudyPals Development(s) plural Team
 /// @version 1.0.0
 library;
 
@@ -21,6 +21,7 @@ import 'package:studypals/providers/note_provider.dart';
 import 'package:studypals/providers/deck_provider.dart';
 import 'package:studypals/providers/pet_provider.dart';
 import 'package:studypals/providers/srs_provider.dart';
+import 'package:studypals/providers/ai_provider.dart';
 import 'package:studypals/screens/auth/auth_wrapper.dart';
 import 'package:studypals/theme/app_theme.dart';
 import 'package:studypals/services/database_service.dart';
@@ -70,6 +71,9 @@ class StudyPalsApp extends StatelessWidget {
         // Gamification providers
         ChangeNotifierProvider(create: (_) => PetProvider()),
         ChangeNotifierProvider(create: (_) => SRSProvider()),
+        
+        // AI-powered features
+        ChangeNotifierProvider(create: (_) => AIProviderManager()),
       ],
       child: MaterialApp(
         title: 'StudyPals',
