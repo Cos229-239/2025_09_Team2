@@ -42,13 +42,13 @@ class AppState extends ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       final user = await _authService.registerWithEmail(
         name: name,
         email: email,
         password: password,
       );
-      
+
       // Don't set current user - they need to verify email first
       notifyListeners();
       return user;
@@ -67,12 +67,12 @@ class AppState extends ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       final user = await _authService.signInWithEmail(
         email: email,
         password: password,
       );
-      
+
       _currentUser = user;
       notifyListeners();
       return user;
@@ -88,7 +88,7 @@ class AppState extends ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       await _authService.resetPassword(email: email);
     } catch (e) {
       _setError(e.toString());
@@ -126,12 +126,12 @@ class AppState extends ChangeNotifier {
     try {
       _setLoading(true);
       _clearError();
-      
+
       final updatedUser = await _authService.updateProfile(
         name: name,
         email: email,
       );
-      
+
       if (updatedUser != null) {
         _currentUser = updatedUser;
         notifyListeners();

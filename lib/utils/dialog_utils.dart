@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 class DialogUtils {
   /// Show a success dialog with custom message
   static void showSuccessDialog(
-    BuildContext context, 
-    String title, 
+    BuildContext context,
+    String title,
     String message, {
     VoidCallback? onOk,
     String? actionText,

@@ -3,11 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../providers/deck_provider.dart';
 import '../../models/deck.dart';
-<<<<<<< HEAD
-import '../../utils/dialog_utils.dart';
 import '../../mixins/loading_state_mixin.dart';
-=======
->>>>>>> backend-features
 import 'ai_settings_widget.dart';
 
 /// AI-Powered Flashcard Generator
@@ -18,14 +14,14 @@ class AIFlashcardGenerator extends StatefulWidget {
   State<AIFlashcardGenerator> createState() => _AIFlashcardGeneratorState();
 }
 
-class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator> 
+class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     with LoadingStateMixin {
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
   String _selectedSubject = 'General';
   int _cardCount = 5;
   String? _generationError;
-  
+
   final List<String> _subjects = [
     'General',
     'Mathematics',
@@ -57,23 +53,23 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     }
 
     setState(() {
-      _isGenerating = true;
+      setLoading(true);
       _generationError = null;
     });
-
     try {
-      final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
+      final aiProvider =
+          Provider.of<StudyPalsAIProvider>(context, listen: false);
       final deckProvider = Provider.of<DeckProvider>(context, listen: false);
-      
+
       // Generate flashcards using AI
       final flashcards = await aiProvider.generateFlashcardsFromText(
-        _textController.text.isNotEmpty 
-            ? _textController.text 
+        _textController.text.isNotEmpty
+            ? _textController.text
             : _topicController.text,
         count: _cardCount,
         subject: _selectedSubject,
       );
-      
+
       if (flashcards.isNotEmpty) {
         // Create a new deck for the generated cards
         final newDeck = Deck(
@@ -84,17 +80,18 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        
+
         // Add the deck to the deck provider
         deckProvider.addDeck(newDeck);
-        
+
         // Show success dialog
         if (mounted) {
           _showSuccessDialog(flashcards.length);
         }
       } else {
         setState(() {
-          _generationError = 'No flashcards were generated. Please try a different topic.';
+          _generationError =
+              'No flashcards were generated. Please try a different topic.';
         });
       }
     } catch (e) {
@@ -103,7 +100,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       });
     } finally {
       setState(() {
-        _isGenerating = false;
+        setLoading(false);
       });
     }
   }
@@ -117,17 +114,18 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     }
 
     setState(() {
-      _isGenerating = true;
+      setLoading(true);
       _generationError = null;
     });
 
     try {
-      final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
+      final aiProvider =
+          Provider.of<StudyPalsAIProvider>(context, listen: false);
       final response = await aiProvider.aiService.debugFlashcardGeneration(
         _topicController.text.trim(),
         _selectedSubject,
       );
-      
+
       // Show the raw response in a dialog
       if (mounted) {
         showDialog(
@@ -152,7 +150,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       });
     } finally {
       setState(() {
-        _isGenerating = false;
+        setLoading(false);
       });
     }
   }
@@ -230,8 +228,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                   Text(
                     'AI Flashcard Generator',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -280,14 +278,15 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     const SizedBox(width: 8),
                     Text(
                       'AI Flashcard Generator',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Topic input
                 TextField(
                   controller: _topicController,
@@ -299,20 +298,21 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Text input for source material
                 TextField(
                   controller: _textController,
                   maxLines: 4,
                   decoration: const InputDecoration(
                     labelText: 'Source Text (Optional)',
-                    hintText: 'Paste notes, textbook excerpts, or any material to generate flashcards from...',
+                    hintText:
+                        'Paste notes, textbook excerpts, or any material to generate flashcards from...',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.text_snippet),
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Options row
                 Row(
                   children: [
@@ -340,7 +340,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                       ),
                     ),
                     const SizedBox(width: 16),
-                    
+
                     // Card count slider
                     Expanded(
                       child: Column(
@@ -366,7 +366,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     ),
                   ],
                 ),
-                
+
                 // Error message
                 if (_generationError != null)
                   Container(
@@ -390,32 +390,33 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                       ],
                     ),
                   ),
-                
+
                 // Generate button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _isGenerating ? null : _generateFlashcards,
-                    icon: _isGenerating
+                    onPressed: isLoading ? null : _generateFlashcards,
+                    icon: isLoading
                         ? const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.auto_awesome),
-                    label: Text(_isGenerating ? 'Generating...' : 'Generate Flashcards'),
+                    label: Text(
+                        isLoading ? 'Generating...' : 'Generate Flashcards'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
-                
+
                 // Debug button
                 const SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton.icon(
-                    onPressed: _isGenerating ? null : _debugAI,
+                    onPressed: isLoading ? null : _debugAI,
                     icon: const Icon(Icons.bug_report),
                     label: const Text('Debug AI Response'),
                     style: OutlinedButton.styleFrom(
@@ -423,13 +424,14 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     ),
                   ),
                 ),
-                
+
                 // Tips
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    color:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(

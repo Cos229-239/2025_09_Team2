@@ -41,7 +41,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: SingleChildScrollView(
             child: SizedBox(
-              height: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top,
+              height: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top,
               child: Column(
                 children: [
                   const SizedBox(height: 40),
@@ -169,7 +170,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 color: const Color(0xFFE67E22),
                                                 width: 1,
                                               ),
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                           ),
                                         ),
@@ -181,7 +183,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 color: const Color(0xFFE67E22),
                                                 width: 1,
                                               ),
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                             ),
                                           ),
                                         ),
@@ -248,7 +251,8 @@ class _LoginScreenState extends State<LoginScreen> {
             letterSpacing: 1.0,
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         ),
         keyboardType: TextInputType.emailAddress,
         validator: (value) {
@@ -287,14 +291,16 @@ class _LoginScreenState extends State<LoginScreen> {
             letterSpacing: 1.0,
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           suffixIcon: IconButton(
             icon: Icon(
               _obscurePassword ? Icons.visibility : Icons.visibility_off,
               color: const Color(0xFF16A085),
               size: 20,
             ),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
         ),
         validator: (value) {
@@ -402,16 +408,16 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      
+
       try {
         final appState = Provider.of<AppState>(context, listen: false);
         final user = await appState.signInUser(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
-        
+
         if (!mounted) return;
-        
+
         if (user != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Welcome back, ${user.name}!')),
@@ -488,7 +494,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
-    
+
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -514,7 +520,7 @@ class _LoginScreenState extends State<LoginScreen> {
       name: 'Guest User',
       isEmailVerified: false,
     );
-    
+
     Provider.of<AppState>(context, listen: false).login(guestUser);
   }
 

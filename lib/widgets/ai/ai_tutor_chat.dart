@@ -13,19 +13,19 @@ class AITutorChat extends StatefulWidget {
 class _AITutorChatState extends State<AITutorChat> {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
-  
+
   @override
   void dispose() {
     _messageController.dispose();
     super.dispose();
   }
-  
+
   void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
-    
+
     final userMessage = _messageController.text.trim();
     _messageController.clear();
-    
+
     setState(() {
       _messages.add(ChatMessage(
         text: userMessage,
@@ -33,7 +33,7 @@ class _AITutorChatState extends State<AITutorChat> {
         timestamp: DateTime.now(),
       ));
     });
-    
+
     // Add typing indicator
     setState(() {
       _messages.add(ChatMessage(
@@ -43,11 +43,11 @@ class _AITutorChatState extends State<AITutorChat> {
         isTyping: true,
       ));
     });
-    
+
     // Get AI response (simplified for now)
     final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
     final response = await _getAIResponse(userMessage, aiProvider);
-    
+
     setState(() {
       // Remove typing indicator
       _messages.removeWhere((msg) => msg.isTyping);
@@ -59,14 +59,20 @@ class _AITutorChatState extends State<AITutorChat> {
       ));
     });
   }
-  
-  Future<String> _getAIResponse(String message, StudyPalsAIProvider aiProvider) async {
+
+  Future<String> _getAIResponse(
+      String message, StudyPalsAIProvider aiProvider) async {
     // This is a simplified AI response - you can enhance this
     if (message.toLowerCase().contains('study tip')) {
       return await aiProvider.getStudyRecommendation(
         // You'll need to pass actual user and stats
         null as dynamic, // Replace with actual user
-        {'cardsToday': 10, 'successRate': 85, 'streak': 5, 'weakSubjects': ['Math']},
+        {
+          'cardsToday': 10,
+          'successRate': 85,
+          'streak': 5,
+          'weakSubjects': ['Math']
+        },
       );
     } else if (message.toLowerCase().contains('motivation')) {
       return await aiProvider.getPetMessage(
@@ -77,7 +83,7 @@ class _AITutorChatState extends State<AITutorChat> {
       return "I'm here to help with your studies! Ask me for study tips, motivation, or help creating flashcards.";
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Consumer<StudyPalsAIProvider>(
@@ -104,7 +110,7 @@ class _AITutorChatState extends State<AITutorChat> {
             ),
           );
         }
-        
+
         return Card(
           child: Column(
             children: [
@@ -113,11 +119,13 @@ class _AITutorChatState extends State<AITutorChat> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(12)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.smart_toy, color: Theme.of(context).primaryColor),
+                    Icon(Icons.smart_toy,
+                        color: Theme.of(context).primaryColor),
                     const SizedBox(width: 8),
                     const Text(
                       'AI Study Assistant',
@@ -126,7 +134,7 @@ class _AITutorChatState extends State<AITutorChat> {
                   ],
                 ),
               ),
-              
+
               // Messages
               Expanded(
                 child: ListView.builder(
@@ -138,7 +146,7 @@ class _AITutorChatState extends State<AITutorChat> {
                   },
                 ),
               ),
-              
+
               // Input area
               Container(
                 padding: const EdgeInsets.all(8),
@@ -181,10 +189,11 @@ class _AITutorChatState extends State<AITutorChat> {
       },
     );
   }
-  
+
   Widget _buildMessageBubble(ChatMessage message) {
     return Align(
-      alignment: message.isFromUser ? Alignment.centerRight : Alignment.centerLeft,
+      alignment:
+          message.isFromUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -232,7 +241,7 @@ class ChatMessage {
   final bool isFromUser;
   final DateTime timestamp;
   final bool isTyping;
-  
+
   ChatMessage({
     required this.text,
     required this.isFromUser,

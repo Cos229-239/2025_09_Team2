@@ -18,9 +18,9 @@ class FlashcardStudyScreen extends StatefulWidget {
 class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   int _currentCardIndex = 0;
   bool _showAnswer = false;
-  
+
   FlashCard get _currentCard => widget.deck.cards[_currentCardIndex];
-  
+
   void _nextCard() {
     setState(() {
       if (_currentCardIndex < widget.deck.cards.length - 1) {
@@ -32,7 +32,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       }
     });
   }
-  
+
   void _previousCard() {
     setState(() {
       if (_currentCardIndex > 0) {
@@ -41,19 +41,20 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       }
     });
   }
-  
+
   void _toggleAnswer() {
     setState(() {
       _showAnswer = !_showAnswer;
     });
   }
-  
+
   void _showCompletionDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Deck Complete!'),
-        content: Text('You\'ve finished studying "${widget.deck.title}". Great job!'),
+        content: Text(
+            'You\'ve finished studying "${widget.deck.title}". Great job!'),
         actions: [
           TextButton(
             onPressed: () {
@@ -96,7 +97,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         ),
       );
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.deck.title),
@@ -122,9 +123,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 Theme.of(context).primaryColor,
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Card display area
             Expanded(
               child: Center(
@@ -143,8 +144,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: _showAnswer 
-                                ? Colors.green.shade100 
+                            color: _showAnswer
+                                ? Colors.green.shade100
                                 : Colors.blue.shade100,
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -152,21 +153,23 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                             _showAnswer ? 'ANSWER' : 'QUESTION',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: _showAnswer 
-                                  ? Colors.green.shade700 
+                              color: _showAnswer
+                                  ? Colors.green.shade700
                                   : Colors.blue.shade700,
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Card content
                         Expanded(
                           child: Center(
                             child: SingleChildScrollView(
                               child: Text(
-                                _showAnswer ? _currentCard.back : _currentCard.front,
+                                _showAnswer
+                                    ? _currentCard.back
+                                    : _currentCard.front,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   height: 1.4,
@@ -182,9 +185,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Control buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -199,11 +202,12 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                     foregroundColor: Colors.white,
                   ),
                 ),
-                
+
                 // Show/Hide answer button
                 ElevatedButton.icon(
                   onPressed: _toggleAnswer,
-                  icon: Icon(_showAnswer ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(
+                      _showAnswer ? Icons.visibility_off : Icons.visibility),
                   label: Text(_showAnswer ? 'Hide Answer' : 'Show Answer'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
@@ -214,13 +218,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                     ),
                   ),
                 ),
-                
+
                 // Next button
                 ElevatedButton.icon(
                   onPressed: _nextCard,
                   icon: const Icon(Icons.arrow_forward),
-                  label: Text(_currentCardIndex < widget.deck.cards.length - 1 
-                      ? 'Next' 
+                  label: Text(_currentCardIndex < widget.deck.cards.length - 1
+                      ? 'Next'
                       : 'Finish'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade600,
@@ -229,9 +233,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Study tips
             Container(
               padding: const EdgeInsets.all(12),

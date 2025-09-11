@@ -8,7 +8,7 @@ mixin LoadingStateMixin<T extends StatefulWidget> on State<T> {
 
   /// Current loading state
   bool get isLoading => _isLoading;
-  
+
   /// Current error message
   String? get error => _error;
 
@@ -43,8 +43,8 @@ mixin LoadingStateMixin<T extends StatefulWidget> on State<T> {
   }
 
   /// Execute an async operation with automatic loading/error handling
-  Future<T?> executeWithLoading<T>(
-    Future<T> Function() operation, {
+  Future<R?> executeWithLoading<R>(
+    Future<R> Function() operation, {
     String? errorPrefix,
   }) async {
     setLoading(true);
@@ -53,9 +53,8 @@ mixin LoadingStateMixin<T extends StatefulWidget> on State<T> {
       setLoading(false);
       return result;
     } catch (e) {
-      final errorMessage = errorPrefix != null 
-          ? '$errorPrefix: $e' 
-          : e.toString();
+      final errorMessage =
+          errorPrefix != null ? '$errorPrefix: $e' : e.toString();
       setError(errorMessage);
       return null;
     }
