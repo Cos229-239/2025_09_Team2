@@ -1,12 +1,14 @@
 {
-    "dart.flutterSdkPath": "C:\\Users\\isolo\\source\\repos\\flutter",
-    "dart.debugExternalPackageLibraries": false,
-    "dart.debugSdkLibraries": false,
-    "dart.showInspectorNotificationsForWidgetErrors": true,
-    "flutter.experiments": {
-        "enable-android-view-debugging": true
-    },
-    "files.associations": {
-        "*.dart": "dart"
+    "dart.flutterSdkPath": null,
+    "dart.lineLength": 80,
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [80],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": "off"
     }
 }
