@@ -14,7 +14,7 @@ class TaskProvider extends ChangeNotifier {
   // Private list storing all tasks loaded from the database
   // Starts empty and gets populated when loadTasks() is called
   List<Task> _tasks = [];
-  
+
   // Private boolean tracking whether an async operation is in progress
   // Used to show loading indicators in the UI
   bool _isLoading = false;
@@ -23,24 +23,25 @@ class TaskProvider extends ChangeNotifier {
   /// UI widgets use this to display task lists
   /// @return Immutable list of all tasks
   List<Task> get tasks => _tasks;
-  
+
   /// Public getter indicating if any async operation is currently running
   /// UI can show loading spinners or disable buttons when this is true
   /// @return true if loading, false if ready for user interaction
   bool get isLoading => _isLoading;
-  
+
   /// Computed property returning tasks due today that aren't completed
   /// Filters tasks to show only those with today's date that need attention
   /// @return List of incomplete tasks due today
   List<Task> get todayTasks {
-    final today = DateTime.now();                      // Get current date and time
-    return _tasks.where((task) {                       // Filter the task list
-      if (task.dueAt == null) return false;            // Skip tasks with no due date
-      return task.dueAt!.day == today.day &&           // Same day
-             task.dueAt!.month == today.month &&       // Same month
-             task.dueAt!.year == today.year &&         // Same year
-             task.status != TaskStatus.completed;      // Not already completed
-    }).toList();                                       // Convert filtered result to list
+    final today = DateTime.now(); // Get current date and time
+    return _tasks.where((task) {
+      // Filter the task list
+      if (task.dueAt == null) return false; // Skip tasks with no due date
+      return task.dueAt!.day == today.day && // Same day
+          task.dueAt!.month == today.month && // Same month
+          task.dueAt!.year == today.year && // Same year
+          task.status != TaskStatus.completed; // Not already completed
+    }).toList(); // Convert filtered result to list
   }
 
   /// Computed property returning all tasks that haven't been started
@@ -54,9 +55,9 @@ class TaskProvider extends ChangeNotifier {
   /// This is typically called when the app starts or when refreshing data
   /// Shows loading state during the operation and handles errors gracefully
   Future<void> loadTasks() async {
-    _isLoading = true;                                  // Set loading flag to show UI indicators
-    notifyListeners();                                  // Update UI to show loading state
-    
+    _isLoading = true; // Set loading flag to show UI indicators
+    notifyListeners(); // Update UI to show loading state
+
     try {
       // Attempt to fetch all tasks from the database repository
       _tasks = await TaskRepository.getAllTasks();
@@ -66,8 +67,8 @@ class TaskProvider extends ChangeNotifier {
       developer.log('Error loading tasks: $e', name: 'TaskProvider');
     } finally {
       // Always clear loading state, whether successful or not
-      _isLoading = false;                               // Clear loading flag
-      notifyListeners();                                // Update UI to hide loading state
+      _isLoading = false; // Clear loading flag
+      notifyListeners(); // Update UI to hide loading state
     }
   }
 
@@ -79,14 +80,14 @@ class TaskProvider extends ChangeNotifier {
     try {
       // First save to database to ensure persistence
       await TaskRepository.insertTask(task);
-      
+
       // Add to local list only after successful database insertion
-      _tasks.add(task);                                 // Add to local task list
-      notifyListeners();                                // Update UI to show new task
+      _tasks.add(task); // Add to local task list
+      notifyListeners(); // Update UI to show new task
     } catch (e) {
       // Log the error for debugging purposes
       developer.log('Error adding task: $e', name: 'TaskProvider');
-      
+
       // Rethrow the exception so calling code can handle the error
       // This allows UI to show error messages to the user
       rethrow;
@@ -101,19 +102,20 @@ class TaskProvider extends ChangeNotifier {
     try {
       // First update in database to ensure persistence
       await TaskRepository.updateTask(task);
-      
+
       // Find the task in local list by matching ID
       final index = _tasks.indexWhere((t) => t.id == task.id);
-      
+
       // Update local list only if task was found
-      if (index != -1) {                                // Check if task was found
-        _tasks[index] = task;                           // Replace with updated task
-        notifyListeners();                              // Update UI to show changes
+      if (index != -1) {
+        // Check if task was found
+        _tasks[index] = task; // Replace with updated task
+        notifyListeners(); // Update UI to show changes
       }
     } catch (e) {
       // Log the error for debugging purposes
       developer.log('Error updating task: $e', name: 'TaskProvider');
-      
+
       // Rethrow the exception so calling code can handle the error
       rethrow;
     }
@@ -127,14 +129,15 @@ class TaskProvider extends ChangeNotifier {
     try {
       // First delete from database to ensure permanent removal
       await TaskRepository.deleteTask(taskId);
-      
+
       // Remove from local list only after successful database deletion
-      _tasks.removeWhere((task) => task.id == taskId);  // Filter out the deleted task
-      notifyListeners();                                // Update UI to hide deleted task
+      _tasks.removeWhere(
+          (task) => task.id == taskId); // Filter out the deleted task
+      notifyListeners(); // Update UI to hide deleted task
     } catch (e) {
       // Log the error for debugging purposes
       developer.log('Error deleting task: $e', name: 'TaskProvider');
-      
+
       // Rethrow the exception so calling code can handle the error
       rethrow;
     }
@@ -146,10 +149,10 @@ class TaskProvider extends ChangeNotifier {
   Future<void> completeTask(String taskId) async {
     // Find the task in the local list by ID
     final task = _tasks.firstWhere((t) => t.id == taskId);
-    
+
     // Create a new task object with completed status (immutable update pattern)
     final completedTask = task.copyWith(status: TaskStatus.completed);
-    
+
     // Use the existing updateTask method to save the status change
     await updateTask(completedTask);
   }

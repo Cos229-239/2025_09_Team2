@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 // Import Provider package for state management across the app
 import 'package:provider/provider.dart';
 // Import all the state providers that manage different parts of app data
-import 'package:studypals/providers/app_state.dart';      // Global app state (auth, user session)
-import 'package:studypals/providers/task_provider.dart';  // Task management state
-import 'package:studypals/providers/note_provider.dart';  // Notes management state
-import 'package:studypals/providers/deck_provider.dart';  // Flashcard decks state
-import 'package:studypals/providers/pet_provider.dart';   // Virtual pet state
-import 'package:studypals/providers/srs_provider.dart';   // Spaced repetition system state
-import 'package:studypals/providers/ai_provider.dart';    // AI integration state
+import 'package:studypals/providers/app_state.dart'; // Global app state (auth, user session)
+import 'package:studypals/providers/task_provider.dart'; // Task management state
+import 'package:studypals/providers/note_provider.dart'; // Notes management state
+import 'package:studypals/providers/deck_provider.dart'; // Flashcard decks state
+import 'package:studypals/providers/pet_provider.dart'; // Virtual pet state
+import 'package:studypals/providers/srs_provider.dart'; // Spaced repetition system state
+import 'package:studypals/providers/ai_provider.dart'; // AI integration state
 // Import authentication wrapper to handle login/logout flow
 import 'package:studypals/screens/auth/auth_wrapper.dart';
 // Import app theme configuration for consistent styling
@@ -22,11 +22,11 @@ import 'package:studypals/services/database_service.dart';
 void main() async {
   // Ensure Flutter framework is initialized before running async operations
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize database service for storing user data locally
   // This must complete before the app starts to ensure data is available
   await DatabaseService.initialize();
-  
+
   // Launch the main app widget
   runApp(const MyApp());
 }

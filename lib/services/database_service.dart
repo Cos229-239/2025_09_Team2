@@ -14,10 +14,10 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 class DatabaseService {
   // Static database instance - singleton pattern ensures one database connection
   static Database? _database;
-  
+
   // Database file name stored on device/browser
   static const String _dbName = 'studypals.db';
-  
+
   // Database schema version - increment when making schema changes
   static const int _dbVersion = 1;
 
@@ -39,13 +39,13 @@ class DatabaseService {
   static Future<Database> get database async {
     // Return existing database if already initialized
     if (_database != null) return _database!;
-    
+
     // Ensure platform-specific initialization is complete
     await initialize();
-    
+
     // Create and configure the database
     _database = await _initDatabase();
-    
+
     return _database!;
   }
 
@@ -55,16 +55,16 @@ class DatabaseService {
   static Future<Database> _initDatabase() async {
     // Get platform-appropriate directory for database files
     final dbPath = await getDatabasesPath();
-    
+
     // Construct full path to database file
     final path = join(dbPath, _dbName);
 
     // Open database with configuration
     return await openDatabase(
-      path,                    // Full path to database file
-      version: _dbVersion,     // Schema version for migration tracking
-      onCreate: _onCreate,     // Callback when database is first created
-      onUpgrade: _onUpgrade,   // Callback when database version changes
+      path, // Full path to database file
+      version: _dbVersion, // Schema version for migration tracking
+      onCreate: _onCreate, // Callback when database is first created
+      onUpgrade: _onUpgrade, // Callback when database version changes
     );
   }
 
@@ -73,7 +73,6 @@ class DatabaseService {
   /// @param db - Database instance to execute CREATE TABLE statements on
   /// @param version - Version number (currently unused)
   static Future<void> _onCreate(Database db, int version) async {
-    
     // Users table - stores user profile and preferences
     await db.execute('''
       CREATE TABLE users (
@@ -200,7 +199,8 @@ class DatabaseService {
   /// @param db - Database instance to perform migrations on
   /// @param oldVersion - Previous schema version
   /// @param newVersion - Target schema version
-  static Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  static Future<void> _onUpgrade(
+      Database db, int oldVersion, int newVersion) async {
     // Handle database migrations here when schema changes are needed
     // Example: if (oldVersion < 2) { await db.execute('ALTER TABLE...'); }
   }

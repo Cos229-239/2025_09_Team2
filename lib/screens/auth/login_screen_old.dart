@@ -24,17 +24,21 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   // Form key for validation - uniquely identifies the form for validation methods
   final _formKey = GlobalKey<FormState>();
-  
+
   // Text controllers for form input fields
-  final _emailController = TextEditingController();     // Email input management
-  final _passwordController = TextEditingController();  // Password input management
-  final _nameController = TextEditingController();      // Name input for registration
-  final _confirmPasswordController = TextEditingController(); // Password confirmation
-  
+  final _emailController = TextEditingController(); // Email input management
+  final _passwordController =
+      TextEditingController(); // Password input management
+  final _nameController =
+      TextEditingController(); // Name input for registration
+  final _confirmPasswordController =
+      TextEditingController(); // Password confirmation
+
   // UI state management
-  bool _isLoading = false;        // Loading state during auth operations
-  bool _isLoginMode = true;       // Toggle between login (true) and register (false) modes
-  bool _obscurePassword = true;   // Toggle password visibility
+  bool _isLoading = false; // Loading state during auth operations
+  bool _isLoginMode =
+      true; // Toggle between login (true) and register (false) modes
+  bool _obscurePassword = true; // Toggle password visibility
   bool _obscureConfirmPassword = true; // Toggle confirm password visibility
 
   /// Builds the enhanced login/registration screen with mode switching
@@ -44,7 +48,8 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView( // Allow scrolling for smaller screens
+        child: SingleChildScrollView(
+          // Allow scrolling for smaller screens
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
@@ -56,23 +61,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 40),
                 _buildAppBranding(),
                 const SizedBox(height: 48),
-                
+
                 // Mode toggle tabs (Login/Register)
                 _buildModeToggle(),
                 const SizedBox(height: 32),
-                
+
                 // Form fields based on current mode
                 _buildFormFields(),
                 const SizedBox(height: 24),
-                
+
                 // Primary action button (Login/Register)
                 _buildPrimaryButton(),
                 const SizedBox(height: 16),
-                
+
                 // Secondary actions
                 _buildSecondaryActions(),
                 const SizedBox(height: 24),
-                
+
                 // Guest login option
                 _buildGuestLogin(),
               ],
@@ -122,7 +127,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _isLoginMode ? Theme.of(context).primaryColor : Colors.transparent,
+                  color: _isLoginMode
+                      ? Theme.of(context).primaryColor
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: Text(
@@ -142,7 +149,9 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: !_isLoginMode ? Theme.of(context).primaryColor : Colors.transparent,
+                  color: !_isLoginMode
+                      ? Theme.of(context).primaryColor
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: Text(
@@ -182,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 16),
         ],
-        
+
         // Email field
         TextFormField(
           controller: _emailController,
@@ -202,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
         const SizedBox(height: 16),
-        
+
         // Password field
         TextFormField(
           controller: _passwordController,
@@ -210,8 +219,10 @@ class _LoginScreenState extends State<LoginScreen> {
             labelText: 'Password',
             prefixIcon: const Icon(Icons.lock),
             suffixIcon: IconButton(
-              icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off),
+              onPressed: () =>
+                  setState(() => _obscurePassword = !_obscurePassword),
             ),
           ),
           obscureText: _obscurePassword,
@@ -225,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
             return null;
           },
         ),
-        
+
         // Confirm password field (only for registration)
         if (!_isLoginMode) ...[
           const SizedBox(height: 16),
@@ -235,8 +246,11 @@ class _LoginScreenState extends State<LoginScreen> {
               labelText: 'Confirm Password',
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                icon: Icon(_obscureConfirmPassword
+                    ? Icons.visibility
+                    : Icons.visibility_off),
+                onPressed: () => setState(
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword),
               ),
             ),
             obscureText: _obscureConfirmPassword,
@@ -321,7 +335,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onPressed: () async {
             final appState = Provider.of<AppState>(context, listen: false);
             await appState.resetAllUserData();
-            
+
             // Clear form fields too
             setState(() {
               _emailController.clear();
@@ -330,12 +344,13 @@ class _LoginScreenState extends State<LoginScreen> {
               _confirmPasswordController.clear();
               _isLoginMode = true;
             });
-            
+
             // Check if the widget is still mounted before using context
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('✅ All user data cleared! You can now register fresh accounts.'),
+                  content: Text(
+                      '✅ All user data cleared! You can now register fresh accounts.'),
                   backgroundColor: Colors.green,
                   duration: Duration(seconds: 3),
                 ),
@@ -358,19 +373,19 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handlePrimaryAction() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
-      
+
       try {
         final appState = Provider.of<AppState>(context, listen: false);
-        
+
         if (_isLoginMode) {
           // Handle login
           final user = await appState.signInUser(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
-          
+
           if (!mounted) return;
-          
+
           if (user != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Welcome back, ${user.name}!')),
@@ -395,20 +410,19 @@ class _LoginScreenState extends State<LoginScreen> {
             password: _passwordController.text,
             name: _nameController.text.trim(),
           );
-          
+
           if (!mounted) return;
-          
+
           if (user != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
-                  'Registration successful! You can now log in immediately. (In production, you would need to verify your email first.)'
-                ),
+                    'Registration successful! You can now log in immediately. (In production, you would need to verify your email first.)'),
                 duration: Duration(seconds: 5),
                 backgroundColor: Colors.green,
               ),
             );
-            
+
             // Switch to login mode after successful registration
             setState(() {
               _isLoginMode = true;
@@ -449,7 +463,7 @@ class _LoginScreenState extends State<LoginScreen> {
   /// Handles forgot password functionality
   Future<void> _handleForgotPassword() async {
     final email = _emailController.text.trim();
-    
+
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -464,7 +478,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final appState = Provider.of<AppState>(context, listen: false);
       await appState.resetPassword(email: email);
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Password reset instructions sent to your email'),
@@ -491,7 +505,7 @@ class _LoginScreenState extends State<LoginScreen> {
       name: 'Guest User',
       isEmailVerified: false,
     );
-    
+
     Provider.of<AppState>(context, listen: false).login(guestUser);
   }
 

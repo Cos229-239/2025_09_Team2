@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 
+
 // Conditional import - only available on web platform
 import 'stub_html.dart' if (dart.library.html) 'dart:html';
 
@@ -17,7 +18,7 @@ class LocalAuthService {
   static const String _devEmail = 'test@studypals.com';
   static const String _devPassword = 'password123';
   static const String _devName = 'Test User';
-  
+
   // Demo account for the new UI
   static const String _demoEmail = 'demo@studypals.com';
   static const String _demoPassword = 'password';
@@ -33,10 +34,10 @@ class LocalAuthService {
   // Initialize development account if needed
   Future<void> _initDevAccount() async {
     if (!_devMode || !kDebugMode) return;
-    
+
     final usersJson = await _getWebSafeString(_usersKey) ?? '{}';
     final users = Map<String, dynamic>.from(json.decode(usersJson));
-    
+
     // Create test account
     if (!users.containsKey(_devEmail)) {
       _debugLog('DEV MODE: Creating test account...');
@@ -47,11 +48,12 @@ class LocalAuthService {
         isEmailVerified: true,
         createdAt: DateTime.now(),
       );
-      
+
       await _saveUser(devUser, _devPassword);
-      _debugLog('DEV MODE: Test account created - Email: $_devEmail, Password: $_devPassword');
+      _debugLog(
+          'DEV MODE: Test account created - Email: $_devEmail, Password: $_devPassword');
     }
-    
+
     // Create demo account
     if (!users.containsKey(_demoEmail)) {
       _debugLog('DEV MODE: Creating demo account...');
@@ -62,14 +64,16 @@ class LocalAuthService {
         isEmailVerified: true,
         createdAt: DateTime.now(),
       );
-      
+
       await _saveUser(demoUser, _demoPassword);
-      _debugLog('DEV MODE: Demo account created - Email: $_demoEmail, Password: $_demoPassword');
+      _debugLog(
+          'DEV MODE: Demo account created - Email: $_demoEmail, Password: $_demoPassword');
     }
   }
 
-  // Web-safe storage methods that use localStorage directly on web
+  // Web-safe storage methods using SharedPreferences
   Future<void> _setWebSafeString(String key, String value) async {
+
     if (kIsWeb) {
       // Use localStorage directly for web to ensure persistence
       try {
@@ -219,6 +223,38 @@ class LocalAuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(key);
     }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(key, value);
+    _debugLog('Saved to SharedPreferences: $key');
+  }
+
+  Future<String?> _getWebSafeString(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString(key);
+    _debugLog(
+        'Read from SharedPreferences: $key = ${value != null ? "found" : "null"}');
+    return value;
+  }
+
+  Future<void> _setWebSafeBool(String key, bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(key, value);
+    _debugLog('Saved bool to SharedPreferences: $key = $value');
+  }
+
+  Future<bool> _getWebSafeBool(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getBool(key) ?? false;
+    _debugLog('Read bool from SharedPreferences: $key = $value');
+    return value;
+  }
+
+  Future<void> _removeWebSafeKey(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(key);
+    _debugLog('Removed from SharedPreferences: $key');
+
   }
 
   // Hash password for storage
@@ -232,7 +268,7 @@ class LocalAuthService {
   Future<void> _saveUser(User user, String password) async {
     final usersJson = await _getWebSafeString(_usersKey) ?? '{}';
     final users = Map<String, dynamic>.from(json.decode(usersJson));
-    
+
     users[user.email] = {
       'id': user.id,
       'name': user.name,
@@ -241,7 +277,7 @@ class LocalAuthService {
       'isEmailVerified': user.isEmailVerified,
       'createdAt': user.createdAt.toIso8601String(),
     };
-    
+
     await _setWebSafeString(_usersKey, json.encode(users));
   }
 
@@ -249,14 +285,15 @@ class LocalAuthService {
   Future<User?> _getUser(String email) async {
     final usersJson = await _getWebSafeString(_usersKey) ?? '{}';
     final users = Map<String, dynamic>.from(json.decode(usersJson));
-    
+
     if (users.containsKey(email)) {
       final userData = users[email];
       return User(
         id: userData['id'],
         name: userData['name'],
         email: userData['email'],
-        isEmailVerified: userData['isEmailVerified'] ?? false, // Default to false for safety
+        isEmailVerified:
+            userData['isEmailVerified'] ?? false, // Default to false for safety
         createdAt: DateTime.parse(userData['createdAt']),
       );
     }
@@ -271,7 +308,7 @@ class LocalAuthService {
   }) async {
     try {
       _debugLog('Attempting to register user: $email');
-      
+
       // Check if user already exists
       final existingUser = await _getUser(email);
       if (existingUser != null) {
@@ -288,22 +325,24 @@ class LocalAuthService {
         createdAt: DateTime.now(),
       );
 
-      _debugLog('Created user object: ${user.email}, verified: ${user.isEmailVerified}');
+      _debugLog(
+          'Created user object: ${user.email}, verified: ${user.isEmailVerified}');
 
       // Save user
       await _saveUser(user, password);
-      
+
       // Debug: Verify the user was saved
       _debugLog('User saved, verifying...');
       await debugStorageState();
       final savedUsers = await getAllStoredUsers();
       _debugLog('User verified in storage: ${savedUsers.containsKey(email)}');
-      
+
       // Send verification email (simulated) - but user is already verified
-      _debugLog('Local development: Email verification skipped - user immediately verified');
-      
+      _debugLog(
+          'Local development: Email verification skipped - user immediately verified');
+
       // DO NOT auto-login - but user is verified and can log in immediately
-      
+
       _debugLog('Registration completed for: $email');
       return user;
     } catch (e) {
@@ -319,57 +358,59 @@ class LocalAuthService {
   }) async {
     try {
       _debugLog('Attempting to sign in user: $email');
-      
+
       // Initialize dev account if in debug mode
       await _initDevAccount();
-      
+
       // Debug: Check what's in storage
       await debugStorageState();
-      
+
       final usersJson = await _getWebSafeString(_usersKey) ?? '{}';
       final users = Map<String, dynamic>.from(json.decode(usersJson));
-      
+
       _debugLog('Found users: ${users.keys.toList()}');
       _debugLog('Total users count: ${users.length}');
-      
+
       if (!users.containsKey(email)) {
         _debugLog('No account found for: $email');
         _debugLog('Available accounts: ${users.keys.join(", ")}');
         if (_devMode && kDebugMode) {
-          _debugLog('DEV MODE: Try using Email: $_devEmail, Password: $_devPassword');
+          _debugLog(
+              'DEV MODE: Try using Email: $_devEmail, Password: $_devPassword');
         }
         throw Exception('No account found with this email');
       }
-      
+
       final userData = users[email];
       final hashedPassword = _hashPassword(password);
-      
+
       _debugLog('Stored password hash: ${userData['password']}');
       _debugLog('Computed password hash: $hashedPassword');
       _debugLog('Hashes match: ${userData['password'] == hashedPassword}');
-      
+
       if (userData['password'] != hashedPassword) {
         _debugLog('Invalid password for: $email');
         throw Exception('Invalid password');
       }
-      
+
       final user = User(
         id: userData['id'],
         name: userData['name'],
         email: userData['email'],
-        isEmailVerified: userData['isEmailVerified'] ?? true, // Default to verified for local development
+        isEmailVerified: userData['isEmailVerified'] ??
+            true, // Default to verified for local development
         createdAt: DateTime.parse(userData['createdAt']),
       );
-      
+
       _debugLog('User found: ${user.email}, verified: ${user.isEmailVerified}');
-      
+
       // For local development, skip email verification check
       // In production with real email, uncomment the lines below:
       // if (!user.isEmailVerified) {
       //   _debugLog('Email not verified for: $email');
       //   throw Exception('Please verify your email address before logging in. Check your email for verification instructions.');
       // }
-      
+
       _debugLog('Sign in successful for: $email');
       await _setCurrentUser(user);
       return user;
@@ -385,7 +426,7 @@ class LocalAuthService {
     if (user == null) {
       throw Exception('No account found with this email');
     }
-    
+
     // In a real app, this would send an email
     // For demo purposes, we'll just show a success message
     _debugLog('Password reset email sent to $email (simulated)');
@@ -396,7 +437,7 @@ class LocalAuthService {
     // In a real app, this would send an actual email
     // For demo purposes, we'll immediately verify the email
     _debugLog('Verification email sent to $email (simulated)');
-    
+
     // For local development, immediately verify the email
     await verifyEmail(email);
     _debugLog('Email immediately verified for local development: $email');
@@ -406,7 +447,7 @@ class LocalAuthService {
   Future<void> verifyEmail(String email) async {
     final usersJson = await _getWebSafeString(_usersKey) ?? '{}';
     final users = Map<String, dynamic>.from(json.decode(usersJson));
-    
+
     if (users.containsKey(email)) {
       users[email]['isEmailVerified'] = true;
       await _setWebSafeString(_usersKey, json.encode(users));
@@ -420,11 +461,11 @@ class LocalAuthService {
     if (user == null) {
       throw Exception('No account found with this email');
     }
-    
+
     if (user.isEmailVerified) {
       throw Exception('Email is already verified');
     }
-    
+
     await _sendVerificationEmail(email);
   }
 
@@ -438,12 +479,12 @@ class LocalAuthService {
   Future<User?> getCurrentUser() async {
     try {
       final isLoggedIn = await _getWebSafeBool(_isLoggedInKey);
-      
+
       if (!isLoggedIn) return null;
-      
+
       final userJson = await _getWebSafeString(_currentUserKey);
       if (userJson == null) return null;
-      
+
       final userData = json.decode(userJson);
       return User.fromJson(userData);
     } catch (e) {
@@ -467,7 +508,7 @@ class LocalAuthService {
     final prefs = await SharedPreferences.getInstance();
     final usersJson = prefs.getString(_usersKey) ?? '{}';
     final users = Map<String, dynamic>.from(json.decode(usersJson));
-    
+
     users.remove(email);
     await prefs.setString(_usersKey, json.encode(users));
     await signOut();
@@ -480,7 +521,7 @@ class LocalAuthService {
   }) async {
     final currentUser = await getCurrentUser();
     if (currentUser == null) return null;
-    
+
     final updatedUser = User(
       id: currentUser.id,
       name: name,
@@ -488,7 +529,7 @@ class LocalAuthService {
       isEmailVerified: currentUser.isEmailVerified,
       createdAt: currentUser.createdAt,
     );
-    
+
     await _setCurrentUser(updatedUser);
     return updatedUser;
   }
@@ -511,6 +552,7 @@ class LocalAuthService {
 
   // Debug method: Check SharedPreferences keys
   Future<void> debugStorageState() async {
+
     if (kIsWeb) {
       try {
         // For web, check localStorage directly
@@ -557,5 +599,15 @@ class LocalAuthService {
       final isLoggedIn = prefs.getBool(_isLoggedInKey);
       _debugLog('Is logged in: $isLoggedIn');
     }
+
+    _debugLog('=== Debug Storage State ===');
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    _debugLog('SharedPreferences keys: $keys');
+    _debugLog('Users: ${await _getWebSafeString(_usersKey)}');
+    _debugLog('Current User: ${await _getWebSafeString(_currentUserKey)}');
+    _debugLog('Is Logged In: ${await _getWebSafeBool(_isLoggedInKey)}');
+    _debugLog('========================');
+
   }
 }

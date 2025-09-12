@@ -299,6 +299,18 @@ This project is licensed under the Full Sail University Academic License - see t
 
 **Academic Project**: This software is developed as part of an academic project at Full Sail University for educational purposes.
 
+## 📚 Documentation
+
+For comprehensive documentation, guides, and technical details, visit our dedicated documentation folder:
+
+**[📖 View All Documentation](docs/README.md)**
+
+### Quick Links
+- [Development Guide](docs/DEVELOPMENT_GUIDE.md)
+- [Architecture Overview](docs/ARCHITECTURE.md) 
+- [AI Setup Guide](docs/AI_SETUP_GUIDE.md)
+- [Authentication Setup](docs/AUTHENTICATION_SETUP.md)
+
 ## 🎓 Academic Information
 
 - **Institution**: Full Sail University

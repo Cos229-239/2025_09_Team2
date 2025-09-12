@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/ai_provider.dart';
-import '../../services/ai_service.dart';
+import 'package:studypals/providers/ai_provider.dart';
+import 'package:studypals/services/ai_service.dart';
 
 /// AI Configuration and Settings Widget
 class AISettingsWidget extends StatefulWidget {
@@ -16,10 +16,10 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
   String _selectedProvider = 'OpenAI';
   bool _isTestingConnection = false;
   String? _connectionStatus;
-  
+
   final List<String> _aiProviders = [
     'OpenAI',
-    'Google AI', 
+    'Google AI',
     'Anthropic Claude',
     'Ollama (Local)',
     'Local Model',
@@ -62,20 +62,21 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
     });
 
     try {
-      final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
-      
+      final aiProvider =
+          Provider.of<StudyPalsAIProvider>(context, listen: false);
+
       // Configure AI with selected settings
       await aiProvider.configureAI(
         provider: _getProviderEnum(_selectedProvider),
         apiKey: _apiKeyController.text.trim(),
       );
-      
+
       // Test connection
       final success = await aiProvider.testConnection();
-      
+
       setState(() {
-        _connectionStatus = success 
-            ? 'Connection successful!' 
+        _connectionStatus = success
+            ? 'Connection successful!'
             : 'Connection failed. Please check your settings.';
       });
     } catch (e) {
@@ -110,24 +111,25 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     const SizedBox(width: 8),
                     Text(
                       'AI Configuration',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Current status
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: aiProvider.isAIEnabled 
-                        ? Colors.green.shade50 
+                    color: aiProvider.isAIEnabled
+                        ? Colors.green.shade50
                         : Colors.orange.shade50,
                     border: Border.all(
-                      color: aiProvider.isAIEnabled 
-                          ? Colors.green.shade200 
+                      color: aiProvider.isAIEnabled
+                          ? Colors.green.shade200
                           : Colors.orange.shade200,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -135,21 +137,21 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                   child: Row(
                     children: [
                       Icon(
-                        aiProvider.isAIEnabled 
-                            ? Icons.check_circle_outline 
+                        aiProvider.isAIEnabled
+                            ? Icons.check_circle_outline
                             : Icons.warning_outlined,
-                        color: aiProvider.isAIEnabled 
-                            ? Colors.green.shade600 
+                        color: aiProvider.isAIEnabled
+                            ? Colors.green.shade600
                             : Colors.orange.shade600,
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        aiProvider.isAIEnabled 
+                        aiProvider.isAIEnabled
                             ? 'AI features are enabled and ready'
                             : 'AI features need configuration',
                         style: TextStyle(
-                          color: aiProvider.isAIEnabled 
-                              ? Colors.green.shade600 
+                          color: aiProvider.isAIEnabled
+                              ? Colors.green.shade600
                               : Colors.orange.shade600,
                           fontWeight: FontWeight.w500,
                         ),
@@ -158,7 +160,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Provider selection
                 DropdownButtonFormField<String>(
                   initialValue: _selectedProvider,
@@ -182,7 +184,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // API Key input
                 TextField(
                   controller: _apiKeyController,
@@ -196,7 +198,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Connection status
                 if (_connectionStatus != null)
                   Container(
@@ -237,21 +239,25 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                       ],
                     ),
                   ),
-                
+
                 // Action buttons
                 Row(
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: _isTestingConnection ? null : _testConnection,
+                        onPressed:
+                            _isTestingConnection ? null : _testConnection,
                         icon: _isTestingConnection
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               )
                             : const Icon(Icons.wifi_protected_setup),
-                        label: Text(_isTestingConnection ? 'Testing...' : 'Test Connection'),
+                        label: Text(_isTestingConnection
+                            ? 'Testing...'
+                            : 'Test Connection'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -272,13 +278,17 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     ),
                   ],
                 ),
-                
+
                 // Info section
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
+
                     color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    color:
+                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
+
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -312,7 +322,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     ],
                   ),
                 ),
-                
+
                 // Links section
                 const SizedBox(height: 12),
                 Wrap(
@@ -342,7 +352,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                         );
                       },
                       icon: const Icon(Icons.launch, size: 16),
-                      label: const Text('OpenAI API', style: TextStyle(fontSize: 12)),
+                      label: const Text('OpenAI API',
+                          style: TextStyle(fontSize: 12)),
                     ),
                     TextButton.icon(
                       onPressed: () {
@@ -368,7 +379,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                         );
                       },
                       icon: const Icon(Icons.launch, size: 16),
-                      label: const Text('Google AI', style: TextStyle(fontSize: 12)),
+                      label: const Text('Google AI',
+                          style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),

@@ -1,15 +1,15 @@
 import 'package:flutter/foundation.dart';
-import '../services/ai_service.dart';
-import '../models/card.dart';
-import '../models/user.dart';
+import 'package:studypals/services/ai_service.dart';
+import 'package:studypals/models/card.dart';
+import 'package:studypals/models/user.dart';
 
 /// StudyPals AI Provider for managing intelligent study features
 class StudyPalsAIProvider with ChangeNotifier {
   final AIService _aiService = AIService();
-  
+
   // Configuration state
   AIProvider _currentProvider = AIProvider.openai;
-  
+
   // State variables
   bool _isAIEnabled = false;
   bool _isGeneratingContent = false;
@@ -17,7 +17,6 @@ class StudyPalsAIProvider with ChangeNotifier {
   String _lastPetMessage = '';
   String? _lastError;
   final List<FlashCard> _aiGeneratedCards = [];
-  
   // Getters
   bool get isAIEnabled => _isAIEnabled && _aiService.isConfigured;
   bool get isGeneratingContent => _isGeneratingContent;
@@ -26,7 +25,8 @@ class StudyPalsAIProvider with ChangeNotifier {
   String? get lastError => _lastError;
   List<FlashCard> get aiGeneratedCards => _aiGeneratedCards;
   AIProvider get currentProvider => _currentProvider;
-  
+  AIService get aiService => _aiService; // Added getter for AI service
+
   /// Configure AI service
   Future<void> configureAI({
     required AIProvider provider,
@@ -35,13 +35,13 @@ class StudyPalsAIProvider with ChangeNotifier {
   }) async {
     try {
       _currentProvider = provider;
-      
+
       _aiService.configure(
         provider: provider,
         apiKey: apiKey,
         customBaseUrl: customBaseUrl,
       );
-      
+
       _isAIEnabled = true;
       _lastError = null;
       notifyListeners();
@@ -51,7 +51,7 @@ class StudyPalsAIProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   /// Test AI connection
   Future<bool> testConnection() async {
     try {
@@ -71,22 +71,24 @@ class StudyPalsAIProvider with ChangeNotifier {
       return false;
     }
   }
-  
+
   /// Initialize AI features
   Future<void> initializeAI() async {
     _isAIEnabled = await _aiService.testConnection();
     notifyListeners();
   }
-  
+
   /// Generate flashcards from text input
-  Future<List<FlashCard>> generateFlashcards(String content, String subject) async {
+  Future<List<FlashCard>> generateFlashcards(
+      String content, String subject) async {
     if (!isAIEnabled) return [];
-    
+
     _isGeneratingContent = true;
     notifyListeners();
-    
+
     try {
-      final cards = await _aiService.generateFlashcardsFromText(content, subject);
+      final cards =
+          await _aiService.generateFlashcardsFromText(content, subject);
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -94,7 +96,7 @@ class StudyPalsAIProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   /// Generate flashcards from text with additional options
   Future<List<FlashCard>> generateFlashcardsFromText(
     String content, {
@@ -102,12 +104,13 @@ class StudyPalsAIProvider with ChangeNotifier {
     String subject = 'General',
   }) async {
     if (!isAIEnabled) return [];
-    
+
     _isGeneratingContent = true;
     notifyListeners();
-    
+
     try {
-      final cards = await _aiService.generateFlashcardsFromText(content, subject, count: count);
+      final cards = await _aiService
+          .generateFlashcardsFromText(content, subject, count: count);
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -115,13 +118,14 @@ class StudyPalsAIProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   /// Get personalized study recommendation
-  Future<String> getStudyRecommendation(User user, Map<String, dynamic> stats) async {
+  Future<String> getStudyRecommendation(
+      User user, Map<String, dynamic> stats) async {
     if (!isAIEnabled) {
       return "Keep up the great work! Consistency is key to success.";
     }
-    
+
     try {
       _lastRecommendation = await _aiService.getStudyRecommendation(stats);
       notifyListeners();
@@ -130,13 +134,14 @@ class StudyPalsAIProvider with ChangeNotifier {
       return "Stay focused and keep studying! You're doing great!";
     }
   }
-  
+
   /// Get AI-powered pet message
-  Future<String> getPetMessage(String petName, Map<String, dynamic> stats) async {
+  Future<String> getPetMessage(
+      String petName, Map<String, dynamic> stats) async {
     if (!isAIEnabled) {
       return "Great job studying today! Keep it up! 🐾";
     }
-    
+
     try {
       _lastPetMessage = await _aiService.getPetMessage(petName, stats);
       notifyListeners();
@@ -145,11 +150,11 @@ class StudyPalsAIProvider with ChangeNotifier {
       return "You're amazing! I'm proud of your hard work! 🐾";
     }
   }
-  
+
   /// Enhance an existing flashcard with AI
   Future<FlashCard?> enhanceFlashcard(FlashCard card) async {
     if (!isAIEnabled) return null;
-    
+
     try {
       return await _aiService.enhanceFlashcard(card);
     } catch (e) {
@@ -157,7 +162,7 @@ class StudyPalsAIProvider with ChangeNotifier {
       return null;
     }
   }
-  
+
   /// Clear AI-generated content
   void clearAIContent() {
     _aiGeneratedCards.clear();
@@ -165,7 +170,7 @@ class StudyPalsAIProvider with ChangeNotifier {
     _lastPetMessage = '';
     notifyListeners();
   }
-  
+
   /// Toggle AI features (for settings)
   void toggleAI(bool enabled) {
     _isAIEnabled = enabled;
