@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/deck.dart';
 import '../models/card.dart';
 import '../providers/pet_provider.dart';
+import '../providers/daily_quest_provider.dart';
 import '../services/quiz_service.dart';
 
 /// Flashcard study interface for reviewing cards in a deck
@@ -32,15 +33,41 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     return _quizService.getCardWithAttempts(card);
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _loadCardState();
+  }
+
+  void _loadCardState() {
+    final card = _currentCard;
+    
+    // If card has quiz attempt data, restore the quiz state
+    if (card.lastQuizAttempt != null) {
+      setState(() {
+        _selectedAnswer = card.lastQuizCorrect == true ? card.correctAnswerIndex : -1;
+        _quizResult = card.lastQuizCorrect;
+        if (card.lastQuizCorrect == true) {
+          _expEarned = card.calculateExpReward();
+        }
+      });
+    } else {
+      // Reset state for cards without attempts
+      setState(() {
+        _selectedAnswer = null;
+        _quizResult = null;
+        _expEarned = null;
+      });
+    }
+  }
+
   void _nextCard() {
     setState(() {
       if (_currentCardIndex < widget.deck.cards.length - 1) {
         _currentCardIndex++;
         _showAnswer = false;
         _showQuiz = false;
-        _selectedAnswer = null;
-        _quizResult = null;
-        _expEarned = null;
+        _loadCardState(); // Load state for the new card
       } else {
         // Show completion dialog
         _showCompletionDialog();
@@ -54,9 +81,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         _currentCardIndex--;
         _showAnswer = false;
         _showQuiz = false;
-        _selectedAnswer = null;
-        _quizResult = null;
-        _expEarned = null;
+        _loadCardState(); // Load state for the previous card
       }
     });
   }
@@ -66,18 +91,23 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       _showAnswer = !_showAnswer;
       _showQuiz = false;
     });
+    
+    // If showing answer for the first time, count as studying a card
+    if (_showAnswer) {
+      final questProvider = Provider.of<DailyQuestProvider>(context, listen: false);
+      questProvider.onCardStudied();
+    }
   }
 
   void _startQuiz() {
     if (!_quizService.canTakeQuiz(_currentCard)) {
-      // Show cooldown message
-      final cooldown = _quizService.getQuizCooldown(_currentCard);
-      final cooldownText = _quizService.formatCooldownTime(cooldown);
+      // Show status message based on quiz state
+      final statusMessage = _quizService.getQuizStatusDescription(_currentCard);
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Quiz cooldown active. Try again in $cooldownText'),
-          backgroundColor: Colors.orange,
+          content: Text(statusMessage),
+          backgroundColor: _currentCard.lastQuizCorrect == true ? Colors.green : Colors.orange,
         ),
       );
       return;
@@ -102,14 +132,23 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
     // Record the quiz attempt
     final petProvider = Provider.of<PetProvider>(context, listen: false);
+    final questProvider = Provider.of<DailyQuestProvider>(context, listen: false);
+    
     _quizService.recordQuizAttempt(
       card: _currentCard,
       correct: _quizResult!,
       petProvider: petProvider,
     );
 
+    // Update daily quest progress
+    questProvider.onQuizTaken();
+    
     if (_quizResult!) {
       _expEarned = _currentCard.calculateExpReward();
+      
+      // Check if this was a perfect score (getting all quiz questions right)
+      // For now, we'll consider any correct answer as contributing to perfect score quest
+      questProvider.onPerfectScore();
       
       // Show success message
       Future.delayed(const Duration(milliseconds: 500), () {
@@ -128,7 +167,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           const SnackBar(
             content: Text('Incorrect! You can retry this quiz in 6 hours.'),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       });
@@ -220,7 +259,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Difficulty: '),
+            const Text('Difficulty: '),
             ...List.generate(5, (index) => Icon(
               Icons.star,
               size: 16,
@@ -502,20 +541,39 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   
                   const SizedBox(width: 16),
                   
-                  // Quiz cooldown info
+                  // Quiz cooldown/status info
                   if (!_quizService.canTakeQuiz(_currentCard))
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
+                        color: _currentCard.lastQuizCorrect == true 
+                            ? Colors.green.shade100 
+                            : Colors.orange.shade100,
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        'Quiz cooldown: ${_quizService.formatCooldownTime(_quizService.getQuizCooldown(_currentCard))}',
-                        style: TextStyle(
-                          color: Colors.orange.shade700,
-                          fontSize: 12,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _currentCard.lastQuizCorrect == true 
+                                ? Icons.check_circle_outline 
+                                : Icons.schedule,
+                            size: 16,
+                            color: _currentCard.lastQuizCorrect == true 
+                                ? Colors.green.shade700 
+                                : Colors.orange.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _quizService.getQuizStatusDescription(_currentCard),
+                            style: TextStyle(
+                              color: _currentCard.lastQuizCorrect == true 
+                                  ? Colors.green.shade700 
+                                  : Colors.orange.shade700,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                 ],

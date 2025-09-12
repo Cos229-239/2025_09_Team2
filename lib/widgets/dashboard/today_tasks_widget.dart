@@ -1,11 +1,15 @@
 // Import Flutter's material design components for UI elements
 import 'package:flutter/material.dart';
-// Import Provider package for accessing task state management
+// Import Provider package for accessing state management
 import 'package:provider/provider.dart';
-// Import TaskProvider for managing task data and operations
+// Import TaskProvider for managing regular task data and operations
 import 'package:studypals/providers/task_provider.dart';
+// Import DailyQuestProvider for managing daily quest data
+import 'package:studypals/providers/daily_quest_provider.dart';
 // Import Task model to access task data structures and enums
 import 'package:studypals/models/task.dart';
+// Import DailyQuest model for quest data structures
+import 'package:studypals/models/daily_quest.dart';
 // Import AddTaskSheet widget for creating new tasks
 import 'package:studypals/widgets/common/add_task_sheet.dart';
 
@@ -21,47 +25,88 @@ class TodayTasksWidget extends StatelessWidget {
   /// @return Widget tree representing today's task interface
   @override
   Widget build(BuildContext context) {
-    // Consumer listens to TaskProvider changes and rebuilds when task data updates
-    return Consumer<TaskProvider>(
-      builder: (context, taskProvider, child) {
-        final todayTasks =
-            taskProvider.todayTasks; // Get tasks due today from provider
+    // Multiple consumers to listen to both regular tasks and daily quests
+    return Consumer2<TaskProvider, DailyQuestProvider>(
+      builder: (context, taskProvider, questProvider, child) {
+        final todayTasks = taskProvider.todayTasks; // Get regular tasks due today
+        final dailyQuests = questProvider.quests; // Get daily quests
 
         // Card container providing elevation and material design appearance
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(16), // Internal spacing for content
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start, // Align content to left
+              crossAxisAlignment: CrossAxisAlignment.start, // Align content to left
               children: [
                 // Header row with title and add task button
                 Row(
-                  mainAxisAlignment: MainAxisAlignment
-                      .spaceBetween, // Space between title and button
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between title and button
                   children: [
                     // Widget title
                     Text(
-                      'Today\'s Tasks',
+                      'Today\'s Tasks & Quests',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     // Add task button - opens task creation modal
                     IconButton(
-                      onPressed: () =>
-                          _showAddTaskSheet(context), // Show add task modal
+                      onPressed: () => _showAddTaskSheet(context), // Show add task modal
                       icon: const Icon(Icons.add), // Plus icon for adding
                     ),
                   ],
                 ),
-                const SizedBox(
-                    height: 12), // Spacing between header and content
+                const SizedBox(height: 12), // Spacing between header and content
 
-                // Conditional content based on task availability
-                if (todayTasks.isEmpty)
-                  // Empty state when no tasks exist for today
+                // Daily Quests Section
+                if (dailyQuests.isNotEmpty) ...[
+                  Text(
+                    'Daily Quests',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.purple,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...dailyQuests.take(3).map((quest) => _buildQuestItem(context, quest, questProvider)),
+                  if (dailyQuests.length > 3)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: TextButton(
+                        onPressed: () {
+                          // Future: Navigate to quest details screen
+                        },
+                        child: Text('View ${dailyQuests.length - 3} more quests'),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Regular Tasks Section
+                if (todayTasks.isNotEmpty) ...[
+                  Text(
+                    'Regular Tasks',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...todayTasks.take(3).map((task) => _buildTaskItem(context, task, taskProvider)),
+                  if (todayTasks.length > 3)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: TextButton(
+                        onPressed: () {
+                          // Future: Navigate to comprehensive task list screen
+                        },
+                        child: Text('View ${todayTasks.length - 3} more tasks'),
+                      ),
+                    ),
+                ],
+
+                // Empty state when no tasks or quests exist
+                if (todayTasks.isEmpty && dailyQuests.isEmpty)
                   Container(
-                    padding: const EdgeInsets.all(
-                        24), // Generous padding for empty state
+                    padding: const EdgeInsets.all(24), // Generous padding for empty state
                     child: Column(
                       children: [
                         // Check circle icon indicating completion/empty state
@@ -70,49 +115,23 @@ class TodayTasksWidget extends StatelessWidget {
                           size: 48, // Large icon for visual impact
                           color: Colors.grey, // Muted color for empty state
                         ),
-                        const SizedBox(
-                            height: 8), // Spacing between icon and text
+                        const SizedBox(height: 8), // Spacing between icon and text
                         // Primary empty state message
                         Text(
-                          'No tasks for today!',
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: Colors
-                                        .grey, // Muted color for secondary text
-                                  ),
+                          'All tasks completed!',
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: Colors.grey, // Muted color for secondary text
+                              ),
                         ),
                         const SizedBox(height: 8), // Spacing between messages
                         // Secondary message encouraging action
                         Text(
-                          'Add a task to get started',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                color:
-                                    Colors.grey, // Muted color for helper text
+                          'New daily quests will appear tomorrow',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey, // Muted color for helper text
                               ),
                         ),
                       ],
-                    ),
-                  )
-                else
-                  // Task list when tasks exist - show up to 3 tasks
-                  ...todayTasks.take(3).map(
-                      (task) => _buildTaskItem(context, task, taskProvider)),
-
-                // "View more" button when there are more than 3 tasks
-                if (todayTasks.length > 3)
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(top: 8), // Top spacing for button
-                    child: TextButton(
-                      onPressed: () {
-                        // Future implementation: Navigate to comprehensive task list screen
-                        // Will show all tasks with filtering, sorting, and management options
-                      },
-                      // Show count of remaining tasks
-                      child: Text('View ${todayTasks.length - 3} more tasks'),
                     ),
                   ),
               ],
@@ -190,6 +209,103 @@ class TodayTasksWidget extends StatelessWidget {
                 fontWeight: FontWeight.w500, // Medium weight for readability
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds an individual daily quest item with progress bar and EXP reward
+  /// @param context - Build context for theme access
+  /// @param quest - Daily quest data to display
+  /// @param questProvider - Provider for quest operations
+  /// @return Widget representing a single quest item
+  Widget _buildQuestItem(
+      BuildContext context, DailyQuest quest, DailyQuestProvider questProvider) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8), // Bottom spacing between quests
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: quest.isCompleted ? Colors.green : Colors.purple.shade200,
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(8),
+        color: quest.isCompleted ? Colors.green.shade50 : Colors.purple.shade50,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Quest header with icon, title, and EXP
+          Row(
+            children: [
+              // Quest type icon
+              Text(
+                quest.type.icon,
+                style: const TextStyle(fontSize: 20),
+              ),
+              const SizedBox(width: 8),
+              // Quest title
+              Expanded(
+                child: Text(
+                  quest.title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    decoration: quest.isCompleted ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ),
+              // EXP reward
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade100,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  '+${quest.expReward} EXP',
+                  style: TextStyle(
+                    color: Colors.amber.shade700,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          
+          // Quest description
+          Text(
+            quest.description,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          
+          // Progress bar and text
+          Row(
+            children: [
+              // Progress indicator
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: quest.progressPercentage,
+                  backgroundColor: Colors.grey.shade200,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    quest.isCompleted ? Colors.green : Colors.purple,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Progress text
+              Text(
+                quest.progressText,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
         ],
       ),

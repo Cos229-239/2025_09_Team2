@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../models/user.dart';
 
-/// AI Study Assistant Chat Widget
+///// AI Study Assistant Chat Widget
 class AITutorChat extends StatefulWidget {
   const AITutorChat({super.key});
 
@@ -18,7 +18,7 @@ class _AITutorChatState extends State<AITutorChat> {
   @override
   void initState() {
     super.initState();
-    // Add welcome message when chat starts
+    /// Add welcome message when chat starts
     _messages.add(ChatMessage(
       text: "Hi! I'm your AI study assistant. Ask me for study tips, motivation, or help with your learning!",
       isFromUser: false,

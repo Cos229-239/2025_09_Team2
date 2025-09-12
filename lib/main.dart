@@ -10,6 +10,7 @@ import 'package:studypals/providers/deck_provider.dart'; // Flashcard decks stat
 import 'package:studypals/providers/pet_provider.dart'; // Virtual pet state
 import 'package:studypals/providers/srs_provider.dart'; // Spaced repetition system state
 import 'package:studypals/providers/ai_provider.dart'; // AI integration state
+import 'package:studypals/providers/daily_quest_provider.dart'; // Daily quest gamification state
 // Import authentication wrapper to handle login/logout flow
 import 'package:studypals/screens/auth/auth_wrapper.dart';
 // Import app theme configuration for consistent styling
@@ -60,6 +61,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SRSProvider()),
         // AI provider for artificial intelligence features and study assistance
         ChangeNotifierProvider(create: (_) => StudyPalsAIProvider()),
+        // Daily quest provider for gamification and daily challenges
+        ChangeNotifierProvider(create: (_) => DailyQuestProvider()),
       ],
       // MaterialApp is the main app container with theme and routing
       child: MaterialApp(

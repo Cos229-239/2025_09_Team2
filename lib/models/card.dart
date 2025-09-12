@@ -62,22 +62,48 @@ class FlashCard {
   });
 
   /// Checks if quiz is available (not in cooldown period)
-  /// @return true if user can take quiz, false if in 6-hour cooldown
+  /// @return true if user can take quiz, false if in cooldown
   bool get canTakeQuiz {
     if (lastQuizAttempt == null) return true; // Never attempted
-    if (lastQuizCorrect == true) return true; // Last attempt was correct, always allow retake
     
+    // For both correct and incorrect answers, enforce a cooldown
+    final oneHourAgo = DateTime.now().subtract(const Duration(hours: 1));
     final sixHoursAgo = DateTime.now().subtract(const Duration(hours: 6));
-    return lastQuizAttempt!.isBefore(sixHoursAgo); // Check if 6 hours passed
+    
+    if (lastQuizCorrect == true) {
+      // Correct answers have a 1-hour cooldown to prevent spam
+      return lastQuizAttempt!.isBefore(oneHourAgo);
+    } else {
+      // Incorrect answers have a 6-hour cooldown
+      return lastQuizAttempt!.isBefore(sixHoursAgo);
+    }
   }
 
   /// Gets time remaining until quiz becomes available again
   /// @return Duration until quiz cooldown expires, or Duration.zero if available
   Duration get quizCooldownRemaining {
-    if (canTakeQuiz) return Duration.zero;
+    if (lastQuizAttempt == null) return Duration.zero;
     
-    final sixHoursAfterAttempt = lastQuizAttempt!.add(const Duration(hours: 6));
-    return sixHoursAfterAttempt.difference(DateTime.now());
+    if (lastQuizCorrect == true) {
+      // 1-hour cooldown for correct answers
+      final oneHourAfterAttempt = lastQuizAttempt!.add(const Duration(hours: 1));
+      final remaining = oneHourAfterAttempt.difference(DateTime.now());
+      return remaining.isNegative ? Duration.zero : remaining;
+    } else {
+      // 6-hour cooldown for incorrect answers
+      final sixHoursAfterAttempt = lastQuizAttempt!.add(const Duration(hours: 6));
+      final remaining = sixHoursAfterAttempt.difference(DateTime.now());
+      return remaining.isNegative ? Duration.zero : remaining;
+    }
+  }
+
+  /// Gets the quiz status for UI display
+  /// @return String describing the quiz state
+  String get quizStatus {
+    if (lastQuizAttempt == null) return 'Not attempted';
+    if (canTakeQuiz) return 'Available';
+    if (lastQuizCorrect == true) return 'Completed (1h cooldown)';
+    return 'Failed (6h cooldown)';
   }
 
   /// Calculates EXP reward for correct quiz answer based on difficulty

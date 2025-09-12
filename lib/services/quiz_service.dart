@@ -83,6 +83,34 @@ class QuizService {
       return "${minutes}m";
     }
   }
+
+  /// Gets a descriptive status for the quiz including cooldown info
+  /// @param card - The flashcard to check
+  /// @return Human-readable status string
+  String getQuizStatusDescription(FlashCard card) {
+    final cardWithAttempts = getCardWithAttempts(card);
+    
+    if (cardWithAttempts.lastQuizAttempt == null) {
+      return "Ready to take quiz";
+    }
+    
+    if (cardWithAttempts.canTakeQuiz) {
+      if (cardWithAttempts.lastQuizCorrect == true) {
+        return "Quiz completed - available for review";
+      } else {
+        return "Ready to retry quiz";
+      }
+    }
+    
+    final cooldown = cardWithAttempts.quizCooldownRemaining;
+    final timeLeft = formatCooldownTime(cooldown);
+    
+    if (cardWithAttempts.lastQuizCorrect == true) {
+      return "Completed - cooldown: $timeLeft";
+    } else {
+      return "Failed - retry in: $timeLeft";
+    }
+  }
   
   /// Clears all quiz attempt data (for testing or reset functionality)
   void clearAllAttempts() {

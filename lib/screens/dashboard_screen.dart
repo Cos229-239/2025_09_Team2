@@ -19,6 +19,7 @@ import 'package:studypals/providers/task_provider.dart'; // Task management stat
 import 'package:studypals/providers/deck_provider.dart'; // Flashcard deck state
 import 'package:studypals/providers/pet_provider.dart'; // Virtual pet state
 import 'package:studypals/providers/srs_provider.dart'; // Spaced repetition system state
+import 'package:studypals/providers/daily_quest_provider.dart'; // Daily quest gamification state
 // Import models for deck and card data
 import 'package:studypals/models/deck.dart'; // Deck model for flashcard collections
 // Import flashcard study screen for studying decks
@@ -78,6 +79,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Provider.of<PetProvider>(context, listen: false); // Pet data access
     final srsProvider =
         Provider.of<SRSProvider>(context, listen: false); // SRS data access
+    final questProvider =
+        Provider.of<DailyQuestProvider>(context, listen: false); // Daily quest data access
 
     // Load all data sources concurrently using Future.wait for better performance
     // If one fails, others can still complete successfully
@@ -87,6 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       petProvider.loadPet(), // Load virtual pet data from database
       srsProvider
           .loadReviews(), // Load spaced repetition review data from database
+      questProvider.loadTodaysQuests(), // Load daily quests and generate if needed
     ]);
   }
 

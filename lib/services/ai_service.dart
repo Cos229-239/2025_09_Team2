@@ -72,8 +72,8 @@ Format:
   {
     "question": "What is...", 
     "answer": "The answer is...",
-    "multipleChoiceOptions": ["Correct answer", "Wrong option 1", "Wrong option 2", "Wrong option 3"],
-    "correctAnswerIndex": 0,
+    "multipleChoiceOptions": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswerIndex": 2,
     "difficulty": 3
   }
 ]
@@ -81,16 +81,30 @@ Format:
 CRITICAL Requirements:
 - Include exactly 4 multiple choice options for each card
 - The correct answer must be one of the 4 options AND must match the "answer" field
-- Set correctAnswerIndex to the position of the correct answer (0-3)
-- Set difficulty from 1 (easy) to 5 (very hard)
-- Make wrong options plausible but clearly incorrect - they should be related to the topic but wrong
-- Wrong options should sound realistic and be about the same subject area
-- Randomize the position of the correct answer across different questions
-- Ensure all options are relevant to the question topic
+- Set correctAnswerIndex to the position (0-3) where the correct answer appears in multipleChoiceOptions
+- RANDOMIZE the correct answer position - don't always put it first! Mix between positions 0, 1, 2, and 3
+- Set difficulty: 1=basic facts, 2=simple understanding, 3=application, 4=analysis, 5=advanced synthesis
+- Create realistic distractors based on difficulty:
+  * Difficulty 1-2: Similar but obviously wrong answers
+  * Difficulty 3-4: Common misconceptions or partial answers  
+  * Difficulty 5: Very subtle differences requiring deep understanding
 
-Example for Math topic:
-Question: "What is 2 + 2?"
-Options: ["4", "3", "5", "6"] - all are numbers, but only 4 is correct
+Distractor Quality Rules:
+- Wrong answers should be plausible and related to the topic
+- Use common mistakes students actually make
+- Include partial truths or common misconceptions
+- Make options similar in length and format
+- Avoid obviously silly or unrelated options
+
+Examples:
+Math (Difficulty 3): "What is the derivative of x²?"
+Options: ["2x", "x", "2x²", "x²/2"] - correctAnswerIndex: 0
+
+History (Difficulty 4): "When did World War II end in Europe?"
+Options: ["May 7, 1945", "May 8, 1945", "May 9, 1945", "June 6, 1944"] - correctAnswerIndex: 1
+
+Science (Difficulty 2): "What is the chemical symbol for water?"
+Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       ''';
 
       debugPrint('Sending prompt to AI...');
@@ -153,12 +167,12 @@ Options: ["4", "3", "5", "6"] - all are numbers, but only 4 is correct
         front: 'What is the main topic of $subject?',
         back: 'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
         multipleChoiceOptions: [
-          'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
           'Advanced theoretical research only',
+          'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
           'Historical dates and events',
           'Language and literature studies',
         ],
-        correctAnswerIndex: 0,
+        correctAnswerIndex: 1,
         difficulty: 2,
       ),
       FlashCard(
@@ -168,12 +182,12 @@ Options: ["4", "3", "5", "6"] - all are numbers, but only 4 is correct
         front: 'What are key concepts in $subject?',
         back: 'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
         multipleChoiceOptions: [
-          'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
           'Only memorization of facts',
           'Unrelated scientific theories',
+          'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
           'Foreign language vocabulary',
         ],
-        correctAnswerIndex: 0,
+        correctAnswerIndex: 2,
         difficulty: 3,
       ),
       FlashCard(
@@ -183,12 +197,12 @@ Options: ["4", "3", "5", "6"] - all are numbers, but only 4 is correct
         front: 'Why is studying $subject important?',
         back: 'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
         multipleChoiceOptions: [
-          'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
           'It has no practical value',
           'Only for entertainment purposes',
           'Just to pass standardized tests',
+          'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
         ],
-        correctAnswerIndex: 0,
+        correctAnswerIndex: 3,
         difficulty: 2,
       ),
       FlashCard(
@@ -213,12 +227,12 @@ Options: ["4", "3", "5", "6"] - all are numbers, but only 4 is correct
         front: 'What are effective study strategies for $subject?',
         back: 'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
         multipleChoiceOptions: [
-          'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
           'Memorizing everything without understanding',
+          'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
           'Studying only right before exams',
           'Avoiding practice problems entirely',
         ],
-        correctAnswerIndex: 0,
+        correctAnswerIndex: 1,
         difficulty: 2,
       ),
     ];
