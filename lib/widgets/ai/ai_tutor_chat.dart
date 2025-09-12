@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
+import '../../models/user.dart';
 
 /// AI Study Assistant Chat Widget
 class AITutorChat extends StatefulWidget {
@@ -13,6 +14,17 @@ class AITutorChat extends StatefulWidget {
 class _AITutorChatState extends State<AITutorChat> {
   final TextEditingController _messageController = TextEditingController();
   final List<ChatMessage> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Add welcome message when chat starts
+    _messages.add(ChatMessage(
+      text: "Hi! I'm your AI study assistant. Ask me for study tips, motivation, or help with your learning!",
+      isFromUser: false,
+      timestamp: DateTime.now(),
+    ));
+  }
 
   @override
   void dispose() {
@@ -44,43 +56,82 @@ class _AITutorChatState extends State<AITutorChat> {
       ));
     });
 
-    // Get AI response (simplified for now)
-    final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
-    final response = await _getAIResponse(userMessage, aiProvider);
+    try {
+      // Get AI response
+      final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
+      final response = await _getAIResponse(userMessage, aiProvider);
 
-    setState(() {
-      // Remove typing indicator
-      _messages.removeWhere((msg) => msg.isTyping);
-      // Add AI response
-      _messages.add(ChatMessage(
-        text: response,
-        isFromUser: false,
-        timestamp: DateTime.now(),
-      ));
-    });
+      setState(() {
+        // Remove typing indicator
+        _messages.removeWhere((msg) => msg.isTyping);
+        // Add AI response
+        _messages.add(ChatMessage(
+          text: response,
+          isFromUser: false,
+          timestamp: DateTime.now(),
+        ));
+      });
+    } catch (e) {
+      setState(() {
+        // Remove typing indicator
+        _messages.removeWhere((msg) => msg.isTyping);
+        // Add error message
+        _messages.add(ChatMessage(
+          text: "Sorry, I'm having trouble responding right now. Please check your AI settings and try again.",
+          isFromUser: false,
+          timestamp: DateTime.now(),
+        ));
+      });
+    }
   }
 
   Future<String> _getAIResponse(
       String message, StudyPalsAIProvider aiProvider) async {
-    // This is a simplified AI response - you can enhance this
-    if (message.toLowerCase().contains('study tip')) {
-      return await aiProvider.getStudyRecommendation(
-        // You'll need to pass actual user and stats
-        null as dynamic, // Replace with actual user
-        {
-          'cardsToday': 10,
-          'successRate': 85,
-          'streak': 5,
-          'weakSubjects': ['Math']
-        },
+    try {
+      // Create mock user and stats - in a real app, get these from user provider
+      final mockUser = User(
+        id: 'mock_user',
+        email: 'user@studypals.com',
+        name: 'Study Buddy',
       );
-    } else if (message.toLowerCase().contains('motivation')) {
-      return await aiProvider.getPetMessage(
-        'Buddy', // Replace with actual pet name
-        {'cardsToday': 10, 'successRate': 85},
-      );
-    } else {
-      return "I'm here to help with your studies! Ask me for study tips, motivation, or help creating flashcards.";
+      
+      final mockStats = {
+        'cardsToday': 10,
+        'successRate': 85,
+        'streak': 5,
+        'weakSubjects': ['Math'],
+        'cardsStudied': 150,
+        'studyStreak': 7,
+      };
+
+      // Handle different types of requests
+      if (message.toLowerCase().contains('study tip') || 
+          message.toLowerCase().contains('recommendation')) {
+        return await aiProvider.getStudyRecommendation(mockUser, mockStats);
+      } else if (message.toLowerCase().contains('motivation') || 
+                 message.toLowerCase().contains('encourage')) {
+        return await aiProvider.getPetMessage('Buddy', mockStats);
+      } else {
+        // For general questions, use the AI service directly for a chat response
+        final aiService = aiProvider.aiService;
+        if (aiService.isConfigured) {
+          final prompt = '''
+You are a helpful AI study assistant for StudyPals. The user asked: "$message"
+
+Provide a helpful, encouraging response about studying, learning, or academic success. 
+Keep it under 100 words and friendly.
+          ''';
+          
+          return await aiService.testConnection() 
+            ? await aiService.callGoogleAIWithRetry(prompt, 0)
+            : "I'm here to help with your studies! Try asking for study tips, motivation, or help creating flashcards.";
+        } else {
+          return "I'm here to help with your studies! Please configure AI settings first to unlock my full potential.";
+        }
+      }
+    } catch (e) {
+      // Graceful fallback for any errors
+      return "I'm having trouble connecting right now, but I'm still here to help! Try asking for study tips or motivation.";
     }
   }
 

@@ -20,6 +20,21 @@ class FlashCard {
   // Optional cloze deletion pattern for cloze cards (e.g., "{{c1::answer}}")
   final String? clozeMask;
 
+  // Multiple choice options for quiz mode (4 options including correct answer)
+  final List<String> multipleChoiceOptions;
+
+  // Index of the correct answer in multipleChoiceOptions (0-3)
+  final int correctAnswerIndex;
+
+  // Difficulty rating from 1-5 (affects EXP rewards)
+  final int difficulty;
+
+  // Timestamp of last quiz attempt for cooldown enforcement
+  final DateTime? lastQuizAttempt;
+
+  // Whether the last quiz attempt was correct
+  final bool? lastQuizCorrect;
+
   /// Constructor for creating a FlashCard instance
   /// @param id - Unique identifier for the card
   /// @param deckId - ID of the parent deck containing this card
@@ -27,6 +42,11 @@ class FlashCard {
   /// @param front - Front side content (question/prompt)
   /// @param back - Back side content (answer/explanation)
   /// @param clozeMask - Optional cloze deletion pattern (only for cloze cards)
+  /// @param multipleChoiceOptions - List of 4 quiz options
+  /// @param correctAnswerIndex - Index (0-3) of correct answer in options
+  /// @param difficulty - Difficulty rating 1-5 for EXP calculation
+  /// @param lastQuizAttempt - When user last attempted quiz for this card
+  /// @param lastQuizCorrect - Whether last quiz attempt was correct
   FlashCard({
     required this.id, // Must provide unique identifier
     required this.deckId, // Must link to parent deck
@@ -34,7 +54,62 @@ class FlashCard {
     required this.front, // Must provide front content
     required this.back, // Must provide back content
     this.clozeMask, // Optional cloze pattern (null for non-cloze cards)
+    this.multipleChoiceOptions = const [], // Default to empty list for existing cards
+    this.correctAnswerIndex = 0, // Default to first option
+    this.difficulty = 3, // Default to medium difficulty
+    this.lastQuizAttempt, // No quiz attempt initially
+    this.lastQuizCorrect, // No quiz result initially
   });
+
+  /// Checks if quiz is available (not in cooldown period)
+  /// @return true if user can take quiz, false if in 6-hour cooldown
+  bool get canTakeQuiz {
+    if (lastQuizAttempt == null) return true; // Never attempted
+    if (lastQuizCorrect == true) return true; // Last attempt was correct, always allow retake
+    
+    final sixHoursAgo = DateTime.now().subtract(const Duration(hours: 6));
+    return lastQuizAttempt!.isBefore(sixHoursAgo); // Check if 6 hours passed
+  }
+
+  /// Gets time remaining until quiz becomes available again
+  /// @return Duration until quiz cooldown expires, or Duration.zero if available
+  Duration get quizCooldownRemaining {
+    if (canTakeQuiz) return Duration.zero;
+    
+    final sixHoursAfterAttempt = lastQuizAttempt!.add(const Duration(hours: 6));
+    return sixHoursAfterAttempt.difference(DateTime.now());
+  }
+
+  /// Calculates EXP reward for correct quiz answer based on difficulty
+  /// @return Random EXP amount (difficulty * 10-20 points)
+  int calculateExpReward() {
+    final baseExp = difficulty * 10; // Base: 10, 20, 30, 40, or 50
+    final randomBonus = (DateTime.now().millisecond % 11); // 0-10 random bonus
+    return baseExp + randomBonus;
+  }
+
+  /// Creates a copy of this card with updated quiz attempt data
+  /// @param attempted - Timestamp of quiz attempt
+  /// @param correct - Whether the answer was correct
+  /// @return New FlashCard instance with updated quiz data
+  FlashCard withQuizAttempt({
+    required DateTime attempted,
+    required bool correct,
+  }) {
+    return FlashCard(
+      id: id,
+      deckId: deckId,
+      type: type,
+      front: front,
+      back: back,
+      clozeMask: clozeMask,
+      multipleChoiceOptions: multipleChoiceOptions,
+      correctAnswerIndex: correctAnswerIndex,
+      difficulty: difficulty,
+      lastQuizAttempt: attempted,
+      lastQuizCorrect: correct,
+    );
+  }
 
   /// Converts the FlashCard object to a JSON map for database storage or API transmission
   /// @return Map<String, dynamic> containing all card data in JSON format
@@ -45,6 +120,11 @@ class FlashCard {
         'front': front, // Store front side content
         'back': back, // Store back side content
         'clozeMask': clozeMask, // Store cloze pattern (can be null)
+        'multipleChoiceOptions': multipleChoiceOptions, // Store quiz options
+        'correctAnswerIndex': correctAnswerIndex, // Store correct answer index
+        'difficulty': difficulty, // Store difficulty rating
+        'lastQuizAttempt': lastQuizAttempt?.toIso8601String(), // Store quiz attempt time
+        'lastQuizCorrect': lastQuizCorrect, // Store quiz result
       };
 
   /// Factory constructor to create a FlashCard from JSON data (database or API)
@@ -60,8 +140,16 @@ class FlashCard {
         ),
         front: json['front'] as String, // Extract front content from JSON
         back: json['back'] as String, // Extract back content from JSON
-        clozeMask:
-            json['clozeMask'] as String?, // Extract optional cloze pattern
+        clozeMask: json['clozeMask'] as String?, // Extract optional cloze pattern
+        multipleChoiceOptions: List<String>.from(
+          (json['multipleChoiceOptions'] as List?) ?? [], // Extract quiz options
+        ),
+        correctAnswerIndex: json['correctAnswerIndex'] as int? ?? 0, // Extract correct answer index
+        difficulty: json['difficulty'] as int? ?? 3, // Extract difficulty with default
+        lastQuizAttempt: json['lastQuizAttempt'] != null
+            ? DateTime.parse(json['lastQuizAttempt'] as String) // Parse quiz attempt time
+            : null,
+        lastQuizCorrect: json['lastQuizCorrect'] as bool?, // Extract quiz result
       );
 }
 

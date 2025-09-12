@@ -69,11 +69,28 @@ You MUST respond with ONLY a valid JSON array. No explanation, no extra text.
 
 Format:
 [
-  {"question": "What is...", "answer": "The answer is..."},
-  {"question": "Define...", "answer": "It means..."}
+  {
+    "question": "What is...", 
+    "answer": "The answer is...",
+    "multipleChoiceOptions": ["Correct answer", "Wrong option 1", "Wrong option 2", "Wrong option 3"],
+    "correctAnswerIndex": 0,
+    "difficulty": 3
+  }
 ]
 
-Make questions clear and answers concise. Focus on key concepts.
+CRITICAL Requirements:
+- Include exactly 4 multiple choice options for each card
+- The correct answer must be one of the 4 options AND must match the "answer" field
+- Set correctAnswerIndex to the position of the correct answer (0-3)
+- Set difficulty from 1 (easy) to 5 (very hard)
+- Make wrong options plausible but clearly incorrect - they should be related to the topic but wrong
+- Wrong options should sound realistic and be about the same subject area
+- Randomize the position of the correct answer across different questions
+- Ensure all options are relevant to the question topic
+
+Example for Math topic:
+Question: "What is 2 + 2?"
+Options: ["4", "3", "5", "6"] - all are numbers, but only 4 is correct
       ''';
 
       debugPrint('Sending prompt to AI...');
@@ -99,11 +116,22 @@ Make questions clear and answers concise. Focus on key concepts.
 
       return cardsData
           .map((cardJson) => FlashCard(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                id: DateTime.now().millisecondsSinceEpoch.toString() + 
+                    cardsData.indexOf(cardJson).toString(),
                 deckId: 'ai_generated',
                 type: CardType.basic,
                 front: cardJson['question'] ?? 'Question',
                 back: cardJson['answer'] ?? 'Answer',
+                multipleChoiceOptions: List<String>.from(
+                  cardJson['multipleChoiceOptions'] ?? [
+                    cardJson['answer'] ?? 'Answer',
+                    'Option B',
+                    'Option C', 
+                    'Option D'
+                  ],
+                ),
+                correctAnswerIndex: cardJson['correctAnswerIndex'] ?? 0,
+                difficulty: cardJson['difficulty'] ?? 3,
               ))
           .toList();
     } catch (e) {
@@ -123,40 +151,75 @@ Make questions clear and answers concise. Focus on key concepts.
         deckId: 'ai_generated',
         type: CardType.basic,
         front: 'What is the main topic of $subject?',
-        back:
-            content.length > 100 ? '${content.substring(0, 100)}...' : content,
+        back: 'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
+        multipleChoiceOptions: [
+          'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
+          'Advanced theoretical research only',
+          'Historical dates and events',
+          'Language and literature studies',
+        ],
+        correctAnswerIndex: 0,
+        difficulty: 2,
       ),
       FlashCard(
         id: '2',
         deckId: 'ai_generated',
         type: CardType.basic,
-        front: 'Define key concepts in $subject',
-        back:
-            'Key concepts include the fundamental principles and ideas covered in this subject area.',
+        front: 'What are key concepts in $subject?',
+        back: 'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
+        multipleChoiceOptions: [
+          'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
+          'Only memorization of facts',
+          'Unrelated scientific theories',
+          'Foreign language vocabulary',
+        ],
+        correctAnswerIndex: 0,
+        difficulty: 3,
       ),
       FlashCard(
         id: '3',
         deckId: 'ai_generated',
         type: CardType.basic,
-        front: 'Why is $subject important?',
-        back:
-            'Understanding $subject helps develop critical thinking and knowledge in this field.',
+        front: 'Why is studying $subject important?',
+        back: 'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
+        multipleChoiceOptions: [
+          'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
+          'It has no practical value',
+          'Only for entertainment purposes',
+          'Just to pass standardized tests',
+        ],
+        correctAnswerIndex: 0,
+        difficulty: 2,
       ),
       FlashCard(
         id: '4',
         deckId: 'ai_generated',
         type: CardType.basic,
         front: 'How can you apply $subject knowledge?',
-        back:
-            'Apply this knowledge through practice, real-world examples, and further study.',
+        back: 'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
+        multipleChoiceOptions: [
+          'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
+          'Knowledge cannot be applied practically',
+          'Only in theoretical discussions',
+          'By avoiding any practical use',
+        ],
+        correctAnswerIndex: 0,
+        difficulty: 3,
       ),
       FlashCard(
         id: '5',
         deckId: 'ai_generated',
         type: CardType.basic,
-        front: 'What are the next steps for learning $subject?',
-        back:
-            'Continue studying, practice regularly, and seek additional resources to deepen understanding.',
+        front: 'What are effective study strategies for $subject?',
+        back: 'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
+        multipleChoiceOptions: [
+          'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
+          'Memorizing everything without understanding',
+          'Studying only right before exams',
+          'Avoiding practice problems entirely',
+        ],
+        correctAnswerIndex: 0,
+        difficulty: 2,
       ),
     ];
   }

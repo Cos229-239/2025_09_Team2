@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 // Import Pet model to manage virtual pet data and behavior
 import 'package:studypals/models/pet.dart';
+// Import Card model for quiz tracking
+import 'package:studypals/models/card.dart';
 
 /// Provider for managing virtual pet state and gamification features
 /// Handles pet interactions, XP progression, leveling, and study streak tracking
@@ -29,10 +31,15 @@ class PetProvider extends ChangeNotifier {
   /// Adds experience points to the pet and handles level progression
   /// Triggers level-up celebrations and UI notifications when pet levels up
   /// @param amount - Amount of XP to add to the pet
-  void addXP(int amount) {
+  /// @param source - Source of XP for logging (e.g., "quiz", "study", "feeding")
+  void addXP(int amount, {String source = "general"}) {
     final oldLevel = _currentPet.level; // Store current level for comparison
     _currentPet =
         _currentPet.addXP(amount); // Add XP and get updated pet instance
+
+    // Log XP gain event for debugging and analytics
+    developer.log('Pet gained $amount XP from $source (Total: ${_currentPet.xp})',
+        name: 'PetProvider');
 
     // Check if the pet leveled up during this XP addition
     if (_currentPet.level > oldLevel) {
@@ -47,6 +54,20 @@ class PetProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Awards XP for correct quiz answers based on flashcard difficulty
+  /// Implements the gamification system for quiz success
+  /// @param card - The flashcard that was answered correctly
+  /// @return Amount of XP awarded
+  int awardQuizXP(FlashCard card) {
+    final expReward = card.calculateExpReward();
+    addXP(expReward, source: "quiz");
+    
+    developer.log('Quiz correct! Awarded $expReward XP for difficulty ${card.difficulty}',
+        name: 'PetProvider');
+    
+    return expReward;
+  }
+
   /// Updates the current study streak and notifies listeners
   /// Called when user completes daily study goals or breaks streak
   /// @param streak - New streak count (0 if streak broken, incremented if continued)
@@ -59,14 +80,14 @@ class PetProvider extends ChangeNotifier {
   /// Part of gamification to encourage regular app engagement
   void feedPet() {
     // Add modest XP reward for feeding interaction
-    addXP(10); // 10 XP for feeding the pet
+    addXP(10, source: "feeding"); // 10 XP for feeding the pet
   }
 
   /// Simulates playing with the pet, adding XP as reward for this interaction
   /// Part of gamification to encourage regular app engagement
   void playWithPet() {
     // Add slightly higher XP reward for playing interaction
-    addXP(15); // 15 XP for playing with pet
+    addXP(15, source: "playing"); // 15 XP for playing with pet
   }
 
   /// Changes the pet's species while preserving all other pet data
