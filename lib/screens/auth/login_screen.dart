@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(20),
             // Rounded corners
             border: Border.all(
-              color: const Color.fromARGB(255, 202, 199, 199).withOpacity(0.9),  // Slightly grayish white
+              color: const Color.fromARGB(255, 202, 199, 199).withValues(alpha: 0.9),  // Slightly grayish white
               width: 12.0,                           // Border thickness
             ),
             boxShadow: [
@@ -248,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
         boxShadow: [
           // Shadows for depth
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            color: Colors.black.withValues(alpha:0.3), // Black drop shadow
             blurRadius: 10,
             // Blur radius
             spreadRadius: 1,
@@ -257,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Shadow offset
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            color: Colors.black.withValues(alpha:0.2), // Black inner shadow
             blurRadius: 8,
             // Blur radius
             spreadRadius: -2,
@@ -293,14 +293,14 @@ class _LoginScreenState extends State<LoginScreen> {
             shadows: [
               // Shadows for hint text
               Shadow(
-                color: Colors.black.withOpacity(0.4), // Drop shadow
+                color: Colors.black.withValues(alpha:0.4), // Drop shadow
                 blurRadius: 8,
                 // Blur radius
                 offset: const Offset(1.5, 1.5),
                 // Shadow offset
               ),
               Shadow(
-                color: Colors.black.withOpacity(0.3), // Inner shadow
+                color: Colors.black.withValues(alpha:0.3), // Inner shadow
                 blurRadius: 6,
                 // Blur radius
                 offset: const Offset(0, 0),
@@ -383,7 +383,7 @@ class _LoginScreenState extends State<LoginScreen> {
         boxShadow: [
           // Shadows for depth
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            color: Colors.black.withValues(alpha:0.3), // Black drop shadow
             blurRadius: 10,
             // Blur radius
             spreadRadius: 1,
@@ -392,7 +392,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Shadow offset
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            color: Colors.black.withValues(alpha:0.2), // Black inner shadow
             blurRadius: 8,
             // Blur radius
             spreadRadius: -2,
@@ -430,14 +430,14 @@ class _LoginScreenState extends State<LoginScreen> {
             shadows: [
               // Shadows for hint text
               Shadow(
-                color: Colors.black.withOpacity(0.4), // Drop shadow
+                color: Colors.black.withValues(alpha:0.4), // Drop shadow
                 blurRadius: 8,
                 // Blur radius
                 offset: const Offset(1.5, 1.5),
                 // Shadow offset
               ),
               Shadow(
-                color: Colors.black.withOpacity(0.3), // Inner shadow
+                color: Colors.black.withValues(alpha:0.3), // Inner shadow
                 blurRadius: 6,
                 // Blur radius
                 offset: const Offset(0, 0),
@@ -526,7 +526,7 @@ class _LoginScreenState extends State<LoginScreen> {
         boxShadow: [
           // Shadows for depth
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            color: Colors.black.withValues(alpha:0.3), // Black drop shadow
             blurRadius: 10,
             // Blur radius
             spreadRadius: 1,
@@ -535,7 +535,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Shadow offset
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            color: Colors.black.withValues(alpha:0.2), // Black inner shadow
             blurRadius: 8,
             // Blur radius
             spreadRadius: -2,
@@ -595,14 +595,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   shadows: [
                     // Shadows for text
                     Shadow(
-                      color: Colors.black.withOpacity(0.4), // Drop shadow
+                      color: Colors.black.withValues(alpha:0.4), // Drop shadow
                       blurRadius: 8,
                       // Blur radius
                       offset: const Offset(1.5, 1.5),
                       // Shadow offset
                     ),
                     Shadow(
-                      color: Colors.black.withOpacity(0.3), // Inner shadow
+                      color: Colors.black.withValues(alpha:0.3), // Inner shadow
                       blurRadius: 6,
                       // Blur radius
                       offset: const Offset(0, 0),

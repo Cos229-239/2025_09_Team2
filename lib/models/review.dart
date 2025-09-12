@@ -103,7 +103,7 @@ class Review {
   }
 
   /// Converts the Review object to a JSON map for database storage or API transmission
-  /// @return Map<String, dynamic> containing all review data in JSON format
+  /// Returns [Map] containing all review data in JSON format
   Map<String, dynamic> toJson() => {
     'cardId': cardId,                                    // Store card reference
     'userId': userId,                                    // Store user reference

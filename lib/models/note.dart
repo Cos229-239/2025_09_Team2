@@ -38,7 +38,7 @@ class Note {
         updatedAt = updatedAt ?? DateTime.now(); // Set update time to now if not provided
 
   /// Converts the Note object to a JSON map for database storage or API transmission
-  /// @return Map<String, dynamic> containing all note data in JSON format
+  /// Returns [Map] containing all note data in JSON format
   Map<String, dynamic> toJson() => {
     'id': id,                                      // Store unique identifier
     'title': title,                                // Store display title
