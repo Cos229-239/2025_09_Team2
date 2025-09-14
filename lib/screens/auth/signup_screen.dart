@@ -29,7 +29,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
   // Controller for the email input field
   final _passwordController = TextEditingController();
   // Controller for the password input field
-  bool _isLoading = false;
+  final bool _isLoading = false;
   // Tracks if a login operation is in progress
   bool _obscurePassword = true;
   // Toggles visibility of the password field
