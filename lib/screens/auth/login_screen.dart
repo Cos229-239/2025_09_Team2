@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:studypals/providers/app_state.dart';
 // Import User model for creating user objects
 import 'package:studypals/models/user.dart';
+import 'package:studypals/screens/auth/signup_screen.dart';
 
 /// Modern login screen with cat mascot design
 /// Matches the beautiful UI provided in the design mockup
@@ -94,32 +95,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     borderRadius: BorderRadius.all(Radius.circular(10)), // Slightly smaller radius to fit inside orange border
                   ),
-                  child: Padding(
-                    // Adds padding inside the container
-                    padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                    // Horizontal padding for content
-                    child: Column(
-                      // Column to stack UI elements vertically
-                      children: [
-                        const SizedBox(height: 60), // Reduced top spacing to accommodate larger mascot
-                        // Cat mascot and branding
-                        Expanded(
-                          flex: 2, // Give more space to the mascot section
-                          child: _buildMascotSection(),
+                  child: SingleChildScrollView(
+                    // Make entire login screen scrollable
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: MediaQuery.of(context).size.height - 64, // Account for padding
+                      ),
+                      child: Padding(
+                        // Adds padding inside the container
+                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                        // Horizontal padding for content
+                        child: Column(
+                          // Column to stack UI elements vertically
+                          children: [
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 60 : 20), // Responsive top spacing
+                            // Cat mascot and branding
+                            _buildMascotSection(),
+                            // Builds the cat mascot section
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            // Responsive spacing
+                            // Login form
+                            _buildLoginForm(),
+                            // Builds the login form section
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            // Responsive spacer between form and links
+                            _buildBottomLinks(),
+                            // Builds the bottom navigation links
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            // Responsive spacer at the bottom
+                          ],
                         ),
-                        // Builds the cat mascot section
-                        const Spacer(),
-                        // Flexible spacer to distribute space
-                        // Login form
-                        _buildLoginForm(),
-                        // Builds the login form section
-                        const SizedBox(height: 40),
-                        // Spacer between form and links
-                        _buildBottomLinks(),
-                        // Builds the bottom navigation links
-                        const SizedBox(height: 40),
-                        // Spacer at the bottom
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -139,15 +145,15 @@ class _LoginScreenState extends State<LoginScreen> {
         // Cat mascot container with the provided image
         Container(
           // Container for the mascot graphic
-          width: 200,  // Reduced size to fit better on screen
-          height: 200, // Reduced size to fit better on screen
+          width: MediaQuery.of(context).size.width > 600 ? 200 : 150,  // Responsive size for different screen sizes
+          height: MediaQuery.of(context).size.width > 600 ? 200 : 150, // Responsive size for different screen sizes
           decoration: BoxDecoration(
             // Styling for the mascot container
             color: const Color(0xFF3d4a5c), // Medium blue-gray for container background
             borderRadius: BorderRadius.circular(20),
             // Rounded corners
             border: Border.all(
-              color: const Color.fromARGB(255, 202, 199, 199).withOpacity(0.9),  // Slightly grayish white
+              color: const Color.fromARGB(255, 202, 199, 199).withValues(alpha: 0.9),  // Slightly grayish white
               width: 12.0,                           // Border thickness
             ),
             boxShadow: [
@@ -248,7 +254,7 @@ class _LoginScreenState extends State<LoginScreen> {
         boxShadow: [
           // Shadows for depth
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            color: Colors.black.withValues(alpha: 0.3), // Black drop shadow
             blurRadius: 10,
             // Blur radius
             spreadRadius: 1,
@@ -257,7 +263,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Shadow offset
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            color: Colors.black.withValues(alpha: 0.2), // Black inner shadow
             blurRadius: 8,
             // Blur radius
             spreadRadius: -2,
@@ -293,14 +299,14 @@ class _LoginScreenState extends State<LoginScreen> {
             shadows: [
               // Shadows for hint text
               Shadow(
-                color: Colors.black.withOpacity(0.4), // Drop shadow
+                color: Colors.black.withValues(alpha: 0.4), // Drop shadow
                 blurRadius: 8,
                 // Blur radius
                 offset: const Offset(1.5, 1.5),
                 // Shadow offset
               ),
               Shadow(
-                color: Colors.black.withOpacity(0.3), // Inner shadow
+                color: Colors.black.withValues(alpha: 0.3), // Inner shadow
                 blurRadius: 6,
                 // Blur radius
                 offset: const Offset(0, 0),
@@ -383,7 +389,7 @@ class _LoginScreenState extends State<LoginScreen> {
         boxShadow: [
           // Shadows for depth
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            color: Colors.black.withValues(alpha: 0.3), // Black drop shadow
             blurRadius: 10,
             // Blur radius
             spreadRadius: 1,
@@ -392,7 +398,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Shadow offset
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            color: Colors.black.withValues(alpha: 0.2), // Black inner shadow
             blurRadius: 8,
             // Blur radius
             spreadRadius: -2,
@@ -430,14 +436,14 @@ class _LoginScreenState extends State<LoginScreen> {
             shadows: [
               // Shadows for hint text
               Shadow(
-                color: Colors.black.withOpacity(0.4), // Drop shadow
+                color: Colors.black.withValues(alpha: 0.4), // Drop shadow
                 blurRadius: 8,
                 // Blur radius
                 offset: const Offset(1.5, 1.5),
                 // Shadow offset
               ),
               Shadow(
-                color: Colors.black.withOpacity(0.3), // Inner shadow
+                color: Colors.black.withValues(alpha: 0.3), // Inner shadow
                 blurRadius: 6,
                 // Blur radius
                 offset: const Offset(0, 0),
@@ -526,7 +532,7 @@ class _LoginScreenState extends State<LoginScreen> {
         boxShadow: [
           // Shadows for depth
           BoxShadow(
-            color: Colors.black.withOpacity(0.3), // Black drop shadow
+            color: Colors.black.withValues(alpha: 0.3), // Black drop shadow
             blurRadius: 10,
             // Blur radius
             spreadRadius: 1,
@@ -535,7 +541,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Shadow offset
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.2), // Black inner shadow
+            color: Colors.black.withValues(alpha: 0.2), // Black inner shadow
             blurRadius: 8,
             // Blur radius
             spreadRadius: -2,
@@ -595,14 +601,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   shadows: [
                     // Shadows for text
                     Shadow(
-                      color: Colors.black.withOpacity(0.4), // Drop shadow
+                      color: Colors.black.withValues(alpha: 0.4), // Drop shadow
                       blurRadius: 8,
                       // Blur radius
                       offset: const Offset(1.5, 1.5),
                       // Shadow offset
                     ),
                     Shadow(
-                      color: Colors.black.withOpacity(0.3), // Inner shadow
+                      color: Colors.black.withValues(alpha: 0.3), // Inner shadow
                       blurRadius: 6,
                       // Blur radius
                       offset: const Offset(0, 0),
@@ -819,73 +825,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleSignUp() {
     // Handles the sign-up action
-    // For now, show a simple dialog for registration
-    showDialog(
-      // Shows a dialog box
-      context: context,
-      // Current context
-      builder: (context) => AlertDialog(
-        // Dialog widget
-        backgroundColor: const Color(0xFF2a3543),
-        // Dialog background color
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        // Rounded dialog corners
-        title: const Text(
-          // Dialog title
-          'Sign Up',
-          // Title text
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-          // Title styling
-        ),
-        content: Column(
-          // Column for dialog content
-          mainAxisSize: MainAxisSize.min,
-          // Minimal column size
-          crossAxisAlignment: CrossAxisAlignment.start,
-          // Aligns content to start
-          children: [
-            Text(
-              // Info text
-              'Registration feature coming soon!',
-              // Text content
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 16),
-              // Text styling
-            ),
-            const SizedBox(height: 16),
-            // Spacer
-            Text(
-              // Additional info text
-              'For now, you can:',
-              // Text content
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14),
-              // Text styling
-            ),
-            const SizedBox(height: 8),
-            // Spacer
-            const Text(
-              // Options text
-              '• Continue as Guest\n• Use demo@studypals.com / password',
-              // Text content
-              style: TextStyle(color: Color(0xFF4ecdc4), fontSize: 14),
-              // Text styling
-            ),
-          ],
-        ),
-        actions: [
-          // Dialog actions
-          TextButton(
-            // OK button
-            onPressed: () => Navigator.pop(context),
-            // Closes dialog
-            child: const Text(
-              // Button text
-              'OK',
-              // Text content
-              style: TextStyle(color: Color(0xFF4ecdc4), fontWeight: FontWeight.w500),
-              // Text styling
-            ),
-          ),
-        ],
+    // Navigate to the signup screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SignupScreenNew(),  //added const for debugging
       ),
     );
   }

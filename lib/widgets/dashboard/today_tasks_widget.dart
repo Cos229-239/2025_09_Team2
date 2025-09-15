@@ -12,6 +12,9 @@ import 'package:studypals/models/task.dart';
 import 'package:studypals/models/daily_quest.dart';
 // Import AddTaskSheet widget for creating new tasks
 import 'package:studypals/widgets/common/add_task_sheet.dart';
+// Import screens for detailed views
+import 'package:studypals/screens/quest_list_screen.dart';
+import 'package:studypals/screens/task_list_screen.dart';
 
 /// Widget displaying today's tasks with quick completion actions
 /// Shows up to 3 tasks due today with add task functionality
@@ -67,16 +70,64 @@ class TodayTasksWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   ...dailyQuests.take(3).map((quest) => _buildQuestItem(context, quest, questProvider)),
-                  if (dailyQuests.length > 3)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: TextButton(
-                        onPressed: () {
-                          // Future: Navigate to quest details screen
-                        },
-                        child: Text('View ${dailyQuests.length - 3} more quests'),
-                      ),
+                  
+                  // Navigation buttons row
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      children: [
+                        // View more quests button (only show if there are more than 3)
+                        if (dailyQuests.length > 3)
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () {
+                                // Navigate to quest details screen
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const QuestListScreen(),
+                                  ),
+                                );
+                              },
+                              child: Text('View ${dailyQuests.length - 3} more quest(s)'),
+                            ),
+                          ),
+                        
+                        // Always show "View All Quests" button if no extra quests
+                        if (dailyQuests.length <= 3)
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const QuestListScreen(),
+                                  ),
+                                );
+                              },
+                              child: const Text('View All Quests'),
+                            ),
+                          ),
+                        
+                        const SizedBox(width: 8),
+                        
+                        // Always show "View Tasks" button
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const TaskListScreen(),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.blue,
+                            ),
+                            child: const Text('View Tasks'),
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
                   const SizedBox(height: 16),
                 ],
 
@@ -96,9 +147,14 @@ class TodayTasksWidget extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 4),
                       child: TextButton(
                         onPressed: () {
-                          // Future: Navigate to comprehensive task list screen
+                          // Navigate to comprehensive task list screen
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const TaskListScreen(),
+                            ),
+                          );
                         },
-                        child: Text('View ${todayTasks.length - 3} more tasks'),
+                        child: Text('View ${todayTasks.length - 3} more task(s)'),
                       ),
                     ),
                 ],

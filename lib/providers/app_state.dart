@@ -1,12 +1,15 @@
 import 'package:flutter/foundation.dart';
 import '../models/user.dart';
 import '../services/local_auth_service.dart';
+import '../services/ai_service.dart';
+import 'ai_provider.dart';
 
 class AppState extends ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
   String? _error;
   final LocalAuthService _authService = LocalAuthService();
+  StudyPalsAIProvider? _aiProvider;
 
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
@@ -16,6 +19,11 @@ class AppState extends ChangeNotifier {
 
   AppState() {
     _initializeApp();
+  }
+
+  // Method to set AI provider reference
+  void setAIProvider(StudyPalsAIProvider aiProvider) {
+    _aiProvider = aiProvider;
   }
 
   Future<void> _initializeApp() async {
@@ -74,6 +82,10 @@ class AppState extends ChangeNotifier {
       );
 
       _currentUser = user;
+      
+      // Auto-configure Google AI upon successful login
+      await _configureAIOnLogin();
+      
       notifyListeners();
       return user;
     } catch (e) {
@@ -81,6 +93,21 @@ class AppState extends ChangeNotifier {
       return null;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  /// Automatically configure Google AI upon login
+  Future<void> _configureAIOnLogin() async {
+    if (_aiProvider != null) {
+      try {
+        await _aiProvider!.configureAI(
+          provider: AIProvider.google,
+          apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+        );
+        debugPrint('Google AI automatically configured upon login');
+      } catch (e) {
+        debugPrint('Failed to auto-configure AI: $e');
+      }
     }
   }
 
