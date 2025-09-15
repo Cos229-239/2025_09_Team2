@@ -55,8 +55,6 @@ class TaskProvider extends ChangeNotifier {
   /// This is typically called when the app starts or when refreshing data
   /// Shows loading state during the operation and handles errors gracefully
   Future<void> loadTasks() async {
-    print('TaskProvider: loadTasks() called');
-    
     // Test SharedPreferences first
     await TaskRepository.testSharedPreferences();
     
@@ -66,20 +64,14 @@ class TaskProvider extends ChangeNotifier {
     try {
       // Attempt to fetch all tasks from the database repository
       _tasks = await TaskRepository.getAllTasks();
-      print('TaskProvider: Loaded ${_tasks.length} tasks');
-      for (var task in _tasks) {
-        print('  - TaskProvider: "${task.title}" (ID: ${task.id}, Status: ${task.status})');
-      }
     } catch (e) {
       // Log any errors that occur during loading for debugging
       // Using developer.log instead of print for better debugging tools
       developer.log('Error loading tasks: $e', name: 'TaskProvider');
-      print('TaskProvider: ERROR loading tasks: $e');
     } finally {
       // Always clear loading state, whether successful or not
       _isLoading = false; // Clear loading flag
       notifyListeners(); // Update UI to hide loading state
-      print('TaskProvider: loadTasks() completed, loading state cleared');
     }
   }
 
@@ -88,21 +80,16 @@ class TaskProvider extends ChangeNotifier {
   /// @param task - New task object to add
   /// @throws Exception if database insertion fails
   Future<void> addTask(Task task) async {
-    print('TaskProvider: addTask() called for "${task.title}"');
     try {
       // First save to database to ensure persistence
       await TaskRepository.insertTask(task);
-      print('TaskProvider: Task saved to repository successfully');
 
       // Add to local list only after successful database insertion
       _tasks.add(task); // Add to local task list
-      print('TaskProvider: Task added to local list. Total tasks: ${_tasks.length}');
       notifyListeners(); // Update UI to show new task
-      print('TaskProvider: notifyListeners() called');
     } catch (e) {
       // Log the error for debugging purposes
       developer.log('Error adding task: $e', name: 'TaskProvider');
-      print('TaskProvider: ERROR adding task: $e');
 
       // Rethrow the exception so calling code can handle the error
       // This allows UI to show error messages to the user
@@ -115,28 +102,21 @@ class TaskProvider extends ChangeNotifier {
   /// @param task - Updated task object with same ID as existing task
   /// @throws Exception if database update fails
   Future<void> updateTask(Task task) async {
-    print('TaskProvider: updateTask() called for "${task.title}" (Status: ${task.status})');
     try {
       // First update in database to ensure persistence
       await TaskRepository.updateTask(task);
-      print('TaskProvider: Task successfully updated in repository');
 
       // Find the task in local list by matching ID
       final index = _tasks.indexWhere((t) => t.id == task.id);
 
       // Update local list only if task was found
       if (index != -1) {
-        print('TaskProvider: Updating task at index $index in local list');
         // Check if task was found
         _tasks[index] = task; // Replace with updated task
-        print('TaskProvider: Calling notifyListeners() after task update');
         notifyListeners(); // Update UI to show changes
-      } else {
-        print('TaskProvider: Warning - Task not found in local list');
       }
     } catch (e) {
       // Log the error for debugging purposes
-      print('TaskProvider: Error updating task: $e');
       developer.log('Error updating task: $e', name: 'TaskProvider');
 
       // Rethrow the exception so calling code can handle the error
@@ -170,17 +150,13 @@ class TaskProvider extends ChangeNotifier {
   /// This is a convenience method that finds the task and updates its status
   /// @param taskId - Unique identifier of the task to complete
   Future<void> completeTask(String taskId) async {
-    print('TaskProvider: completeTask() called for task ID: $taskId');
     // Find the task in the local list by ID
     final task = _tasks.firstWhere((t) => t.id == taskId);
-    print('TaskProvider: Found task "${task.title}" with current status: ${task.status}');
 
     // Create a new task object with completed status (immutable update pattern)
     final completedTask = task.copyWith(status: TaskStatus.completed);
-    print('TaskProvider: Created completed task with status: ${completedTask.status}');
 
     // Use the existing updateTask method to save the status change
     await updateTask(completedTask);
-    print('TaskProvider: completeTask() finished');
   }
 }

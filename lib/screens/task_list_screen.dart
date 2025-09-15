@@ -68,13 +68,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
           }
 
           final allTasks = taskProvider.tasks;
-          print('TaskListScreen: Rendering with ${allTasks.length} total tasks');
-          for (var task in allTasks) {
-            print('  - TaskListScreen task: "${task.title}" (Status: ${task.status})');
-          }
           
           final filteredTasks = _filterTasks(allTasks);
-          print('TaskListScreen: After filtering, ${filteredTasks.length} tasks remain');
           
           final completedTasks = allTasks.where((task) => task.status == TaskStatus.completed).toList();
           final pendingTasks = allTasks.where((task) => task.status != TaskStatus.completed).toList();
@@ -203,7 +198,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         child: LinearProgressIndicator(
                           value: completedTasks.length / allTasks.length,
                           backgroundColor: Colors.blue.shade200,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                         ),
                       ),
                   ],
@@ -274,9 +269,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         padding: const EdgeInsets.all(16),
                         itemCount: filteredTasks.length,
                         itemBuilder: (context, index) {
-                          print('ListView.builder: Rendering item $index of ${filteredTasks.length}');
                           final task = filteredTasks[index];
-                          print('  Task to render: "${task.title}"');
                           return _buildDetailedTaskItem(context, task, taskProvider);
                         },
                       ),
@@ -294,46 +287,32 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   List<Task> _filterTasks(List<Task> tasks) {
-    print('_filterTasks: Starting with ${tasks.length} tasks');
-    print('  Search query: "$_searchQuery"');
-    print('  Filter status: $_filterStatus');
-    print('  Filter priority: $_filterPriority');
     
     var filtered = tasks;
 
     // Apply search filter (search in title since Task doesn't have description)
     if (_searchQuery.isNotEmpty) {
-      var beforeSearch = filtered.length;
       filtered = filtered.where((task) =>
           task.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
-      print('  After search filter: ${filtered.length} tasks (was $beforeSearch)');
     }
 
     // Apply status filter
     if (_filterStatus != null) {
-      var beforeStatus = filtered.length;
       filtered = filtered.where((task) => task.status == _filterStatus).toList();
-      print('  After status filter: ${filtered.length} tasks (was $beforeStatus)');
     }
 
     // Apply priority filter
     if (_filterPriority != null) {
-      var beforePriority = filtered.length;
       filtered = filtered.where((task) => task.priority == _filterPriority).toList();
-      print('  After priority filter: ${filtered.length} tasks (was $beforePriority)');
     }
 
     // Apply completed/active task filter based on current view mode
     if (_showingCompletedTasks) {
       // Show only completed tasks
-      var beforeCompletedFilter = filtered.length;
       filtered = filtered.where((task) => task.status == TaskStatus.completed).toList();
-      print('  After completed filter (showing completed): ${filtered.length} tasks (was $beforeCompletedFilter)');
     } else {
       // Hide completed tasks (show only active tasks)
-      var beforeActiveFilter = filtered.length;
       filtered = filtered.where((task) => task.status != TaskStatus.completed).toList();
-      print('  After active filter (hiding completed): ${filtered.length} tasks (was $beforeActiveFilter)');
     }
 
     // Sort by priority (high to low) then by due date
@@ -356,11 +335,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
       }
       return 0;
     });
-
-    print('_filterTasks: Returning ${filtered.length} tasks after all filters and sorting');
-    for (var task in filtered) {
-      print('  - Final task: "${task.title}" (Status: ${task.status}, Priority: ${task.priority})');
-    }
     
     return filtered;
   }
@@ -435,11 +409,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
               DropdownButton<int?>(
                 value: tempPriority,
                 isExpanded: true,
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('All')),
-                  const DropdownMenuItem(value: 1, child: Text('Low')),
-                  const DropdownMenuItem(value: 2, child: Text('Medium')),
-                  const DropdownMenuItem(value: 3, child: Text('High')),
+                items: const [
+                  DropdownMenuItem(value: null, child: Text('All')),
+                  DropdownMenuItem(value: 1, child: Text('Low')),
+                  DropdownMenuItem(value: 2, child: Text('Medium')),
+                  DropdownMenuItem(value: 3, child: Text('High')),
                 ],
                 onChanged: (value) => setDialogState(() => tempPriority = value),
               ),

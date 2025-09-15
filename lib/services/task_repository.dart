@@ -17,11 +17,8 @@ class TaskRepository {
   /// Tasks without due dates will appear last in the list
   /// @return List of Task objects representing all stored tasks
   static Future<List<Task>> getAllTasks() async {
-    print('TaskRepository: getAllTasks() called');
-    
     // On web, skip SQLite entirely and use SharedPreferences directly
     if (kIsWeb) {
-      print('TaskRepository: Web platform detected, using SharedPreferences directly');
       return await _getTasksFromPrefs();
     }
     
@@ -29,11 +26,9 @@ class TaskRepository {
     try {
       // Get database instance from the database service
       final db = await DatabaseService.database;
-      print('TaskRepository: Got SQLite database instance');
 
       // Query the tasks table, ordering by due date (null values last)
       final results = await db.query('tasks', orderBy: 'due_at ASC');
-      print('TaskRepository: SQLite query returned ${results.length} rows');
 
       // Transform database rows into Task objects
       final tasks = results
@@ -74,11 +69,8 @@ class TaskRepository {
               ))
           .toList(); // Convert map result to list
       
-      print('TaskRepository: Loaded ${tasks.length} tasks from SQLite');
       return tasks;
     } catch (e) {
-      print('TaskRepository: SQLite failed: $e');
-      print('TaskRepository: Using SharedPreferences fallback');
       // Fallback to SharedPreferences for web compatibility
       return await _getTasksFromPrefs();
     }
@@ -86,17 +78,14 @@ class TaskRepository {
 
   /// Fallback method to get tasks from SharedPreferences (web-compatible)
   static Future<List<Task>> _getTasksFromPrefs() async {
-    print('TaskRepository: _getTasksFromPrefs() called');
     try {
       final prefs = await SharedPreferences.getInstance();
       final tasksJson = prefs.getStringList('tasks') ?? [];
-      print('TaskRepository: Found ${tasksJson.length} tasks in SharedPreferences');
       
       final tasks = <Task>[];
       for (int i = 0; i < tasksJson.length; i++) {
         try {
           final taskStr = tasksJson[i];
-          print('TaskRepository: Parsing task $i: $taskStr');
           final taskMap = jsonDecode(taskStr) as Map<String, dynamic>;
           final task = Task(
             id: taskMap['id'] as String,
@@ -115,32 +104,22 @@ class TaskRepository {
             linkedDeckId: taskMap['linkedDeckId'] as String?,
           );
           tasks.add(task);
-          print('TaskRepository: Successfully parsed task "${task.title}"');
         } catch (e) {
-          print('TaskRepository: Error parsing task $i: $e');
           // Skip this task and continue with others
         }
       }
       
-      print('TaskRepository: Loaded ${tasks.length} tasks from SharedPreferences');
-      for (var task in tasks) {
-        print('  - TaskRepository (Prefs): "${task.title}" (ID: ${task.id}, Status: ${task.status})');
-      }
-      
       return tasks;
     } catch (e) {
-      print('TaskRepository: Error in _getTasksFromPrefs: $e');
       return <Task>[]; // Return empty list on error
     }
   }
 
   /// Updates an existing task in SharedPreferences for web platform
   static Future<void> _updateTaskInPrefs(Task task) async {
-    print('TaskRepository: _updateTaskInPrefs() called for "${task.title}" (ID: ${task.id})');
     try {
       final prefs = await SharedPreferences.getInstance();
       final existingTasks = prefs.getStringList('tasks') ?? [];
-      print('TaskRepository: Found ${existingTasks.length} existing tasks in SharedPreferences');
       
       // Parse existing tasks and find the one to update
       List<Map<String, dynamic>> taskMaps = [];
@@ -164,27 +143,19 @@ class TaskRepository {
             'updatedAt': DateTime.now().toIso8601String(), // Update modification time
           };
           taskFound = true;
-          print('TaskRepository: Updated task "${task.title}" with status ${task.status}');
         }
         taskMaps.add(taskMap);
       }
       
       if (!taskFound) {
-        print('TaskRepository: Warning - Task with ID ${task.id} not found for update');
         return;
       }
       
       // Convert back to string list and save
       final updatedTasks = taskMaps.map((taskMap) => jsonEncode(taskMap)).toList();
-      final saveResult = await prefs.setStringList('tasks', updatedTasks);
-      print('TaskRepository: SharedPreferences update result: $saveResult. Total tasks: ${updatedTasks.length}');
-      
-      // Verification
-      final verification = prefs.getStringList('tasks') ?? [];
-      print('TaskRepository: Verification - found ${verification.length} tasks after update');
+      await prefs.setStringList('tasks', updatedTasks);
       
     } catch (e) {
-      print('TaskRepository: Error in _updateTaskInPrefs: $e');
       rethrow;
     }
   }
@@ -194,21 +165,17 @@ class TaskRepository {
   /// @param task - Task object to be stored in database
   /// @throws Exception if database insertion fails
   static Future<void> insertTask(Task task) async {
-    print('TaskRepository: insertTask() called for "${task.title}" (ID: ${task.id})');
     
     // On web, skip SQLite entirely and use SharedPreferences directly
     if (kIsWeb) {
-      print('TaskRepository: Web platform detected, using SharedPreferences directly');
       await _saveTaskToPrefs(task);
       return;
     }
     
     // Try SQLite first, fallback to SharedPreferences on mobile if SQLite fails
     try {
-      print('TaskRepository: Attempting to get SQLite database instance...');
       // Get database instance from the database service
       final db = await DatabaseService.database;
-      print('TaskRepository: Got SQLite database instance');
 
       final taskData = {
         'id': task.id, // Unique task identifier
@@ -232,19 +199,13 @@ class TaskRepository {
             DateTime.now().toIso8601String(), // Set update timestamp to now
       };
 
-      print('TaskRepository: About to insert into SQLite...');
       // Insert task data into tasks table
       await db.insert('tasks', taskData);
-      print('TaskRepository: Task inserted successfully into SQLite');
     } catch (e) {
-      print('TaskRepository: SQLite insert failed: $e');
-      print('TaskRepository: Using SharedPreferences fallback');
       // Fallback to SharedPreferences for web compatibility
       try {
         await _saveTaskToPrefs(task);
-        print('TaskRepository: SharedPreferences fallback completed successfully');
       } catch (fallbackError) {
-        print('TaskRepository: SharedPreferences fallback also failed: $fallbackError');
         rethrow;
       }
     }
@@ -252,11 +213,9 @@ class TaskRepository {
 
   /// Fallback method to save task to SharedPreferences (web-compatible)
   static Future<void> _saveTaskToPrefs(Task task) async {
-    print('TaskRepository: _saveTaskToPrefs() called for "${task.title}"');
     try {
       final prefs = await SharedPreferences.getInstance();
       final existingTasks = prefs.getStringList('tasks') ?? [];
-      print('TaskRepository: Found ${existingTasks.length} existing tasks in SharedPreferences');
       
       // Convert task to JSON
       final taskJson = jsonEncode({
@@ -273,35 +232,26 @@ class TaskRepository {
         'updatedAt': DateTime.now().toIso8601String(),
       });
       
-      print('TaskRepository: Task JSON: $taskJson');
       
       // Add new task to list
       existingTasks.add(taskJson);
       
       // Save back to SharedPreferences
-      final success = await prefs.setStringList('tasks', existingTasks);
-      print('TaskRepository: SharedPreferences save result: $success. Total tasks: ${existingTasks.length}');
-      
-      // Verify the save worked
-      final verifyTasks = prefs.getStringList('tasks') ?? [];
-      print('TaskRepository: Verification - found ${verifyTasks.length} tasks after save');
+      await prefs.setStringList('tasks', existingTasks);
       
     } catch (e) {
-      print('TaskRepository: Error in _saveTaskToPrefs: $e');
       rethrow;
     }
   }
 
   /// Test method to verify SharedPreferences is working
   static Future<void> testSharedPreferences() async {
-    print('TaskRepository: testSharedPreferences() called');
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('test_key', 'test_value');
-      final result = prefs.getString('test_key');
-      print('TaskRepository: SharedPreferences test - wrote "test_value", read "$result"');
+      prefs.getString('test_key');
     } catch (e) {
-      print('TaskRepository: SharedPreferences test failed: $e');
+      // Ignore SharedPreferences test errors
     }
   }
 
@@ -310,10 +260,8 @@ class TaskRepository {
   /// @param task - Task object with updated data (must have existing ID)
   /// @throws Exception if database update fails or task doesn't exist
   static Future<void> updateTask(Task task) async {
-    print('TaskRepository: updateTask() called for "${task.title}" (ID: ${task.id})');
     
     if (kIsWeb) {
-      print('TaskRepository: Web platform detected, using SharedPreferences for update');
       await _updateTaskInPrefs(task);
       return;
     }

@@ -151,26 +151,34 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       questProvider.onPerfectScore();
       
       // Show success message
-      Future.delayed(const Duration(milliseconds: 500), () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Correct! +$_expEarned EXP earned!'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      });
+      if (mounted) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Correct! +$_expEarned EXP earned!'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        });
+      }
     } else {
       // Show incorrect message with cooldown info
-      Future.delayed(const Duration(milliseconds: 500), () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Incorrect! You can retry this quiz in 6 hours.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      });
+      if (mounted) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Incorrect! You can retry this quiz in 6 hours.'),
+                backgroundColor: Colors.red,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        });
+      }
     }
   }
 

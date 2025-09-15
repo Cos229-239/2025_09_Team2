@@ -178,7 +178,7 @@ class _QuestListScreenState extends State<QuestListScreen> {
                         child: LinearProgressIndicator(
                           value: questProvider.completionRate,
                           backgroundColor: Colors.purple.shade200,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.purple),
                         ),
                       ),
                   ],
@@ -403,7 +403,7 @@ class _QuestListScreenState extends State<QuestListScreen> {
                 padding: const EdgeInsets.only(top: 8),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.check_circle,
                       size: 16,
                       color: Colors.green,
