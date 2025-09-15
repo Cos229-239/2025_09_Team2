@@ -199,34 +199,32 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                   child: Stack(
                     // Stack to overlay the back arrow on the content
                     children: [
-                      // Main content
-                      Padding(
-                        // Adds padding inside the container
-                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: Column(
-                          // Arranges children vertically in a column
-                          children: [
-                            const SizedBox(height: 60),
-                            // Adds space at the top
-                            _buildMascotSection(),
-                            // Builds the cat mascot and branding
-                            const SizedBox(height: 130),
-                            // Further increased space between mascot and form to move fields down more
-                            Expanded(
-                              // This will make the form take remaining space
-                              child: SingleChildScrollView(
-                                // Allows content to scroll if screen is too small
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 30.0),
-                                  // Top padding to create buffer space for floating labels
-                                  child: _buildSignupForm(),
-                                  // Builds the signup form
-                                ),
-                              ),
+                      // Main content - make entire screen scrollable
+                      SingleChildScrollView(
+                        // Allow entire screen to scroll
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: MediaQuery.of(context).size.height - 64, // Account for padding
+                          ),
+                          child: Padding(
+                            // Adds padding inside the container
+                            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                            child: Column(
+                              // Arranges children vertically in a column
+                              children: [
+                                SizedBox(height: MediaQuery.of(context).size.height > 600 ? 20 : 10),
+                                // Even more responsive top spacing
+                                _buildMascotSection(),
+                                // Builds the cat mascot and branding
+                                SizedBox(height: MediaQuery.of(context).size.height > 600 ? 30 : 15),
+                                // Even more responsive spacing between mascot and form
+                                _buildSignupForm(),
+                                // Builds the signup form directly without Expanded
+                                SizedBox(height: MediaQuery.of(context).size.height > 600 ? 20 : 10),
+                                // Responsive bottom spacing
+                              ],
                             ),
-                            const SizedBox(height: 20),
-                            // Adds space at the bottom
-                          ],
+                          ),
                         ),
                       ),
                       // Back arrow positioned at top-left
@@ -303,10 +301,10 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
         // Cat mascot with video
         Container(
           // Container for the video with rounded corners
-          width: 200,
-          // Fixed width for consistency (increased from 150)
-          height: 200,
-          // Fixed height for consistency (increased from 150)
+          width: MediaQuery.of(context).size.width > 600 ? 200 : 150,
+          // Responsive width: larger on desktop, smaller on mobile
+          height: MediaQuery.of(context).size.width > 600 ? 200 : 150,
+          // Responsive height: larger on desktop, smaller on mobile
           decoration: BoxDecoration(
             // Styling for the video container
             color: const Color(0xFF2a3543),
@@ -412,8 +410,8 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
           // Space between fields
           _buildConfirmPasswordField(),
           // Confirm password input field
-          const SizedBox(height: 130),
-          // Maximum space before signup button to lower it as much as possible
+          SizedBox(height: MediaQuery.of(context).size.height > 800 ? 60 : MediaQuery.of(context).size.height > 600 ? 30 : 15),
+          // Very responsive spacing before signup button - scales with screen height
           _buildSignupButton(),
           // Signup button
           const SizedBox(height: 20),

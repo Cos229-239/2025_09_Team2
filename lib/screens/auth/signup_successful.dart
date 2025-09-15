@@ -153,19 +153,25 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                     // Stack to overlay the back arrow on the content
                     children: [
                       // Main content
-                      Padding(
-                        // Adds padding inside the container
-                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: Column(
-                          // Arranges children vertically in a column
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      SingleChildScrollView(
+                        // Allow scrolling on smaller screens
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: MediaQuery.of(context).size.height - 64, // Account for padding
+                          ),
+                          child: Padding(
+                            // Adds padding inside the container
+                            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                            child: Column(
+                              // Arranges children vertically in a column
+                              mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const SizedBox(height: 60),
-                            // Adds space at the top
+                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 60 : 20),
+                            // Responsive top spacing
                             _buildMascotSection(),
                             // Builds the video mascot section
-                            const SizedBox(height: 32),
-                            // Space between video and text
+                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 32 : 16),
+                            // Responsive space between video and text
                             const Text(
                               'Your account has been created successfully!',
                               style: TextStyle(
@@ -175,20 +181,22 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                                 letterSpacing: 2.5,
                               ),
                             ),
-                            const SizedBox(height: 40),
-                            // Space between text and button
+                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 40 : 20),
+                            // Responsive space between text and button
                             _buildReturnToLoginButton(),
                             // Return to Login button
-                            const SizedBox(height: 30),
-                            // Space between button and smiley
+                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 30 : 15),
+                            // Responsive space between button and smiley
                             const Icon(
                               Icons.sentiment_very_satisfied,
                               color: Color(0xFFe67e22),
                               size: 60,
                             ),
-                            const SizedBox(height: 60),
-                            // Space at bottom
+                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 60 : 20),
+                            // Responsive space at bottom
                           ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -210,10 +218,10 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
         // Cat mascot with video
         Container(
           // Container for the video with rounded corners
-          width: 200,
-          // Fixed width for consistency (increased from 150)
-          height: 200,
-          // Fixed height for consistency (increased from 150)
+          width: MediaQuery.of(context).size.width > 600 ? 200 : 150,
+          // Responsive width: larger on desktop, smaller on mobile
+          height: MediaQuery.of(context).size.width > 600 ? 200 : 150,
+          // Responsive height: larger on desktop, smaller on mobile
           decoration: BoxDecoration(
             // Styling for the video container
             color: const Color(0xFF2a3543),

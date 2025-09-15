@@ -95,32 +95,37 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     borderRadius: BorderRadius.all(Radius.circular(10)), // Slightly smaller radius to fit inside orange border
                   ),
-                  child: Padding(
-                    // Adds padding inside the container
-                    padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                    // Horizontal padding for content
-                    child: Column(
-                      // Column to stack UI elements vertically
-                      children: [
-                        const SizedBox(height: 60), // Reduced top spacing to accommodate larger mascot
-                        // Cat mascot and branding
-                        Expanded(
-                          flex: 2, // Give more space to the mascot section
-                          child: _buildMascotSection(),
+                  child: SingleChildScrollView(
+                    // Make entire login screen scrollable
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: MediaQuery.of(context).size.height - 64, // Account for padding
+                      ),
+                      child: Padding(
+                        // Adds padding inside the container
+                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                        // Horizontal padding for content
+                        child: Column(
+                          // Column to stack UI elements vertically
+                          children: [
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 60 : 20), // Responsive top spacing
+                            // Cat mascot and branding
+                            _buildMascotSection(),
+                            // Builds the cat mascot section
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            // Responsive spacing
+                            // Login form
+                            _buildLoginForm(),
+                            // Builds the login form section
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            // Responsive spacer between form and links
+                            _buildBottomLinks(),
+                            // Builds the bottom navigation links
+                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            // Responsive spacer at the bottom
+                          ],
                         ),
-                        // Builds the cat mascot section
-                        const Spacer(),
-                        // Flexible spacer to distribute space
-                        // Login form
-                        _buildLoginForm(),
-                        // Builds the login form section
-                        const SizedBox(height: 40),
-                        // Spacer between form and links
-                        _buildBottomLinks(),
-                        // Builds the bottom navigation links
-                        const SizedBox(height: 40),
-                        // Spacer at the bottom
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -140,8 +145,8 @@ class _LoginScreenState extends State<LoginScreen> {
         // Cat mascot container with the provided image
         Container(
           // Container for the mascot graphic
-          width: 200,  // Reduced size to fit better on screen
-          height: 200, // Reduced size to fit better on screen
+          width: MediaQuery.of(context).size.width > 600 ? 200 : 150,  // Responsive size for different screen sizes
+          height: MediaQuery.of(context).size.width > 600 ? 200 : 150, // Responsive size for different screen sizes
           decoration: BoxDecoration(
             // Styling for the mascot container
             color: const Color(0xFF3d4a5c), // Medium blue-gray for container background
