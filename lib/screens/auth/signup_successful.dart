@@ -30,7 +30,7 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
   void _initializeVideo() async {
     try {
       _videoController = VideoPlayerController.asset(
-        'assets/grok-video-864eb59b-ebfe-413f-8f5e-b5da134296c4.mp4',
+        'assets/LibraryCat.mp4',
       );
       
       await _videoController!.initialize();
@@ -311,8 +311,9 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
       child: ElevatedButton(
         // Elevated button for return to login
         onPressed: () {
-          // Navigate back to login screen
-          Navigator.of(context).pop();
+          // Navigate back to login screen (pop twice to skip signup screen)
+          Navigator.of(context).pop(); // Pop signup successful screen
+          Navigator.of(context).pop(); // Pop signup screen to return to login
         },
         style: ElevatedButton.styleFrom(
           // Button styling

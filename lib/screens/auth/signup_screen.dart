@@ -5,7 +5,7 @@ import 'dart:developer' as developer;
 // Import video player package
 import 'package:video_player/video_player.dart';
 // Import signup successful screen
-import 'package:studypals/screens/auth/signup_seccessful.dart';
+import 'package:studypals/screens/auth/signup_successful.dart';
 
 /// Modern signup screen with video mascot design
 /// Matches the beautiful UI provided in the design mockup
