@@ -58,14 +58,16 @@ class AIService {
 
     if (!isConfigured) {
       debugPrint('ERROR: AI service not configured!');
-      return _createFallbackFlashcards(subject, content);
+      return _createFallbackFlashcards(subject, content, count: count);
     }
 
     try {
       final prompt = '''
 Create exactly $count flashcards about $subject. Topic: $content
 
-You MUST respond with ONLY a valid JSON array. No explanation, no extra text.
+CRITICAL: You MUST create exactly $count flashcards. No more, no less.
+
+You MUST respond with ONLY a valid JSON array containing exactly $count objects. No explanation, no extra text.
 
 Format:
 [
@@ -79,6 +81,7 @@ Format:
 ]
 
 CRITICAL Requirements:
+- Create EXACTLY $count flashcards - count them carefully!
 - Include exactly 4 multiple choice options for each card
 - The correct answer must be one of the 4 options AND must match the "answer" field
 - Set correctAnswerIndex to the position (0-3) where the correct answer appears in multipleChoiceOptions
@@ -120,15 +123,41 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
 
       if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
         cleanResponse = cleanResponse.substring(startIndex, endIndex + 1);
+      } else {
+        // If no complete JSON array found, try to repair truncated JSON
+        if (startIndex != -1) {
+          // Extract from start to end of string and try to repair
+          cleanResponse = cleanResponse.substring(startIndex);
+          cleanResponse = _repairTruncatedJSON(cleanResponse);
+        }
       }
 
       debugPrint('Cleaned response: $cleanResponse');
 
-      // Parse JSON
-      final cardsData = json.decode(cleanResponse) as List;
+      // Parse JSON with error handling
+      List cardsData;
+      try {
+        cardsData = json.decode(cleanResponse) as List;
+      } catch (e) {
+        debugPrint('JSON parsing failed: $e');
+        debugPrint('Attempting to repair JSON...');
+        
+        // Try to repair the JSON and parse again
+        final repairedJSON = _repairTruncatedJSON(cleanResponse);
+        debugPrint('Repaired JSON: $repairedJSON');
+        
+        try {
+          cardsData = json.decode(repairedJSON) as List;
+        } catch (e2) {
+          debugPrint('JSON repair failed: $e2');
+          debugPrint('Raw response might not be valid JSON');
+          throw Exception('Failed to parse AI response as JSON');
+        }
+      }
+      
       debugPrint('Parsed ${cardsData.length} cards from AI response');
 
-      return cardsData
+      List<FlashCard> generatedCards = cardsData
           .map((cardJson) => FlashCard(
                 id: DateTime.now().millisecondsSinceEpoch.toString() + 
                     cardsData.indexOf(cardJson).toString(),
@@ -148,94 +177,171 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
                 difficulty: cardJson['difficulty'] ?? 3,
               ))
           .toList();
+
+      // If we didn't get enough cards, supplement with fallback cards
+      if (generatedCards.length < count) {
+        debugPrint('Generated ${generatedCards.length} cards (expected $count)');
+        final shortfall = count - generatedCards.length;
+        debugPrint('Creating $shortfall additional fallback cards');
+        
+        final fallbackCards = _createFallbackFlashcards(subject, content, count: shortfall);
+        generatedCards.addAll(fallbackCards);
+        
+        debugPrint('Final card count: ${generatedCards.length}');
+      }
+
+      return generatedCards;
     } catch (e) {
       debugPrint('AI flashcard generation error: $e');
       debugPrint('Raw response might not be valid JSON');
-      return _createFallbackFlashcards(subject, content);
+      return _createFallbackFlashcards(subject, content, count: count);
     }
   }
 
   /// Create fallback flashcards when AI is unavailable
-  List<FlashCard> _createFallbackFlashcards(String subject, String content) {
-    debugPrint('Creating fallback flashcards for $subject');
+  List<FlashCard> _createFallbackFlashcards(String subject, String content, {int count = 5}) {
+    debugPrint('Creating $count fallback flashcards for $subject');
 
-    return [
-      FlashCard(
-        id: '1',
-        deckId: 'ai_generated',
-        type: CardType.basic,
-        front: 'What is the main topic of $subject?',
-        back: 'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
-        multipleChoiceOptions: [
+    final templates = [
+      {
+        'front': 'What is the main topic of $subject?',
+        'back': 'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
+        'options': [
           'Advanced theoretical research only',
           'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
           'Historical dates and events',
           'Language and literature studies',
         ],
-        correctAnswerIndex: 1,
-        difficulty: 2,
-      ),
-      FlashCard(
-        id: '2',
-        deckId: 'ai_generated',
-        type: CardType.basic,
-        front: 'What are key concepts in $subject?',
-        back: 'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
-        multipleChoiceOptions: [
+        'correctIndex': 1,
+        'difficulty': 2,
+      },
+      {
+        'front': 'What are key concepts in $subject?',
+        'back': 'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
+        'options': [
           'Only memorization of facts',
           'Unrelated scientific theories',
           'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
           'Foreign language vocabulary',
         ],
-        correctAnswerIndex: 2,
-        difficulty: 3,
-      ),
-      FlashCard(
-        id: '3',
-        deckId: 'ai_generated',
-        type: CardType.basic,
-        front: 'Why is studying $subject important?',
-        back: 'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
-        multipleChoiceOptions: [
+        'correctIndex': 2,
+        'difficulty': 3,
+      },
+      {
+        'front': 'Why is studying $subject important?',
+        'back': 'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
+        'options': [
           'It has no practical value',
           'Only for entertainment purposes',
           'Just to pass standardized tests',
           'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
         ],
-        correctAnswerIndex: 3,
-        difficulty: 2,
-      ),
-      FlashCard(
-        id: '4',
-        deckId: 'ai_generated',
-        type: CardType.basic,
-        front: 'How can you apply $subject knowledge?',
-        back: 'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
-        multipleChoiceOptions: [
+        'correctIndex': 3,
+        'difficulty': 2,
+      },
+      {
+        'front': 'How can you apply $subject knowledge?',
+        'back': 'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
+        'options': [
           'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
           'Knowledge cannot be applied practically',
           'Only in theoretical discussions',
           'By avoiding any practical use',
         ],
-        correctAnswerIndex: 0,
-        difficulty: 3,
-      ),
-      FlashCard(
-        id: '5',
-        deckId: 'ai_generated',
-        type: CardType.basic,
-        front: 'What are effective study strategies for $subject?',
-        back: 'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
-        multipleChoiceOptions: [
+        'correctIndex': 0,
+        'difficulty': 3,
+      },
+      {
+        'front': 'What are effective study strategies for $subject?',
+        'back': 'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
+        'options': [
           'Memorizing everything without understanding',
           'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
           'Studying only right before exams',
           'Avoiding practice problems entirely',
         ],
-        correctAnswerIndex: 1,
-        difficulty: 2,
-      ),
+        'correctIndex': 1,
+        'difficulty': 2,
+      },
+      {
+        'front': 'What tools or resources are helpful for $subject?',
+        'back': 'Helpful resources include textbooks, practice problems, online tutorials, study groups, and hands-on experimentation.',
+        'options': [
+          'Only expensive software',
+          'Helpful resources include textbooks, practice problems, online tutorials, study groups, and hands-on experimentation.',
+          'No resources are needed',
+          'Just reading without practicing',
+        ],
+        'correctIndex': 1,
+        'difficulty': 2,
+      },
+      {
+        'front': 'How do you measure progress in $subject?',
+        'back': 'Progress can be measured through practice tests, completed exercises, understanding of complex concepts, and practical applications.',
+        'options': [
+          'Progress cannot be measured',
+          'Only through final exams',
+          'Progress can be measured through practice tests, completed exercises, understanding of complex concepts, and practical applications.',
+          'By avoiding all assessments',
+        ],
+        'correctIndex': 2,
+        'difficulty': 3,
+      },
+      {
+        'front': 'What common mistakes should be avoided in $subject?',
+        'back': 'Common mistakes include rushing without understanding, not practicing regularly, ignoring fundamentals, and not seeking help when needed.',
+        'options': [
+          'Making mistakes is always good',
+          'Common mistakes include rushing without understanding, not practicing regularly, ignoring fundamentals, and not seeking help when needed.',
+          'Only experts make mistakes',
+          'Mistakes should never be corrected',
+        ],
+        'correctIndex': 1,
+        'difficulty': 3,
+      },
+      {
+        'front': 'How does $subject connect to other fields?',
+        'back': '$subject often connects to other fields through shared principles, cross-disciplinary applications, and integrated problem-solving approaches.',
+        'options': [
+          '$subject is completely isolated',
+          'No connections exist between fields',
+          '$subject often connects to other fields through shared principles, cross-disciplinary applications, and integrated problem-solving approaches.',
+          'Connections are always negative',
+        ],
+        'correctIndex': 2,
+        'difficulty': 4,
+      },
+      {
+        'front': 'What advanced topics in $subject should be explored?',
+        'back': 'Advanced topics typically involve deeper theoretical understanding, complex problem-solving, research applications, and specialized techniques.',
+        'options': [
+          'Advanced topics should be avoided',
+          'Advanced topics typically involve deeper theoretical understanding, complex problem-solving, research applications, and specialized techniques.',
+          'Only basic concepts matter',
+          'Advanced means more memorization',
+        ],
+        'correctIndex': 1,
+        'difficulty': 4,
+      },
     ];
+
+    // Generate the requested number of cards, cycling through templates if needed
+    final cards = <FlashCard>[];
+    for (int i = 0; i < count; i++) {
+      final template = templates[i % templates.length];
+      cards.add(FlashCard(
+        id: (i + 1).toString(),
+        deckId: 'ai_generated',
+        type: CardType.basic,
+        front: template['front'] as String,
+        back: template['back'] as String,
+        multipleChoiceOptions: List<String>.from(template['options'] as List),
+        correctAnswerIndex: template['correctIndex'] as int,
+        difficulty: template['difficulty'] as int,
+      ));
+    }
+
+    return cards;
   }
 
   /// Generate motivational pet message
@@ -336,7 +442,7 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
         'messages': [
           {'role': 'user', 'content': prompt}
         ],
-        'max_tokens': 300,
+        'max_tokens': 1500,
         'temperature': 0.7,
       }),
     );
@@ -381,7 +487,7 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
           ],
           'generationConfig': {
             'temperature': 0.7,
-            'maxOutputTokens': 300,
+            'maxOutputTokens': 1500,
           }
         }),
       );
@@ -438,7 +544,7 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       body: json.encode({
         'model': 'claude-3-haiku-20240307',
-        'max_tokens': 300,
+        'max_tokens': 1500,
         'messages': [
           {'role': 'user', 'content': prompt}
         ]
@@ -488,7 +594,7 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
         'messages': [
           {'role': 'user', 'content': prompt}
         ],
-        'max_tokens': 300,
+        'max_tokens': 1500,
         'temperature': 0.7,
       }),
     );
@@ -499,6 +605,55 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
     } else {
       throw Exception(
           'Local model API call failed: ${response.statusCode} - ${response.body}');
+    }
+  }
+
+  /// Repairs truncated JSON by completing missing brackets and braces
+  String _repairTruncatedJSON(String truncatedJSON) {
+    try {
+      // Remove code block markers if present
+      String json = truncatedJSON.trim();
+      if (json.startsWith('```json')) {
+        json = json.replaceFirst('```json', '');
+      }
+      if (json.endsWith('```')) {
+        json = json.substring(0, json.lastIndexOf('```'));
+      }
+      json = json.trim();
+
+      // Count opening and closing brackets/braces
+      int openBrackets = '['.allMatches(json).length;
+      int closeBrackets = ']'.allMatches(json).length;
+      int openBraces = '{'.allMatches(json).length;
+      int closeBraces = '}'.allMatches(json).length;
+
+      // If we have incomplete objects, try to close them
+      if (openBraces > closeBraces) {
+        // Check if we're in the middle of a property
+        if (!json.endsWith('}') && !json.endsWith(',')) {
+          // If we ended mid-property value, close with quote if needed
+          if (json.split('"').length % 2 == 0) {
+            json += '"';
+          }
+        }
+        
+        // Close missing braces
+        for (int i = 0; i < (openBraces - closeBraces); i++) {
+          json += '}';
+        }
+      }
+
+      // Close missing brackets
+      if (openBrackets > closeBrackets) {
+        for (int i = 0; i < (openBrackets - closeBrackets); i++) {
+          json += ']';
+        }
+      }
+
+      return json;
+    } catch (e) {
+      debugPrint('JSON repair failed: $e');
+      return truncatedJSON;
     }
   }
 

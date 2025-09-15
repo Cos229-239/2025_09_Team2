@@ -5,24 +5,33 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Import screen for flashcard study interface
 import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
+// Import settings screen for app configuration
+import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/pet_widget.dart'; // Virtual pet display and interactions
-import 'package:studypals/widgets/dashboard/today_tasks_widget.dart'; // Today's tasks overview
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
 import 'package:studypals/widgets/dashboard/quick_stats_widget.dart'; // Study statistics summary
 // Import AI widgets for intelligent study features
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
 import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI study assistant chat
-import 'package:studypals/widgets/ai/ai_settings_widget.dart'; // AI configuration settings
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/app_state.dart'; // Global app state for authentication
 import 'package:studypals/providers/task_provider.dart'; // Task management state
+import 'package:studypals/providers/note_provider.dart'; // Notes management state
 import 'package:studypals/providers/deck_provider.dart'; // Flashcard deck state
 import 'package:studypals/providers/pet_provider.dart'; // Virtual pet state
 import 'package:studypals/providers/srs_provider.dart'; // Spaced repetition system state
+import 'package:studypals/providers/ai_provider.dart'; // AI provider state
 import 'package:studypals/providers/daily_quest_provider.dart'; // Daily quest gamification state
+import 'package:studypals/providers/notification_provider.dart'; // Notification system state
+import 'package:studypals/services/ai_service.dart'; // AI service for provider enum
+// Import notification widgets for LinkedIn-style notifications
+import 'package:studypals/widgets/notifications/notification_panel.dart'; // Notification bell and panel
 // Import models for deck and card data
 import 'package:studypals/models/deck.dart'; // Deck model for flashcard collections
+import 'package:studypals/models/note.dart'; // Note model for study notes
+import 'package:studypals/models/task.dart'; // Task model for to-do items
+import 'package:studypals/models/daily_quest.dart'; // Daily quest model for gamification
 // Import flashcard study screen for studying decks
 //import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
 
@@ -82,6 +91,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Provider.of<SRSProvider>(context, listen: false); // SRS data access
     final questProvider =
         Provider.of<DailyQuestProvider>(context, listen: false); // Daily quest data access
+    final aiProvider = 
+        Provider.of<StudyPalsAIProvider>(context, listen: false); // AI provider access
+    final notificationProvider =
+        Provider.of<NotificationProvider>(context, listen: false); // Notification system access
+
+    // Auto-configure Google AI upon dashboard initialization
+    try {
+      await aiProvider.configureAI(
+        provider: AIProvider.google,
+        apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+      );
+      debugPrint('Google AI automatically configured on dashboard load');
+    } catch (e) {
+      debugPrint('Failed to auto-configure AI on dashboard load: $e');
+    }
 
     // Load all data sources concurrently using Future.wait for better performance
     // If one fails, others can still complete successfully
@@ -92,7 +116,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       srsProvider
           .loadReviews(), // Load spaced repetition review data from database
       questProvider.loadTodaysQuests(), // Load daily quests and generate if needed
+      notificationProvider.loadNotifications(), // Load existing notifications
     ]);
+
+    // Set up quest completion callback for notifications
+    questProvider.setQuestCompletionCallback((quest) {
+      notificationProvider.notifyQuestCompleted(quest);
+    });
+
+    // Generate quiz and review notifications based on loaded data
+    try {
+      await notificationProvider.checkQuizNotifications(
+        quests: questProvider.quests,
+        dueCards: srsProvider.dueReviews,
+      );
+      debugPrint('Checked and generated quiz notifications');
+    } catch (e) {
+      debugPrint('Error generating notifications: $e');
+    }
   }
 
   /// Builds the dashboard screen with bottom navigation
@@ -156,23 +197,19 @@ class DashboardHome extends StatelessWidget {
   /// @return List of IconButton widgets for the app bar actions
   List<Widget> _buildAppBarActions(BuildContext context) {
     return [
-      // Notifications button - shows app notifications and reminders
-      IconButton(
-        icon: const Icon(Icons.notifications), // Bell icon for notifications
-        onPressed: () {
-          // Future implementation: Navigate to notifications panel
-          // Will show study reminders, achievements, task completions, pet interactions
-          // Navigation will be implemented when notifications screen is created
-        },
-      ),
+      // LinkedIn-style notification bell with unread count badge
+      const NotificationBellIcon(),
 
       // Settings button - opens app configuration panel
       IconButton(
         icon: const Icon(Icons.settings), // Gear icon for settings
         onPressed: () {
-          // Future implementation: Navigate to settings screen
-          // Will handle app configuration, themes, notifications, data export
-          // Navigation will be implemented when settings screen is created
+          // Navigate to settings screen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SettingsScreen(),
+            ),
+          );
         },
       ),
 
@@ -237,26 +274,8 @@ class DashboardHome extends StatelessWidget {
             // Spacing between widgets for visual separation
             SizedBox(height: 20),
 
-            // Today's tasks widget - displays tasks due today with quick actions
-            TodayTasksWidget(),
-
-            // Spacing between widgets
-            SizedBox(height: 20),
-
-            // Due cards widget - shows flashcards that need review today
-            DueCardsWidget(),
-
-            // Spacing between widgets
-            SizedBox(height: 20),
-
             // Quick stats widget - displays study progress and statistics
             QuickStatsWidget(),
-
-            // Spacing between widgets
-            SizedBox(height: 20),
-
-            // AI flashcard generator - create cards using AI
-            AIFlashcardGenerator(),
 
             // Spacing between widgets
             SizedBox(height: 20),
@@ -266,12 +285,6 @@ class DashboardHome extends StatelessWidget {
               height: 300,
               child: AITutorChat(),
             ),
-
-            // Spacing between widgets
-            SizedBox(height: 20),
-
-            // AI settings - configure AI features
-            AISettingsWidget(),
           ],
         ),
       ),
@@ -316,39 +329,1113 @@ class PlannerScreen extends StatelessWidget {
   }
 }
 
-/// Placeholder screen for note-taking functionality
-/// Will be replaced with full note editor and management interface
-class NotesScreen extends StatelessWidget {
-  // Constructor with optional key for widget identification
+/// Enhanced notes screen with task integration and filtering options
+/// Displays both notes and tasks with filtering capabilities
+class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
 
-  /// Builds placeholder content indicating feature is coming soon
-  /// @param context - Build context containing theme information
-  /// @return Widget tree showing placeholder content
+  @override
+  State<NotesScreen> createState() => _NotesScreenState();
+}
+
+class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    
+    // Load data when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final noteProvider = Provider.of<NoteProvider>(context, listen: false);
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      final questProvider = Provider.of<DailyQuestProvider>(context, listen: false);
+      noteProvider.loadNotes();
+      taskProvider.loadTasks();
+      questProvider.loadTodaysQuests();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // App bar with screen title
-      appBar: AppBar(title: const Text('Notes')),
-
-      // Centered placeholder content
-      body: Center(
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center, // Center content vertically
-          children: [
-            // Large note icon to indicate note-taking functionality
-            const Icon(Icons.note, size: 64, color: Colors.grey),
-
-            // Spacing between icon and text
-            const SizedBox(height: 16),
-
-            // Coming soon message with appropriate text style
-            Text('Notes coming soon!',
-                style: Theme.of(context).textTheme.headlineSmall),
+      appBar: AppBar(
+        title: const Text('Notes & Tasks'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(icon: Icon(Icons.note), text: 'Notes'),
+            Tab(icon: Icon(Icons.task_alt), text: 'Tasks'),
+            Tab(icon: Icon(Icons.emoji_events), text: 'Quests'),
+            Tab(icon: Icon(Icons.view_agenda), text: 'All'),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _showCreateDialog(context),
+          ),
+        ],
       ),
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search notes and tasks...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty 
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+            ),
+          ),
+          
+          // Tab content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildNotesTab(),
+                _buildTasksTab(),
+                _buildQuestsTab(),
+                _buildAllTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build notes-only tab
+  Widget _buildNotesTab() {
+    return Consumer<NoteProvider>(
+      builder: (context, noteProvider, child) {
+        if (noteProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final filteredNotes = noteProvider.searchNotes(_searchQuery);
+
+        if (filteredNotes.isEmpty) {
+          return _buildEmptyState(
+            icon: Icons.note,
+            title: _searchQuery.isEmpty ? 'No notes yet' : 'No notes found',
+            subtitle: _searchQuery.isEmpty 
+                ? 'Create your first study note'
+                : 'Try a different search term',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: filteredNotes.length,
+          itemBuilder: (context, index) {
+            final note = filteredNotes[index];
+            return _buildNoteCard(note);
+          },
+        );
+      },
+    );
+  }
+
+  /// Build tasks-only tab
+  Widget _buildTasksTab() {
+    return Consumer<TaskProvider>(
+      builder: (context, taskProvider, child) {
+        if (taskProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final filteredTasks = taskProvider.searchTasks(_searchQuery);
+
+        if (filteredTasks.isEmpty) {
+          return _buildEmptyState(
+            icon: Icons.task_alt,
+            title: _searchQuery.isEmpty ? 'No tasks yet' : 'No tasks found',
+            subtitle: _searchQuery.isEmpty 
+                ? 'Create your first task'
+                : 'Try a different search term',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: filteredTasks.length,
+          itemBuilder: (context, index) {
+            final task = filteredTasks[index];
+            return _buildTaskCard(task);
+          },
+        );
+      },
+    );
+  }
+
+  /// Build quests-only tab
+  Widget _buildQuestsTab() {
+    return Consumer<DailyQuestProvider>(
+      builder: (context, questProvider, child) {
+        if (questProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final filteredQuests = questProvider.quests.where((quest) {
+          if (_searchQuery.isEmpty) return true;
+          final lowerQuery = _searchQuery.toLowerCase();
+          return quest.title.toLowerCase().contains(lowerQuery) ||
+                 quest.description.toLowerCase().contains(lowerQuery) ||
+                 quest.type.displayName.toLowerCase().contains(lowerQuery);
+        }).toList();
+
+        if (filteredQuests.isEmpty) {
+          return _buildEmptyState(
+            icon: Icons.emoji_events,
+            title: _searchQuery.isEmpty ? 'No quests today' : 'No quests found',
+            subtitle: _searchQuery.isEmpty 
+                ? 'Daily quests will be generated automatically'
+                : 'Try a different search term',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: filteredQuests.length,
+          itemBuilder: (context, index) {
+            final quest = filteredQuests[index];
+            return _buildQuestCard(quest, questProvider);
+          },
+        );
+      },
+    );
+  }
+
+  /// Build combined notes, tasks, and quests tab
+  Widget _buildAllTab() {
+    return Consumer3<NoteProvider, TaskProvider, DailyQuestProvider>(
+      builder: (context, noteProvider, taskProvider, questProvider, child) {
+        if (noteProvider.isLoading || taskProvider.isLoading || questProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final filteredNotes = noteProvider.searchNotes(_searchQuery);
+        final filteredTasks = taskProvider.searchTasks(_searchQuery);
+        
+        // Filter quests based on search query
+        final filteredQuests = questProvider.quests.where((quest) {
+          if (_searchQuery.isEmpty) return true;
+          final lowerQuery = _searchQuery.toLowerCase();
+          return quest.title.toLowerCase().contains(lowerQuery) ||
+                 quest.description.toLowerCase().contains(lowerQuery) ||
+                 quest.type.displayName.toLowerCase().contains(lowerQuery);
+        }).toList();
+        
+        if (filteredNotes.isEmpty && filteredTasks.isEmpty && filteredQuests.isEmpty) {
+          return _buildEmptyState(
+            icon: Icons.view_agenda,
+            title: _searchQuery.isEmpty ? 'No content yet' : 'No results found',
+            subtitle: _searchQuery.isEmpty 
+                ? 'Create notes, tasks, or complete quests to get started'
+                : 'Try a different search term',
+          );
+        }
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            // Daily Quests section
+            if (filteredQuests.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Daily Quests (${filteredQuests.length})',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ),
+              ...filteredQuests.map((quest) => _buildQuestCard(quest, questProvider)),
+              const SizedBox(height: 16),
+            ],
+            
+            // Notes section
+            if (filteredNotes.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Notes (${filteredNotes.length})',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue.shade700,
+                  ),
+                ),
+              ),
+              ...filteredNotes.map((note) => _buildNoteCard(note)),
+              const SizedBox(height: 16),
+            ],
+            
+            // Tasks section
+            if (filteredTasks.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Tasks (${filteredTasks.length})',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.green.shade700,
+                  ),
+                ),
+              ),
+              ...filteredTasks.map((task) => _buildTaskCard(task)),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  /// Build note card widget
+  Widget _buildNoteCard(Note note) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: Colors.blue.shade100,
+          child: Icon(Icons.note, color: Colors.blue.shade700),
+        ),
+        title: Text(
+          note.title,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (note.contentMd.isNotEmpty)
+              Text(
+                note.contentMd.length > 100 
+                    ? '${note.contentMd.substring(0, 100)}...'
+                    : note.contentMd,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            if (note.tags.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 4,
+                children: note.tags.take(3).map((tag) => 
+                  Chip(
+                    label: Text(tag, style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.w600)),
+                    backgroundColor: Colors.blue.shade50,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ).toList(),
+              ),
+            ],
+          ],
+        ),
+        trailing: Text(
+          _formatDate(note.updatedAt),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Colors.grey.shade600,
+          ),
+        ),
+        onTap: () => _editNote(note),
+      ),
+    );
+  }
+
+  /// Build task card widget
+  Widget _buildTaskCard(Task task) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: _getTaskStatusColor(task.status).withValues(alpha: 0.2),
+          child: Icon(
+            _getTaskStatusIcon(task.status),
+            color: _getTaskStatusColor(task.status),
+          ),
+        ),
+        title: Text(
+          task.title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            decoration: task.status == TaskStatus.completed 
+                ? TextDecoration.lineThrough 
+                : null,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 14, color: Colors.grey.shade600),
+                const SizedBox(width: 4),
+                Text(
+                  '${task.estMinutes} min',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                if (task.dueAt != null) ...[
+                  const SizedBox(width: 16),
+                  Icon(Icons.schedule, size: 14, color: Colors.grey.shade600),
+                  const SizedBox(width: 4),
+                  Text(
+                    _formatDate(task.dueAt!),
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                ],
+              ],
+            ),
+            if (task.tags.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 4,
+                children: task.tags.take(3).map((tag) => 
+                  Chip(
+                    label: Text(tag, style: const TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.w600)),
+                    backgroundColor: Colors.green.shade50,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ).toList(),
+              ),
+            ],
+          ],
+        ),
+        trailing: _buildPriorityIndicator(task.priority),
+        onTap: () => _editTask(task),
+      ),
+    );
+  }
+
+  /// Build a quest card widget
+  Widget _buildQuestCard(DailyQuest quest, DailyQuestProvider questProvider) {
+    final progressPercent = quest.currentProgress / quest.targetCount;
+    
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _handleQuestTap(quest, questProvider),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: quest.isCompleted 
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : _getQuestTypeColor(quest.type).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      quest.isCompleted ? Icons.check_circle : _getQuestTypeIcon(quest.type),
+                      color: quest.isCompleted 
+                          ? Colors.green
+                          : _getQuestTypeColor(quest.type),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          quest.title,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            decoration: quest.isCompleted ? TextDecoration.lineThrough : null,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          quest.description,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star, size: 14, color: Colors.orange),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${quest.expReward}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.orange,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (!quest.isCompleted) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: progressPercent,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _getQuestTypeColor(quest.type),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${quest.currentProgress}/${quest.targetCount}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Handle quest card tap
+  void _handleQuestTap(DailyQuest quest, DailyQuestProvider questProvider) {
+    // Show quest details dialog or navigate to appropriate screen
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                _getQuestTypeIcon(quest.type),
+                color: _getQuestTypeColor(quest.type),
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: Text(quest.title)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(quest.description),
+              const SizedBox(height: 16),
+              if (!quest.isCompleted) ...[
+                Text(
+                  'Progress: ${quest.currentProgress}/${quest.targetCount}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: quest.currentProgress / quest.targetCount,
+                  backgroundColor: Colors.grey[200],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    _getQuestTypeColor(quest.type),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              Row(
+                children: [
+                  const Icon(Icons.star, size: 16, color: Colors.orange),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${quest.expReward} XP Reward',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.orange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+            if (!quest.isCompleted && quest.currentProgress >= quest.targetCount)
+              ElevatedButton(
+                onPressed: () {
+                  questProvider.completeQuest(quest.id);
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Quest completed! +${quest.expReward} XP'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                child: const Text('Complete Quest'),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Get quest type icon
+  IconData _getQuestTypeIcon(QuestType type) {
+    switch (type) {
+      case QuestType.study:
+        return Icons.school;
+      case QuestType.quiz:
+        return Icons.quiz;
+      case QuestType.streak:
+        return Icons.local_fire_department;
+      case QuestType.perfectScore:
+        return Icons.star;
+      case QuestType.timeSpent:
+        return Icons.access_time;
+      case QuestType.newCards:
+        return Icons.new_releases;
+      case QuestType.review:
+        return Icons.refresh;
+    }
+  }
+
+  /// Get quest type color
+  Color _getQuestTypeColor(QuestType type) {
+    switch (type) {
+      case QuestType.study:
+        return Colors.blue;
+      case QuestType.quiz:
+        return Colors.purple;
+      case QuestType.streak:
+        return Colors.orange;
+      case QuestType.perfectScore:
+        return Colors.yellow[700]!;
+      case QuestType.timeSpent:
+        return Colors.teal;
+      case QuestType.newCards:
+        return Colors.green;
+      case QuestType.review:
+        return Colors.indigo;
+    }
+  }
+
+  /// Build empty state widget
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build priority indicator widget
+  Widget _buildPriorityIndicator(int priority) {
+    Color color;
+    String text;
+    
+    switch (priority) {
+      case 3:
+        color = Colors.red;
+        text = 'HIGH';
+        break;
+      case 2:
+        color = Colors.orange;
+        text = 'MED';
+        break;
+      default:
+        color = Colors.green;
+        text = 'LOW';
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  /// Get task status color
+  Color _getTaskStatusColor(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.completed:
+        return Colors.green;
+      case TaskStatus.inProgress:
+        return Colors.blue;
+      case TaskStatus.cancelled:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  /// Get task status icon
+  IconData _getTaskStatusIcon(TaskStatus status) {
+    switch (status) {
+      case TaskStatus.completed:
+        return Icons.check_circle;
+      case TaskStatus.inProgress:
+        return Icons.play_circle;
+      case TaskStatus.cancelled:
+        return Icons.cancel;
+      default:
+        return Icons.radio_button_unchecked;
+    }
+  }
+
+  /// Format date for display
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  /// Show create dialog for notes or tasks
+  void _showCreateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Create New'),
+        content: const Text('What would you like to create?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _createNote();
+            },
+            child: const Text('Note'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _createTask();
+            },
+            child: const Text('Task'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Create new note
+  void _createNote() {
+    // TODO: Navigate to note creation screen
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Note creation coming soon!')),
+    );
+  }
+
+  /// Create new task
+  void _createTask() {
+    // TODO: Navigate to task creation screen
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Task creation coming soon!')),
+    );
+  }
+
+  /// Edit existing note
+  void _editNote(Note note) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final titleController = TextEditingController(text: note.title);
+        final contentController = TextEditingController(text: note.contentMd);
+        final tagsController = TextEditingController(text: note.tags.join(', '));
+        
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.note, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Edit Note'),
+            ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Title',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: contentController,
+                  decoration: const InputDecoration(
+                    labelText: 'Content',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 5,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: tagsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tags (comma separated)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Delete note
+                Provider.of<NoteProvider>(context, listen: false).deleteNote(note.id);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Note deleted'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final updatedNote = note.copyWith(
+                  title: titleController.text.trim(),
+                  contentMd: contentController.text.trim(),
+                  tags: tagsController.text
+                      .split(',')
+                      .map((tag) => tag.trim())
+                      .where((tag) => tag.isNotEmpty)
+                      .toList(),
+                  updatedAt: DateTime.now(),
+                );
+                
+                Provider.of<NoteProvider>(context, listen: false).updateNote(updatedNote);
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Note updated')),
+                );
+              },
+              child: const Text('Update'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Edit existing task
+  void _editTask(Task task) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final titleController = TextEditingController(text: task.title);
+        final tagsController = TextEditingController(text: task.tags.join(', '));
+        final estMinutesController = TextEditingController(text: task.estMinutes.toString());
+        TaskStatus selectedStatus = task.status;
+        int selectedPriority = task.priority;
+        DateTime? selectedDueDate = task.dueAt;
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(
+                    _getTaskStatusIcon(task.status),
+                    color: _getTaskStatusColor(task.status),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Edit Task'),
+                ],
+              ),
+              content: SizedBox(
+                width: 400,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Title',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<TaskStatus>(
+                              initialValue: selectedStatus,
+                              decoration: const InputDecoration(
+                                labelText: 'Status',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: TaskStatus.values.map((status) {
+                                return DropdownMenuItem(
+                                  value: status,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        _getTaskStatusIcon(status),
+                                        color: _getTaskStatusColor(status),
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(status.name),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedStatus = value!;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: DropdownButtonFormField<int>(
+                              initialValue: selectedPriority,
+                              decoration: const InputDecoration(
+                                labelText: 'Priority',
+                                border: OutlineInputBorder(),
+                              ),
+                              items: const [
+                                DropdownMenuItem(value: 1, child: Row(children: [Icon(Icons.low_priority, color: Colors.green), SizedBox(width: 8), Text('Low')])),
+                                DropdownMenuItem(value: 2, child: Row(children: [Icon(Icons.priority_high, color: Colors.orange), SizedBox(width: 8), Text('Medium')])),
+                                DropdownMenuItem(value: 3, child: Row(children: [Icon(Icons.priority_high, color: Colors.red), SizedBox(width: 8), Text('High')])),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedPriority = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: estMinutesController,
+                              decoration: const InputDecoration(
+                                labelText: 'Estimated Minutes',
+                                border: OutlineInputBorder(),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextField(
+                              controller: tagsController,
+                              decoration: const InputDecoration(
+                                labelText: 'Tags (comma separated)',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDueDate ?? DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (date != null) {
+                            setState(() {
+                              selectedDueDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.calendar_today, color: Colors.grey[600]),
+                              const SizedBox(width: 8),
+                              Text(
+                                selectedDueDate != null 
+                                    ? 'Due: ${_formatDate(selectedDueDate!)}'
+                                    : 'Set due date (optional)',
+                                style: TextStyle(
+                                  color: selectedDueDate != null ? Colors.black : Colors.grey[600],
+                                ),
+                              ),
+                              const Spacer(),
+                              if (selectedDueDate != null)
+                                IconButton(
+                                  icon: const Icon(Icons.clear, size: 16),
+                                  onPressed: () {
+                                    setState(() {
+                                      selectedDueDate = null;
+                                    });
+                                  },
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // Delete task
+                    Provider.of<TaskProvider>(context, listen: false).deleteTask(task.id);
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Task deleted'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  },
+                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final updatedTask = task.copyWith(
+                      title: titleController.text.trim(),
+                      status: selectedStatus,
+                      priority: selectedPriority,
+                      estMinutes: int.tryParse(estMinutesController.text) ?? task.estMinutes,
+                      dueAt: selectedDueDate,
+                      tags: tagsController.text
+                          .split(',')
+                          .map((tag) => tag.trim())
+                          .where((tag) => tag.isNotEmpty)
+                          .toList(),
+                    );
+                    
+                    Provider.of<TaskProvider>(context, listen: false).updateTask(updatedTask);
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Task updated')),
+                    );
+                  },
+                  child: const Text('Update'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -373,90 +1460,119 @@ class DecksScreen extends StatelessWidget {
         builder: (context, deckProvider, child) {
           final decks = deckProvider.decks;
 
-          if (decks.isEmpty) {
-            // Show empty state when no decks exist
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.style, size: 64, color: Colors.grey),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No decks yet!',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create flashcards using the AI Generator\nin the dashboard.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Show list of decks
-          return ListView.builder(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            itemCount: decks.length,
-            itemBuilder: (context, index) {
-              final deck = decks[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    child: const Icon(Icons.style, color: Colors.white),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // AI Flashcard Generator at the top
+                const AIFlashcardGenerator(),
+                
+                const SizedBox(height: 24),
+                
+                // Flashcard Review section
+                const DueCardsWidget(),
+                
+                const SizedBox(height: 24),
+                
+                // Decks section header
+                Text(
+                  'Your Decks',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  title: Text(
-                    deck.title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${deck.cards.length} cards'),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 4,
-                        children: deck.tags
-                            .map((tag) => Chip(
-                                  label: Text(
-                                    tag,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ))
-                            .toList(),
-                      ),
-                    ],
-                  ),
-                  isThreeLine: true,
-                  trailing: const Icon(Icons.arrow_forward_ios),
-                  onTap: () {
-                    // Navigate to flashcard study screen
-                    if (deck.cards.isNotEmpty) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              FlashcardStudyScreen(deck: deck),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Deck "${deck.title}" has no cards to study'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  },
                 ),
-              );
-            },
+                
+                const SizedBox(height: 16),
+
+                if (decks.isEmpty) 
+                  // Show empty state when no decks exist
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.style, size: 64, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No decks yet!',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Create flashcards using the AI Generator above.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  // Show list of decks
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: decks.length,
+                    itemBuilder: (context, index) {
+                      final deck = decks[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            child: const Icon(Icons.style, color: Colors.white),
+                          ),
+                          title: Text(
+                            deck.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${deck.cards.length} cards'),
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: 4,
+                                children: deck.tags
+                                    .map((tag) => Chip(
+                                          label: Text(
+                                            tag,
+                                            style: const TextStyle(fontSize: 12, color: Colors.indigo, fontWeight: FontWeight.w600),
+                                          ),
+                                          backgroundColor: Colors.indigo.shade50,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                        ))
+                                    .toList(),
+                              ),
+                            ],
+                          ),
+                          isThreeLine: true,
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                          onTap: () {
+                            // Navigate to flashcard study screen
+                            if (deck.cards.isNotEmpty) {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      FlashcardStudyScreen(deck: deck),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Deck "${deck.title}" has no cards to study'),
+                                  duration: const Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
           );
         },
       ),

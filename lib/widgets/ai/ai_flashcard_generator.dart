@@ -62,6 +62,12 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       final deckProvider = Provider.of<DeckProvider>(context, listen: false);
 
       // Generate flashcards using AI
+      debugPrint('=== AI Flashcard Generator Widget Debug ===');
+      debugPrint('Topic: ${_topicController.text}');
+      debugPrint('Text: ${_textController.text}');
+      debugPrint('Subject: $_selectedSubject');
+      debugPrint('Card Count: $_cardCount');
+      
       final flashcards = await aiProvider.generateFlashcardsFromText(
         _textController.text.isNotEmpty
             ? _textController.text
@@ -70,6 +76,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
         subject: _selectedSubject,
       );
 
+      debugPrint('Generated ${flashcards.length} flashcards (expected $_cardCount)');
+      
       if (flashcards.isNotEmpty) {
         // Create a new deck for the generated cards
         final newDeck = Deck(

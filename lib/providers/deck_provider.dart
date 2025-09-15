@@ -42,7 +42,59 @@ class DeckProvider extends ChangeNotifier {
           id: '1', // Sample deck ID
           title: 'Sample Deck', // Sample deck title
           tags: ['sample'], // Sample tags for categorization
-          cards: [], // Empty card list initially
+          cards: [
+            // Add some sample flashcards for testing
+            FlashCard(
+              id: '1',
+              deckId: '1',
+              type: CardType.basic,
+              front: 'What is the capital of France?',
+              back: 'Paris',
+              multipleChoiceOptions: ['London', 'Paris', 'Berlin', 'Madrid'],
+              correctAnswerIndex: 1,
+              difficulty: 2,
+            ),
+            FlashCard(
+              id: '2',
+              deckId: '1',
+              type: CardType.basic,
+              front: 'What is 2 + 2?',
+              back: '4',
+              multipleChoiceOptions: ['3', '4', '5', '6'],
+              correctAnswerIndex: 1,
+              difficulty: 1,
+            ),
+            FlashCard(
+              id: '3',
+              deckId: '1',
+              type: CardType.basic,
+              front: 'What is the largest planet in our solar system?',
+              back: 'Jupiter',
+              multipleChoiceOptions: ['Earth', 'Saturn', 'Jupiter', 'Neptune'],
+              correctAnswerIndex: 2,
+              difficulty: 3,
+            ),
+            FlashCard(
+              id: '4',
+              deckId: '1',
+              type: CardType.basic,
+              front: 'Who wrote "Romeo and Juliet"?',
+              back: 'William Shakespeare',
+              multipleChoiceOptions: ['Charles Dickens', 'William Shakespeare', 'Mark Twain', 'Jane Austen'],
+              correctAnswerIndex: 1,
+              difficulty: 2,
+            ),
+            FlashCard(
+              id: '5',
+              deckId: '1',
+              type: CardType.basic,
+              front: 'What is the chemical symbol for gold?',
+              back: 'Au',
+              multipleChoiceOptions: ['Go', 'Gd', 'Au', 'Ag'],
+              correctAnswerIndex: 2,
+              difficulty: 4,
+            ),
+          ], // Sample cards for testing
         ),
       ];
     } catch (e) {

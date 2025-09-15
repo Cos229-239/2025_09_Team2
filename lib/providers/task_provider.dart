@@ -64,6 +64,58 @@ class TaskProvider extends ChangeNotifier {
     try {
       // Attempt to fetch all tasks from the database repository
       _tasks = await TaskRepository.getAllTasks();
+      
+      // Add sample tasks if list is empty (for demonstration)
+      if (_tasks.isEmpty) {
+        final sampleTasks = [
+          Task(
+            id: 'task_1',
+            title: 'Complete JavaScript Assignment',
+            estMinutes: 120,
+            dueAt: DateTime.now().add(const Duration(days: 2)),
+            priority: 3,
+            tags: ['javascript', 'assignment', 'urgent'],
+            status: TaskStatus.pending,
+          ),
+          Task(
+            id: 'task_2',
+            title: 'Review React Documentation',
+            estMinutes: 60,
+            dueAt: DateTime.now().add(const Duration(days: 1)),
+            priority: 2,
+            tags: ['react', 'study', 'documentation'],
+            status: TaskStatus.inProgress,
+          ),
+          Task(
+            id: 'task_3',
+            title: 'Practice SQL Queries',
+            estMinutes: 90,
+            dueAt: DateTime.now().add(const Duration(hours: 8)),
+            priority: 2,
+            tags: ['sql', 'database', 'practice'],
+            status: TaskStatus.pending,
+          ),
+          Task(
+            id: 'task_4',
+            title: 'Study Database Normalization',
+            estMinutes: 45,
+            dueAt: DateTime.now().subtract(const Duration(days: 1)),
+            priority: 1,
+            tags: ['database', 'theory'],
+            status: TaskStatus.completed,
+          ),
+          Task(
+            id: 'task_5',
+            title: 'Set up Development Environment',
+            estMinutes: 30,
+            priority: 1,
+            tags: ['setup', 'tools'],
+            status: TaskStatus.completed,
+          ),
+        ];
+        
+        _tasks.addAll(sampleTasks);
+      }
     } catch (e) {
       // Log any errors that occur during loading for debugging
       // Using developer.log instead of print for better debugging tools
@@ -158,5 +210,30 @@ class TaskProvider extends ChangeNotifier {
 
     // Use the existing updateTask method to save the status change
     await updateTask(completedTask);
+  }
+
+  /// Searches tasks by title, tags, or linked content using case-insensitive matching
+  /// Returns all tasks if query is empty, filtered tasks otherwise
+  /// @param query - Search string to match against task data
+  /// @return List of Task objects matching the search criteria
+  List<Task> searchTasks(String query) {
+    // Return all tasks if no search query provided
+    if (query.isEmpty) return _tasks;
+
+    // Filter tasks based on title or tag matches
+    return _tasks.where((task) {
+      // Convert query to lowercase for case-insensitive search
+      final lowerQuery = query.toLowerCase();
+
+      // Check if title contains the search query
+      final titleMatch = task.title.toLowerCase().contains(lowerQuery);
+
+      // Check if any tag contains the search query
+      final tagMatch =
+          task.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+
+      // Return true if any field matches the search query
+      return titleMatch || tagMatch;
+    }).toList();
   }
 }

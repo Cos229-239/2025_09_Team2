@@ -10,6 +10,9 @@ class DailyQuestProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   Map<String, dynamic> _questStats = {};
+  
+  // Callback for quest completion notifications
+  Function(DailyQuest)? _onQuestCompleted;
 
   // Getters
   List<DailyQuest> get quests => _quests;
@@ -62,9 +65,18 @@ class DailyQuestProvider with ChangeNotifier {
           isCompleted: progress >= quest.targetCount,
         );
         
-        // If quest was just completed, update stats
+        // If quest was just completed, update stats and notify
         if (!wasCompleted && _quests[questIndex].isCompleted) {
           _questStats = await _questService.getQuestStats();
+          
+          // Generate achievement notification
+          try {
+            // Note: In a real implementation, we'd inject NotificationProvider
+            // For now, we'll add a callback mechanism
+            _onQuestCompleted?.call(_quests[questIndex]);
+          } catch (e) {
+            debugPrint('Error generating quest completion notification: $e');
+          }
           
           // Notify completion
           debugPrint('Quest completed: ${quest.title} (+${quest.expReward} EXP)');
@@ -221,5 +233,10 @@ class DailyQuestProvider with ChangeNotifier {
 
   void _clearError() {
     _error = null;
+  }
+  
+  /// Set callback for quest completion notifications
+  void setQuestCompletionCallback(Function(DailyQuest)? callback) {
+    _onQuestCompleted = callback;
   }
 }
