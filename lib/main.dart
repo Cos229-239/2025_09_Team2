@@ -12,6 +12,7 @@ import 'package:studypals/providers/srs_provider.dart'; // Spaced repetition sys
 import 'package:studypals/providers/ai_provider.dart'; // AI integration state
 import 'package:studypals/providers/daily_quest_provider.dart'; // Daily quest gamification state
 import 'package:studypals/providers/notification_provider.dart'; // Notification system state
+import 'package:studypals/providers/planner_provider.dart'; // Planner management state
 // Import authentication wrapper to handle login/logout flow
 import 'package:studypals/screens/auth/auth_wrapper.dart';
 // Import app theme configuration for consistent styling
@@ -66,6 +67,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DailyQuestProvider()),
         // Notification provider for managing quiz expiration and review notifications
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        // Planner provider for managing calendar and tasks
+        ChangeNotifierProvider(create: (_) => PlannerProvider()),
       ],
       // MaterialApp is the main app container with theme and routing
       child: MaterialApp(
