@@ -7,8 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
 // Import settings screen for app configuration
 import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
-// Import planner screen and provider
-import 'package:studypals/providers/planner_provider.dart';
+// Import planner screen
 import 'package:studypals/screens/planner/planner_screen.dart';
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
@@ -50,32 +49,6 @@ class DashboardScreen extends StatefulWidget {
 /// Private state class managing bottom navigation and data initialization
 /// Handles tab switching between Dashboard, Planner, Notes, Decks, and Progress
 class _DashboardScreenState extends State<DashboardScreen> {
-<<<<<<< Updated upstream
-  // Note: Bottom navigation removed - now using direct page navigation
-=======
-  // Index of currently selected tab in bottom navigation (0 = Dashboard, 1 = Planner, etc.)
-  int _selectedIndex = 0;
-
-  // List of screen widgets corresponding to each navigation tab
-  // Each widget represents a different section of the app
-  final List<Widget> _pages = [
-    const DashboardHome(), // Main dashboard with widgets (index 0)
-    Consumer<PlannerProvider>(
-      builder: (context, provider, child) => Navigator(
-        onGenerateRoute: (settings) {
-          return MaterialPageRoute(
-            builder: (context) => const PlannerPage(),
-            settings: settings,
-          );
-        },
-      ),
-    ), // Calendar/planning interface (index 1)
-    const NotesScreen(), // Note-taking interface (index 2)
-    const DecksScreen(), // Flashcard deck management (index 3)
-    const ProgressScreen(), // Progress tracking and analytics (index 4)
-  ];
->>>>>>> Stashed changes
-
   /// Widget initialization lifecycle method
   /// Called once when the widget is first created
   @override
