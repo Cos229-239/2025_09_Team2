@@ -8,9 +8,12 @@ import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard stu
 // Import settings screen for app configuration
 import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
 // Import custom dashboard widgets that display different app features
+import 'package:studypals/widgets/dashboard/pet_widget.dart'; // Virtual pet display and interactions
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
+import 'package:studypals/widgets/dashboard/quick_stats_widget.dart'; // Study statistics summary
 // Import AI widgets for intelligent study features
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
+import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI study assistant chat
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/app_state.dart'; // Global app state for authentication
 import 'package:studypals/providers/task_provider.dart'; // Task management state
@@ -47,7 +50,18 @@ class DashboardScreen extends StatefulWidget {
 /// Private state class managing bottom navigation and data initialization
 /// Handles tab switching between Dashboard, Planner, Notes, Decks, and Progress
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Note: Bottom navigation removed - now using direct page navigation
+  // Index of currently selected tab in bottom navigation (0 = Dashboard, 1 = Planner, etc.)
+  int _selectedIndex = 0;
+
+  // List of screen widgets corresponding to each navigation tab
+  // Each widget represents a different section of the app
+  final List<Widget> _pages = [
+    const DashboardHome(), // Main dashboard with widgets (index 0)
+    const PlannerScreen(), // Calendar/planning interface (index 1)
+    const NotesScreen(), // Note-taking interface (index 2)
+    const DecksScreen(), // Flashcard deck management (index 3)
+    const ProgressScreen(), // Progress tracking and analytics (index 4)
+  ];
 
   /// Widget initialization lifecycle method
   /// Called once when the widget is first created
@@ -128,32 +142,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Display only the dashboard home screen (no more navigation)
-      body: DashboardHome(onNavigate: (index) {
-        // Handle navigation by opening different screens directly
-        switch (index) {
-          case 1: // Planner
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const PlannerScreen()),
-            );
-            break;
-          case 2: // Notes
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const NotesScreen()),
-            );
-            break;
-          case 3: // Decks
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const DecksScreen()),
-            );
-            break;
-          case 4: // Progress
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const ProgressScreen()),
-            );
-            break;
-        }
-      }),
+      // Display the currently selected page based on navigation index
+      body: _pages[_selectedIndex],
+
+      // Bottom navigation bar for switching between app sections
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex, // Highlight currently selected tab
+
+        // Handle tab selection by updating the selected index
+        onDestinationSelected: (index) {
+          setState(() {
+            // Trigger rebuild with new selection
+            _selectedIndex = index; // Update selected tab index
+          });
+        },
+
+        // Define navigation destinations (tabs) with icons and labels
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.dashboard), // Dashboard tab icon
+            label: 'Dashboard', // Dashboard tab label
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_today), // Calendar tab icon
+            label: 'Planner', // Planner tab label
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.note), // Notes tab icon
+            label: 'Notes', // Notes tab label
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.style), // Decks tab icon
+            label: 'Decks', // Decks tab label
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.insights), // Progress tab icon
+            label: 'Progress', // Progress tab label
+          ),
+        ],
+      ),
     );
   }
 }
@@ -161,10 +188,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 /// Main dashboard home screen displaying key app widgets
 /// Shows virtual pet, today's tasks, due cards, and quick statistics
 class DashboardHome extends StatelessWidget {
-  final Function(int)? onNavigate;
-  
   // Constructor with optional key for widget identification
-  const DashboardHome({super.key, this.onNavigate});
+  const DashboardHome({super.key});
 
   /// Builds the app bar action buttons (notifications, settings, and logout)
   /// Separated into method to keep build method clean and organized
@@ -226,876 +251,41 @@ class DashboardHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      // App bar with title and action buttons
+      appBar: AppBar(
+        title: const Text('Today'), // Screen title indicating today's overview
+        actions: _buildAppBarActions(
+            context), // Notifications, settings, and logout buttons
+      ),
 
       // Scrollable body containing dashboard widgets
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: const SingleChildScrollView(
         // Allow vertical scrolling if content overflows
-          padding: const EdgeInsets.all(16), // Consistent padding around content
+        padding: EdgeInsets.all(16), // Consistent padding around content
 
         // Vertical layout of dashboard widgets
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Align widgets to start (left) edge
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // Align widgets to start (left) edge
           children: [
-              // Header section with greeting and actions
-              _buildHeader(context),
-              
-              const SizedBox(height: 20),
-              
-              // Calendar and Tasks section
-              _buildCalendarSection(context),
-              
-              const SizedBox(height: 20),
-              
-              // Today's Progress section
-              _buildTodaysProgress(context),
-              
-              const SizedBox(height: 20),
-              
-              // Flash Cards and Notes row
-              _buildCardsAndNotesRow(context),
-              
-              const SizedBox(height: 20),
-              
-              // XP Progress section
-              _buildXPProgress(context),
-              
-              // Add bottom padding to account for the fixed bottom bar
-              const SizedBox(height: 100),
-            ],
-          ),
-        ),
-      ),
-      
-      // Bottom action buttons (Progress, Timer, Music) fixed at bottom
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF2a3543), // Lighter dark blue-gray from login
-              Color(0xFF253142), // Dark blue-gray from login
-              Color(0xFF1a2332), // Very dark blue-gray from login
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF365069), // Border color from login
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 12,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 6,
-              spreadRadius: -2,
-              offset: const Offset(0, 2),
+            // Virtual pet widget - shows pet status and allows interactions
+            PetWidget(),
+
+            // Spacing between widgets for visual separation
+            SizedBox(height: 20),
+
+            // Quick stats widget - displays study progress and statistics
+            QuickStatsWidget(),
+
+            // Spacing between widgets
+            SizedBox(height: 20),
+
+            // AI tutor chat - study assistant
+            SizedBox(
+              height: 300,
+              child: AITutorChat(),
             ),
           ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildActionButton(
-                context,
-                icon: Icons.trending_up,
-                label: 'Progress',
-                onTap: () {
-                  // Navigate to progress
-                  onNavigate?.call(4); // Progress tab
-                },
-              ),
-              _buildActionButton(
-                context,
-                icon: Icons.timer,
-                label: 'Timer',
-                onTap: () {
-                  // TODO: Implement timer functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Timer coming soon!')),
-                  );
-                },
-              ),
-              _buildActionButton(
-                context,
-                icon: Icons.music_note,
-                label: 'Music',
-                onTap: () {
-                  // TODO: Implement music functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Music coming soon!')),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Build the header section with greeting and action buttons
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Study Pals',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              const SizedBox(height: 4),
-              Consumer<AppState>(
-                builder: (context, appState, child) {
-                  return Text(
-                    'Hi ${appState.currentUser?.name ?? 'User'}, Ready to study?',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: _buildAppBarActions(context),
-        ),
-      ],
-    );
-  }
-
-  /// Build the calendar section with tasks using login screen styling
-  Widget _buildCalendarSection(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 0),
-      decoration: BoxDecoration(
-        // Use login screen gradient colors
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2a3543), // Lighter dark blue-gray from login
-            Color(0xFF253142), // Dark blue-gray from login
-            Color(0xFF1a2332), // Very dark blue-gray from login
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF365069), // Border color from login
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 12,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 6,
-            spreadRadius: -2,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            // Calendar month indicator with sophisticated styling
-            Container(
-              width: 90,
-              height: 120,
-              decoration: BoxDecoration(
-                // Sophisticated gradient for SEP button
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF4a5568), // Lighter blue-gray
-                    Color(0xFF365069), // Medium blue-gray from login
-                    Color(0xFF2d3748), // Darker blue-gray
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFF4a5568),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.4),
-                    blurRadius: 8,
-                    spreadRadius: 1,
-                    offset: const Offset(2, 2),
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    blurRadius: 4,
-                    spreadRadius: -1,
-                    offset: const Offset(-1, -1),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'SEP',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFe67e22), // Orange accent from login
-                      fontSize: 16,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${DateTime.now().day}',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 28,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(width: 20),
-            
-            // Tasks section with enhanced styling
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Navigation arrows and month header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(
-                        Icons.chevron_left,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        size: 18,
-                      ),
-                      Expanded(
-                        child: Text(
-                          'SEPTEMBER',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.0,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        size: 18,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Calendar Days',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 11,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Tasks button with login screen styling
-                  Container(
-                    width: double.infinity,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      // Use login field colors
-                      color: const Color(0xFF3d4a5c), // Medium blue-gray from login
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          spreadRadius: 1,
-                          offset: const Offset(2, 2),
-                        ),
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 8,
-                          spreadRadius: -2,
-                          offset: const Offset(0, 0),
-                        ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(8),
-                        onTap: () {
-                          // Navigate to tasks
-                          onNavigate?.call(2); // Notes/Tasks tab
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFe67e22), // Orange accent
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: const Icon(
-                                  Icons.task_alt,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Tasks',
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Build today's progress section with login screen styling - full width to match Flash Cards and Notes
-  Widget _buildTodaysProgress(context) {
-    return Row(
-      children: [
-        // Full width container to match the Flash Cards and Notes row layout
-        Expanded(
-          child: Container(
-            height: 140, // Match the height of Flash Cards and Notes containers
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF2a3543), // Lighter dark blue-gray from login
-                  Color(0xFF253142), // Dark blue-gray from login
-                  Color(0xFF1a2332), // Very dark blue-gray from login
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFF365069), // Border color from login
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center, // Center content vertically
-                children: [
-                  Text(
-                    'Today\'s Progress',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Consumer<TaskProvider>(
-                    builder: (context, taskProvider, child) {
-                      final completedTasks = taskProvider.tasks.where((task) => task.status == TaskStatus.completed).length;
-                      final totalTasks = taskProvider.tasks.length;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFe67e22), // Orange accent
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          '$completedTasks of $totalTasks tasks completed',
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Build flash cards and notes row with login screen styling
-  Widget _buildCardsAndNotesRow(BuildContext context) {
-    return Row(
-      children: [
-        // Flash Cards section
-        Expanded(
-          child: Container(
-            height: 140,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF2a3543), // Lighter dark blue-gray from login
-                  Color(0xFF253142), // Dark blue-gray from login
-                  Color(0xFF1a2332), // Very dark blue-gray from login
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFF365069), // Border color from login
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // Navigate to flash cards
-                  onNavigate?.call(3); // Decks tab
-                },
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFe67e22), // Orange accent
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.style,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Flash Cards',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        
-        const SizedBox(width: 16),
-        
-        // Notes section
-        Expanded(
-          child: Container(
-            height: 140,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF2a3543), // Lighter dark blue-gray from login
-                  Color(0xFF253142), // Dark blue-gray from login
-                  Color(0xFF1a2332), // Very dark blue-gray from login
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: const Color(0xFF365069), // Border color from login
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  // Navigate to notes
-                  onNavigate?.call(2); // Notes tab
-                },
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFe67e22), // Orange accent
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 4,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.note_alt,
-                          size: 24,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Notes',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Build XP progress section with login screen styling
-  Widget _buildXPProgress(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 0),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2a3543), // Lighter dark blue-gray from login
-            Color(0xFF253142), // Dark blue-gray from login
-            Color(0xFF1a2332), // Very dark blue-gray from login
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF365069), // Border color from login
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 12,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 6,
-            spreadRadius: -2,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hello text
-            Text(
-              'hello',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.8),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Consumer<PetProvider>(
-              builder: (context, petProvider, child) {
-                final currentXP = petProvider.currentPet.xp;
-                final maxXP = petProvider.currentPet.xpForNextLevel;
-                final progress = currentXP / maxXP;
-                
-                return Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'XP $currentXP/$maxXP',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                        // Pet avatar with login screen styling
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFF4a5568), // Lighter blue-gray
-                                Color(0xFF365069), // Medium blue-gray from login
-                                Color(0xFF2d3748), // Darker blue-gray
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(0xFF4a5568),
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                                offset: const Offset(2, 2),
-                              ),
-                              BoxShadow(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                blurRadius: 4,
-                                spreadRadius: -1,
-                                offset: const Offset(-1, -1),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.pets,
-                            color: Color(0xFFe67e22), // Orange accent
-                            size: 24,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Custom progress bar with login screen styling
-                    Container(
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF3d4a5c), // Background from login fields
-                        borderRadius: BorderRadius.circular(4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            spreadRadius: 1,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progress,
-                          backgroundColor: Colors.transparent,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Color(0xFFe67e22), // Orange accent
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  /// Build individual action button with login screen styling
-  Widget _buildActionButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: Container(
-        height: 70, // Reduced height to fix overflow
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          // Use login field colors
-          color: const Color(0xFF3d4a5c), // Medium blue-gray from login
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              spreadRadius: 1,
-              offset: const Offset(2, 2),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 6,
-              spreadRadius: -2,
-              offset: const Offset(0, 0),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8), // Reduced padding
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min, // Added to prevent overflow
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6), // Reduced padding
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFe67e22), // Orange accent
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          blurRadius: 3,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 18, // Reduced icon size
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6), // Reduced spacing
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 10, // Smaller font size
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1, // Prevent text wrapping
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ),
         ),
       ),
     );
