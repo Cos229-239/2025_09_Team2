@@ -11,11 +11,12 @@ import '../providers/pet_provider.dart';
 class QuizService {
   static const String _quizSessionsKey = 'quiz_sessions';
   static const String _deckCooldownsKey = 'deck_cooldowns';
-  static const Duration _deckCooldownPeriod = Duration(hours: 12); // Longer cooldown for deck quizzes
-  
+  static const Duration _deckCooldownPeriod =
+      Duration(hours: 12); // Longer cooldown for deck quizzes
+
   // Cache for active quiz sessions
   final Map<String, QuizSession> _activeSessions = {};
-  
+
   // Cache for deck cooldowns (deckId -> last attempt time)
   final Map<String, DateTime> _deckCooldowns = {};
 
@@ -33,10 +34,11 @@ class QuizService {
     }
 
     // Filter cards that have multiple choice options
-    final quizCards = deck.cards.where((card) => 
-        card.multipleChoiceOptions.isNotEmpty &&
-        card.multipleChoiceOptions.length >= 2
-    ).toList();
+    final quizCards = deck.cards
+        .where((card) =>
+            card.multipleChoiceOptions.isNotEmpty &&
+            card.multipleChoiceOptions.length >= 2)
+        .toList();
 
     if (quizCards.isEmpty) {
       return null; // No cards available for quiz
@@ -57,15 +59,16 @@ class QuizService {
 
     // Cache the active session
     _activeSessions[sessionId] = session;
-    
-    debugPrint('Created quiz session for deck ${deck.title} with ${quizCards.length} questions');
+
+    debugPrint(
+        'Created quiz session for deck ${deck.title} with ${quizCards.length} questions');
     return session;
   }
 
   /// Checks if a deck can be quizzed (not on cooldown and has quiz cards)
   Future<bool> canTakeDeckQuiz(String deckId) async {
     await _loadDeckCooldowns();
-    
+
     // Check if deck is on cooldown
     if (_deckCooldowns.containsKey(deckId)) {
       final lastAttempt = _deckCooldowns[deckId]!;
@@ -79,7 +82,7 @@ class QuizService {
   /// Gets the remaining cooldown time for a deck quiz
   Future<Duration> getDeckQuizCooldown(String deckId) async {
     await _loadDeckCooldowns();
-    
+
     if (!_deckCooldowns.containsKey(deckId)) {
       return Duration.zero; // No cooldown
     }
@@ -87,7 +90,7 @@ class QuizService {
     final lastAttempt = _deckCooldowns[deckId]!;
     final timeSinceLastAttempt = DateTime.now().difference(lastAttempt);
     final cooldownRemaining = _deckCooldownPeriod - timeSinceLastAttempt;
-    
+
     return cooldownRemaining.isNegative ? Duration.zero : cooldownRemaining;
   }
 
@@ -109,7 +112,7 @@ class QuizService {
     final isCorrect = selectedOptionIndex == correctOptionIndex;
     final card = deck.cards.firstWhere((c) => c.id == cardId);
     final expEarned = isCorrect ? card.calculateExpReward() : 0;
-    
+
     final answer = QuizAnswer(
       cardId: cardId,
       selectedOptionIndex: selectedOptionIndex,
@@ -128,17 +131,21 @@ class QuizService {
 
     // Check if quiz is completed
     if (updatedSession.currentQuestionIndex >= updatedSession.totalQuestions) {
-      await _completeQuizSession(updatedSession, petProvider);
+      final completedSession =
+          await _completeQuizSession(updatedSession, petProvider);
+      _activeSessions[sessionId] = completedSession;
     } else {
       _activeSessions[sessionId] = updatedSession;
     }
 
-    debugPrint('Answer recorded: ${isCorrect ? "CORRECT" : "INCORRECT"} (+$expEarned EXP)');
+    debugPrint(
+        'Answer recorded: ${isCorrect ? "CORRECT" : "INCORRECT"} (+$expEarned EXP)');
     return _activeSessions[sessionId];
   }
 
   /// Completes a quiz session and calculates final results
-  Future<QuizSession> _completeQuizSession(QuizSession session, PetProvider petProvider) async {
+  Future<QuizSession> _completeQuizSession(
+      QuizSession session, PetProvider petProvider) async {
     final correctAnswers = session.correctAnswers;
     final totalQuestions = session.totalQuestions;
     final finalScore = correctAnswers / totalQuestions;
@@ -158,7 +165,10 @@ class QuizService {
 
     // Award total EXP to pet
     if (totalExpEarned > 0) {
+      debugPrint('Awarding $totalExpEarned EXP to pet from quiz session');
       petProvider.addXP(totalExpEarned, source: "quiz_session");
+    } else {
+      debugPrint('No EXP to award - totalExpEarned: $totalExpEarned');
     }
 
     // Set deck cooldown
@@ -166,11 +176,12 @@ class QuizService {
 
     // Cache completed session
     _activeSessions[session.id] = completedSession;
-    
+
     // Save completed session
     await _saveQuizSession(completedSession);
 
-    debugPrint('Quiz completed: ${(finalScore * 100).round()}% score, +$totalExpEarned total EXP');
+    debugPrint(
+        'Quiz completed: ${(finalScore * 100).round()}% score, +$totalExpEarned total EXP');
     return completedSession;
   }
 
@@ -198,10 +209,10 @@ class QuizService {
   /// Formats cooldown time as human-readable string
   String formatCooldownTime(Duration duration) {
     if (duration.inMinutes <= 0) return "Available now";
-    
+
     final hours = duration.inHours;
     final minutes = duration.inMinutes % 60;
-    
+
     if (hours > 0) {
       return "${hours}h ${minutes}m";
     } else {
@@ -223,9 +234,8 @@ class QuizService {
   /// Gets quiz statistics for all completed sessions
   Future<Map<String, dynamic>> getQuizStats() async {
     // This would load from persistent storage in a real app
-    final completedSessions = _activeSessions.values
-        .where((session) => session.isCompleted)
-        .toList();
+    final completedSessions =
+        _activeSessions.values.where((session) => session.isCompleted).toList();
 
     if (completedSessions.isEmpty) {
       return {
@@ -238,14 +248,14 @@ class QuizService {
 
     final totalSessions = completedSessions.length;
     final averageScore = completedSessions
-        .map((session) => session.finalScore ?? 0.0)
-        .reduce((a, b) => a + b) / totalSessions;
+            .map((session) => session.finalScore ?? 0.0)
+            .reduce((a, b) => a + b) /
+        totalSessions;
     final totalExpEarned = completedSessions
         .map((session) => session.totalExpEarned ?? 0)
         .reduce((a, b) => a + b);
-    final perfectScores = completedSessions
-        .where((session) => session.isPerfectScore)
-        .length;
+    final perfectScores =
+        completedSessions.where((session) => session.isPerfectScore).length;
 
     return {
       'totalSessions': totalSessions,
@@ -259,11 +269,11 @@ class QuizService {
   Future<void> clearAllData() async {
     _activeSessions.clear();
     _deckCooldowns.clear();
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_quizSessionsKey);
     await prefs.remove(_deckCooldownsKey);
-    
+
     debugPrint('All quiz data cleared');
   }
 
@@ -291,7 +301,7 @@ class QuizService {
   Future<void> _loadDeckCooldowns() async {
     final prefs = await SharedPreferences.getInstance();
     final cooldownsString = prefs.getString(_deckCooldownsKey);
-    
+
     if (cooldownsString != null) {
       final cooldownsJson = jsonDecode(cooldownsString) as Map<String, dynamic>;
       _deckCooldowns.clear();

@@ -7,13 +7,12 @@ import 'package:provider/provider.dart';
 import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
 // Import settings screen for app configuration
 import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
+// Import planner screen
+import 'package:studypals/screens/planner_page.dart';
 // Import custom dashboard widgets that display different app features
-import 'package:studypals/widgets/dashboard/pet_widget.dart'; // Virtual pet display and interactions
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
-import 'package:studypals/widgets/dashboard/quick_stats_widget.dart'; // Study statistics summary
 // Import AI widgets for intelligent study features
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
-import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI study assistant chat
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/app_state.dart'; // Global app state for authentication
 import 'package:studypals/providers/task_provider.dart'; // Task management state
@@ -50,19 +49,6 @@ class DashboardScreen extends StatefulWidget {
 /// Private state class managing bottom navigation and data initialization
 /// Handles tab switching between Dashboard, Planner, Notes, Decks, and Progress
 class _DashboardScreenState extends State<DashboardScreen> {
-  // Index of currently selected tab in bottom navigation (0 = Dashboard, 1 = Planner, etc.)
-  int _selectedIndex = 0;
-
-  // List of screen widgets corresponding to each navigation tab
-  // Each widget represents a different section of the app
-  final List<Widget> _pages = [
-    const DashboardHome(), // Main dashboard with widgets (index 0)
-    const PlannerScreen(), // Calendar/planning interface (index 1)
-    const NotesScreen(), // Note-taking interface (index 2)
-    const DecksScreen(), // Flashcard deck management (index 3)
-    const ProgressScreen(), // Progress tracking and analytics (index 4)
-  ];
-
   /// Widget initialization lifecycle method
   /// Called once when the widget is first created
   @override
@@ -89,12 +75,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Provider.of<PetProvider>(context, listen: false); // Pet data access
     final srsProvider =
         Provider.of<SRSProvider>(context, listen: false); // SRS data access
-    final questProvider =
-        Provider.of<DailyQuestProvider>(context, listen: false); // Daily quest data access
-    final aiProvider = 
-        Provider.of<StudyPalsAIProvider>(context, listen: false); // AI provider access
-    final notificationProvider =
-        Provider.of<NotificationProvider>(context, listen: false); // Notification system access
+    final questProvider = Provider.of<DailyQuestProvider>(context,
+        listen: false); // Daily quest data access
+    final aiProvider = Provider.of<StudyPalsAIProvider>(context,
+        listen: false); // AI provider access
+    final notificationProvider = Provider.of<NotificationProvider>(context,
+        listen: false); // Notification system access
 
     // Auto-configure Google AI upon dashboard initialization
     try {
@@ -115,7 +101,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       petProvider.loadPet(), // Load virtual pet data from database
       srsProvider
           .loadReviews(), // Load spaced repetition review data from database
-      questProvider.loadTodaysQuests(), // Load daily quests and generate if needed
+      questProvider
+          .loadTodaysQuests(), // Load daily quests and generate if needed
       notificationProvider.loadNotifications(), // Load existing notifications
     ]);
 
@@ -142,45 +129,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Display the currently selected page based on navigation index
-      body: _pages[_selectedIndex],
-
-      // Bottom navigation bar for switching between app sections
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex, // Highlight currently selected tab
-
-        // Handle tab selection by updating the selected index
-        onDestinationSelected: (index) {
-          setState(() {
-            // Trigger rebuild with new selection
-            _selectedIndex = index; // Update selected tab index
-          });
-        },
-
-        // Define navigation destinations (tabs) with icons and labels
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard), // Dashboard tab icon
-            label: 'Dashboard', // Dashboard tab label
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_today), // Calendar tab icon
-            label: 'Planner', // Planner tab label
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.note), // Notes tab icon
-            label: 'Notes', // Notes tab label
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.style), // Decks tab icon
-            label: 'Decks', // Decks tab label
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.insights), // Progress tab icon
-            label: 'Progress', // Progress tab label
-          ),
-        ],
-      ),
+      // Display only the dashboard home screen (no more navigation)
+      body: DashboardHome(onNavigate: (index) {
+        // Handle navigation by opening different screens directly
+        switch (index) {
+          case 1: // Planner
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const PlannerScreen()),
+            );
+            break;
+          case 2: // Notes
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const NotesScreen()),
+            );
+            break;
+          case 3: // Decks
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const DecksScreen()),
+            );
+            break;
+          case 4: // Progress
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const ProgressScreen()),
+            );
+            break;
+        }
+      }),
     );
   }
 }
@@ -188,8 +162,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 /// Main dashboard home screen displaying key app widgets
 /// Shows virtual pet, today's tasks, due cards, and quick statistics
 class DashboardHome extends StatelessWidget {
+  final Function(int)? onNavigate;
+
   // Constructor with optional key for widget identification
-  const DashboardHome({super.key});
+  const DashboardHome({super.key, this.onNavigate});
 
   /// Builds the app bar action buttons (notifications, settings, and logout)
   /// Separated into method to keep build method clean and organized
@@ -251,79 +227,922 @@ class DashboardHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // App bar with title and action buttons
-      appBar: AppBar(
-        title: const Text('Today'), // Screen title indicating today's overview
-        actions: _buildAppBarActions(
-            context), // Notifications, settings, and logout buttons
-      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
 
       // Scrollable body containing dashboard widgets
-      body: const SingleChildScrollView(
-        // Allow vertical scrolling if content overflows
-        padding: EdgeInsets.all(16), // Consistent padding around content
+      body: SafeArea(
+        child: SingleChildScrollView(
+          // Allow vertical scrolling if content overflows
+          padding:
+              const EdgeInsets.all(16), // Consistent padding around content
 
-        // Vertical layout of dashboard widgets
-        child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start, // Align widgets to start (left) edge
+          // Vertical layout of dashboard widgets
+          child: Column(
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // Align widgets to start (left) edge
+            children: [
+              // Header section with greeting and actions
+              _buildHeader(context),
+
+              const SizedBox(height: 20),
+
+              // Calendar and Tasks section
+              _buildCalendarSection(context),
+
+              const SizedBox(height: 20),
+
+              // Today's Progress section
+              _buildTodaysProgress(context),
+
+              const SizedBox(height: 20),
+
+              // Flash Cards and Notes row
+              _buildCardsAndNotesRow(context),
+
+              const SizedBox(height: 20),
+
+              // XP Progress section
+              _buildXPProgress(context),
+
+              // Add bottom padding to account for the fixed bottom bar
+              const SizedBox(height: 100),
+            ],
+          ),
+        ),
+      ),
+
+      // Bottom action buttons (Progress, Timer, Music) fixed at bottom
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF2a3543), // Lighter dark blue-gray from login
+              Color(0xFF253142), // Dark blue-gray from login
+              Color(0xFF1a2332), // Very dark blue-gray from login
+            ],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF365069), // Border color from login
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 12,
+              spreadRadius: 1,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 6,
+              spreadRadius: -2,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildActionButton(
+                context,
+                icon: Icons.trending_up,
+                label: 'Progress',
+                onTap: () {
+                  // Navigate to progress
+                  onNavigate?.call(4); // Progress tab
+                },
+              ),
+              _buildActionButton(
+                context,
+                icon: Icons.timer,
+                label: 'Timer',
+                onTap: () {
+                  // TODO: Implement timer functionality
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Timer coming soon!')),
+                  );
+                },
+              ),
+              _buildActionButton(
+                context,
+                icon: Icons.music_note,
+                label: 'Music',
+                onTap: () {
+                  // TODO: Implement music functionality
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Music coming soon!')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build the header section with greeting and action buttons
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Study Pals',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+              const SizedBox(height: 4),
+              Consumer<AppState>(
+                builder: (context, appState, child) {
+                  return Text(
+                    'Hi ${appState.currentUser?.name ?? 'User'}, Ready to study?',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.7),
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: _buildAppBarActions(context),
+        ),
+      ],
+    );
+  }
+
+  /// Build the calendar section with tasks using login screen styling
+  Widget _buildCalendarSection(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        // Use login screen gradient colors
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2a3543), // Lighter dark blue-gray from login
+            Color(0xFF253142), // Dark blue-gray from login
+            Color(0xFF1a2332), // Very dark blue-gray from login
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF365069), // Border color from login
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 12,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 6,
+            spreadRadius: -2,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
           children: [
-            // Virtual pet widget - shows pet status and allows interactions
-            PetWidget(),
+            // Calendar month indicator with sophisticated styling
+            Container(
+              width: 90,
+              height: 120,
+              decoration: BoxDecoration(
+                // Sophisticated gradient for SEP button
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF4a5568), // Lighter blue-gray
+                    Color(0xFF365069), // Medium blue-gray from login
+                    Color(0xFF2d3748), // Darker blue-gray
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF4a5568),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                    offset: const Offset(2, 2),
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    spreadRadius: -1,
+                    offset: const Offset(-1, -1),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'SEP',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: const Color(
+                              0xFFe67e22), // Orange accent from login
+                          fontSize: 16,
+                          letterSpacing: 1.2,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${DateTime.now().day}',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 28,
+                        ),
+                  ),
+                ],
+              ),
+            ),
 
-            // Spacing between widgets for visual separation
-            SizedBox(height: 20),
+            const SizedBox(width: 20),
 
-            // Quick stats widget - displays study progress and statistics
-            QuickStatsWidget(),
+            // Tasks section with enhanced styling
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Navigation arrows and month header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(
+                        Icons.chevron_left,
+                        color: Colors.white.withValues(alpha: 0.7),
+                        size: 18,
+                      ),
+                      Expanded(
+                        child: Text(
+                          'SEPTEMBER',
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 1.0,
+                                  ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: Colors.white.withValues(alpha: 0.7),
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Calendar Days',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 11,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
 
-            // Spacing between widgets
-            SizedBox(height: 20),
-
-            // AI tutor chat - study assistant
-            SizedBox(
-              height: 300,
-              child: AITutorChat(),
+                  // Tasks button with login screen styling
+                  Container(
+                    width: double.infinity,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      // Use login field colors
+                      color: const Color(
+                          0xFF3d4a5c), // Medium blue-gray from login
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                          offset: const Offset(2, 2),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          spreadRadius: -2,
+                          offset: const Offset(0, 0),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () {
+                          // Navigate to tasks
+                          onNavigate?.call(2); // Notes/Tasks tab
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color:
+                                      const Color(0xFFe67e22), // Orange accent
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: const Icon(
+                                  Icons.task_alt,
+                                  color: Colors.white,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Tasks',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  /// Build today's progress section with login screen styling - full width to match Flash Cards and Notes
+  Widget _buildTodaysProgress(context) {
+    return Row(
+      children: [
+        // Full width container to match the Flash Cards and Notes row layout
+        Expanded(
+          child: Container(
+            height: 140, // Match the height of Flash Cards and Notes containers
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF2a3543), // Lighter dark blue-gray from login
+                  Color(0xFF253142), // Dark blue-gray from login
+                  Color(0xFF1a2332), // Very dark blue-gray from login
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF365069), // Border color from login
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 6,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment:
+                    MainAxisAlignment.center, // Center content vertically
+                children: [
+                  Text(
+                    'Today\'s Progress',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                  ),
+                  const SizedBox(height: 12),
+                  Consumer<TaskProvider>(
+                    builder: (context, taskProvider, child) {
+                      final completedTasks = taskProvider.tasks
+                          .where((task) => task.status == TaskStatus.completed)
+                          .length;
+                      final totalTasks = taskProvider.tasks.length;
+                      return Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFe67e22), // Orange accent
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '$completedTasks of $totalTasks tasks completed',
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build flash cards and notes row with login screen styling
+  Widget _buildCardsAndNotesRow(BuildContext context) {
+    return Row(
+      children: [
+        // Flash Cards section
+        Expanded(
+          child: Container(
+            height: 140,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF2a3543), // Lighter dark blue-gray from login
+                  Color(0xFF253142), // Dark blue-gray from login
+                  Color(0xFF1a2332), // Very dark blue-gray from login
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF365069), // Border color from login
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 6,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // Navigate to flash cards
+                  onNavigate?.call(3); // Decks tab
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFe67e22), // Orange accent
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.style,
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Flash Cards',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(width: 16),
+
+        // Notes section
+        Expanded(
+          child: Container(
+            height: 140,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF2a3543), // Lighter dark blue-gray from login
+                  Color(0xFF253142), // Dark blue-gray from login
+                  Color(0xFF1a2332), // Very dark blue-gray from login
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF365069), // Border color from login
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 6,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // Navigate to notes
+                  onNavigate?.call(2); // Notes tab
+                },
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFe67e22), // Orange accent
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.note_alt,
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Notes',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Build XP progress section with login screen styling
+  Widget _buildXPProgress(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2a3543), // Lighter dark blue-gray from login
+            Color(0xFF253142), // Dark blue-gray from login
+            Color(0xFF1a2332), // Very dark blue-gray from login
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF365069), // Border color from login
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 12,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 6,
+            spreadRadius: -2,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hello text
+            Text(
+              'hello',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+            ),
+            const SizedBox(height: 16),
+            Consumer<PetProvider>(
+              builder: (context, petProvider, child) {
+                final currentXP = petProvider.currentPet.xp;
+                final maxXP = petProvider.currentPet.xpForNextLevel;
+                final progress = currentXP / maxXP;
+
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'XP $currentXP/$maxXP',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        // Pet avatar with login screen styling
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF4a5568), // Lighter blue-gray
+                                Color(
+                                    0xFF365069), // Medium blue-gray from login
+                                Color(0xFF2d3748), // Darker blue-gray
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFF4a5568),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                                offset: const Offset(2, 2),
+                              ),
+                              BoxShadow(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                blurRadius: 4,
+                                spreadRadius: -1,
+                                offset: const Offset(-1, -1),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.pets,
+                            color: Color(0xFFe67e22), // Orange accent
+                            size: 24,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Custom progress bar with login screen styling
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(
+                            0xFF3d4a5c), // Background from login fields
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.transparent,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFFe67e22), // Orange accent
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build individual action button with login screen styling
+  Widget _buildActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: Container(
+        height: 70, // Reduced height to fix overflow
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          // Use login field colors
+          color: const Color(0xFF3d4a5c), // Medium blue-gray from login
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 8,
+              spreadRadius: 1,
+              offset: const Offset(2, 2),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 6,
+              spreadRadius: -2,
+              offset: const Offset(0, 0),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 6, vertical: 8), // Reduced padding
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min, // Added to prevent overflow
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6), // Reduced padding
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFe67e22), // Orange accent
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      icon,
+                      size: 18, // Reduced icon size
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6), // Reduced spacing
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10, // Smaller font size
+                        ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1, // Prevent text wrapping
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
-/// Placeholder screen for calendar/planning functionality
-/// Will be replaced with full calendar interface in future versions
+/// Screen for calendar/planning functionality
+/// Shows a calendar and task management interface
 class PlannerScreen extends StatelessWidget {
   // Constructor with optional key for widget identification
   const PlannerScreen({super.key});
 
-  /// Builds placeholder content indicating feature is coming soon
-  /// @param context - Build context containing theme information
-  /// @return Widget tree showing placeholder content
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // App bar with screen title
-      appBar: AppBar(title: const Text('Planner')),
-
-      // Centered placeholder content
-      body: Center(
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center, // Center content vertically
-          children: [
-            // Large calendar icon to indicate planner functionality
-            const Icon(Icons.calendar_today, size: 64, color: Colors.grey),
-
-            // Spacing between icon and text
-            const SizedBox(height: 16),
-
-            // Coming soon message with appropriate text style
-            Text('Planner coming soon!',
-                style: Theme.of(context).textTheme.headlineSmall),
-          ],
-        ),
+      body: Navigator(
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => const PlannerPage(),
+            settings: settings,
+          );
+        },
       ),
     );
   }
@@ -338,7 +1157,8 @@ class NotesScreen extends StatefulWidget {
   State<NotesScreen> createState() => _NotesScreenState();
 }
 
-class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStateMixin {
+class _NotesScreenState extends State<NotesScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -347,12 +1167,13 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    
+
     // Load data when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final noteProvider = Provider.of<NoteProvider>(context, listen: false);
       final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-      final questProvider = Provider.of<DailyQuestProvider>(context, listen: false);
+      final questProvider =
+          Provider.of<DailyQuestProvider>(context, listen: false);
       noteProvider.loadNotes();
       taskProvider.loadTasks();
       questProvider.loadTodaysQuests();
@@ -397,7 +1218,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
               decoration: InputDecoration(
                 hintText: 'Search notes and tasks...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty 
+                suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
                         onPressed: () {
@@ -419,7 +1240,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
               },
             ),
           ),
-          
+
           // Tab content
           Expanded(
             child: TabBarView(
@@ -451,7 +1272,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
           return _buildEmptyState(
             icon: Icons.note,
             title: _searchQuery.isEmpty ? 'No notes yet' : 'No notes found',
-            subtitle: _searchQuery.isEmpty 
+            subtitle: _searchQuery.isEmpty
                 ? 'Create your first study note'
                 : 'Try a different search term',
           );
@@ -483,7 +1304,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
           return _buildEmptyState(
             icon: Icons.task_alt,
             title: _searchQuery.isEmpty ? 'No tasks yet' : 'No tasks found',
-            subtitle: _searchQuery.isEmpty 
+            subtitle: _searchQuery.isEmpty
                 ? 'Create your first task'
                 : 'Try a different search term',
           );
@@ -513,15 +1334,15 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
           if (_searchQuery.isEmpty) return true;
           final lowerQuery = _searchQuery.toLowerCase();
           return quest.title.toLowerCase().contains(lowerQuery) ||
-                 quest.description.toLowerCase().contains(lowerQuery) ||
-                 quest.type.displayName.toLowerCase().contains(lowerQuery);
+              quest.description.toLowerCase().contains(lowerQuery) ||
+              quest.type.displayName.toLowerCase().contains(lowerQuery);
         }).toList();
 
         if (filteredQuests.isEmpty) {
           return _buildEmptyState(
             icon: Icons.emoji_events,
             title: _searchQuery.isEmpty ? 'No quests today' : 'No quests found',
-            subtitle: _searchQuery.isEmpty 
+            subtitle: _searchQuery.isEmpty
                 ? 'Daily quests will be generated automatically'
                 : 'Try a different search term',
           );
@@ -543,27 +1364,31 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
   Widget _buildAllTab() {
     return Consumer3<NoteProvider, TaskProvider, DailyQuestProvider>(
       builder: (context, noteProvider, taskProvider, questProvider, child) {
-        if (noteProvider.isLoading || taskProvider.isLoading || questProvider.isLoading) {
+        if (noteProvider.isLoading ||
+            taskProvider.isLoading ||
+            questProvider.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
 
         final filteredNotes = noteProvider.searchNotes(_searchQuery);
         final filteredTasks = taskProvider.searchTasks(_searchQuery);
-        
+
         // Filter quests based on search query
         final filteredQuests = questProvider.quests.where((quest) {
           if (_searchQuery.isEmpty) return true;
           final lowerQuery = _searchQuery.toLowerCase();
           return quest.title.toLowerCase().contains(lowerQuery) ||
-                 quest.description.toLowerCase().contains(lowerQuery) ||
-                 quest.type.displayName.toLowerCase().contains(lowerQuery);
+              quest.description.toLowerCase().contains(lowerQuery) ||
+              quest.type.displayName.toLowerCase().contains(lowerQuery);
         }).toList();
-        
-        if (filteredNotes.isEmpty && filteredTasks.isEmpty && filteredQuests.isEmpty) {
+
+        if (filteredNotes.isEmpty &&
+            filteredTasks.isEmpty &&
+            filteredQuests.isEmpty) {
           return _buildEmptyState(
             icon: Icons.view_agenda,
             title: _searchQuery.isEmpty ? 'No content yet' : 'No results found',
-            subtitle: _searchQuery.isEmpty 
+            subtitle: _searchQuery.isEmpty
                 ? 'Create notes, tasks, or complete quests to get started'
                 : 'Try a different search term',
           );
@@ -579,15 +1404,16 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                 child: Text(
                   'Daily Quests (${filteredQuests.length})',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.orange.shade700,
-                  ),
+                        fontWeight: FontWeight.w600,
+                        color: Colors.orange.shade700,
+                      ),
                 ),
               ),
-              ...filteredQuests.map((quest) => _buildQuestCard(quest, questProvider)),
+              ...filteredQuests
+                  .map((quest) => _buildQuestCard(quest, questProvider)),
               const SizedBox(height: 16),
             ],
-            
+
             // Notes section
             if (filteredNotes.isNotEmpty) ...[
               Padding(
@@ -595,15 +1421,15 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                 child: Text(
                   'Notes (${filteredNotes.length})',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blue.shade700,
-                  ),
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue.shade700,
+                      ),
                 ),
               ),
               ...filteredNotes.map((note) => _buildNoteCard(note)),
               const SizedBox(height: 16),
             ],
-            
+
             // Tasks section
             if (filteredTasks.isNotEmpty) ...[
               Padding(
@@ -611,9 +1437,9 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                 child: Text(
                   'Tasks (${filteredTasks.length})',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Colors.green.shade700,
-                  ),
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green.shade700,
+                      ),
                 ),
               ),
               ...filteredTasks.map((task) => _buildTaskCard(task)),
@@ -642,7 +1468,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
           children: [
             if (note.contentMd.isNotEmpty)
               Text(
-                note.contentMd.length > 100 
+                note.contentMd.length > 100
                     ? '${note.contentMd.substring(0, 100)}...'
                     : note.contentMd,
                 maxLines: 2,
@@ -652,13 +1478,20 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
               const SizedBox(height: 4),
               Wrap(
                 spacing: 4,
-                children: note.tags.take(3).map((tag) => 
-                  Chip(
-                    label: Text(tag, style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.w600)),
-                    backgroundColor: Colors.blue.shade50,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ).toList(),
+                children: note.tags
+                    .take(3)
+                    .map(
+                      (tag) => Chip(
+                        label: Text(tag,
+                            style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.blue,
+                                fontWeight: FontWeight.w600)),
+                        backgroundColor: Colors.blue.shade50,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    )
+                    .toList(),
               ),
             ],
           ],
@@ -666,8 +1499,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
         trailing: Text(
           _formatDate(note.updatedAt),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey.shade600,
-          ),
+                color: Colors.grey.shade600,
+              ),
         ),
         onTap: () => _editNote(note),
       ),
@@ -680,7 +1513,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getTaskStatusColor(task.status).withValues(alpha: 0.2),
+          backgroundColor:
+              _getTaskStatusColor(task.status).withValues(alpha: 0.2),
           child: Icon(
             _getTaskStatusIcon(task.status),
             color: _getTaskStatusColor(task.status),
@@ -690,8 +1524,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
           task.title,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            decoration: task.status == TaskStatus.completed 
-                ? TextDecoration.lineThrough 
+            decoration: task.status == TaskStatus.completed
+                ? TextDecoration.lineThrough
                 : null,
           ),
         ),
@@ -721,13 +1555,20 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
               const SizedBox(height: 4),
               Wrap(
                 spacing: 4,
-                children: task.tags.take(3).map((tag) => 
-                  Chip(
-                    label: Text(tag, style: const TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.w600)),
-                    backgroundColor: Colors.green.shade50,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ).toList(),
+                children: task.tags
+                    .take(3)
+                    .map(
+                      (tag) => Chip(
+                        label: Text(tag,
+                            style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.green,
+                                fontWeight: FontWeight.w600)),
+                        backgroundColor: Colors.green.shade50,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    )
+                    .toList(),
               ),
             ],
           ],
@@ -741,7 +1582,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
   /// Build a quest card widget
   Widget _buildQuestCard(DailyQuest quest, DailyQuestProvider questProvider) {
     final progressPercent = quest.currentProgress / quest.targetCount;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -759,14 +1600,17 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: quest.isCompleted 
+                      color: quest.isCompleted
                           ? Colors.green.withValues(alpha: 0.1)
-                          : _getQuestTypeColor(quest.type).withValues(alpha: 0.1),
+                          : _getQuestTypeColor(quest.type)
+                              .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      quest.isCompleted ? Icons.check_circle : _getQuestTypeIcon(quest.type),
-                      color: quest.isCompleted 
+                      quest.isCompleted
+                          ? Icons.check_circle
+                          : _getQuestTypeIcon(quest.type),
+                      color: quest.isCompleted
                           ? Colors.green
                           : _getQuestTypeColor(quest.type),
                       size: 20,
@@ -779,23 +1623,28 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                       children: [
                         Text(
                           quest.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            decoration: quest.isCompleted ? TextDecoration.lineThrough : null,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    decoration: quest.isCompleted
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           quest.description,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
                         ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(6),
@@ -807,10 +1656,11 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                         const SizedBox(width: 4),
                         Text(
                           '${quest.expReward}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.orange,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),
@@ -834,8 +1684,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                     Text(
                       '${quest.currentProgress}/${quest.targetCount}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                   ],
                 ),
@@ -874,8 +1724,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                 Text(
                   'Progress: ${quest.currentProgress}/${quest.targetCount}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 LinearProgressIndicator(
@@ -894,9 +1744,9 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                   Text(
                     '${quest.expReward} XP Reward',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.orange,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: Colors.orange,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                 ],
               ),
@@ -907,7 +1757,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Close'),
             ),
-            if (!quest.isCompleted && quest.currentProgress >= quest.targetCount)
+            if (!quest.isCompleted &&
+                quest.currentProgress >= quest.targetCount)
               ElevatedButton(
                 onPressed: () {
                   questProvider.completeQuest(quest.id);
@@ -982,15 +1833,15 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
           Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Colors.grey.shade600,
-            ),
+                  color: Colors.grey.shade600,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade500,
-            ),
+                  color: Colors.grey.shade500,
+                ),
           ),
         ],
       ),
@@ -1001,7 +1852,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
   Widget _buildPriorityIndicator(int priority) {
     Color color;
     String text;
-    
+
     switch (priority) {
       case 3:
         color = Colors.red;
@@ -1015,7 +1866,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
         color = Colors.green;
         text = 'LOW';
     }
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -1066,7 +1917,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Today';
     } else if (difference.inDays == 1) {
@@ -1132,8 +1983,9 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
       builder: (BuildContext context) {
         final titleController = TextEditingController(text: note.title);
         final contentController = TextEditingController(text: note.contentMd);
-        final tagsController = TextEditingController(text: note.tags.join(', '));
-        
+        final tagsController =
+            TextEditingController(text: note.tags.join(', '));
+
         return AlertDialog(
           title: const Row(
             children: [
@@ -1182,7 +2034,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
             TextButton(
               onPressed: () {
                 // Delete note
-                Provider.of<NoteProvider>(context, listen: false).deleteNote(note.id);
+                Provider.of<NoteProvider>(context, listen: false)
+                    .deleteNote(note.id);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -1205,8 +2058,9 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                       .toList(),
                   updatedAt: DateTime.now(),
                 );
-                
-                Provider.of<NoteProvider>(context, listen: false).updateNote(updatedNote);
+
+                Provider.of<NoteProvider>(context, listen: false)
+                    .updateNote(updatedNote);
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Note updated')),
@@ -1226,12 +2080,14 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
       context: context,
       builder: (BuildContext context) {
         final titleController = TextEditingController(text: task.title);
-        final tagsController = TextEditingController(text: task.tags.join(', '));
-        final estMinutesController = TextEditingController(text: task.estMinutes.toString());
+        final tagsController =
+            TextEditingController(text: task.tags.join(', '));
+        final estMinutesController =
+            TextEditingController(text: task.estMinutes.toString());
         TaskStatus selectedStatus = task.status;
         int selectedPriority = task.priority;
         DateTime? selectedDueDate = task.dueAt;
-        
+
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -1300,9 +2156,30 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                                 border: OutlineInputBorder(),
                               ),
                               items: const [
-                                DropdownMenuItem(value: 1, child: Row(children: [Icon(Icons.low_priority, color: Colors.green), SizedBox(width: 8), Text('Low')])),
-                                DropdownMenuItem(value: 2, child: Row(children: [Icon(Icons.priority_high, color: Colors.orange), SizedBox(width: 8), Text('Medium')])),
-                                DropdownMenuItem(value: 3, child: Row(children: [Icon(Icons.priority_high, color: Colors.red), SizedBox(width: 8), Text('High')])),
+                                DropdownMenuItem(
+                                    value: 1,
+                                    child: Row(children: [
+                                      Icon(Icons.low_priority,
+                                          color: Colors.green),
+                                      SizedBox(width: 8),
+                                      Text('Low')
+                                    ])),
+                                DropdownMenuItem(
+                                    value: 2,
+                                    child: Row(children: [
+                                      Icon(Icons.priority_high,
+                                          color: Colors.orange),
+                                      SizedBox(width: 8),
+                                      Text('Medium')
+                                    ])),
+                                DropdownMenuItem(
+                                    value: 3,
+                                    child: Row(children: [
+                                      Icon(Icons.priority_high,
+                                          color: Colors.red),
+                                      SizedBox(width: 8),
+                                      Text('High')
+                                    ])),
                               ],
                               onChanged: (value) {
                                 setState(() {
@@ -1345,7 +2222,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                             context: context,
                             initialDate: selectedDueDate ?? DateTime.now(),
                             firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
                           );
                           if (date != null) {
                             setState(() {
@@ -1361,14 +2239,17 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today, color: Colors.grey[600]),
+                              Icon(Icons.calendar_today,
+                                  color: Colors.grey[600]),
                               const SizedBox(width: 8),
                               Text(
-                                selectedDueDate != null 
+                                selectedDueDate != null
                                     ? 'Due: ${_formatDate(selectedDueDate!)}'
                                     : 'Set due date (optional)',
                                 style: TextStyle(
-                                  color: selectedDueDate != null ? Colors.black : Colors.grey[600],
+                                  color: selectedDueDate != null
+                                      ? Colors.black
+                                      : Colors.grey[600],
                                 ),
                               ),
                               const Spacer(),
@@ -1397,7 +2278,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                 TextButton(
                   onPressed: () {
                     // Delete task
-                    Provider.of<TaskProvider>(context, listen: false).deleteTask(task.id);
+                    Provider.of<TaskProvider>(context, listen: false)
+                        .deleteTask(task.id);
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -1406,7 +2288,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                       ),
                     );
                   },
-                  child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                  child:
+                      const Text('Delete', style: TextStyle(color: Colors.red)),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -1414,7 +2297,8 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                       title: titleController.text.trim(),
                       status: selectedStatus,
                       priority: selectedPriority,
-                      estMinutes: int.tryParse(estMinutesController.text) ?? task.estMinutes,
+                      estMinutes: int.tryParse(estMinutesController.text) ??
+                          task.estMinutes,
                       dueAt: selectedDueDate,
                       tags: tagsController.text
                           .split(',')
@@ -1422,8 +2306,9 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                           .where((tag) => tag.isNotEmpty)
                           .toList(),
                     );
-                    
-                    Provider.of<TaskProvider>(context, listen: false).updateTask(updatedTask);
+
+                    Provider.of<TaskProvider>(context, listen: false)
+                        .updateTask(updatedTask);
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Task updated')),
@@ -1467,25 +2352,25 @@ class DecksScreen extends StatelessWidget {
               children: [
                 // AI Flashcard Generator at the top
                 const AIFlashcardGenerator(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Flashcard Review section
                 const DueCardsWidget(),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Decks section header
                 Text(
                   'Your Decks',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
-                
+
                 const SizedBox(height: 16),
 
-                if (decks.isEmpty) 
+                if (decks.isEmpty)
                   // Show empty state when no decks exist
                   Center(
                     child: Column(
@@ -1536,9 +2421,13 @@ class DecksScreen extends StatelessWidget {
                                     .map((tag) => Chip(
                                           label: Text(
                                             tag,
-                                            style: const TextStyle(fontSize: 12, color: Colors.indigo, fontWeight: FontWeight.w600),
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.indigo,
+                                                fontWeight: FontWeight.w600),
                                           ),
-                                          backgroundColor: Colors.indigo.shade50,
+                                          backgroundColor:
+                                              Colors.indigo.shade50,
                                           materialTapTargetSize:
                                               MaterialTapTargetSize.shrinkWrap,
                                         ))
