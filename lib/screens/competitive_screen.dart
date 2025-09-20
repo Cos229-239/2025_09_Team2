@@ -4,7 +4,7 @@ import '../widgets/competitive/competitive_widgets.dart';
 
 /// Main competitive learning screen
 class CompetitiveScreen extends StatefulWidget {
-  const CompetitiveScreen({Key? key}) : super(key: key);
+  const CompetitiveScreen({super.key});
 
   @override
   State<CompetitiveScreen> createState() => _CompetitiveScreenState();
@@ -15,7 +15,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
   late TabController _tabController;
   CompetitiveLearningService? _competitiveService;
   bool _isLoading = true;
-  String _currentUserId = 'current_user';
+  final String _currentUserId = 'current_user';
 
   CompetitionCategory _selectedCategory = CompetitionCategory.xpGained;
   LeaderboardPeriod _selectedPeriod = LeaderboardPeriod.weekly;
@@ -207,9 +207,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -245,7 +245,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     final activeCompetitions = _competitiveService!.getActiveCompetitions();
     
     if (activeCompetitions.isEmpty) {
-      return Container(
+      return SizedBox(
         height: 100,
         child: const Center(
           child: Text('No active competitions'),
@@ -287,7 +287,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
             children: [
               Expanded(
                 child: DropdownButtonFormField<CompetitionCategory>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   decoration: const InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(),
@@ -310,7 +310,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
               const SizedBox(width: 16),
               Expanded(
                 child: DropdownButtonFormField<LeaderboardPeriod>(
-                  value: _selectedPeriod,
+                  initialValue: _selectedPeriod,
                   decoration: const InputDecoration(
                     labelText: 'Period',
                     border: OutlineInputBorder(),
