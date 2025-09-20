@@ -9,12 +9,12 @@ class LeaderboardWidget extends StatelessWidget {
   final int maxEntries;
 
   const LeaderboardWidget({
-    Key? key,
+    super.key,
     required this.entries,
     this.currentUserId,
     this.showRankIcons = true,
     this.maxEntries = 10,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
