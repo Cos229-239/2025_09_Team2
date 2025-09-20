@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -313,7 +314,7 @@ class AchievementGamificationService {
         _earnedRewards = rewardsList.map((r) => Reward.fromJson(r)).toList();
       }
     } catch (e) {
-      print('Error loading achievement data: $e');
+      debugPrint('Error loading achievement data: $e');
     }
   }
 
@@ -337,7 +338,7 @@ class AchievementGamificationService {
       final rewardsList = _earnedRewards.map((r) => r.toJson()).toList();
       await _prefs?.setString(_rewardsKey, jsonEncode(rewardsList));
     } catch (e) {
-      print('Error saving achievement data: $e');
+      debugPrint('Error saving achievement data: $e');
     }
   }
 

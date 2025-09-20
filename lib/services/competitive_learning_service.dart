@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Represents different types of competitions
@@ -382,7 +383,7 @@ class CompetitiveLearningService {
         _peerComparisons = comparisonsList.map((c) => PeerComparison.fromJson(c)).toList();
       }
     } catch (e) {
-      print('Error loading competitive learning data: $e');
+      debugPrint('Error loading competitive learning data: $e');
     }
   }
 
@@ -409,19 +410,17 @@ class CompetitiveLearningService {
       final comparisonsList = _peerComparisons.map((c) => c.toJson()).toList();
       await _prefs?.setString(_peerComparisonsKey, jsonEncode(comparisonsList));
     } catch (e) {
-      print('Error saving competitive learning data: $e');
+      debugPrint('Error saving competitive learning data: $e');
     }
   }
 
   /// Initialize default data
   Future<void> _initializeDefaultData(String userId) async {
     // Initialize user stats if not exists
-    if (_userStats == null) {
-      _userStats = CompetitiveStats(
-        userId: userId,
-        lastUpdated: DateTime.now(),
-      );
-    }
+    _userStats ??= CompetitiveStats(
+      userId: userId,
+      lastUpdated: DateTime.now(),
+    );
 
     // Initialize default leaderboards if empty
     if (_leaderboards.isEmpty) {
@@ -438,8 +437,8 @@ class CompetitiveLearningService {
 
   /// Initialize default leaderboards with mock data
   Future<void> _initializeDefaultLeaderboards() async {
-    final categories = CompetitionCategory.values;
-    final periods = LeaderboardPeriod.values;
+    const categories = CompetitionCategory.values;
+    const periods = LeaderboardPeriod.values;
 
     for (final period in periods) {
       for (final category in categories) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Represents a user's privacy settings
@@ -412,7 +413,7 @@ class SocialLearningService {
         _collaborativeSessions = sessionsList.map((s) => CollaborativeSession.fromJson(s)).toList();
       }
     } catch (e) {
-      print('Error loading social learning data: $e');
+      debugPrint('Error loading social learning data: $e');
     }
   }
 
@@ -436,7 +437,7 @@ class SocialLearningService {
       final sessionsList = _collaborativeSessions.map((s) => s.toJson()).toList();
       await _prefs?.setString(_collaborativeSessionsKey, jsonEncode(sessionsList));
     } catch (e) {
-      print('Error saving social learning data: $e');
+      debugPrint('Error saving social learning data: $e');
     }
   }
 
