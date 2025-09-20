@@ -17,13 +17,13 @@ class SocialIntegrationService extends ChangeNotifier {
   bool _isInitialized = false;
 
   // Social AI State
-  Map<String, SocialAIPersonality> _userPersonalities = {};
-  List<SocialAIInsight> _aiInsights = [];
-  Map<String, List<SocialAIMessage>> _aiSocialMessages = {};
+  final Map<String, SocialAIPersonality> _userPersonalities = {};
+  final List<SocialAIInsight> _aiInsights = [];
+  final Map<String, List<SocialAIMessage>> _aiSocialMessages = {};
 
   // Cross-system Integration State
-  List<SocialLearningRecommendation> _socialRecommendations = [];
-  Map<String, CollaborativeAISession> _aiSessions = {};
+  final List<SocialLearningRecommendation> _socialRecommendations = [];
+  final Map<String, CollaborativeAISession> _aiSessions = {};
 
   // Getters
   bool get isInitialized => _isInitialized;

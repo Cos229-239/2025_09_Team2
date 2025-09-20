@@ -4,7 +4,7 @@ import '../widgets/social/social_widgets.dart';
 
 /// Main social learning screen with tabs for different social features
 class SocialScreen extends StatefulWidget {
-  const SocialScreen({Key? key}) : super(key: key);
+  const SocialScreen({super.key});
 
   @override
   State<SocialScreen> createState() => _SocialScreenState();
@@ -234,9 +234,9 @@ class _SocialScreenState extends State<SocialScreen>
     ];
 
     if (activities.isEmpty) {
-      return Container(
+      return const SizedBox(
         height: 100,
-        child: const Center(
+        child: Center(
           child: Text('No recent activity'),
         ),
       );
@@ -276,7 +276,7 @@ class _SocialScreenState extends State<SocialScreen>
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: color.withOpacity(0.2),
+                backgroundColor: color.withValues(alpha: 0.2),
                 child: Icon(icon, color: color, size: 16),
               ),
               const SizedBox(width: 12),
@@ -619,9 +619,11 @@ class _SocialScreenState extends State<SocialScreen>
     final success = await _socialService!.acceptFriendRequest(friendshipId);
     if (success) {
       setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend request accepted!')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Friend request accepted!')),
+        );
+      }
     }
   }
 
@@ -645,14 +647,16 @@ class _SocialScreenState extends State<SocialScreen>
       message: 'Let\'s study together!',
     );
     
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Friend request sent!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send friend request')),
-      );
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Friend request sent!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to send friend request')),
+        );
+      }
     }
   }
 
@@ -689,13 +693,18 @@ class _SocialScreenState extends State<SocialScreen>
     final success = await _socialService!.joinStudyGroup(groupId: group.id);
     if (success) {
       setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Joined ${group.name}!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to join group')),
-      );
+    }
+    
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Joined ${group.name}!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to join group')),
+        );
+      }
     }
   }
 
