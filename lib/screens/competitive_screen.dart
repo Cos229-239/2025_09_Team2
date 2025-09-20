@@ -30,10 +30,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
   Future<void> _initializeCompetitiveService() async {
     _competitiveService = CompetitiveLearningService();
     await _competitiveService!.initialize(_currentUserId);
-    
+
     // Update user performance with mock data
     await _updateUserPerformance();
-    
+
     setState(() {
       _isLoading = false;
     });
@@ -117,7 +117,8 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
   Widget _buildOverviewTab() {
     final stats = _competitiveService!.getCompetitiveOverview(_currentUserId);
-    final leaderboardSummary = _competitiveService!.getLeaderboardSummary(_currentUserId);
+    final leaderboardSummary =
+        _competitiveService!.getLeaderboardSummary(_currentUserId);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -138,8 +139,8 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                   Text(
                     'Your Rankings',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   _buildQuickRankings(leaderboardSummary),
@@ -161,8 +162,8 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                       Text(
                         'Active Competitions',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const Spacer(),
                       TextButton(
@@ -183,8 +184,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
   }
 
   Widget _buildQuickRankings(Map<String, dynamic> leaderboardSummary) {
-    final weeklyRankings = leaderboardSummary['weekly'] as Map<String, dynamic>? ?? {};
-    
+    final weeklyRankings =
+        leaderboardSummary['weekly'] as Map<String, dynamic>? ?? {};
+
     return GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -193,17 +195,22 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
       crossAxisSpacing: 8,
       mainAxisSpacing: 8,
       children: [
-        _buildRankCard('XP Gained', weeklyRankings['xpGained'] ?? 'N/A', Icons.star, Colors.amber),
-        _buildRankCard('Study Time', weeklyRankings['studyTime'] ?? 'N/A', Icons.access_time, Colors.blue),
-        _buildRankCard('Accuracy', weeklyRankings['accuracy'] ?? 'N/A', Icons.gps_fixed, Colors.green),
-        _buildRankCard('Streaks', weeklyRankings['streaks'] ?? 'N/A', Icons.local_fire_department, Colors.red),
+        _buildRankCard('XP Gained', weeklyRankings['xpGained'] ?? 'N/A',
+            Icons.star, Colors.amber),
+        _buildRankCard('Study Time', weeklyRankings['studyTime'] ?? 'N/A',
+            Icons.access_time, Colors.blue),
+        _buildRankCard('Accuracy', weeklyRankings['accuracy'] ?? 'N/A',
+            Icons.gps_fixed, Colors.green),
+        _buildRankCard('Streaks', weeklyRankings['streaks'] ?? 'N/A',
+            Icons.local_fire_department, Colors.red),
       ],
     );
   }
 
-  Widget _buildRankCard(String title, dynamic rank, IconData icon, Color color) {
+  Widget _buildRankCard(
+      String title, dynamic rank, IconData icon, Color color) {
     final rankText = rank is int ? '#$rank' : rank.toString();
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -243,11 +250,11 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
   Widget _buildActiveCompetitionsPreview() {
     final activeCompetitions = _competitiveService!.getActiveCompetitions();
-    
+
     if (activeCompetitions.isEmpty) {
-      return SizedBox(
+      return const SizedBox(
         height: 100,
-        child: const Center(
+        child: Center(
           child: Text('No active competitions'),
         ),
       );
@@ -260,8 +267,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
         itemCount: activeCompetitions.length,
         itemBuilder: (context, index) {
           final competition = activeCompetitions[index];
-          final isParticipating = competition.participants.contains(_currentUserId);
-          
+          final isParticipating =
+              competition.participants.contains(_currentUserId);
+
           return Container(
             width: 300,
             margin: const EdgeInsets.only(right: 12),
@@ -333,7 +341,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
             ],
           ),
         ),
-        
+
         // Leaderboard
         Expanded(
           child: Padding(
@@ -378,7 +386,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
   Widget _buildActiveCompetitions() {
     final activeCompetitions = _competitiveService!.getActiveCompetitions();
-    
+
     if (activeCompetitions.isEmpty) {
       return const Center(
         child: Column(
@@ -397,8 +405,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
       itemCount: activeCompetitions.length,
       itemBuilder: (context, index) {
         final competition = activeCompetitions[index];
-        final isParticipating = competition.participants.contains(_currentUserId);
-        
+        final isParticipating =
+            competition.participants.contains(_currentUserId);
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: CompetitionCard(
@@ -414,7 +423,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
   Widget _buildUpcomingCompetitions() {
     final upcomingCompetitions = _competitiveService!.getUpcomingCompetitions();
-    
+
     if (upcomingCompetitions.isEmpty) {
       return const Center(
         child: Column(
@@ -433,8 +442,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
       itemCount: upcomingCompetitions.length,
       itemBuilder: (context, index) {
         final competition = upcomingCompetitions[index];
-        final isParticipating = competition.participants.contains(_currentUserId);
-        
+        final isParticipating =
+            competition.participants.contains(_currentUserId);
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: CompetitionCard(
@@ -449,8 +459,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
   }
 
   Widget _buildCompareTab() {
-    final peerComparisons = _competitiveService!.getPeerComparisons(_currentUserId);
-    
+    final peerComparisons =
+        _competitiveService!.getPeerComparisons(_currentUserId);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -465,7 +476,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
             },
           ),
           const SizedBox(height: 16),
-          
+
           // Personal Best Rankings
           Card(
             child: Padding(
@@ -476,8 +487,8 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                   Text(
                     'Your Best Rankings',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   _buildBestRankings(),
@@ -493,18 +504,17 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
   Widget _buildBestRankings() {
     final stats = _competitiveService!.getCompetitiveOverview(_currentUserId);
     final bestRanks = stats['bestRanks'] as Map<String, int>? ?? {};
-    
+
     if (bestRanks.isEmpty) {
       return const Text('No rankings yet');
     }
-    
+
     return Column(
       children: bestRanks.entries.map((entry) {
         final categoryName = _getCategoryName(
-          CompetitionCategory.values.firstWhere((e) => e.name == entry.key)
-        );
+            CompetitionCategory.values.firstWhere((e) => e.name == entry.key));
         final rank = entry.value;
-        
+
         return ListTile(
           leading: CircleAvatar(
             backgroundColor: _getRankColor(rank),
@@ -528,7 +538,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     if (rank <= 3) {
       IconData icon;
       Color color;
-      
+
       switch (rank) {
         case 1:
           icon = Icons.emoji_events;
@@ -546,10 +556,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
           icon = Icons.star;
           color = Colors.grey;
       }
-      
+
       return Icon(icon, color: color);
     }
-    
+
     return const SizedBox();
   }
 
@@ -598,21 +608,22 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     setState(() {
       _isLoading = true;
     });
-    
+
     await _updateUserPerformance();
-    
+
     setState(() {
       _isLoading = false;
     });
   }
 
   Future<void> _joinCompetition(String competitionId) async {
-    final success = await _competitiveService!.joinCompetition(competitionId, _currentUserId);
-    
+    final success = await _competitiveService!
+        .joinCompetition(competitionId, _currentUserId);
+
     if (success) {
       setState(() {});
     }
-    
+
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -639,8 +650,8 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
               Text(
                 competition.name,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 16),
               Text(competition.description),

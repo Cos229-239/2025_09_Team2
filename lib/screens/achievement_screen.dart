@@ -96,8 +96,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                   Text(
                     'Quick Stats',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -163,8 +163,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                   Text(
                     'Recent Achievements',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   _buildRecentAchievements(),
@@ -198,15 +198,15 @@ class _AchievementScreenState extends State<AchievementScreen>
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -216,7 +216,7 @@ class _AchievementScreenState extends State<AchievementScreen>
 
   Widget _buildRecentAchievements() {
     final unlockedAchievements = _gamificationService!.unlockedAchievements;
-    
+
     if (unlockedAchievements.isEmpty) {
       return SizedBox(
         height: 100,
@@ -238,7 +238,7 @@ class _AchievementScreenState extends State<AchievementScreen>
 
     // Show last 3 achievements
     final recentAchievements = unlockedAchievements.take(3).toList();
-    
+
     return Column(
       children: recentAchievements.map((achievement) {
         return Padding(
@@ -249,7 +249,8 @@ class _AchievementScreenState extends State<AchievementScreen>
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
+                color:
+                    _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
               ),
               child: Center(
                 child: Text(
@@ -348,8 +349,8 @@ class _AchievementScreenState extends State<AchievementScreen>
               Text(
                 showOnlyUnlocked ? 'Unlocked Achievements' : 'All Achievements',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -369,7 +370,8 @@ class _AchievementScreenState extends State<AchievementScreen>
   Map<String, AchievementProgress> _getProgressMap() {
     final progressMap = <String, AchievementProgress>{};
     for (final achievement in _gamificationService!.allAchievements) {
-      final progress = _gamificationService!.getAchievementProgress(achievement.id);
+      final progress =
+          _gamificationService!.getAchievementProgress(achievement.id);
       if (progress != null) {
         progressMap[achievement.id] = progress;
       }
@@ -429,7 +431,7 @@ class AchievementUnlockDialog extends StatelessWidget {
               color: Colors.white,
             ),
             const SizedBox(height: 16),
-            
+
             // Achievement unlocked text
             const Text(
               'ACHIEVEMENT UNLOCKED!',
@@ -440,7 +442,7 @@ class AchievementUnlockDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Achievement icon
             Container(
               width: 80,
@@ -457,7 +459,7 @@ class AchievementUnlockDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Achievement name
             Text(
               achievement.name,
@@ -469,7 +471,7 @@ class AchievementUnlockDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            
+
             // Achievement description
             Text(
               achievement.description,
@@ -480,7 +482,7 @@ class AchievementUnlockDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            
+
             // XP reward
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -505,14 +507,15 @@ class AchievementUnlockDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Close button
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: _getRarityColor(achievement.rarity),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               ),
               child: const Text(
                 'Awesome!',

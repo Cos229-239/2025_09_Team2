@@ -26,12 +26,12 @@ class _SocialScreenState extends State<SocialScreen>
   Future<void> _initializeSocialService() async {
     _socialService = SocialLearningService();
     await _socialService!.initialize();
-    
+
     // Create default profile if none exists
     if (_socialService!.currentUserProfile == null) {
       await _showProfileSetup();
     }
-    
+
     setState(() {
       _isLoading = false;
     });
@@ -156,13 +156,15 @@ class _SocialScreenState extends State<SocialScreen>
                       children: [
                         Text(
                           'Friend Requests',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.red,
                             borderRadius: BorderRadius.circular(12),
@@ -179,20 +181,22 @@ class _SocialScreenState extends State<SocialScreen>
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ...(_socialService!.pendingFriendRequests.take(3).map((request) => 
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: FriendRequestCard(
-                          friendship: request,
-                          onAccept: () => _acceptFriendRequest(request.id),
-                          onDecline: () => _declineFriendRequest(request.id),
-                        ),
-                      ),
-                    )),
+                    ...(_socialService!.pendingFriendRequests.take(3).map(
+                          (request) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: FriendRequestCard(
+                              friendship: request,
+                              onAccept: () => _acceptFriendRequest(request.id),
+                              onDecline: () =>
+                                  _declineFriendRequest(request.id),
+                            ),
+                          ),
+                        )),
                     if (_socialService!.pendingFriendRequests.length > 3)
                       TextButton(
                         onPressed: () => _tabController.animateTo(1),
-                        child: Text('View all ${_socialService!.pendingFriendRequests.length} requests'),
+                        child: Text(
+                            'View all ${_socialService!.pendingFriendRequests.length} requests'),
                       ),
                   ],
                 ),
@@ -211,8 +215,8 @@ class _SocialScreenState extends State<SocialScreen>
                   Text(
                     'Recent Activity',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   _buildRecentActivity(),
@@ -229,8 +233,16 @@ class _SocialScreenState extends State<SocialScreen>
     // Mock recent activity - in a real app, this would come from a service
     final activities = [
       {'type': 'friend_joined', 'user': 'Alex Chen', 'time': '2 hours ago'},
-      {'type': 'group_created', 'group': 'Mathematics Study Group', 'time': '1 day ago'},
-      {'type': 'session_completed', 'session': 'Physics Review', 'time': '2 days ago'},
+      {
+        'type': 'group_created',
+        'group': 'Mathematics Study Group',
+        'time': '1 day ago'
+      },
+      {
+        'type': 'session_completed',
+        'session': 'Physics Review',
+        'time': '2 days ago'
+      },
     ];
 
     if (activities.isEmpty) {
@@ -247,7 +259,7 @@ class _SocialScreenState extends State<SocialScreen>
         IconData icon;
         String description;
         Color color;
-        
+
         switch (activity['type']) {
           case 'friend_joined':
             icon = Icons.person_add;
@@ -269,7 +281,7 @@ class _SocialScreenState extends State<SocialScreen>
             description = 'Unknown activity';
             color = Colors.grey;
         }
-        
+
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
@@ -288,8 +300,8 @@ class _SocialScreenState extends State<SocialScreen>
                     Text(
                       activity['time']!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color: Colors.grey[600],
+                          ),
                     ),
                   ],
                 ),
@@ -329,7 +341,7 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildFriendsList() {
     final friends = _socialService!.friends;
-    
+
     if (friends.isEmpty) {
       return const Center(
         child: Column(
@@ -361,7 +373,7 @@ class _SocialScreenState extends State<SocialScreen>
           interests: ['Math', 'Science'],
           isOnline: index % 3 == 0,
         );
-        
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: UserProfileCard(
@@ -376,7 +388,7 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildFriendRequests() {
     final requests = _socialService!.pendingFriendRequests;
-    
+
     if (requests.isEmpty) {
       return const Center(
         child: Column(
@@ -409,19 +421,21 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildFindPeople() {
     // Mock suggested users
-    final suggestedUsers = List.generate(10, (index) => UserProfile(
-      id: 'suggested_$index',
-      username: 'user_$index',
-      displayName: 'User ${index + 1}',
-      bio: 'Love studying and learning new things!',
-      joinDate: DateTime.now().subtract(Duration(days: index * 10)),
-      level: 10 + index,
-      totalXP: 1000 + (index * 200),
-      title: index > 5 ? 'Advanced' : 'Intermediate',
-      interests: ['Math', 'Science', 'History'][index % 3] == 'Math' 
-          ? ['Math', 'Physics'] 
-          : ['Science', 'Biology'],
-    ));
+    final suggestedUsers = List.generate(
+        10,
+        (index) => UserProfile(
+              id: 'suggested_$index',
+              username: 'user_$index',
+              displayName: 'User ${index + 1}',
+              bio: 'Love studying and learning new things!',
+              joinDate: DateTime.now().subtract(Duration(days: index * 10)),
+              level: 10 + index,
+              totalXP: 1000 + (index * 200),
+              title: index > 5 ? 'Advanced' : 'Intermediate',
+              interests: ['Math', 'Science', 'History'][index % 3] == 'Math'
+                  ? ['Math', 'Physics']
+                  : ['Science', 'Biology'],
+            ));
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -466,7 +480,7 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildMyGroups() {
     final groups = _socialService!.myStudyGroups;
-    
+
     if (groups.isEmpty) {
       return Center(
         child: Column(
@@ -506,14 +520,15 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildDiscoverGroups() {
     final groups = _socialService!.publicStudyGroups;
-    
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: groups.length,
       itemBuilder: (context, index) {
         final group = groups[index];
-        final isJoined = _socialService!.myStudyGroups.any((g) => g.id == group.id);
-        
+        final isJoined =
+            _socialService!.myStudyGroups.any((g) => g.id == group.id);
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: StudyGroupCard(
@@ -529,7 +544,7 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildSessionsTab() {
     final sessions = _socialService!.myCollaborativeSessions;
-    
+
     if (sessions.isEmpty) {
       return Center(
         child: Column(
@@ -646,7 +661,7 @@ class _SocialScreenState extends State<SocialScreen>
       friendId: userId,
       message: 'Let\'s study together!',
     );
-    
+
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -694,7 +709,7 @@ class _SocialScreenState extends State<SocialScreen>
     if (success) {
       setState(() {});
     }
-    
+
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(

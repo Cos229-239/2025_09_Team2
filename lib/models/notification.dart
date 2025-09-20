@@ -3,37 +3,37 @@
 class AppNotification {
   // Unique identifier for the notification
   final String id;
-  
+
   // Title of the notification (brief summary)
   final String title;
-  
+
   // Detailed message body
   final String message;
-  
+
   // Type of notification for categorization and styling
   final NotificationType type;
-  
+
   // Priority level affecting display order and styling
   final NotificationPriority priority;
-  
+
   // Whether the notification has been read by the user
   final bool isRead;
-  
+
   // Whether the notification requires immediate attention
   final bool isUrgent;
-  
+
   // Timestamp when notification was created
   final DateTime createdAt;
-  
+
   // Optional timestamp for when notification becomes relevant
   final DateTime? scheduledFor;
-  
+
   // Optional expiration time for temporary notifications
   final DateTime? expiresAt;
-  
+
   // Optional action data (navigation routes, parameters)
   final NotificationAction? action;
-  
+
   // Optional metadata for additional context
   final Map<String, dynamic>? metadata;
 
@@ -117,14 +117,13 @@ class AppNotification {
       isRead: json['isRead'] ?? false,
       isUrgent: json['isUrgent'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
-      scheduledFor: json['scheduledFor'] != null 
-          ? DateTime.parse(json['scheduledFor']) 
+      scheduledFor: json['scheduledFor'] != null
+          ? DateTime.parse(json['scheduledFor'])
           : null,
-      expiresAt: json['expiresAt'] != null 
-          ? DateTime.parse(json['expiresAt']) 
-          : null,
-      action: json['action'] != null 
-          ? NotificationAction.fromJson(json['action']) 
+      expiresAt:
+          json['expiresAt'] != null ? DateTime.parse(json['expiresAt']) : null,
+      action: json['action'] != null
+          ? NotificationAction.fromJson(json['action'])
           : null,
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
@@ -153,7 +152,7 @@ class AppNotification {
   String get timeAgo {
     final now = DateTime.now();
     final difference = now.difference(createdAt);
-    
+
     if (difference.inDays > 7) {
       return '${(difference.inDays / 7).floor()}w ago';
     } else if (difference.inDays > 0) {
@@ -177,7 +176,7 @@ class AppNotification {
   }) {
     final hoursLeft = timeRemaining.inHours;
     final minutesLeft = timeRemaining.inMinutes % 60;
-    
+
     String timeText;
     if (hoursLeft > 0) {
       timeText = '$hoursLeft hour${hoursLeft != 1 ? 's' : ''}';
@@ -242,7 +241,8 @@ class AppNotification {
     return AppNotification(
       id: 'review_due_${DateTime.now().millisecondsSinceEpoch}',
       title: 'Cards Ready for Review',
-      message: '$cardCount card${cardCount != 1 ? 's' : ''} from "$deckName" ${cardCount != 1 ? 'are' : 'is'} ready for review',
+      message:
+          '$cardCount card${cardCount != 1 ? 's' : ''} from "$deckName" ${cardCount != 1 ? 'are' : 'is'} ready for review',
       type: NotificationType.reviewDue,
       priority: NotificationPriority.normal,
       createdAt: DateTime.now(),
@@ -288,7 +288,8 @@ class AppNotification {
     return AppNotification(
       id: 'daily_goal_${DateTime.now().millisecondsSinceEpoch}',
       title: 'Daily Goal Achieved! 🎉',
-      message: 'You completed $questsCompleted quest${questsCompleted != 1 ? 's' : ''} and earned $totalExp EXP today!',
+      message:
+          'You completed $questsCompleted quest${questsCompleted != 1 ? 's' : ''} and earned $totalExp EXP today!',
       type: NotificationType.achievement,
       priority: NotificationPriority.normal,
       createdAt: DateTime.now(),
@@ -339,28 +340,28 @@ class NotificationAction {
 
 /// Types of notifications in the system
 enum NotificationType {
-  quizExpiring,     // Quiz is about to expire
-  quizAvailable,    // New quiz is available
-  reviewDue,        // SRS cards need review
-  streakReminder,   // Daily streak maintenance reminder
-  achievement,      // Goal completed, milestone reached
-  system,           // System updates, announcements
-  social,           // Study group, sharing features
+  quizExpiring, // Quiz is about to expire
+  quizAvailable, // New quiz is available
+  reviewDue, // SRS cards need review
+  streakReminder, // Daily streak maintenance reminder
+  achievement, // Goal completed, milestone reached
+  system, // System updates, announcements
+  social, // Study group, sharing features
 }
 
 /// Priority levels for notification ordering and styling
 enum NotificationPriority {
-  low,              // Gray styling, bottom of list
-  normal,           // Standard blue styling
-  high,             // Orange/yellow styling, higher in list
-  critical,         // Red styling, top of list
+  low, // Gray styling, bottom of list
+  normal, // Standard blue styling
+  high, // Orange/yellow styling, higher in list
+  critical, // Red styling, top of list
 }
 
 /// Types of actions notifications can trigger
 enum ActionType {
-  navigate,         // Navigate to app screen
-  url,              // Open external URL
-  dismiss,          // Just dismiss notification
+  navigate, // Navigate to app screen
+  url, // Open external URL
+  dismiss, // Just dismiss notification
 }
 
 /// Extension to provide display properties for notification types

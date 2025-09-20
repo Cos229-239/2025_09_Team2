@@ -80,7 +80,12 @@ class DeckProvider extends ChangeNotifier {
               type: CardType.basic,
               front: 'Who wrote "Romeo and Juliet"?',
               back: 'William Shakespeare',
-              multipleChoiceOptions: ['Charles Dickens', 'William Shakespeare', 'Mark Twain', 'Jane Austen'],
+              multipleChoiceOptions: [
+                'Charles Dickens',
+                'William Shakespeare',
+                'Mark Twain',
+                'Jane Austen'
+              ],
               correctAnswerIndex: 1,
               difficulty: 2,
             ),

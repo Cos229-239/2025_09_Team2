@@ -57,14 +57,14 @@ class TaskProvider extends ChangeNotifier {
   Future<void> loadTasks() async {
     // Test SharedPreferences first
     await TaskRepository.testSharedPreferences();
-    
+
     _isLoading = true; // Set loading flag to show UI indicators
     notifyListeners(); // Update UI to show loading state
 
     try {
       // Attempt to fetch all tasks from the database repository
       _tasks = await TaskRepository.getAllTasks();
-      
+
       // Add sample tasks if list is empty (for demonstration)
       if (_tasks.isEmpty) {
         final sampleTasks = [
@@ -113,7 +113,7 @@ class TaskProvider extends ChangeNotifier {
             status: TaskStatus.completed,
           ),
         ];
-        
+
         _tasks.addAll(sampleTasks);
       }
     } catch (e) {

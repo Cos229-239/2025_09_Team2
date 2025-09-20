@@ -16,15 +16,15 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final notificationsJson = prefs.getStringList(_notificationsKey) ?? [];
-      
+
       final notifications = notificationsJson
           .map((json) => AppNotification.fromJson(jsonDecode(json)))
           .where((n) => !n.isExpired) // Filter out expired notifications
           .toList();
-      
+
       // Sort by creation time (newest first)
       notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      
+
       return notifications;
     } catch (e) {
       debugPrint('Error loading notifications: $e');
@@ -36,17 +36,17 @@ class NotificationService {
   Future<void> addNotification(AppNotification notification) async {
     try {
       final notifications = await getAllNotifications();
-      
+
       // Check for duplicate notifications
       final exists = notifications.any((n) => n.id == notification.id);
       if (exists) {
         debugPrint('Notification already exists: ${notification.id}');
         return;
       }
-      
+
       notifications.insert(0, notification);
       await saveNotifications(notifications);
-      
+
       debugPrint('Added notification: ${notification.title}');
     } catch (e) {
       debugPrint('Error adding notification: $e');
@@ -58,10 +58,9 @@ class NotificationService {
   Future<void> saveNotifications(List<AppNotification> notifications) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final notificationsJson = notifications
-          .map((n) => jsonEncode(n.toJson()))
-          .toList();
-      
+      final notificationsJson =
+          notifications.map((n) => jsonEncode(n.toJson())).toList();
+
       await prefs.setStringList(_notificationsKey, notificationsJson);
     } catch (e) {
       debugPrint('Error saving notifications: $e');
@@ -74,7 +73,7 @@ class NotificationService {
     try {
       final notifications = await getAllNotifications();
       final index = notifications.indexWhere((n) => n.id == notificationId);
-      
+
       if (index != -1) {
         notifications[index] = notifications[index].copyWith(isRead: true);
         await saveNotifications(notifications);
@@ -90,10 +89,9 @@ class NotificationService {
   Future<void> markAllAsRead() async {
     try {
       final notifications = await getAllNotifications();
-      final updatedNotifications = notifications
-          .map((n) => n.copyWith(isRead: true))
-          .toList();
-      
+      final updatedNotifications =
+          notifications.map((n) => n.copyWith(isRead: true)).toList();
+
       await saveNotifications(updatedNotifications);
       debugPrint('Marked all notifications as read');
     } catch (e) {
@@ -140,7 +138,7 @@ class NotificationService {
       for (final quest in quests) {
         if (quest is DailyQuest && !quest.isCompleted && !quest.isExpired) {
           final timeUntilExpiration = quest.expiresAt.difference(now);
-          
+
           // Generate notifications for quests expiring in 2 hours or 30 minutes
           if (_shouldNotifyForExpiring(timeUntilExpiration)) {
             final notification = AppNotification.quizExpiring(
@@ -159,8 +157,9 @@ class NotificationService {
           final isNewToday = quest.createdAt.isAfter(
             DateTime(now.year, now.month, now.day),
           );
-          
-          if (isNewToday && !(await _hasNotificationForQuest(quest.id, 'quiz_available'))) {
+
+          if (isNewToday &&
+              !(await _hasNotificationForQuest(quest.id, 'quiz_available'))) {
             final notification = AppNotification.quizAvailable(
               questId: quest.id,
               questTitle: quest.title,
@@ -208,32 +207,31 @@ class NotificationService {
   bool _shouldNotifyForExpiring(Duration timeRemaining) {
     final hours = timeRemaining.inHours;
     final minutes = timeRemaining.inMinutes;
-    
+
     // Notify at 2 hours, 1 hour, and 30 minutes before expiration
     return (hours == 2 && minutes <= 120) ||
-           (hours == 1 && minutes <= 60) ||
-           (minutes == 30) ||
-           (minutes == 15) ||
-           (minutes == 5);
+        (hours == 1 && minutes <= 60) ||
+        (minutes == 30) ||
+        (minutes == 15) ||
+        (minutes == 5);
   }
 
   /// Check if we already have a notification for a specific quest
   Future<bool> _hasNotificationForQuest(String questId, String type) async {
     final notifications = await getAllNotifications();
-    return notifications.any((n) => 
-        n.id.startsWith('${type}_$questId') && 
-        n.createdAt.isAfter(DateTime.now().subtract(const Duration(hours: 24)))
-    );
+    return notifications.any((n) =>
+        n.id.startsWith('${type}_$questId') &&
+        n.createdAt
+            .isAfter(DateTime.now().subtract(const Duration(hours: 24))));
   }
 
   /// Check if we already have a review notification for a deck
   Future<bool> _hasNotificationForReview(String deckName) async {
     final notifications = await getAllNotifications();
-    return notifications.any((n) => 
+    return notifications.any((n) =>
         n.type == NotificationType.reviewDue &&
         n.metadata?['deckName'] == deckName &&
-        n.createdAt.isAfter(DateTime.now().subtract(const Duration(hours: 6)))
-    );
+        n.createdAt.isAfter(DateTime.now().subtract(const Duration(hours: 6))));
   }
 
   /// Generate streak-related notifications
@@ -247,9 +245,12 @@ class NotificationService {
       final timeUntilEndOfDay = endOfDay.difference(now);
 
       // If user hasn't studied today and it's getting late, remind them
-      if (!hasStudiedToday && timeUntilEndOfDay.inHours <= 3 && currentStreak > 0) {
-        final notificationId = 'streak_reminder_${now.year}_${now.month}_${now.day}';
-        
+      if (!hasStudiedToday &&
+          timeUntilEndOfDay.inHours <= 3 &&
+          currentStreak > 0) {
+        final notificationId =
+            'streak_reminder_${now.year}_${now.month}_${now.day}';
+
         if (!(await _hasNotificationById(notificationId))) {
           final notification = AppNotification.streakReminder(
             currentStreak: currentStreak,
@@ -272,7 +273,7 @@ class NotificationService {
       if (isAllQuestsComplete && questsCompleted > 0) {
         final now = DateTime.now();
         final notificationId = 'daily_goal_${now.year}_${now.month}_${now.day}';
-        
+
         if (!(await _hasNotificationById(notificationId))) {
           final notification = AppNotification.dailyGoalCompleted(
             questsCompleted: questsCompleted,
@@ -296,8 +297,9 @@ class NotificationService {
   Future<void> scheduleRecurringChecks() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_lastNotificationCheckKey, DateTime.now().toIso8601String());
-      
+      await prefs.setString(
+          _lastNotificationCheckKey, DateTime.now().toIso8601String());
+
       // In a real implementation, this would set up background tasks
       // For now, we'll rely on app lifecycle checks
       debugPrint('Scheduled recurring notification checks');
@@ -312,25 +314,25 @@ class NotificationService {
     try {
       final notifications = await getAllNotifications();
       final now = DateTime.now();
-      
+
       // Remove expired notifications
-      final activeNotifications = notifications
-          .where((n) => !n.isExpired)
-          .toList();
-      
+      final activeNotifications =
+          notifications.where((n) => !n.isExpired).toList();
+
       // Remove old read notifications (older than 7 days)
       final recentNotifications = activeNotifications
-          .where((n) => 
-              !n.isRead || 
+          .where((n) =>
+              !n.isRead ||
               n.createdAt.isAfter(now.subtract(const Duration(days: 7))))
           .toList();
-      
+
       // Limit total notifications (keep latest 100)
       final limitedNotifications = recentNotifications.take(100).toList();
-      
+
       if (limitedNotifications.length != notifications.length) {
         await saveNotifications(limitedNotifications);
-        debugPrint('Cleaned up ${notifications.length - limitedNotifications.length} old notifications');
+        debugPrint(
+            'Cleaned up ${notifications.length - limitedNotifications.length} old notifications');
       }
     } catch (e) {
       debugPrint('Error performing notification maintenance: $e');
@@ -342,7 +344,7 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final settingsJson = prefs.getString(_notificationSettingsKey);
-      
+
       if (settingsJson == null) {
         // Default settings
         return {
@@ -354,7 +356,7 @@ class NotificationService {
           'system': true,
         };
       }
-      
+
       final settings = jsonDecode(settingsJson) as Map<String, dynamic>;
       return settings.cast<String, bool>();
     } catch (e) {
@@ -391,15 +393,18 @@ class NotificationService {
   }) async {
     try {
       final now = DateTime.now();
-      final notificationId = 'daily_summary_${now.year}_${now.month}_${now.day}';
-      
-      if (!(await _hasNotificationById(notificationId)) && questsCompleted > 0) {
+      final notificationId =
+          'daily_summary_${now.year}_${now.month}_${now.day}';
+
+      if (!(await _hasNotificationById(notificationId)) &&
+          questsCompleted > 0) {
         final completionRate = (questsCompleted / totalQuests * 100).round();
-        
+
         final notification = AppNotification(
           id: notificationId,
           title: 'Daily Summary 📊',
-          message: 'Today: $questsCompleted/$totalQuests quests ($completionRate%), $expEarned EXP, $cardsStudied cards studied',
+          message:
+              'Today: $questsCompleted/$totalQuests quests ($completionRate%), $expEarned EXP, $cardsStudied cards studied',
           type: NotificationType.achievement,
           priority: NotificationPriority.normal,
           createdAt: now,
@@ -411,7 +416,7 @@ class NotificationService {
             'completionRate': completionRate,
           },
         );
-        
+
         await addNotification(notification);
       }
     } catch (e) {

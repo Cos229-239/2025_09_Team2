@@ -15,7 +15,7 @@ class LevelProgressWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = userLevel.currentXP / userLevel.xpForNextLevel;
-    
+
     return Card(
       elevation: 4,
       child: Padding(
@@ -44,16 +44,17 @@ class LevelProgressWidget extends StatelessWidget {
                     children: [
                       Text(
                         userLevel.title,
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Level ${userLevel.level}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
@@ -74,8 +75,8 @@ class LevelProgressWidget extends StatelessWidget {
                   Text(
                     'Total: ${userLevel.totalXP}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                 ],
               ),
@@ -83,15 +84,16 @@ class LevelProgressWidget extends StatelessWidget {
               LinearProgressIndicator(
                 value: progress,
                 backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(_getLevelColor(userLevel.level)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    _getLevelColor(userLevel.level)),
                 minHeight: 8,
               ),
               const SizedBox(height: 8),
               Text(
                 '${userLevel.xpForNextLevel - userLevel.currentXP} XP to next level',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
             ],
           ],
@@ -126,7 +128,9 @@ class AchievementsGridWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final filteredAchievements = showOnlyUnlocked
-        ? achievements.where((a) => progress[a.id]?.isUnlocked ?? false).toList()
+        ? achievements
+            .where((a) => progress[a.id]?.isUnlocked ?? false)
+            .toList()
         : achievements;
 
     if (filteredAchievements.isEmpty) {
@@ -141,12 +145,12 @@ class AchievementsGridWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              showOnlyUnlocked 
+              showOnlyUnlocked
                   ? 'No achievements unlocked yet'
                   : 'No achievements available',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
           ],
         ),
@@ -189,7 +193,7 @@ class AchievementCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUnlocked = progress?.isUnlocked ?? false;
     final progressValue = progress?.progress ?? 0.0;
-    
+
     return Card(
       elevation: isUnlocked ? 6 : 2,
       child: InkWell(
@@ -198,7 +202,8 @@ class AchievementCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: isUnlocked
-                ? Border.all(color: _getRarityColor(achievement.rarity), width: 2)
+                ? Border.all(
+                    color: _getRarityColor(achievement.rarity), width: 2)
                 : null,
           ),
           child: Padding(
@@ -213,7 +218,8 @@ class AchievementCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isUnlocked
-                        ? _getRarityColor(achievement.rarity).withValues(alpha: 0.2)
+                        ? _getRarityColor(achievement.rarity)
+                            .withValues(alpha: 0.2)
                         : Colors.grey[300],
                   ),
                   child: Center(
@@ -227,23 +233,24 @@ class AchievementCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Achievement name
                 Text(
                   achievement.name,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isUnlocked ? null : Colors.grey,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: isUnlocked ? null : Colors.grey,
+                      ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                
+
                 // Rarity indicator
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: _getRarityColor(achievement.rarity),
                     borderRadius: BorderRadius.circular(8),
@@ -258,21 +265,22 @@ class AchievementCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Progress bar (if not unlocked)
                 if (!isUnlocked) ...[
                   LinearProgressIndicator(
                     value: progressValue,
                     backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(_getRarityColor(achievement.rarity)),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        _getRarityColor(achievement.rarity)),
                     minHeight: 4,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '${(progressValue * 100).toInt()}%',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                 ] else ...[
                   Icon(
@@ -329,7 +337,7 @@ class AchievementDetailDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUnlocked = progress?.isUnlocked ?? false;
-    
+
     return Dialog(
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -342,7 +350,8 @@ class AchievementDetailDialog extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
+                color:
+                    _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
                 border: Border.all(
                   color: _getRarityColor(achievement.rarity),
                   width: 3,
@@ -356,16 +365,16 @@ class AchievementDetailDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             Text(
               achievement.name,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
-            
+
             // Rarity
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -383,7 +392,7 @@ class AchievementDetailDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Description
             Text(
               achievement.description,
@@ -391,7 +400,7 @@ class AchievementDetailDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            
+
             // XP Reward
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -401,12 +410,12 @@ class AchievementDetailDialog extends StatelessWidget {
                 Text(
                   '${achievement.xpReward} XP',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ],
             ),
-            
+
             // Progress or unlock status
             if (isUnlocked) ...[
               const SizedBox(height: 16),
@@ -442,34 +451,35 @@ class AchievementDetailDialog extends StatelessWidget {
               LinearProgressIndicator(
                 value: progress!.progress,
                 backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(_getRarityColor(achievement.rarity)),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    _getRarityColor(achievement.rarity)),
                 minHeight: 8,
               ),
             ],
-            
+
             // Rewards
             if (achievement.rewards.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
                 'Rewards:',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 8),
               ...achievement.rewards.map((reward) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(_getRewardIcon(reward.type), size: 16),
-                    const SizedBox(width: 4),
-                    Text(reward.name),
-                  ],
-                ),
-              )),
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_getRewardIcon(reward.type), size: 16),
+                        const SizedBox(width: 4),
+                        Text(reward.name),
+                      ],
+                    ),
+                  )),
             ],
-            
+
             const SizedBox(height: 24),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -538,11 +548,12 @@ class StreakWidget extends StatelessWidget {
             Text(
               'Streaks',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
-            ...streaks.entries.map((entry) => _buildStreakItem(context, entry.value)),
+            ...streaks.entries
+                .map((entry) => _buildStreakItem(context, entry.value)),
           ],
         ),
       ),
@@ -553,7 +564,7 @@ class StreakWidget extends StatelessWidget {
     IconData icon;
     Color color;
     String title;
-    
+
     switch (streak.type) {
       case 'daily':
         icon = Icons.calendar_today;
@@ -575,7 +586,7 @@ class StreakWidget extends StatelessWidget {
         color = Colors.grey;
         title = streak.type;
     }
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -589,14 +600,14 @@ class StreakWidget extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 Text(
                   'Current: ${streak.current} | Best: ${streak.longest}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                        color: Colors.grey[600],
+                      ),
                 ),
               ],
             ),
@@ -607,9 +618,9 @@ class StreakWidget extends StatelessWidget {
             Text(
               '${streak.current}',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.red,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
             ),
           ],
         ],
@@ -644,8 +655,8 @@ class RewardsWidget extends StatelessWidget {
               Text(
                 'No rewards earned yet',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
             ],
           ),
@@ -662,8 +673,8 @@ class RewardsWidget extends StatelessWidget {
             Text(
               'Rewards Earned',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             GridView.builder(

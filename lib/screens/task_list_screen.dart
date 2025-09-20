@@ -22,7 +22,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   int? _filterPriority; // Priority is an int (1=low, 2=medium, 3=high)
   String _searchQuery = '';
   bool _showingCompletedTasks = false; // Track if we're viewing completed tasks
-  
+
   @override
   void initState() {
     super.initState();
@@ -68,11 +68,15 @@ class _TaskListScreenState extends State<TaskListScreen> {
           }
 
           final allTasks = taskProvider.tasks;
-          
+
           final filteredTasks = _filterTasks(allTasks);
-          
-          final completedTasks = allTasks.where((task) => task.status == TaskStatus.completed).toList();
-          final pendingTasks = allTasks.where((task) => task.status != TaskStatus.completed).toList();
+
+          final completedTasks = allTasks
+              .where((task) => task.status == TaskStatus.completed)
+              .toList();
+          final pendingTasks = allTasks
+              .where((task) => task.status != TaskStatus.completed)
+              .toList();
 
           if (allTasks.isEmpty) {
             return Center(
@@ -132,15 +136,21 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       children: [
                         Text(
                           'Task Overview',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.blue.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
-                        if (_filterStatus != null || _filterPriority != null || _searchQuery.isNotEmpty || _showingCompletedTasks)
+                        if (_filterStatus != null ||
+                            _filterPriority != null ||
+                            _searchQuery.isNotEmpty ||
+                            _showingCompletedTasks)
                           TextButton(
                             onPressed: _clearFilters,
-                            child: Text(_showingCompletedTasks ? 'Back to Active Tasks' : 'Clear Filters'),
+                            child: Text(_showingCompletedTasks
+                                ? 'Back to Active Tasks'
+                                : 'Clear Filters'),
                           ),
                       ],
                     ),
@@ -168,10 +178,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             context,
                             'Completed',
                             '${completedTasks.length}',
-                            _showingCompletedTasks ? Colors.green.shade700 : Colors.green,
+                            _showingCompletedTasks
+                                ? Colors.green.shade700
+                                : Colors.green,
                             onTap: () {
                               setState(() {
-                                _showingCompletedTasks = !_showingCompletedTasks;
+                                _showingCompletedTasks =
+                                    !_showingCompletedTasks;
                                 // Clear other filters when switching between views
                                 if (_showingCompletedTasks) {
                                   _filterStatus = null;
@@ -198,7 +211,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         child: LinearProgressIndicator(
                           value: completedTasks.length / allTasks.length,
                           backgroundColor: Colors.blue.shade200,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+                          valueColor:
+                              const AlwaysStoppedAnimation<Color>(Colors.blue),
                         ),
                       ),
                   ],
@@ -206,10 +220,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
               ),
 
               // Active filters display
-              if (_filterStatus != null || _filterPriority != null || _searchQuery.isNotEmpty)
+              if (_filterStatus != null ||
+                  _filterPriority != null ||
+                  _searchQuery.isNotEmpty)
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   color: Colors.grey.shade100,
                   child: Wrap(
                     spacing: 8,
@@ -222,14 +239,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         ),
                       if (_filterStatus != null)
                         Chip(
-                          label: Text('Status: ${_getStatusText(_filterStatus!)}'),
+                          label:
+                              Text('Status: ${_getStatusText(_filterStatus!)}'),
                           onDeleted: () => setState(() => _filterStatus = null),
                           deleteIcon: const Icon(Icons.close, size: 16),
                         ),
                       if (_filterPriority != null)
                         Chip(
-                          label: Text('Priority: ${_getPriorityText(_filterPriority!)}'),
-                          onDeleted: () => setState(() => _filterPriority = null),
+                          label: Text(
+                              'Priority: ${_getPriorityText(_filterPriority!)}'),
+                          onDeleted: () =>
+                              setState(() => _filterPriority = null),
                           deleteIcon: const Icon(Icons.close, size: 16),
                         ),
                     ],
@@ -251,14 +271,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             const SizedBox(height: 16),
                             Text(
                               'No tasks match your filters',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
                                     color: Colors.grey,
                                   ),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Try adjusting your search or filters',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
                                     color: Colors.grey,
                                   ),
                             ),
@@ -270,7 +296,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         itemCount: filteredTasks.length,
                         itemBuilder: (context, index) {
                           final task = filteredTasks[index];
-                          return _buildDetailedTaskItem(context, task, taskProvider);
+                          return _buildDetailedTaskItem(
+                              context, task, taskProvider);
                         },
                       ),
               ),
@@ -287,32 +314,39 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   List<Task> _filterTasks(List<Task> tasks) {
-    
     var filtered = tasks;
 
     // Apply search filter (search in title since Task doesn't have description)
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((task) =>
-          task.title.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+      filtered = filtered
+          .where((task) =>
+              task.title.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .toList();
     }
 
     // Apply status filter
     if (_filterStatus != null) {
-      filtered = filtered.where((task) => task.status == _filterStatus).toList();
+      filtered =
+          filtered.where((task) => task.status == _filterStatus).toList();
     }
 
     // Apply priority filter
     if (_filterPriority != null) {
-      filtered = filtered.where((task) => task.priority == _filterPriority).toList();
+      filtered =
+          filtered.where((task) => task.priority == _filterPriority).toList();
     }
 
     // Apply completed/active task filter based on current view mode
     if (_showingCompletedTasks) {
       // Show only completed tasks
-      filtered = filtered.where((task) => task.status == TaskStatus.completed).toList();
+      filtered = filtered
+          .where((task) => task.status == TaskStatus.completed)
+          .toList();
     } else {
       // Hide completed tasks (show only active tasks)
-      filtered = filtered.where((task) => task.status != TaskStatus.completed).toList();
+      filtered = filtered
+          .where((task) => task.status != TaskStatus.completed)
+          .toList();
     }
 
     // Sort by priority (high to low) then by due date
@@ -324,7 +358,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
       // Then by priority (high to low)
       final priorityComparison = b.priority.compareTo(a.priority);
       if (priorityComparison != 0) return priorityComparison;
-      
+
       // Finally by due date (earlier first)
       if (a.dueAt != null && b.dueAt != null) {
         return a.dueAt!.compareTo(b.dueAt!);
@@ -335,7 +369,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
       }
       return 0;
     });
-    
+
     return filtered;
   }
 
@@ -415,7 +449,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   DropdownMenuItem(value: 2, child: Text('Medium')),
                   DropdownMenuItem(value: 3, child: Text('High')),
                 ],
-                onChanged: (value) => setDialogState(() => tempPriority = value),
+                onChanged: (value) =>
+                    setDialogState(() => tempPriority = value),
               ),
             ],
           ),
@@ -481,8 +516,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: (label == 'Completed' && _showingCompletedTasks) 
-                ? color.withAlpha(40)  // Highlight when active
+            color: (label == 'Completed' && _showingCompletedTasks)
+                ? color.withAlpha(40) // Highlight when active
                 : Colors.transparent,
             border: (label == 'Completed' && _showingCompletedTasks)
                 ? Border.all(color: color.withAlpha(100), width: 1)
@@ -509,10 +544,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: task.status == TaskStatus.completed ? Colors.green : _getPriorityColor(task.priority),
+            color: task.status == TaskStatus.completed
+                ? Colors.green
+                : _getPriorityColor(task.priority),
             width: 2,
           ),
-          color: task.status == TaskStatus.completed ? Colors.green.shade50 : Colors.white,
+          color: task.status == TaskStatus.completed
+              ? Colors.green.shade50
+              : Colors.white,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,7 +567,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       await taskProvider.completeTask(task.id);
                     } else {
                       // Update task status back to pending
-                      final updatedTask = task.copyWith(status: TaskStatus.pending);
+                      final updatedTask =
+                          task.copyWith(status: TaskStatus.pending);
                       await taskProvider.updateTask(updatedTask);
                     }
                   },
@@ -540,13 +580,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     task.title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          decoration: task.status == TaskStatus.completed ? TextDecoration.lineThrough : null,
+                          decoration: task.status == TaskStatus.completed
+                              ? TextDecoration.lineThrough
+                              : null,
                         ),
                   ),
                 ),
                 // Priority indicator
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getPriorityColor(task.priority).withAlpha(50),
                     borderRadius: BorderRadius.circular(8),
@@ -562,7 +605,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 ),
               ],
             ),
-            
+
             // Task details row
             if (task.dueAt != null || task.estMinutes > 0)
               Padding(

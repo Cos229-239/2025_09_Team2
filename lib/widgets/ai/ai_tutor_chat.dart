@@ -18,9 +18,11 @@ class _AITutorChatState extends State<AITutorChat> {
   @override
   void initState() {
     super.initState();
+
     /// Add welcome message when chat starts
     _messages.add(ChatMessage(
-      text: "Hi! I'm your AI study assistant. Ask me for study tips, motivation, or help with your learning!",
+      text:
+          "Hi! I'm your AI study assistant. Ask me for study tips, motivation, or help with your learning!",
       isFromUser: false,
       timestamp: DateTime.now(),
     ));
@@ -58,7 +60,8 @@ class _AITutorChatState extends State<AITutorChat> {
 
     try {
       // Get AI response
-      final aiProvider = Provider.of<StudyPalsAIProvider>(context, listen: false);
+      final aiProvider =
+          Provider.of<StudyPalsAIProvider>(context, listen: false);
       final response = await _getAIResponse(userMessage, aiProvider);
 
       setState(() {
@@ -77,7 +80,8 @@ class _AITutorChatState extends State<AITutorChat> {
         _messages.removeWhere((msg) => msg.isTyping);
         // Add error message
         _messages.add(ChatMessage(
-          text: "Sorry, I'm having trouble responding right now. Please check your AI settings and try again.",
+          text:
+              "Sorry, I'm having trouble responding right now. Please check your AI settings and try again.",
           isFromUser: false,
           timestamp: DateTime.now(),
         ));
@@ -94,7 +98,7 @@ class _AITutorChatState extends State<AITutorChat> {
         email: 'user@studypals.com',
         name: 'Study Buddy',
       );
-      
+
       final mockStats = {
         'cardsToday': 10,
         'successRate': 85,
@@ -105,11 +109,11 @@ class _AITutorChatState extends State<AITutorChat> {
       };
 
       // Handle different types of requests
-      if (message.toLowerCase().contains('study tip') || 
+      if (message.toLowerCase().contains('study tip') ||
           message.toLowerCase().contains('recommendation')) {
         return await aiProvider.getStudyRecommendation(mockUser, mockStats);
-      } else if (message.toLowerCase().contains('motivation') || 
-                 message.toLowerCase().contains('encourage')) {
+      } else if (message.toLowerCase().contains('motivation') ||
+          message.toLowerCase().contains('encourage')) {
         return await aiProvider.getPetMessage('Buddy', mockStats);
       } else {
         // For general questions, use the AI service directly for a chat response
@@ -121,10 +125,10 @@ You are a helpful AI study assistant for StudyPals. The user asked: "$message"
 Provide a helpful, encouraging response about studying, learning, or academic success. 
 Keep it under 100 words and friendly.
           ''';
-          
-          return await aiService.testConnection() 
-            ? await aiService.callGoogleAIWithRetry(prompt, 0)
-            : "I'm here to help with your studies! Try asking for study tips, motivation, or help creating flashcards.";
+
+          return await aiService.testConnection()
+              ? await aiService.callGoogleAIWithRetry(prompt, 0)
+              : "I'm here to help with your studies! Try asking for study tips, motivation, or help creating flashcards.";
         } else {
           return "I'm here to help with your studies! Please configure AI settings first to unlock my full potential.";
         }

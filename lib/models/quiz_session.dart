@@ -7,19 +7,20 @@ class QuizSession {
   final List<String> cardIds; // IDs of cards included in this quiz session
   final DateTime startTime; // When the quiz session was started
   DateTime? endTime; // When the quiz session was completed (null if ongoing)
-  
+
   // Progress tracking
   int currentQuestionIndex; // Index of current question (0-based)
   final List<QuizAnswer> answers; // User's answers for each question
-  
+
   // Session state
   bool isCompleted; // Whether the quiz session is finished
   double? finalScore; // Final score as percentage (0.0 to 1.0)
   int? totalExpEarned; // Total EXP earned from this session
-  
+
   // Cooldown and retry logic
   DateTime? lastAttemptTime; // When this quiz was last attempted
-  bool canRetake; // Whether user can retake this quiz (based on cooldown/success)
+  bool
+      canRetake; // Whether user can retake this quiz (based on cooldown/success)
 
   QuizSession({
     required this.id,
@@ -96,7 +97,8 @@ class QuizSession {
   int get correctAnswers => answers.where((answer) => answer.isCorrect).length;
 
   /// Get number of incorrect answers
-  int get incorrectAnswers => answers.where((answer) => !answer.isCorrect).length;
+  int get incorrectAnswers =>
+      answers.where((answer) => !answer.isCorrect).length;
 
   /// Check if this is a perfect score (all answers correct)
   bool get isPerfectScore => isCompleted && finalScore == 1.0;
@@ -106,9 +108,9 @@ class QuizSession {
     if (!isCompleted) {
       return 'In Progress ($questionsAnswered/$totalQuestions)';
     }
-    
+
     if (finalScore == null) return 'Completed';
-    
+
     final percentage = (finalScore! * 100).round();
     if (percentage >= 90) return 'Excellent ($percentage%)';
     if (percentage >= 80) return 'Great ($percentage%)';
@@ -147,13 +149,14 @@ class QuizSession {
       endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
       currentQuestionIndex: json['currentQuestionIndex'] ?? 0,
       answers: (json['answers'] as List<dynamic>?)
-          ?.map((answerJson) => QuizAnswer.fromJson(answerJson))
-          .toList() ?? [],
+              ?.map((answerJson) => QuizAnswer.fromJson(answerJson))
+              .toList() ??
+          [],
       isCompleted: json['isCompleted'] ?? false,
       finalScore: json['finalScore']?.toDouble(),
       totalExpEarned: json['totalExpEarned'],
-      lastAttemptTime: json['lastAttemptTime'] != null 
-          ? DateTime.parse(json['lastAttemptTime']) 
+      lastAttemptTime: json['lastAttemptTime'] != null
+          ? DateTime.parse(json['lastAttemptTime'])
           : null,
       canRetake: json['canRetake'] ?? true,
     );
@@ -236,7 +239,7 @@ class QuizResults {
     final incorrectAnswers = session.incorrectAnswers;
     final scorePercentage = session.finalScore ?? 0.0;
     final totalExpEarned = session.totalExpEarned ?? 0;
-    final timeSpent = session.endTime != null 
+    final timeSpent = session.endTime != null
         ? session.endTime!.difference(session.startTime)
         : Duration.zero;
     final isPerfectScore = session.isPerfectScore;

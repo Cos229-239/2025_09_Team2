@@ -20,28 +20,31 @@ class NotificationPanel extends StatelessWidget {
     return Consumer<NotificationProvider>(
       builder: (context, notificationProvider, child) {
         return Container(
-          height: isBottomSheet ? MediaQuery.of(context).size.height * 0.8 : null,
+          height:
+              isBottomSheet ? MediaQuery.of(context).size.height * 0.8 : null,
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: isBottomSheet 
+            borderRadius: isBottomSheet
                 ? const BorderRadius.vertical(top: Radius.circular(20))
                 : null,
-            boxShadow: isBottomSheet ? [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -2),
-              ),
-            ] : null,
+            boxShadow: isBottomSheet
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ]
+                : null,
           ),
           child: Column(
             children: [
               // Header with title and controls
               _buildHeader(context, notificationProvider),
-              
+
               // Filter bar
               _buildFilterBar(context, notificationProvider),
-              
+
               // Notification list
               Expanded(
                 child: _buildNotificationList(context, notificationProvider),
@@ -75,13 +78,14 @@ class NotificationPanel extends StatelessWidget {
                 Text(
                   'Notifications',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 if (provider.unreadCount > 0) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: Theme.of(context).primaryColor,
                       borderRadius: BorderRadius.circular(12),
@@ -99,7 +103,7 @@ class NotificationPanel extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Action buttons
           Row(
             children: [
@@ -110,14 +114,14 @@ class NotificationPanel extends StatelessWidget {
                   onPressed: () => provider.markAllAsRead(),
                   tooltip: 'Mark all as read',
                 ),
-              
+
               // Settings button
               IconButton(
                 icon: const Icon(Icons.settings),
                 onPressed: () => _showNotificationSettings(context),
                 tooltip: 'Notification settings',
               ),
-              
+
               // Close button (for bottom sheet)
               if (onClose != null)
                 IconButton(
@@ -144,7 +148,8 @@ class NotificationPanel extends StatelessWidget {
               decoration: const InputDecoration(
                 labelText: 'Filter by type',
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 isDense: true,
               ),
               items: [
@@ -153,28 +158,29 @@ class NotificationPanel extends StatelessWidget {
                   child: Text('All notifications'),
                 ),
                 ...NotificationType.values.map((type) => DropdownMenuItem(
-                  value: type,
-                  child: Row(
-                    children: [
-                      Text(type.icon, style: const TextStyle(fontSize: 16)),
-                      const SizedBox(width: 8),
-                      Text(type.displayName),
-                    ],
-                  ),
-                )),
+                      value: type,
+                      child: Row(
+                        children: [
+                          Text(type.icon, style: const TextStyle(fontSize: 16)),
+                          const SizedBox(width: 8),
+                          Text(type.displayName),
+                        ],
+                      ),
+                    )),
               ],
               onChanged: (value) => provider.setFilter(value),
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
+
           // Unread only toggle
           FilterChip(
             label: const Text('Unread only'),
             selected: provider.showUnreadOnly,
             onSelected: (_) => provider.toggleUnreadFilter(),
-            selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+            selectedColor:
+                Theme.of(context).primaryColor.withValues(alpha: 0.3),
           ),
         ],
       ),
@@ -182,7 +188,8 @@ class NotificationPanel extends StatelessWidget {
   }
 
   /// Build the main notification list
-  Widget _buildNotificationList(BuildContext context, NotificationProvider provider) {
+  Widget _buildNotificationList(
+      BuildContext context, NotificationProvider provider) {
     if (provider.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -203,17 +210,19 @@ class NotificationPanel extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              provider.showUnreadOnly ? 'No unread notifications' : 'No notifications',
+              provider.showUnreadOnly
+                  ? 'No unread notifications'
+                  : 'No notifications',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+                    color: Colors.grey.shade600,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               'We\'ll notify you about quiz deadlines and study reminders',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade500,
-              ),
+                    color: Colors.grey.shade500,
+                  ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -239,8 +248,8 @@ class NotificationPanel extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
       decoration: BoxDecoration(
-        color: notification.isRead 
-            ? Colors.transparent 
+        color: notification.isRead
+            ? Colors.transparent
             : Theme.of(context).primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
         border: notification.isUrgent
@@ -256,15 +265,17 @@ class NotificationPanel extends StatelessWidget {
               child: Text(
                 notification.title,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: notification.isRead ? FontWeight.normal : FontWeight.w600,
-                ),
+                      fontWeight: notification.isRead
+                          ? FontWeight.normal
+                          : FontWeight.w600,
+                    ),
               ),
             ),
             Text(
               notification.timeAgo,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+                    color: Colors.grey.shade600,
+                  ),
             ),
           ],
         ),
@@ -275,8 +286,10 @@ class NotificationPanel extends StatelessWidget {
             Text(
               notification.message,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: notification.isRead ? Colors.grey.shade600 : Colors.grey.shade800,
-              ),
+                    color: notification.isRead
+                        ? Colors.grey.shade600
+                        : Colors.grey.shade800,
+                  ),
             ),
             if (notification.isUrgent) ...[
               const SizedBox(height: 8),
@@ -301,7 +314,10 @@ class NotificationPanel extends StatelessWidget {
         trailing: PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, size: 20),
           onSelected: (action) => _handleNotificationAction(
-            context, notification, provider, action,
+            context,
+            notification,
+            provider,
+            action,
           ),
           itemBuilder: (context) => [
             if (!notification.isRead)
@@ -381,7 +397,7 @@ class NotificationPanel extends StatelessWidget {
     // Handle navigation if action is specified
     if (notification.action != null) {
       final action = notification.action!;
-      
+
       if (action.type == ActionType.navigate && action.route != null) {
         Navigator.of(context).pushNamed(
           action.route!,
@@ -428,10 +444,12 @@ class NotificationSettingsDialog extends StatefulWidget {
   const NotificationSettingsDialog({super.key});
 
   @override
-  State<NotificationSettingsDialog> createState() => _NotificationSettingsDialogState();
+  State<NotificationSettingsDialog> createState() =>
+      _NotificationSettingsDialogState();
 }
 
-class _NotificationSettingsDialogState extends State<NotificationSettingsDialog> {
+class _NotificationSettingsDialogState
+    extends State<NotificationSettingsDialog> {
   Map<String, bool> _settings = {};
   bool _isLoading = true;
 
@@ -536,7 +554,9 @@ class NotificationBellIcon extends StatelessWidget {
                     minHeight: 16,
                   ),
                   child: Text(
-                    provider.unreadCount > 99 ? '99+' : '${provider.unreadCount}',
+                    provider.unreadCount > 99
+                        ? '99+'
+                        : '${provider.unreadCount}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,

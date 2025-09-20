@@ -66,12 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             child: Padding(
               // Adds padding for the thick border effect - INCREASED
-              padding: const EdgeInsets.all(32.0), // Increased padding for thicker space between border and edge
+              padding: const EdgeInsets.all(
+                  32.0), // Increased padding for thicker space between border and edge
               child: Container(
                 // Inner container for form and mascot
                 decoration: BoxDecoration(
                   // Styling for the inner container
-                  color: Colors.transparent, // Transparent to show gradient background
+                  color: Colors
+                      .transparent, // Transparent to show gradient background
                   border: Border.all(
                     // Adds the original orange border
                     color: const Color(0xFFe67e22), // Orange border
@@ -93,13 +95,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         Color(0xFF2a3543), // Slightly lighter dark blue-gray
                       ],
                     ),
-                    borderRadius: BorderRadius.all(Radius.circular(10)), // Slightly smaller radius to fit inside orange border
+                    borderRadius: BorderRadius.all(Radius.circular(
+                        10)), // Slightly smaller radius to fit inside orange border
                   ),
                   child: SingleChildScrollView(
                     // Make entire login screen scrollable
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
-                        minHeight: MediaQuery.of(context).size.height - 64, // Account for padding
+                        minHeight: MediaQuery.of(context).size.height -
+                            64, // Account for padding
                       ),
                       child: Padding(
                         // Adds padding inside the container
@@ -108,20 +112,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Column(
                           // Column to stack UI elements vertically
                           children: [
-                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 60 : 20), // Responsive top spacing
+                            SizedBox(
+                                height: MediaQuery.of(context).size.height > 600
+                                    ? 60
+                                    : 20), // Responsive top spacing
                             // Cat mascot and branding
                             _buildMascotSection(),
                             // Builds the cat mascot section
-                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            SizedBox(
+                                height: MediaQuery.of(context).size.height > 600
+                                    ? 40
+                                    : 20),
                             // Responsive spacing
                             // Login form
                             _buildLoginForm(),
                             // Builds the login form section
-                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            SizedBox(
+                                height: MediaQuery.of(context).size.height > 600
+                                    ? 40
+                                    : 20),
                             // Responsive spacer between form and links
                             _buildBottomLinks(),
                             // Builds the bottom navigation links
-                            SizedBox(height: MediaQuery.of(context).size.height > 600 ? 40 : 20),
+                            SizedBox(
+                                height: MediaQuery.of(context).size.height > 600
+                                    ? 40
+                                    : 20),
                             // Responsive spacer at the bottom
                           ],
                         ),
@@ -145,16 +161,22 @@ class _LoginScreenState extends State<LoginScreen> {
         // Cat mascot container with the provided image
         Container(
           // Container for the mascot graphic
-          width: MediaQuery.of(context).size.width > 600 ? 200 : 150,  // Responsive size for different screen sizes
-          height: MediaQuery.of(context).size.width > 600 ? 200 : 150, // Responsive size for different screen sizes
+          width: MediaQuery.of(context).size.width > 600
+              ? 200
+              : 150, // Responsive size for different screen sizes
+          height: MediaQuery.of(context).size.width > 600
+              ? 200
+              : 150, // Responsive size for different screen sizes
           decoration: BoxDecoration(
             // Styling for the mascot container
-            color: const Color(0xFF3d4a5c), // Medium blue-gray for container background
+            color: const Color(
+                0xFF3d4a5c), // Medium blue-gray for container background
             borderRadius: BorderRadius.circular(20),
             // Rounded corners
             border: Border.all(
-              color: const Color.fromARGB(255, 202, 199, 199).withValues(alpha: 0.9),  // Slightly grayish white
-              width: 12.0,                           // Border thickness
+              color: const Color.fromARGB(255, 202, 199, 199)
+                  .withValues(alpha: 0.9), // Slightly grayish white
+              width: 12.0, // Border thickness
             ),
             boxShadow: [
               // Shadow for depth
@@ -177,7 +199,8 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Image.asset(
                 // Display the cat mascot image
                 'FirstStudyPal.png', // Path to your cat image asset
-                fit: BoxFit.contain, // Maintain aspect ratio while fitting in container
+                fit: BoxFit
+                    .contain, // Maintain aspect ratio while fitting in container
                 errorBuilder: (context, error, stackTrace) {
                   // Fallback if image fails to load
                   return const Icon(
@@ -344,7 +367,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           border: InputBorder.none,
           // No default border
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           // Padding inside field
         ),
         keyboardType: TextInputType.emailAddress,
@@ -418,7 +442,8 @@ class _LoginScreenState extends State<LoginScreen> {
         // Hides password text
         style: const TextStyle(color: Colors.white, fontSize: 14),
         // Text style
-        textAlign: passwordFocusNode.hasFocus ? TextAlign.right : TextAlign.center,
+        textAlign:
+            passwordFocusNode.hasFocus ? TextAlign.right : TextAlign.center,
         // Aligns text based on focus
         decoration: InputDecoration(
           // Input field styling
@@ -481,18 +506,25 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           border: InputBorder.none,
           // No default border
-          contentPadding: const EdgeInsets.only(left: 40, right: 16, top: 16, bottom: 16), // Slightly increased left offset
+          contentPadding: const EdgeInsets.only(
+              left: 40,
+              right: 16,
+              top: 16,
+              bottom: 16), // Slightly increased left offset
           suffixIcon: IconButton(
             // Button to toggle password visibility
             icon: Icon(
               // Icon for visibility toggle
-              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              _obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
               // Switches icon based on visibility
               color: const Color(0xFF4ecdc4), // Teal color
               size: 18,
               // Icon size
             ),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            onPressed: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
             // Toggles password visibility
           ),
         ),
@@ -608,7 +640,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Shadow offset
                     ),
                     Shadow(
-                      color: Colors.black.withValues(alpha: 0.3), // Inner shadow
+                      color:
+                          Colors.black.withValues(alpha: 0.3), // Inner shadow
                       blurRadius: 6,
                       // Blur radius
                       offset: const Offset(0, 0),
@@ -829,7 +862,8 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const SignupScreenNew(),  //added const for debugging
+        builder: (context) =>
+            const SignupScreenNew(), //added const for debugging
       ),
     );
   }

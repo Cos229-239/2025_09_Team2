@@ -38,7 +38,8 @@ class PetProvider extends ChangeNotifier {
         _currentPet.addXP(amount); // Add XP and get updated pet instance
 
     // Log XP gain event for debugging and analytics
-    developer.log('Pet gained $amount XP from $source (Total: ${_currentPet.xp})',
+    developer.log(
+        'Pet gained $amount XP from $source (Total: ${_currentPet.xp})',
         name: 'PetProvider');
 
     // Check if the pet leveled up during this XP addition
@@ -61,10 +62,11 @@ class PetProvider extends ChangeNotifier {
   int awardQuizXP(FlashCard card) {
     final expReward = card.calculateExpReward();
     addXP(expReward, source: "quiz");
-    
-    developer.log('Quiz correct! Awarded $expReward XP for difficulty ${card.difficulty}',
+
+    developer.log(
+        'Quiz correct! Awarded $expReward XP for difficulty ${card.difficulty}',
         name: 'PetProvider');
-    
+
     return expReward;
   }
 
