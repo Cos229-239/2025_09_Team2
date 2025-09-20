@@ -7,10 +7,10 @@ class LevelProgressWidget extends StatelessWidget {
   final bool showDetails;
 
   const LevelProgressWidget({
-    Key? key,
+    super.key,
     required this.userLevel,
     this.showDetails = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,7 @@ class LevelProgressWidget extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.star, color: Colors.amber, size: 20),
+                  const Icon(Icons.star, color: Colors.amber, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     '${userLevel.currentXP} / ${userLevel.xpForNextLevel} XP',
@@ -117,11 +117,11 @@ class AchievementsGridWidget extends StatelessWidget {
   final bool showOnlyUnlocked;
 
   const AchievementsGridWidget({
-    Key? key,
+    super.key,
     required this.achievements,
     required this.progress,
     this.showOnlyUnlocked = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -180,10 +180,10 @@ class AchievementCard extends StatelessWidget {
   final AchievementProgress? progress;
 
   const AchievementCard({
-    Key? key,
+    super.key,
     required this.achievement,
     this.progress,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +213,7 @@ class AchievementCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isUnlocked
-                        ? _getRarityColor(achievement.rarity).withOpacity(0.2)
+                        ? _getRarityColor(achievement.rarity).withValues(alpha: 0.2)
                         : Colors.grey[300],
                   ),
                   child: Center(
@@ -321,10 +321,10 @@ class AchievementDetailDialog extends StatelessWidget {
   final AchievementProgress? progress;
 
   const AchievementDetailDialog({
-    Key? key,
+    super.key,
     required this.achievement,
     this.progress,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -342,7 +342,7 @@ class AchievementDetailDialog extends StatelessWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _getRarityColor(achievement.rarity).withOpacity(0.2),
+                color: _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
                 border: Border.all(
                   color: _getRarityColor(achievement.rarity),
                   width: 3,
@@ -396,7 +396,7 @@ class AchievementDetailDialog extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.star, color: Colors.amber),
+                const Icon(Icons.star, color: Colors.amber),
                 const SizedBox(width: 4),
                 Text(
                   '${achievement.xpReward} XP',
@@ -413,14 +413,14 @@ class AchievementDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.green),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green),
+                    const Icon(Icons.check_circle, color: Colors.green),
                     const SizedBox(width: 8),
                     Text(
                       'Unlocked on ${_formatDate(progress!.unlockedAt!)}',
@@ -523,9 +523,9 @@ class StreakWidget extends StatelessWidget {
   final Map<String, Streak> streaks;
 
   const StreakWidget({
-    Key? key,
+    super.key,
     required this.streaks,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -602,7 +602,7 @@ class StreakWidget extends StatelessWidget {
             ),
           ),
           if (streak.current > 0) ...[
-            Icon(Icons.local_fire_department, color: Colors.red),
+            const Icon(Icons.local_fire_department, color: Colors.red),
             const SizedBox(width: 4),
             Text(
               '${streak.current}',
@@ -623,9 +623,9 @@ class RewardsWidget extends StatelessWidget {
   final List<Reward> rewards;
 
   const RewardsWidget({
-    Key? key,
+    super.key,
     required this.rewards,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
