@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Represents different types of competitions
@@ -58,30 +59,33 @@ class LeaderboardEntry {
   }) : metadata = metadata ?? {};
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'username': username,
-    'displayName': displayName,
-    'avatar': avatar,
-    'score': score,
-    'rank': rank,
-    'category': category.name,
-    'period': period.name,
-    'lastUpdated': lastUpdated.toIso8601String(),
-    'metadata': metadata,
-  };
+        'userId': userId,
+        'username': username,
+        'displayName': displayName,
+        'avatar': avatar,
+        'score': score,
+        'rank': rank,
+        'category': category.name,
+        'period': period.name,
+        'lastUpdated': lastUpdated.toIso8601String(),
+        'metadata': metadata,
+      };
 
-  factory LeaderboardEntry.fromJson(Map<String, dynamic> json) => LeaderboardEntry(
-    userId: json['userId'],
-    username: json['username'],
-    displayName: json['displayName'],
-    avatar: json['avatar'],
-    score: json['score'].toDouble(),
-    rank: json['rank'],
-    category: CompetitionCategory.values.firstWhere((e) => e.name == json['category']),
-    period: LeaderboardPeriod.values.firstWhere((e) => e.name == json['period']),
-    lastUpdated: DateTime.parse(json['lastUpdated']),
-    metadata: Map<String, dynamic>.from(json['metadata'] ?? {}),
-  );
+  factory LeaderboardEntry.fromJson(Map<String, dynamic> json) =>
+      LeaderboardEntry(
+        userId: json['userId'],
+        username: json['username'],
+        displayName: json['displayName'],
+        avatar: json['avatar'],
+        score: json['score'].toDouble(),
+        rank: json['rank'],
+        category: CompetitionCategory.values
+            .firstWhere((e) => e.name == json['category']),
+        period: LeaderboardPeriod.values
+            .firstWhere((e) => e.name == json['period']),
+        lastUpdated: DateTime.parse(json['lastUpdated']),
+        metadata: Map<String, dynamic>.from(json['metadata'] ?? {}),
+      );
 }
 
 /// Represents a competition or challenge
@@ -116,43 +120,47 @@ class Competition {
     this.isActive = false,
     this.requiresInvitation = false,
     this.createdBy,
-  }) : rules = rules ?? {},
-       rewards = rewards ?? [],
-       participants = participants ?? [];
+  })  : rules = rules ?? {},
+        rewards = rewards ?? [],
+        participants = participants ?? [];
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'description': description,
-    'type': type.name,
-    'category': category.name,
-    'startDate': startDate.toIso8601String(),
-    'endDate': endDate.toIso8601String(),
-    'rules': rules,
-    'rewards': rewards.map((r) => r.toJson()).toList(),
-    'maxParticipants': maxParticipants,
-    'participants': participants,
-    'isActive': isActive,
-    'requiresInvitation': requiresInvitation,
-    'createdBy': createdBy,
-  };
+        'id': id,
+        'name': name,
+        'description': description,
+        'type': type.name,
+        'category': category.name,
+        'startDate': startDate.toIso8601String(),
+        'endDate': endDate.toIso8601String(),
+        'rules': rules,
+        'rewards': rewards.map((r) => r.toJson()).toList(),
+        'maxParticipants': maxParticipants,
+        'participants': participants,
+        'isActive': isActive,
+        'requiresInvitation': requiresInvitation,
+        'createdBy': createdBy,
+      };
 
   factory Competition.fromJson(Map<String, dynamic> json) => Competition(
-    id: json['id'],
-    name: json['name'],
-    description: json['description'],
-    type: CompetitionType.values.firstWhere((e) => e.name == json['type']),
-    category: CompetitionCategory.values.firstWhere((e) => e.name == json['category']),
-    startDate: DateTime.parse(json['startDate']),
-    endDate: DateTime.parse(json['endDate']),
-    rules: Map<String, dynamic>.from(json['rules'] ?? {}),
-    rewards: (json['rewards'] as List?)?.map((r) => CompetitionReward.fromJson(r)).toList() ?? [],
-    maxParticipants: json['maxParticipants'] ?? 100,
-    participants: List<String>.from(json['participants'] ?? []),
-    isActive: json['isActive'] ?? false,
-    requiresInvitation: json['requiresInvitation'] ?? false,
-    createdBy: json['createdBy'],
-  );
+        id: json['id'],
+        name: json['name'],
+        description: json['description'],
+        type: CompetitionType.values.firstWhere((e) => e.name == json['type']),
+        category: CompetitionCategory.values
+            .firstWhere((e) => e.name == json['category']),
+        startDate: DateTime.parse(json['startDate']),
+        endDate: DateTime.parse(json['endDate']),
+        rules: Map<String, dynamic>.from(json['rules'] ?? {}),
+        rewards: (json['rewards'] as List?)
+                ?.map((r) => CompetitionReward.fromJson(r))
+                .toList() ??
+            [],
+        maxParticipants: json['maxParticipants'] ?? 100,
+        participants: List<String>.from(json['participants'] ?? []),
+        isActive: json['isActive'] ?? false,
+        requiresInvitation: json['requiresInvitation'] ?? false,
+        createdBy: json['createdBy'],
+      );
 }
 
 /// Represents a reward for competition winners
@@ -176,24 +184,25 @@ class CompetitionReward {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'description': description,
-    'type': type,
-    'value': value,
-    'minRank': minRank,
-    'maxRank': maxRank,
-  };
+        'id': id,
+        'name': name,
+        'description': description,
+        'type': type,
+        'value': value,
+        'minRank': minRank,
+        'maxRank': maxRank,
+      };
 
-  factory CompetitionReward.fromJson(Map<String, dynamic> json) => CompetitionReward(
-    id: json['id'],
-    name: json['name'],
-    description: json['description'],
-    type: json['type'],
-    value: json['value'],
-    minRank: json['minRank'],
-    maxRank: json['maxRank'],
-  );
+  factory CompetitionReward.fromJson(Map<String, dynamic> json) =>
+      CompetitionReward(
+        id: json['id'],
+        name: json['name'],
+        description: json['description'],
+        type: json['type'],
+        value: json['value'],
+        minRank: json['minRank'],
+        maxRank: json['maxRank'],
+      );
 }
 
 /// Represents a peer comparison
@@ -221,28 +230,30 @@ class PeerComparison {
   });
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'friendId': friendId,
-    'category': category.name,
-    'userScore': userScore,
-    'friendScore': friendScore,
-    'difference': difference,
-    'userIsAhead': userIsAhead,
-    'period': period.name,
-    'lastUpdated': lastUpdated.toIso8601String(),
-  };
+        'userId': userId,
+        'friendId': friendId,
+        'category': category.name,
+        'userScore': userScore,
+        'friendScore': friendScore,
+        'difference': difference,
+        'userIsAhead': userIsAhead,
+        'period': period.name,
+        'lastUpdated': lastUpdated.toIso8601String(),
+      };
 
   factory PeerComparison.fromJson(Map<String, dynamic> json) => PeerComparison(
-    userId: json['userId'],
-    friendId: json['friendId'],
-    category: CompetitionCategory.values.firstWhere((e) => e.name == json['category']),
-    userScore: json['userScore'].toDouble(),
-    friendScore: json['friendScore'].toDouble(),
-    difference: json['difference'].toDouble(),
-    userIsAhead: json['userIsAhead'],
-    period: LeaderboardPeriod.values.firstWhere((e) => e.name == json['period']),
-    lastUpdated: DateTime.parse(json['lastUpdated']),
-  );
+        userId: json['userId'],
+        friendId: json['friendId'],
+        category: CompetitionCategory.values
+            .firstWhere((e) => e.name == json['category']),
+        userScore: json['userScore'].toDouble(),
+        friendScore: json['friendScore'].toDouble(),
+        difference: json['difference'].toDouble(),
+        userIsAhead: json['userIsAhead'],
+        period: LeaderboardPeriod.values
+            .firstWhere((e) => e.name == json['period']),
+        lastUpdated: DateTime.parse(json['lastUpdated']),
+      );
 }
 
 /// Represents user's competitive statistics
@@ -265,30 +276,33 @@ class CompetitiveStats {
     this.winRate = 0.0,
     List<String>? achievements,
     required this.lastUpdated,
-  }) : categoryScores = categoryScores ?? {},
-       rankings = rankings ?? {},
-       achievements = achievements ?? [];
+  })  : categoryScores = categoryScores ?? {},
+        rankings = rankings ?? {},
+        achievements = achievements ?? [];
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'categoryScores': categoryScores.map((key, value) => MapEntry(key.name, value)),
-    'rankings': rankings.map((periodKey, periodValue) => MapEntry(
-      periodKey.name, 
-      periodValue.map((catKey, catValue) => MapEntry(catKey.name, catValue))
-    )),
-    'competitionsWon': competitionsWon,
-    'competitionsParticipated': competitionsParticipated,
-    'winRate': winRate,
-    'achievements': achievements,
-    'lastUpdated': lastUpdated.toIso8601String(),
-  };
+        'userId': userId,
+        'categoryScores':
+            categoryScores.map((key, value) => MapEntry(key.name, value)),
+        'rankings': rankings.map((periodKey, periodValue) => MapEntry(
+            periodKey.name,
+            periodValue
+                .map((catKey, catValue) => MapEntry(catKey.name, catValue)))),
+        'competitionsWon': competitionsWon,
+        'competitionsParticipated': competitionsParticipated,
+        'winRate': winRate,
+        'achievements': achievements,
+        'lastUpdated': lastUpdated.toIso8601String(),
+      };
 
   factory CompetitiveStats.fromJson(Map<String, dynamic> json) {
     final categoryScores = <CompetitionCategory, double>{};
-    final categoryScoresJson = json['categoryScores'] as Map<String, dynamic>? ?? {};
+    final categoryScoresJson =
+        json['categoryScores'] as Map<String, dynamic>? ?? {};
     for (final entry in categoryScoresJson.entries) {
       try {
-        final category = CompetitionCategory.values.firstWhere((e) => e.name == entry.key);
+        final category =
+            CompetitionCategory.values.firstWhere((e) => e.name == entry.key);
         categoryScores[category] = entry.value.toDouble();
       } catch (e) {
         // Skip invalid categories
@@ -299,12 +313,15 @@ class CompetitiveStats {
     final rankingsJson = json['rankings'] as Map<String, dynamic>? ?? {};
     for (final periodEntry in rankingsJson.entries) {
       try {
-        final period = LeaderboardPeriod.values.firstWhere((e) => e.name == periodEntry.key);
+        final period = LeaderboardPeriod.values
+            .firstWhere((e) => e.name == periodEntry.key);
         final categoryRankings = <CompetitionCategory, int>{};
-        final categoryRankingsJson = periodEntry.value as Map<String, dynamic>? ?? {};
+        final categoryRankingsJson =
+            periodEntry.value as Map<String, dynamic>? ?? {};
         for (final catEntry in categoryRankingsJson.entries) {
           try {
-            final category = CompetitionCategory.values.firstWhere((e) => e.name == catEntry.key);
+            final category = CompetitionCategory.values
+                .firstWhere((e) => e.name == catEntry.key);
             categoryRankings[category] = catEntry.value;
           } catch (e) {
             // Skip invalid categories
@@ -355,18 +372,18 @@ class CompetitiveLearningService {
       // Load leaderboards
       final leaderboardsData = _prefs?.getString(_leaderboardsKey);
       if (leaderboardsData != null) {
-        final Map<String, dynamic> leaderboardsMap = jsonDecode(leaderboardsData);
-        _leaderboards = leaderboardsMap.map((key, value) => MapEntry(
-          key,
-          (value as List).map((e) => LeaderboardEntry.fromJson(e)).toList()
-        ));
+        final Map<String, dynamic> leaderboardsMap =
+            jsonDecode(leaderboardsData);
+        _leaderboards = leaderboardsMap.map((key, value) => MapEntry(key,
+            (value as List).map((e) => LeaderboardEntry.fromJson(e)).toList()));
       }
 
       // Load competitions
       final competitionsData = _prefs?.getString(_competitionsKey);
       if (competitionsData != null) {
         final List<dynamic> competitionsList = jsonDecode(competitionsData);
-        _competitions = competitionsList.map((c) => Competition.fromJson(c)).toList();
+        _competitions =
+            competitionsList.map((c) => Competition.fromJson(c)).toList();
       }
 
       // Load competitive stats
@@ -379,10 +396,11 @@ class CompetitiveLearningService {
       final comparisonsData = _prefs?.getString(_peerComparisonsKey);
       if (comparisonsData != null) {
         final List<dynamic> comparisonsList = jsonDecode(comparisonsData);
-        _peerComparisons = comparisonsList.map((c) => PeerComparison.fromJson(c)).toList();
+        _peerComparisons =
+            comparisonsList.map((c) => PeerComparison.fromJson(c)).toList();
       }
     } catch (e) {
-      print('Error loading competitive learning data: $e');
+      debugPrint('Error loading competitive learning data: $e');
     }
   }
 
@@ -390,10 +408,8 @@ class CompetitiveLearningService {
   Future<void> _saveData() async {
     try {
       // Save leaderboards
-      final leaderboardsMap = _leaderboards.map((key, value) => MapEntry(
-        key,
-        value.map((e) => e.toJson()).toList()
-      ));
+      final leaderboardsMap = _leaderboards.map(
+          (key, value) => MapEntry(key, value.map((e) => e.toJson()).toList()));
       await _prefs?.setString(_leaderboardsKey, jsonEncode(leaderboardsMap));
 
       // Save competitions
@@ -402,26 +418,25 @@ class CompetitiveLearningService {
 
       // Save competitive stats
       if (_userStats != null) {
-        await _prefs?.setString(_competitiveStatsKey, jsonEncode(_userStats!.toJson()));
+        await _prefs?.setString(
+            _competitiveStatsKey, jsonEncode(_userStats!.toJson()));
       }
 
       // Save peer comparisons
       final comparisonsList = _peerComparisons.map((c) => c.toJson()).toList();
       await _prefs?.setString(_peerComparisonsKey, jsonEncode(comparisonsList));
     } catch (e) {
-      print('Error saving competitive learning data: $e');
+      debugPrint('Error saving competitive learning data: $e');
     }
   }
 
   /// Initialize default data
   Future<void> _initializeDefaultData(String userId) async {
     // Initialize user stats if not exists
-    if (_userStats == null) {
-      _userStats = CompetitiveStats(
-        userId: userId,
-        lastUpdated: DateTime.now(),
-      );
-    }
+    _userStats ??= CompetitiveStats(
+      userId: userId,
+      lastUpdated: DateTime.now(),
+    );
 
     // Initialize default leaderboards if empty
     if (_leaderboards.isEmpty) {
@@ -438,8 +453,8 @@ class CompetitiveLearningService {
 
   /// Initialize default leaderboards with mock data
   Future<void> _initializeDefaultLeaderboards() async {
-    final categories = CompetitionCategory.values;
-    final periods = LeaderboardPeriod.values;
+    const categories = CompetitionCategory.values;
+    const periods = LeaderboardPeriod.values;
 
     for (final period in periods) {
       for (final category in categories) {
@@ -460,7 +475,7 @@ class CompetitiveLearningService {
     for (int i = 0; i < 50; i++) {
       final score = _generateScoreForCategory(category, random);
       final userId = 'user_${i + 1}';
-      
+
       entries.add(LeaderboardEntry(
         userId: userId,
         username: 'user$i',
@@ -469,7 +484,8 @@ class CompetitiveLearningService {
         rank: i + 1,
         category: category,
         period: period,
-        lastUpdated: DateTime.now().subtract(Duration(hours: random.nextInt(24))),
+        lastUpdated:
+            DateTime.now().subtract(Duration(hours: random.nextInt(24))),
         metadata: {
           'level': 5 + random.nextInt(45),
           'streak': random.nextInt(30),
@@ -479,7 +495,7 @@ class CompetitiveLearningService {
 
     // Sort by score descending
     entries.sort((a, b) => b.score.compareTo(a.score));
-    
+
     // Update ranks
     for (int i = 0; i < entries.length; i++) {
       entries[i] = LeaderboardEntry(
@@ -500,7 +516,8 @@ class CompetitiveLearningService {
   }
 
   /// Generate appropriate score for category
-  double _generateScoreForCategory(CompetitionCategory category, Random random) {
+  double _generateScoreForCategory(
+      CompetitionCategory category, Random random) {
     switch (category) {
       case CompetitionCategory.studyTime:
         return 60 + random.nextDouble() * 300; // 1-6 hours in minutes
@@ -524,7 +541,7 @@ class CompetitiveLearningService {
   /// Initialize default competitions
   Future<void> _initializeDefaultCompetitions() async {
     final now = DateTime.now();
-    
+
     // Daily XP Challenge
     _competitions.add(Competition(
       id: 'daily_xp_${now.day}',
@@ -590,7 +607,8 @@ class CompetitiveLearningService {
       type: CompetitionType.monthly,
       category: CompetitionCategory.accuracy,
       startDate: monthStart,
-      endDate: DateTime(now.year, now.month + 1, 1).subtract(const Duration(days: 1)),
+      endDate: DateTime(now.year, now.month + 1, 1)
+          .subtract(const Duration(days: 1)),
       isActive: true,
       rewards: [
         CompetitionReward(
@@ -736,19 +754,18 @@ class CompetitiveLearningService {
   /// Get active competitions
   List<Competition> getActiveCompetitions() {
     final now = DateTime.now();
-    return _competitions.where((comp) => 
-      comp.isActive && 
-      comp.startDate.isBefore(now) && 
-      comp.endDate.isAfter(now)
-    ).toList();
+    return _competitions
+        .where((comp) =>
+            comp.isActive &&
+            comp.startDate.isBefore(now) &&
+            comp.endDate.isAfter(now))
+        .toList();
   }
 
   /// Get upcoming competitions
   List<Competition> getUpcomingCompetitions() {
     final now = DateTime.now();
-    return _competitions.where((comp) => 
-      comp.startDate.isAfter(now)
-    ).toList();
+    return _competitions.where((comp) => comp.startDate.isAfter(now)).toList();
   }
 
   /// Join competition
@@ -822,11 +839,11 @@ class CompetitiveLearningService {
   Map<CompetitionCategory, double> _generateMockFriendScores() {
     final random = Random();
     final scores = <CompetitionCategory, double>{};
-    
+
     for (final category in CompetitionCategory.values) {
       scores[category] = _generateScoreForCategory(category, random);
     }
-    
+
     return scores;
   }
 
@@ -844,10 +861,10 @@ class CompetitiveLearningService {
   /// Get leaderboard summary for user
   Map<String, dynamic> getLeaderboardSummary(String userId) {
     final summary = <String, dynamic>{};
-    
+
     for (final period in LeaderboardPeriod.values) {
       final periodData = <String, dynamic>{};
-      
+
       for (final category in CompetitionCategory.values) {
         final rank = getUserRank(
           userId: userId,
@@ -856,10 +873,10 @@ class CompetitiveLearningService {
         );
         periodData[category.name] = rank;
       }
-      
+
       summary[period.name] = periodData;
     }
-    
+
     return summary;
   }
 
@@ -868,7 +885,7 @@ class CompetitiveLearningService {
     final activeComps = getActiveCompetitions();
     final upcomingComps = getUpcomingCompetitions();
     final userComparisons = getPeerComparisons(userId);
-    
+
     return {
       'activeCompetitions': activeComps.length,
       'upcomingCompetitions': upcomingComps.length,
@@ -883,27 +900,27 @@ class CompetitiveLearningService {
   /// Get user's best ranks across all categories
   Map<String, int> _getBestRanks(String userId) {
     final bestRanks = <String, int>{};
-    
+
     for (final category in CompetitionCategory.values) {
       int? bestRank;
-      
+
       for (final period in LeaderboardPeriod.values) {
         final rank = getUserRank(
           userId: userId,
           category: category,
           period: period,
         );
-        
+
         if (rank != null && (bestRank == null || rank < bestRank)) {
           bestRank = rank;
         }
       }
-      
+
       if (bestRank != null) {
         bestRanks[category.name] = bestRank;
       }
     }
-    
+
     return bestRanks;
   }
 }

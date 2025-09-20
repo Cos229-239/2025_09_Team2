@@ -37,7 +37,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
   // Add video controller variables
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
-  
+
   // Add hover state for back button
   bool _isBackButtonHovered = false;
 
@@ -52,26 +52,28 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
       _videoController = VideoPlayerController.asset(
         'assets/LibraryCat.mp4',
       );
-      
+
       await _videoController!.initialize();
-      
+
       if (mounted) {
         setState(() {
           _isVideoInitialized = true;
         });
-        
+
         // Try to start autoplay with muted sound (works on most browsers)
-        await _videoController!.setVolume(0.0);  // Start muted
+        await _videoController!.setVolume(0.0); // Start muted
         await _videoController!.setLooping(true);
         await _videoController!.play();
-        
+
         // After a short delay, restore volume if playing
         await Future.delayed(const Duration(milliseconds: 100));
         if (_videoController!.value.isPlaying) {
           await _videoController!.setVolume(1.0);
-          developer.log("Video is playing automatically with sound restored", name: 'SignupScreen');
+          developer.log("Video is playing automatically with sound restored",
+              name: 'SignupScreen');
         } else {
-          developer.log("Video needs user interaction to play", name: 'SignupScreen');
+          developer.log("Video needs user interaction to play",
+              name: 'SignupScreen');
         }
       }
     } catch (e) {
@@ -107,14 +109,14 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
       setState(() {
         _isLoading = true;
       });
-      
+
       // Simulate async operation
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
           setState(() {
             _isLoading = false;
           });
-          
+
           // Navigate to signup successful screen
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -163,14 +165,16 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
             ),
             child: Padding(
               // Adds padding for the thick border effect - MATCHES LOGIN SCREEN
-              padding: const EdgeInsets.all(32.0), // Matches login screen padding
+              padding:
+                  const EdgeInsets.all(32.0), // Matches login screen padding
               child: Container(
                 // Inner container for form and mascot
                 width: double.infinity,
                 height: double.infinity,
                 decoration: BoxDecoration(
                   // Styling for the inner container
-                  color: Colors.transparent, // Transparent to show gradient background
+                  color: Colors
+                      .transparent, // Transparent to show gradient background
                   border: Border.all(
                     // Adds the original orange border
                     color: const Color(0xFFe67e22), // Orange border
@@ -194,7 +198,8 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                         Color(0xFF2a3543), // Slightly lighter dark blue-gray
                       ],
                     ),
-                    borderRadius: BorderRadius.all(Radius.circular(10)), // Slightly smaller radius to fit inside orange border
+                    borderRadius: BorderRadius.all(Radius.circular(
+                        10)), // Slightly smaller radius to fit inside orange border
                   ),
                   child: Stack(
                     // Stack to overlay the back arrow on the content
@@ -204,23 +209,37 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                         // Allow entire screen to scroll
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minHeight: MediaQuery.of(context).size.height - 64, // Account for padding
+                            minHeight: MediaQuery.of(context).size.height -
+                                64, // Account for padding
                           ),
                           child: Padding(
                             // Adds padding inside the container
-                            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 40.0),
                             child: Column(
                               // Arranges children vertically in a column
                               children: [
-                                SizedBox(height: MediaQuery.of(context).size.height > 600 ? 20 : 10),
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 600
+                                            ? 20
+                                            : 10),
                                 // Even more responsive top spacing
                                 _buildMascotSection(),
                                 // Builds the cat mascot and branding
-                                SizedBox(height: MediaQuery.of(context).size.height > 600 ? 30 : 15),
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 600
+                                            ? 30
+                                            : 15),
                                 // Even more responsive spacing between mascot and form
                                 _buildSignupForm(),
                                 // Builds the signup form directly without Expanded
-                                SizedBox(height: MediaQuery.of(context).size.height > 600 ? 20 : 10),
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 600
+                                            ? 20
+                                            : 10),
                                 // Responsive bottom spacing
                               ],
                             ),
@@ -232,8 +251,10 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                         top: 16,
                         left: 16,
                         child: MouseRegion(
-                          onEnter: (_) => setState(() => _isBackButtonHovered = true),
-                          onExit: (_) => setState(() => _isBackButtonHovered = false),
+                          onEnter: (_) =>
+                              setState(() => _isBackButtonHovered = true),
+                          onExit: (_) =>
+                              setState(() => _isBackButtonHovered = false),
                           child: GestureDetector(
                             onTap: () {
                               Navigator.of(context).pop();
@@ -264,14 +285,16 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                                 children: [
                                   Icon(
                                     Icons.arrow_back,
-                                    color: Color(0xFFe67e22), // Orange color to match theme
+                                    color: Color(
+                                        0xFFe67e22), // Orange color to match theme
                                     size: 28,
                                   ),
                                   SizedBox(height: 2),
                                   Text(
                                     'Back',
                                     style: TextStyle(
-                                      color: Color(0xFFe67e22), // Orange color to match theme
+                                      color: Color(
+                                          0xFFe67e22), // Orange color to match theme
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -352,7 +375,8 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                   )
                 : const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFe67e22)),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFe67e22)),
                     ),
                   ),
           ),
@@ -410,7 +434,12 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
           // Space between fields
           _buildConfirmPasswordField(),
           // Confirm password input field
-          SizedBox(height: MediaQuery.of(context).size.height > 800 ? 60 : MediaQuery.of(context).size.height > 600 ? 30 : 15),
+          SizedBox(
+              height: MediaQuery.of(context).size.height > 800
+                  ? 60
+                  : MediaQuery.of(context).size.height > 600
+                      ? 30
+                      : 15),
           // Very responsive spacing before signup button - scales with screen height
           _buildSignupButton(),
           // Signup button
@@ -673,7 +702,8 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                       // Shadow offset
                     ),
                     Shadow(
-                      color: Colors.black.withValues(alpha: 0.3), // Inner shadow
+                      color:
+                          Colors.black.withValues(alpha: 0.3), // Inner shadow
                       blurRadius: 6,
                       // Blur radius
                       offset: const Offset(0, 0),

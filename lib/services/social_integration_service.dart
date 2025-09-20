@@ -5,7 +5,8 @@ import 'competitive_learning_service.dart';
 
 /// Central service that integrates all social features with AI companion
 class SocialIntegrationService extends ChangeNotifier {
-  static final SocialIntegrationService _instance = SocialIntegrationService._internal();
+  static final SocialIntegrationService _instance =
+      SocialIntegrationService._internal();
   factory SocialIntegrationService() => _instance;
   SocialIntegrationService._internal();
 
@@ -17,19 +18,19 @@ class SocialIntegrationService extends ChangeNotifier {
   bool _isInitialized = false;
 
   // Social AI State
-  Map<String, SocialAIPersonality> _userPersonalities = {};
-  List<SocialAIInsight> _aiInsights = [];
-  Map<String, List<SocialAIMessage>> _aiSocialMessages = {};
+  final Map<String, SocialAIPersonality> _userPersonalities = {};
+  final List<SocialAIInsight> _aiInsights = [];
+  final Map<String, List<SocialAIMessage>> _aiSocialMessages = {};
 
   // Cross-system Integration State
-  List<SocialLearningRecommendation> _socialRecommendations = [];
-  Map<String, CollaborativeAISession> _aiSessions = {};
+  final List<SocialLearningRecommendation> _socialRecommendations = [];
+  final Map<String, CollaborativeAISession> _aiSessions = {};
 
   // Getters
   bool get isInitialized => _isInitialized;
   String? get currentUserId => _currentUserId;
   List<SocialAIInsight> get aiInsights => List.unmodifiable(_aiInsights);
-  List<SocialLearningRecommendation> get socialRecommendations => 
+  List<SocialLearningRecommendation> get socialRecommendations =>
       List.unmodifiable(_socialRecommendations);
 
   /// Initialize the social integration service
@@ -37,7 +38,7 @@ class SocialIntegrationService extends ChangeNotifier {
     if (_isInitialized) return;
 
     _currentUserId = userId;
-    
+
     // Initialize all subsystems
     _achievementService = AchievementGamificationService();
     _socialService = SocialLearningService();
@@ -49,7 +50,7 @@ class SocialIntegrationService extends ChangeNotifier {
 
     // Initialize social AI components
     await _initializeSocialAI();
-    
+
     _isInitialized = true;
     notifyListeners();
   }
@@ -60,13 +61,13 @@ class SocialIntegrationService extends ChangeNotifier {
 
     // Create social AI personality based on user behavior
     await _createSocialAIPersonality(_currentUserId!);
-    
+
     // Generate initial social insights
     await _generateSocialInsights();
-    
+
     // Create social learning recommendations
     await _generateSocialRecommendations();
-    
+
     // Initialize collaborative AI sessions
     await _initializeCollaborativeAI();
   }
@@ -127,8 +128,18 @@ class SocialIntegrationService extends ChangeNotifier {
 
   List<dynamic> _getMockSessions() {
     return [
-      {'id': 'session1', 'type': 'study', 'date': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()},
-      {'id': 'session2', 'type': 'quiz', 'date': DateTime.now().subtract(const Duration(days: 3)).toIso8601String()},
+      {
+        'id': 'session1',
+        'type': 'study',
+        'date':
+            DateTime.now().subtract(const Duration(days: 1)).toIso8601String()
+      },
+      {
+        'id': 'session2',
+        'type': 'quiz',
+        'date':
+            DateTime.now().subtract(const Duration(days: 3)).toIso8601String()
+      },
     ];
   }
 
@@ -140,13 +151,13 @@ class SocialIntegrationService extends ChangeNotifier {
 
     // Social engagement insights
     await _analyzeSocialEngagement();
-    
+
     // Competitive performance insights
     await _analyzeCompetitivePerformance();
-    
+
     // Collaboration effectiveness insights
     await _analyzeCollaborationEffectiveness();
-    
+
     // Achievement motivation insights
     await _analyzeAchievementMotivation();
 
@@ -160,7 +171,8 @@ class SocialIntegrationService extends ChangeNotifier {
     final sessionHistory = _getMockSessions();
 
     // Calculate engagement metrics
-    final socialActivityScore = _calculateSocialActivityScore(friendsData, groupData, sessionHistory);
+    final socialActivityScore =
+        _calculateSocialActivityScore(friendsData, groupData, sessionHistory);
     final networkSize = friendsData.length;
 
     String insight;
@@ -168,16 +180,22 @@ class SocialIntegrationService extends ChangeNotifier {
     Priority priority;
 
     if (socialActivityScore < 30) {
-      insight = "Your social learning activity is below average. Connecting with study partners could boost your motivation and learning outcomes.";
-      recommendation = "Try joining a study group or inviting friends to collaborative sessions.";
+      insight =
+          "Your social learning activity is below average. Connecting with study partners could boost your motivation and learning outcomes.";
+      recommendation =
+          "Try joining a study group or inviting friends to collaborative sessions.";
       priority = Priority.high;
     } else if (socialActivityScore > 80) {
-      insight = "You're highly socially engaged! Your collaborative learning approach is excellent for knowledge retention.";
-      recommendation = "Consider mentoring newer users or leading study groups to reinforce your own learning.";
+      insight =
+          "You're highly socially engaged! Your collaborative learning approach is excellent for knowledge retention.";
+      recommendation =
+          "Consider mentoring newer users or leading study groups to reinforce your own learning.";
       priority = Priority.medium;
     } else {
-      insight = "Your social engagement is healthy. You balance solo and group study well.";
-      recommendation = "Continue your balanced approach, perhaps explore one new social learning feature.";
+      insight =
+          "Your social engagement is healthy. You balance solo and group study well.";
+      recommendation =
+          "Continue your balanced approach, perhaps explore one new social learning feature.";
       priority = Priority.low;
     }
 
@@ -198,9 +216,12 @@ class SocialIntegrationService extends ChangeNotifier {
 
   /// Analyze competitive performance patterns
   Future<void> _analyzeCompetitivePerformance() async {
-    final competitiveStats = _competitiveService.getCompetitiveOverview(_currentUserId!);
-    final leaderboardSummary = _competitiveService.getLeaderboardSummary(_currentUserId!);
-    final peerComparisons = _competitiveService.getPeerComparisons(_currentUserId!);
+    final competitiveStats =
+        _competitiveService.getCompetitiveOverview(_currentUserId!);
+    final leaderboardSummary =
+        _competitiveService.getLeaderboardSummary(_currentUserId!);
+    final peerComparisons =
+        _competitiveService.getPeerComparisons(_currentUserId!);
 
     final competitiveScore = competitiveStats['overallScore'] as double? ?? 50;
     final rankImprovement = _calculateRankImprovement(leaderboardSummary);
@@ -211,16 +232,22 @@ class SocialIntegrationService extends ChangeNotifier {
     Priority priority;
 
     if (competitiveScore > 80 && rankImprovement > 0) {
-      insight = "Excellent competitive performance! You're climbing the ranks consistently.";
-      recommendation = "Consider entering advanced competitions or helping lower-ranked friends improve.";
+      insight =
+          "Excellent competitive performance! You're climbing the ranks consistently.";
+      recommendation =
+          "Consider entering advanced competitions or helping lower-ranked friends improve.";
       priority = Priority.low;
     } else if (competitiveScore < 40 || rankImprovement < -10) {
-      insight = "Your competitive rankings have room for improvement. Focused practice could help.";
-      recommendation = "Set specific daily goals and track progress. Consider studying with higher-ranked friends.";
+      insight =
+          "Your competitive rankings have room for improvement. Focused practice could help.";
+      recommendation =
+          "Set specific daily goals and track progress. Consider studying with higher-ranked friends.";
       priority = Priority.high;
     } else {
-      insight = "Your competitive performance is steady. Small optimizations could yield big gains.";
-      recommendation = "Focus on your weakest subjects or try new study techniques your friends are using.";
+      insight =
+          "Your competitive performance is steady. Small optimizations could yield big gains.";
+      recommendation =
+          "Focus on your weakest subjects or try new study techniques your friends are using.";
       priority = Priority.medium;
     }
 
@@ -244,7 +271,7 @@ class SocialIntegrationService extends ChangeNotifier {
   Future<void> _analyzeCollaborationEffectiveness() async {
     final sessions = _getMockSessions();
     final groupData = _getMockGroups();
-    
+
     final collaborationScore = _calculateCollaborationScore(sessions);
     final groupPerformance = _analyzeGroupPerformance(groupData);
 
@@ -252,14 +279,20 @@ class SocialIntegrationService extends ChangeNotifier {
     String recommendation;
 
     if (collaborationScore > 85) {
-      insight = "You excel in collaborative learning! Your group study sessions are highly effective.";
-      recommendation = "Share your collaboration techniques with other users or start a study tips blog.";
+      insight =
+          "You excel in collaborative learning! Your group study sessions are highly effective.";
+      recommendation =
+          "Share your collaboration techniques with other users or start a study tips blog.";
     } else if (collaborationScore < 50) {
-      insight = "Your collaborative sessions could be more effective. Better preparation might help.";
-      recommendation = "Try setting clear goals before group sessions and practice active participation.";
+      insight =
+          "Your collaborative sessions could be more effective. Better preparation might help.";
+      recommendation =
+          "Try setting clear goals before group sessions and practice active participation.";
     } else {
-      insight = "Your collaboration skills are developing well. You're becoming a valued team member.";
-      recommendation = "Focus on one collaboration skill at a time, like leading discussions or time management.";
+      insight =
+          "Your collaboration skills are developing well. You're becoming a valued team member.";
+      recommendation =
+          "Focus on one collaboration skill at a time, like leading discussions or time management.";
     }
 
     _aiInsights.add(SocialAIInsight(
@@ -283,7 +316,8 @@ class SocialIntegrationService extends ChangeNotifier {
     final achievements = userLevel['achievements'] as List<dynamic>;
     final streaks = _getMockStreaks();
 
-    final motivationScore = _calculateMotivationScore(userLevel, achievements, streaks);
+    final motivationScore =
+        _calculateMotivationScore(userLevel, achievements, streaks);
     final achievementRate = _calculateAchievementRate(achievements);
     final consistencyScore = _calculateConsistencyScore(streaks);
 
@@ -292,16 +326,22 @@ class SocialIntegrationService extends ChangeNotifier {
     Priority priority;
 
     if (motivationScore > 80 && consistencyScore > 70) {
-      insight = "Your motivation and consistency are outstanding! You're a model learner.";
-      recommendation = "Consider mentoring others or competing in advanced challenges.";
+      insight =
+          "Your motivation and consistency are outstanding! You're a model learner.";
+      recommendation =
+          "Consider mentoring others or competing in advanced challenges.";
       priority = Priority.low;
     } else if (motivationScore < 40 || consistencyScore < 30) {
-      insight = "Your motivation seems to be flagging. Social accountability might help reignite your drive.";
-      recommendation = "Join an active study group or find an accountability partner to keep you motivated.";
+      insight =
+          "Your motivation seems to be flagging. Social accountability might help reignite your drive.";
+      recommendation =
+          "Join an active study group or find an accountability partner to keep you motivated.";
       priority = Priority.high;
     } else {
-      insight = "Your motivation is good with room for improvement. Small changes could boost your progress.";
-      recommendation = "Set micro-goals and celebrate small wins. Consider friendly competitions with peers.";
+      insight =
+          "Your motivation is good with room for improvement. Small changes could boost your progress.";
+      recommendation =
+          "Set micro-goals and celebrate small wins. Consider friendly competitions with peers.";
       priority = Priority.medium;
     }
 
@@ -336,10 +376,10 @@ class SocialIntegrationService extends ChangeNotifier {
 
     // Friend recommendations
     await _generateFriendRecommendations();
-    
+
     // Study group recommendations
     await _generateStudyGroupRecommendations();
-    
+
     // Competition recommendations
     await _generateCompetitionRecommendations();
 
@@ -353,10 +393,12 @@ class SocialIntegrationService extends ChangeNotifier {
         id: 'friend_rec_1',
         type: SocialRecommendationType.friendSuggestion,
         title: 'Study Buddy Match',
-        description: 'Alex Chen has similar learning goals and complementary strengths in your weak subjects.',
+        description:
+            'Alex Chen has similar learning goals and complementary strengths in your weak subjects.',
         targetUserId: 'alex_chen',
         relevanceScore: 0.92,
-        reasoning: 'High compatibility based on study patterns and mutual subject interests',
+        reasoning:
+            'High compatibility based on study patterns and mutual subject interests',
         actionType: SocialActionType.sendFriendRequest,
         createdAt: DateTime.now(),
         metadata: {
@@ -369,10 +411,12 @@ class SocialIntegrationService extends ChangeNotifier {
         id: 'friend_rec_2',
         type: SocialRecommendationType.friendSuggestion,
         title: 'Competitive Partner',
-        description: 'Sarah Johnson is at a similar competitive level and could make a great study rival.',
+        description:
+            'Sarah Johnson is at a similar competitive level and could make a great study rival.',
         targetUserId: 'sarah_johnson',
         relevanceScore: 0.88,
-        reasoning: 'Similar competitive rankings with potential for mutual motivation',
+        reasoning:
+            'Similar competitive rankings with potential for mutual motivation',
         actionType: SocialActionType.sendFriendRequest,
         createdAt: DateTime.now(),
         metadata: {
@@ -393,7 +437,8 @@ class SocialIntegrationService extends ChangeNotifier {
         id: 'group_rec_1',
         type: SocialRecommendationType.studyGroupSuggestion,
         title: 'Advanced Mathematics Group',
-        description: 'Join this active group focused on calculus and linear algebra.',
+        description:
+            'Join this active group focused on calculus and linear algebra.',
         targetGroupId: 'advanced_math_group',
         relevanceScore: 0.85,
         reasoning: 'Matches your math skill level and learning pace',
@@ -418,7 +463,8 @@ class SocialIntegrationService extends ChangeNotifier {
         id: 'comp_rec_1',
         type: SocialRecommendationType.competitionSuggestion,
         title: 'Weekly Math Challenge',
-        description: 'Perfect for your skill level with great rewards for top performers.',
+        description:
+            'Perfect for your skill level with great rewards for top performers.',
         targetCompetitionId: 'weekly_math_challenge',
         relevanceScore: 0.91,
         reasoning: 'Matches your competitive level and strongest subject area',
@@ -439,9 +485,10 @@ class SocialIntegrationService extends ChangeNotifier {
   /// Initialize collaborative AI sessions
   Future<void> _initializeCollaborativeAI() async {
     final userGroups = _getMockGroups();
-    
+
     for (final group in userGroups) {
-      final sessionId = 'ai_session_${group['id']}_${DateTime.now().millisecondsSinceEpoch}';
+      final sessionId =
+          'ai_session_${group['id']}_${DateTime.now().millisecondsSinceEpoch}';
       final aiSession = CollaborativeAISession(
         id: sessionId,
         groupId: group['id'],
@@ -455,13 +502,14 @@ class SocialIntegrationService extends ChangeNotifier {
         collaborationMetrics: CollaborationMetrics.empty(),
         createdAt: DateTime.now(),
       );
-      
+
       _aiSessions[sessionId] = aiSession;
     }
   }
 
   /// Get AI-generated social message for user
-  Future<String> getAISocialMessage(String context, {
+  Future<String> getAISocialMessage(
+    String context, {
     String? friendId,
     String? groupId,
     String? competitionId,
@@ -474,7 +522,7 @@ class SocialIntegrationService extends ChangeNotifier {
     // Generate contextual message based on social situation
     try {
       final response = _getMockAIResponse(context, personality);
-      
+
       // Cache the message
       final message = SocialAIMessage(
         id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
@@ -483,10 +531,10 @@ class SocialIntegrationService extends ChangeNotifier {
         personality: personality,
         createdAt: DateTime.now(),
       );
-      
+
       _aiSocialMessages[_currentUserId!] ??= [];
       _aiSocialMessages[_currentUserId!]!.add(message);
-      
+
       return response;
     } catch (e) {
       return _getFallbackSocialMessage(context, personality);
@@ -495,17 +543,23 @@ class SocialIntegrationService extends ChangeNotifier {
 
   String _getMockAIResponse(String context, SocialAIPersonality personality) {
     final responses = {
-      'achievement_unlocked': 'Congratulations on your achievement! Your ${personality.socialStyle} approach is really paying off.',
-      'friend_request': 'You\'ve got a new friend request! Building connections aligns perfectly with your collaborative style.',
-      'competition_joined': 'Welcome to the competition! Your competitive spirit will serve you well here.',
-      'study_session': 'Time for a group study session! Your ${personality.communicationTone} communication style will be valuable.',
+      'achievement_unlocked':
+          'Congratulations on your achievement! Your ${personality.socialStyle} approach is really paying off.',
+      'friend_request':
+          'You\'ve got a new friend request! Building connections aligns perfectly with your collaborative style.',
+      'competition_joined':
+          'Welcome to the competition! Your competitive spirit will serve you well here.',
+      'study_session':
+          'Time for a group study session! Your ${personality.communicationTone} communication style will be valuable.',
     };
-    
-    return responses[context] ?? 'Keep up the excellent social learning progress!';
+
+    return responses[context] ??
+        'Keep up the excellent social learning progress!';
   }
 
   /// Get fallback social message when AI is unavailable
-  String _getFallbackSocialMessage(String context, SocialAIPersonality personality) {
+  String _getFallbackSocialMessage(
+      String context, SocialAIPersonality personality) {
     final messages = {
       'achievement_unlocked': [
         'Awesome achievement! Share your success with your study group!',
@@ -528,18 +582,20 @@ class SocialIntegrationService extends ChangeNotifier {
         'Let\'s learn together! Your peers bring unique perspectives.',
       ],
     };
-    
-    final contextMessages = messages[context] ?? [
-      'Keep up the great work with your social learning!',
-      'Your learning community is here to support you!',
-      'Together we learn better!'
-    ];
-    
+
+    final contextMessages = messages[context] ??
+        [
+          'Keep up the great work with your social learning!',
+          'Your learning community is here to support you!',
+          'Together we learn better!'
+        ];
+
     return contextMessages[DateTime.now().millisecond % contextMessages.length];
   }
 
   // Helper calculation methods
-  double _calculateSocialActivityScore(List<dynamic> friends, List<dynamic> groups, List<dynamic> sessions) {
+  double _calculateSocialActivityScore(
+      List<dynamic> friends, List<dynamic> groups, List<dynamic> sessions) {
     double score = 0;
     score += friends.length * 10; // 10 points per friend
     score += groups.length * 15; // 15 points per group
@@ -569,11 +625,14 @@ class SocialIntegrationService extends ChangeNotifier {
     return 50 + (DateTime.now().millisecond % 51); // 50-100 range
   }
 
-  double _calculateMotivationScore(dynamic userLevel, List<dynamic> achievements, List<dynamic> streaks) {
+  double _calculateMotivationScore(
+      dynamic userLevel, List<dynamic> achievements, List<dynamic> streaks) {
     double score = 0;
     score += (userLevel['level'] ?? 0) * 5; // Level contribution
     score += achievements.length * 3; // Achievement contribution
-    score += streaks.fold<double>(0, (sum, streak) => sum + (streak['days'] ?? 0)) * 0.5; // Streak contribution
+    score +=
+        streaks.fold<double>(0, (sum, streak) => sum + (streak['days'] ?? 0)) *
+            0.5; // Streak contribution
     return (score / 100) * 100; // Normalize
   }
 
@@ -584,29 +643,45 @@ class SocialIntegrationService extends ChangeNotifier {
 
   double _calculateConsistencyScore(List<dynamic> streaks) {
     if (streaks.isEmpty) return 0;
-    final maxStreak = streaks.fold<int>(0, (max, streak) => 
-        (streak['days'] ?? 0) > max ? streak['days'] : max);
+    final maxStreak = streaks.fold<int>(
+        0, (max, streak) => (streak['days'] ?? 0) > max ? streak['days'] : max);
     return (maxStreak / 30) * 100; // 30 days = 100%
   }
 
-  SocialStyle _determineSocialStyle(Map<String, dynamic> userProfile, Map<String, dynamic> competitiveStats) {
+  SocialStyle _determineSocialStyle(
+      Map<String, dynamic> userProfile, Map<String, dynamic> competitiveStats) {
     // Mock determination based on user behavior patterns
-    final styles = [SocialStyle.collaborativeLeader, SocialStyle.supportivePeer, 
-                   SocialStyle.independentLearner, SocialStyle.competitiveStrategist];
+    final styles = [
+      SocialStyle.collaborativeLeader,
+      SocialStyle.supportivePeer,
+      SocialStyle.independentLearner,
+      SocialStyle.competitiveStrategist
+    ];
     return styles[DateTime.now().millisecond % styles.length];
   }
 
-  List<String> _analyzeLearningPreferences(Map<String, dynamic> achievementData) {
-    return ['visual_learning', 'collaborative_discussion', 'competitive_challenges'];
+  List<String> _analyzeLearningPreferences(
+      Map<String, dynamic> achievementData) {
+    return [
+      'visual_learning',
+      'collaborative_discussion',
+      'competitive_challenges'
+    ];
   }
 
-  List<String> _identifyMotivationFactors(Map<String, dynamic> competitiveStats) {
+  List<String> _identifyMotivationFactors(
+      Map<String, dynamic> competitiveStats) {
     return ['achievement_recognition', 'peer_comparison', 'progress_tracking'];
   }
 
-  CommunicationTone _determineCommunicationTone(Map<String, dynamic> userProfile) {
-    final tones = [CommunicationTone.encouraging, CommunicationTone.analytical, 
-                   CommunicationTone.casual, CommunicationTone.motivational];
+  CommunicationTone _determineCommunicationTone(
+      Map<String, dynamic> userProfile) {
+    final tones = [
+      CommunicationTone.encouraging,
+      CommunicationTone.analytical,
+      CommunicationTone.casual,
+      CommunicationTone.motivational
+    ];
     return tones[DateTime.now().millisecond % tones.length];
   }
 

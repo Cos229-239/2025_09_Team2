@@ -10,13 +10,13 @@ class UserProfileCard extends StatelessWidget {
   final VoidCallback? onAddFriendTap;
 
   const UserProfileCard({
-    Key? key,
+    super.key,
     required this.profile,
     this.isCurrentUser = false,
     this.onTap,
     this.onMessageTap,
     this.onAddFriendTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +35,12 @@ class UserProfileCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: _getLevelColor(profile.level),
-                    backgroundImage: profile.avatar != null 
+                    backgroundImage: profile.avatar != null
                         ? NetworkImage(profile.avatar!)
                         : null,
-                    child: profile.avatar == null 
+                    child: profile.avatar == null
                         ? Text(
-                            profile.displayName.isNotEmpty 
+                            profile.displayName.isNotEmpty
                                 ? profile.displayName[0].toUpperCase()
                                 : '?',
                             style: const TextStyle(
@@ -52,7 +52,7 @@ class UserProfileCard extends StatelessWidget {
                         : null,
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Profile Info
                   Expanded(
                     child: Column(
@@ -63,9 +63,12 @@ class UserProfileCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 profile.displayName,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -91,15 +94,17 @@ class UserProfileCard extends StatelessWidget {
                         ),
                         Text(
                           '@${profile.username}',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: _getLevelColor(profile.level),
                                 borderRadius: BorderRadius.circular(12),
@@ -114,7 +119,8 @@ class UserProfileCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Icon(Icons.star, color: Colors.amber, size: 16),
+                            const Icon(Icons.star,
+                                color: Colors.amber, size: 16),
                             Text(
                               '${profile.totalXP}',
                               style: Theme.of(context).textTheme.bodySmall,
@@ -126,7 +132,7 @@ class UserProfileCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               // Bio
               if (profile.bio != null && profile.bio!.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -137,7 +143,7 @@ class UserProfileCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              
+
               // Interests
               if (profile.interests.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -146,11 +152,13 @@ class UserProfileCard extends StatelessWidget {
                   runSpacing: 4,
                   children: profile.interests.take(3).map((interest) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
+                        color: Colors.blue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        border: Border.all(
+                            color: Colors.blue.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         interest,
@@ -163,7 +171,7 @@ class UserProfileCard extends StatelessWidget {
                   }).toList(),
                 ),
               ],
-              
+
               // Action buttons
               if (!isCurrentUser) ...[
                 const SizedBox(height: 16),
@@ -221,12 +229,12 @@ class FriendRequestCard extends StatelessWidget {
   final VoidCallback? onDecline;
 
   const FriendRequestCard({
-    Key? key,
+    super.key,
     required this.friendship,
     this.requesterProfile,
     this.onAccept,
     this.onDecline,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -241,10 +249,10 @@ class FriendRequestCard extends StatelessWidget {
                 CircleAvatar(
                   radius: 20,
                   backgroundColor: Colors.blue,
-                  backgroundImage: requesterProfile?.avatar != null 
+                  backgroundImage: requesterProfile?.avatar != null
                       ? NetworkImage(requesterProfile!.avatar!)
                       : null,
-                  child: requesterProfile?.avatar == null 
+                  child: requesterProfile?.avatar == null
                       ? Text(
                           requesterProfile?.displayName.isNotEmpty == true
                               ? requesterProfile!.displayName[0].toUpperCase()
@@ -263,23 +271,24 @@ class FriendRequestCard extends StatelessWidget {
                     children: [
                       Text(
                         requesterProfile?.displayName ?? 'Unknown User',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       Text(
                         '@${requesterProfile?.username ?? 'unknown'}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            
-            if (friendship.requestMessage != null && friendship.requestMessage!.isNotEmpty) ...[
+            if (friendship.requestMessage != null &&
+                friendship.requestMessage!.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -293,7 +302,6 @@ class FriendRequestCard extends StatelessWidget {
                 ),
               ),
             ],
-            
             const SizedBox(height: 16),
             Row(
               children: [
@@ -312,13 +320,12 @@ class FriendRequestCard extends StatelessWidget {
                 ),
               ],
             ),
-            
             const SizedBox(height: 8),
             Text(
               'Sent ${_formatTimeAgo(friendship.requestDate)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
           ],
         ),
@@ -329,7 +336,7 @@ class FriendRequestCard extends StatelessWidget {
   String _formatTimeAgo(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
     } else if (difference.inHours > 0) {
@@ -351,13 +358,13 @@ class StudyGroupCard extends StatelessWidget {
   final bool showJoinButton;
 
   const StudyGroupCard({
-    Key? key,
+    super.key,
     required this.group,
     this.onTap,
     this.onJoin,
     this.isJoined = false,
     this.showJoinButton = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -376,11 +383,11 @@ class StudyGroupCard extends StatelessWidget {
                   CircleAvatar(
                     radius: 24,
                     backgroundColor: Colors.blue,
-                    backgroundImage: group.avatar != null 
+                    backgroundImage: group.avatar != null
                         ? NetworkImage(group.avatar!)
                         : null,
-                    child: group.avatar == null 
-                        ? Icon(
+                    child: group.avatar == null
+                        ? const Icon(
                             Icons.groups,
                             color: Colors.white,
                             size: 24,
@@ -388,7 +395,7 @@ class StudyGroupCard extends StatelessWidget {
                         : null,
                   ),
                   const SizedBox(width: 12),
-                  
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,9 +405,12 @@ class StudyGroupCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 group.name,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -414,18 +424,19 @@ class StudyGroupCard extends StatelessWidget {
                         ),
                         Text(
                           '${group.currentMembers}/${group.maxMembers} members',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Description
               Text(
                 group.description,
@@ -433,7 +444,7 @@ class StudyGroupCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              
+
               // Subjects
               if (group.subjects.isNotEmpty) ...[
                 const SizedBox(height: 12),
@@ -442,11 +453,13 @@ class StudyGroupCard extends StatelessWidget {
                   runSpacing: 4,
                   children: group.subjects.take(3).map((subject) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
+                        color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        border: Border.all(
+                            color: Colors.green.withValues(alpha: 0.3)),
                       ),
                       child: Text(
                         subject,
@@ -459,9 +472,9 @@ class StudyGroupCard extends StatelessWidget {
                   }).toList(),
                 ),
               ],
-              
+
               const SizedBox(height: 16),
-              
+
               // Action buttons
               Row(
                 children: [
@@ -484,13 +497,13 @@ class StudyGroupCard extends StatelessWidget {
                   ],
                 ],
               ),
-              
+
               const SizedBox(height: 8),
               Text(
                 'Created ${_formatDate(group.createdDate)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
             ],
           ),
@@ -502,7 +515,7 @@ class StudyGroupCard extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays > 30) {
       return '${date.day}/${date.month}/${date.year}';
     } else if (difference.inDays > 0) {
@@ -521,22 +534,22 @@ class CollaborativeSessionCard extends StatelessWidget {
   final bool canJoin;
 
   const CollaborativeSessionCard({
-    Key? key,
+    super.key,
     required this.session,
     this.onTap,
     this.onJoin,
     this.canJoin = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final isUpcoming = session.scheduledTime.isAfter(DateTime.now());
     final isActive = session.isActive;
-    
+
     Color statusColor = Colors.grey;
     String statusText = 'Ended';
     IconData statusIcon = Icons.history;
-    
+
     if (isActive) {
       statusColor = Colors.green;
       statusText = 'Live';
@@ -559,9 +572,10 @@ class CollaborativeSessionCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
+                      color: statusColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: statusColor),
                     ),
@@ -585,27 +599,23 @@ class CollaborativeSessionCard extends StatelessWidget {
                   Text(
                     '${session.participants.length} participant${session.participants.length != 1 ? 's' : ''}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                 ],
               ),
-              
               const SizedBox(height: 12),
-              
               Text(
                 session.name,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
-              
               const SizedBox(height: 4),
-              
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.purple.withOpacity(0.1),
+                  color: Colors.purple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -617,8 +627,8 @@ class CollaborativeSessionCard extends StatelessWidget {
                   ),
                 ),
               ),
-              
-              if (session.description != null && session.description!.isNotEmpty) ...[
+              if (session.description != null &&
+                  session.description!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   session.description!,
@@ -627,9 +637,7 @@ class CollaborativeSessionCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              
               const SizedBox(height: 12),
-              
               Row(
                 children: [
                   Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
@@ -637,12 +645,11 @@ class CollaborativeSessionCard extends StatelessWidget {
                   Text(
                     _formatDateTime(session.scheduledTime),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                          color: Colors.grey[600],
+                        ),
                   ),
                 ],
               ),
-              
               if (session.startTime != null && session.endTime != null) ...[
                 const SizedBox(height: 4),
                 Row(
@@ -652,13 +659,12 @@ class CollaborativeSessionCard extends StatelessWidget {
                     Text(
                       'Duration: ${_formatDuration(session.endTime!.difference(session.startTime!))}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                            color: Colors.grey[600],
+                          ),
                     ),
                   ],
                 ),
               ],
-              
               if (canJoin && (isUpcoming || isActive)) ...[
                 const SizedBox(height: 16),
                 SizedBox(
@@ -684,7 +690,7 @@ class CollaborativeSessionCard extends StatelessWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final sessionDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
-    
+
     String dateStr;
     if (sessionDate == today) {
       dateStr = 'Today';
@@ -695,15 +701,16 @@ class CollaborativeSessionCard extends StatelessWidget {
     } else {
       dateStr = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
-    
-    final timeStr = '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+
+    final timeStr =
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     return '$dateStr at $timeStr';
   }
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
-    
+
     if (hours > 0) {
       return '${hours}h ${minutes}m';
     } else {
@@ -717,9 +724,9 @@ class SocialStatsWidget extends StatelessWidget {
   final Map<String, dynamic> stats;
 
   const SocialStatsWidget({
-    Key? key,
+    super.key,
     required this.stats,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -732,11 +739,10 @@ class SocialStatsWidget extends StatelessWidget {
             Text(
               'Social Stats',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
-            
             Row(
               children: [
                 Expanded(
@@ -761,7 +767,6 @@ class SocialStatsWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            
             Row(
               children: [
                 Expanded(
@@ -801,9 +806,9 @@ class SocialStatsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -812,15 +817,15 @@ class SocialStatsWidget extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
             textAlign: TextAlign.center,
           ),
         ],

@@ -37,7 +37,8 @@ class _QuestListScreenState extends State<QuestListScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              Provider.of<DailyQuestProvider>(context, listen: false).refreshQuests();
+              Provider.of<DailyQuestProvider>(context, listen: false)
+                  .refreshQuests();
             },
           ),
         ],
@@ -178,7 +179,8 @@ class _QuestListScreenState extends State<QuestListScreen> {
                         child: LinearProgressIndicator(
                           value: questProvider.completionRate,
                           backgroundColor: Colors.purple.shade200,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.purple),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              Colors.purple),
                         ),
                       ),
                   ],
@@ -192,7 +194,8 @@ class _QuestListScreenState extends State<QuestListScreen> {
                   itemCount: quests.length,
                   itemBuilder: (context, index) {
                     final quest = quests[index];
-                    return _buildDetailedQuestItem(context, quest, questProvider);
+                    return _buildDetailedQuestItem(
+                        context, quest, questProvider);
                   },
                 ),
               ),
@@ -256,7 +259,9 @@ class _QuestListScreenState extends State<QuestListScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: quest.isCompleted ? Colors.green.shade100 : Colors.purple.shade100,
+                    color: quest.isCompleted
+                        ? Colors.green.shade100
+                        : Colors.purple.shade100,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -272,10 +277,13 @@ class _QuestListScreenState extends State<QuestListScreen> {
                     children: [
                       Text(
                         quest.title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              decoration: quest.isCompleted ? TextDecoration.lineThrough : null,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  decoration: quest.isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
                       ),
                       Text(
                         quest.type.displayName,
@@ -291,7 +299,8 @@ class _QuestListScreenState extends State<QuestListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.amber.shade100,
                         borderRadius: BorderRadius.circular(8),
@@ -308,7 +317,8 @@ class _QuestListScreenState extends State<QuestListScreen> {
                     const SizedBox(height: 4),
                     // Priority indicator
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: _getPriorityColor(quest.priority).withAlpha(50),
                         borderRadius: BorderRadius.circular(4),
@@ -327,7 +337,7 @@ class _QuestListScreenState extends State<QuestListScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Quest description
             Text(
               quest.description,
@@ -336,7 +346,7 @@ class _QuestListScreenState extends State<QuestListScreen> {
                   ),
             ),
             const SizedBox(height: 12),
-            
+
             // Progress section
             Row(
               children: [
@@ -349,15 +359,17 @@ class _QuestListScreenState extends State<QuestListScreen> {
                         children: [
                           Text(
                             'Progress',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
                           ),
                           Text(
                             quest.progressText,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
                           ),
                         ],
                       ),
@@ -374,7 +386,7 @@ class _QuestListScreenState extends State<QuestListScreen> {
                 ),
               ],
             ),
-            
+
             // Expiry information
             if (!quest.isCompleted && !quest.isExpired)
               Padding(

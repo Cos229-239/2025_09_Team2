@@ -82,10 +82,10 @@ class AppState extends ChangeNotifier {
       );
 
       _currentUser = user;
-      
+
       // Auto-configure Google AI upon successful login
       await _configureAIOnLogin();
-      
+
       notifyListeners();
       return user;
     } catch (e) {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Represents a user's privacy settings
@@ -61,9 +62,9 @@ class UserProfile {
     this.isOnline = false,
     this.lastActive,
     Map<String, dynamic>? studyStats,
-  }) : interests = interests ?? [],
-       achievements = achievements ?? {},
-       studyStats = studyStats ?? {};
+  })  : interests = interests ?? [],
+        achievements = achievements ?? {},
+        studyStats = studyStats ?? {};
 
   UserProfile copyWith({
     String? username,
@@ -104,44 +105,49 @@ class UserProfile {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'username': username,
-    'displayName': displayName,
-    'avatar': avatar,
-    'bio': bio,
-    'joinDate': joinDate.toIso8601String(),
-    'level': level,
-    'totalXP': totalXP,
-    'title': title,
-    'interests': interests,
-    'achievements': achievements,
-    'profilePrivacy': profilePrivacy.name,
-    'progressPrivacy': progressPrivacy.name,
-    'friendsPrivacy': friendsPrivacy.name,
-    'isOnline': isOnline,
-    'lastActive': lastActive?.toIso8601String(),
-    'studyStats': studyStats,
-  };
+        'id': id,
+        'username': username,
+        'displayName': displayName,
+        'avatar': avatar,
+        'bio': bio,
+        'joinDate': joinDate.toIso8601String(),
+        'level': level,
+        'totalXP': totalXP,
+        'title': title,
+        'interests': interests,
+        'achievements': achievements,
+        'profilePrivacy': profilePrivacy.name,
+        'progressPrivacy': progressPrivacy.name,
+        'friendsPrivacy': friendsPrivacy.name,
+        'isOnline': isOnline,
+        'lastActive': lastActive?.toIso8601String(),
+        'studyStats': studyStats,
+      };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-    id: json['id'],
-    username: json['username'],
-    displayName: json['displayName'],
-    avatar: json['avatar'],
-    bio: json['bio'],
-    joinDate: DateTime.parse(json['joinDate']),
-    level: json['level'],
-    totalXP: json['totalXP'],
-    title: json['title'],
-    interests: List<String>.from(json['interests'] ?? []),
-    achievements: Map<String, dynamic>.from(json['achievements'] ?? {}),
-    profilePrivacy: PrivacyLevel.values.firstWhere((e) => e.name == json['profilePrivacy']),
-    progressPrivacy: PrivacyLevel.values.firstWhere((e) => e.name == json['progressPrivacy']),
-    friendsPrivacy: PrivacyLevel.values.firstWhere((e) => e.name == json['friendsPrivacy']),
-    isOnline: json['isOnline'] ?? false,
-    lastActive: json['lastActive'] != null ? DateTime.parse(json['lastActive']) : null,
-    studyStats: Map<String, dynamic>.from(json['studyStats'] ?? {}),
-  );
+        id: json['id'],
+        username: json['username'],
+        displayName: json['displayName'],
+        avatar: json['avatar'],
+        bio: json['bio'],
+        joinDate: DateTime.parse(json['joinDate']),
+        level: json['level'],
+        totalXP: json['totalXP'],
+        title: json['title'],
+        interests: List<String>.from(json['interests'] ?? []),
+        achievements: Map<String, dynamic>.from(json['achievements'] ?? {}),
+        profilePrivacy: PrivacyLevel.values
+            .firstWhere((e) => e.name == json['profilePrivacy']),
+        progressPrivacy: PrivacyLevel.values
+            .firstWhere((e) => e.name == json['progressPrivacy']),
+        friendsPrivacy: PrivacyLevel.values
+            .firstWhere((e) => e.name == json['friendsPrivacy']),
+        isOnline: json['isOnline'] ?? false,
+        lastActive: json['lastActive'] != null
+            ? DateTime.parse(json['lastActive'])
+            : null,
+        studyStats: Map<String, dynamic>.from(json['studyStats'] ?? {}),
+      );
 }
 
 /// Represents a friendship connection
@@ -167,26 +173,28 @@ class Friendship {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'userId': userId,
-    'friendId': friendId,
-    'requestDate': requestDate.toIso8601String(),
-    'acceptDate': acceptDate?.toIso8601String(),
-    'isAccepted': isAccepted,
-    'isBlocked': isBlocked,
-    'requestMessage': requestMessage,
-  };
+        'id': id,
+        'userId': userId,
+        'friendId': friendId,
+        'requestDate': requestDate.toIso8601String(),
+        'acceptDate': acceptDate?.toIso8601String(),
+        'isAccepted': isAccepted,
+        'isBlocked': isBlocked,
+        'requestMessage': requestMessage,
+      };
 
   factory Friendship.fromJson(Map<String, dynamic> json) => Friendship(
-    id: json['id'],
-    userId: json['userId'],
-    friendId: json['friendId'],
-    requestDate: DateTime.parse(json['requestDate']),
-    acceptDate: json['acceptDate'] != null ? DateTime.parse(json['acceptDate']) : null,
-    isAccepted: json['isAccepted'] ?? false,
-    isBlocked: json['isBlocked'] ?? false,
-    requestMessage: json['requestMessage'],
-  );
+        id: json['id'],
+        userId: json['userId'],
+        friendId: json['friendId'],
+        requestDate: DateTime.parse(json['requestDate']),
+        acceptDate: json['acceptDate'] != null
+            ? DateTime.parse(json['acceptDate'])
+            : null,
+        isAccepted: json['isAccepted'] ?? false,
+        isBlocked: json['isBlocked'] ?? false,
+        requestMessage: json['requestMessage'],
+      );
 }
 
 /// Represents a study group
@@ -219,41 +227,44 @@ class StudyGroup {
     Map<String, dynamic>? settings,
     List<StudyGroupMember>? members,
     this.currentMembers = 1,
-  }) : subjects = subjects ?? [],
-       settings = settings ?? {},
-       members = members ?? [];
+  })  : subjects = subjects ?? [],
+        settings = settings ?? {},
+        members = members ?? [];
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'description': description,
-    'ownerId': ownerId,
-    'createdDate': createdDate.toIso8601String(),
-    'subjects': subjects,
-    'maxMembers': maxMembers,
-    'isPrivate': isPrivate,
-    'password': password,
-    'avatar': avatar,
-    'settings': settings,
-    'members': members.map((m) => m.toJson()).toList(),
-    'currentMembers': currentMembers,
-  };
+        'id': id,
+        'name': name,
+        'description': description,
+        'ownerId': ownerId,
+        'createdDate': createdDate.toIso8601String(),
+        'subjects': subjects,
+        'maxMembers': maxMembers,
+        'isPrivate': isPrivate,
+        'password': password,
+        'avatar': avatar,
+        'settings': settings,
+        'members': members.map((m) => m.toJson()).toList(),
+        'currentMembers': currentMembers,
+      };
 
   factory StudyGroup.fromJson(Map<String, dynamic> json) => StudyGroup(
-    id: json['id'],
-    name: json['name'],
-    description: json['description'],
-    ownerId: json['ownerId'],
-    createdDate: DateTime.parse(json['createdDate']),
-    subjects: List<String>.from(json['subjects'] ?? []),
-    maxMembers: json['maxMembers'] ?? 50,
-    isPrivate: json['isPrivate'] ?? false,
-    password: json['password'],
-    avatar: json['avatar'],
-    settings: Map<String, dynamic>.from(json['settings'] ?? {}),
-    members: (json['members'] as List?)?.map((m) => StudyGroupMember.fromJson(m)).toList() ?? [],
-    currentMembers: json['currentMembers'] ?? 1,
-  );
+        id: json['id'],
+        name: json['name'],
+        description: json['description'],
+        ownerId: json['ownerId'],
+        createdDate: DateTime.parse(json['createdDate']),
+        subjects: List<String>.from(json['subjects'] ?? []),
+        maxMembers: json['maxMembers'] ?? 50,
+        isPrivate: json['isPrivate'] ?? false,
+        password: json['password'],
+        avatar: json['avatar'],
+        settings: Map<String, dynamic>.from(json['settings'] ?? {}),
+        members: (json['members'] as List?)
+                ?.map((m) => StudyGroupMember.fromJson(m))
+                .toList() ??
+            [],
+        currentMembers: json['currentMembers'] ?? 1,
+      );
 }
 
 /// Represents a member of a study group
@@ -277,24 +288,28 @@ class StudyGroupMember {
   }) : contributions = contributions ?? {};
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'groupId': groupId,
-    'role': role.name,
-    'status': status.name,
-    'joinDate': joinDate.toIso8601String(),
-    'lastActive': lastActive?.toIso8601String(),
-    'contributions': contributions,
-  };
+        'userId': userId,
+        'groupId': groupId,
+        'role': role.name,
+        'status': status.name,
+        'joinDate': joinDate.toIso8601String(),
+        'lastActive': lastActive?.toIso8601String(),
+        'contributions': contributions,
+      };
 
-  factory StudyGroupMember.fromJson(Map<String, dynamic> json) => StudyGroupMember(
-    userId: json['userId'],
-    groupId: json['groupId'],
-    role: StudyGroupRole.values.firstWhere((e) => e.name == json['role']),
-    status: MembershipStatus.values.firstWhere((e) => e.name == json['status']),
-    joinDate: DateTime.parse(json['joinDate']),
-    lastActive: json['lastActive'] != null ? DateTime.parse(json['lastActive']) : null,
-    contributions: Map<String, dynamic>.from(json['contributions'] ?? {}),
-  );
+  factory StudyGroupMember.fromJson(Map<String, dynamic> json) =>
+      StudyGroupMember(
+        userId: json['userId'],
+        groupId: json['groupId'],
+        role: StudyGroupRole.values.firstWhere((e) => e.name == json['role']),
+        status:
+            MembershipStatus.values.firstWhere((e) => e.name == json['status']),
+        joinDate: DateTime.parse(json['joinDate']),
+        lastActive: json['lastActive'] != null
+            ? DateTime.parse(json['lastActive'])
+            : null,
+        contributions: Map<String, dynamic>.from(json['contributions'] ?? {}),
+      );
 }
 
 /// Represents a collaborative study session
@@ -327,40 +342,44 @@ class CollaborativeSession {
     Map<String, dynamic>? sessionData,
     this.isActive = false,
     this.isRecorded = false,
-  }) : participants = participants ?? [],
-       sessionData = sessionData ?? {};
+  })  : participants = participants ?? [],
+        sessionData = sessionData ?? {};
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'hostId': hostId,
-    'groupId': groupId,
-    'scheduledTime': scheduledTime.toIso8601String(),
-    'startTime': startTime?.toIso8601String(),
-    'endTime': endTime?.toIso8601String(),
-    'participants': participants,
-    'subject': subject,
-    'description': description,
-    'sessionData': sessionData,
-    'isActive': isActive,
-    'isRecorded': isRecorded,
-  };
+        'id': id,
+        'name': name,
+        'hostId': hostId,
+        'groupId': groupId,
+        'scheduledTime': scheduledTime.toIso8601String(),
+        'startTime': startTime?.toIso8601String(),
+        'endTime': endTime?.toIso8601String(),
+        'participants': participants,
+        'subject': subject,
+        'description': description,
+        'sessionData': sessionData,
+        'isActive': isActive,
+        'isRecorded': isRecorded,
+      };
 
-  factory CollaborativeSession.fromJson(Map<String, dynamic> json) => CollaborativeSession(
-    id: json['id'],
-    name: json['name'],
-    hostId: json['hostId'],
-    groupId: json['groupId'],
-    scheduledTime: DateTime.parse(json['scheduledTime']),
-    startTime: json['startTime'] != null ? DateTime.parse(json['startTime']) : null,
-    endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
-    participants: List<String>.from(json['participants'] ?? []),
-    subject: json['subject'],
-    description: json['description'],
-    sessionData: Map<String, dynamic>.from(json['sessionData'] ?? {}),
-    isActive: json['isActive'] ?? false,
-    isRecorded: json['isRecorded'] ?? false,
-  );
+  factory CollaborativeSession.fromJson(Map<String, dynamic> json) =>
+      CollaborativeSession(
+        id: json['id'],
+        name: json['name'],
+        hostId: json['hostId'],
+        groupId: json['groupId'],
+        scheduledTime: DateTime.parse(json['scheduledTime']),
+        startTime: json['startTime'] != null
+            ? DateTime.parse(json['startTime'])
+            : null,
+        endTime:
+            json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
+        participants: List<String>.from(json['participants'] ?? []),
+        subject: json['subject'],
+        description: json['description'],
+        sessionData: Map<String, dynamic>.from(json['sessionData'] ?? {}),
+        isActive: json['isActive'] ?? false,
+        isRecorded: json['isRecorded'] ?? false,
+      );
 }
 
 /// Social learning service for managing user profiles, friendships, and study groups
@@ -395,7 +414,8 @@ class SocialLearningService {
       final friendshipsData = _prefs?.getString(_friendshipsKey);
       if (friendshipsData != null) {
         final List<dynamic> friendshipsList = jsonDecode(friendshipsData);
-        _friendships = friendshipsList.map((f) => Friendship.fromJson(f)).toList();
+        _friendships =
+            friendshipsList.map((f) => Friendship.fromJson(f)).toList();
       }
 
       // Load study groups
@@ -409,10 +429,11 @@ class SocialLearningService {
       final sessionsData = _prefs?.getString(_collaborativeSessionsKey);
       if (sessionsData != null) {
         final List<dynamic> sessionsList = jsonDecode(sessionsData);
-        _collaborativeSessions = sessionsList.map((s) => CollaborativeSession.fromJson(s)).toList();
+        _collaborativeSessions =
+            sessionsList.map((s) => CollaborativeSession.fromJson(s)).toList();
       }
     } catch (e) {
-      print('Error loading social learning data: $e');
+      debugPrint('Error loading social learning data: $e');
     }
   }
 
@@ -421,7 +442,8 @@ class SocialLearningService {
     try {
       // Save user profile
       if (_currentUserProfile != null) {
-        await _prefs?.setString(_userProfileKey, jsonEncode(_currentUserProfile!.toJson()));
+        await _prefs?.setString(
+            _userProfileKey, jsonEncode(_currentUserProfile!.toJson()));
       }
 
       // Save friendships
@@ -433,10 +455,12 @@ class SocialLearningService {
       await _prefs?.setString(_studyGroupsKey, jsonEncode(groupsList));
 
       // Save collaborative sessions
-      final sessionsList = _collaborativeSessions.map((s) => s.toJson()).toList();
-      await _prefs?.setString(_collaborativeSessionsKey, jsonEncode(sessionsList));
+      final sessionsList =
+          _collaborativeSessions.map((s) => s.toJson()).toList();
+      await _prefs?.setString(
+          _collaborativeSessionsKey, jsonEncode(sessionsList));
     } catch (e) {
-      print('Error saving social learning data: $e');
+      debugPrint('Error saving social learning data: $e');
     }
   }
 
@@ -451,7 +475,7 @@ class SocialLearningService {
     PrivacyLevel? friendsPrivacy,
   }) async {
     final profileId = _generateId();
-    
+
     _currentUserProfile = UserProfile(
       id: profileId,
       username: username,
@@ -508,8 +532,9 @@ class SocialLearningService {
 
     // Check if friendship already exists
     final existingFriendship = _friendships
-        .where((f) => (f.userId == _currentUserProfile!.id && f.friendId == friendId) ||
-                     (f.userId == friendId && f.friendId == _currentUserProfile!.id))
+        .where((f) =>
+            (f.userId == _currentUserProfile!.id && f.friendId == friendId) ||
+            (f.userId == friendId && f.friendId == _currentUserProfile!.id))
         .firstOrNull;
 
     if (existingFriendship != null) return false;
@@ -529,7 +554,8 @@ class SocialLearningService {
 
   /// Accept friend request
   Future<bool> acceptFriendRequest(String friendshipId) async {
-    final friendshipIndex = _friendships.indexWhere((f) => f.id == friendshipId);
+    final friendshipIndex =
+        _friendships.indexWhere((f) => f.id == friendshipId);
     if (friendshipIndex == -1) return false;
 
     final friendship = _friendships[friendshipIndex];
@@ -581,15 +607,17 @@ class SocialLearningService {
     );
 
     // Update member group ID
-    final updatedMembers = group.members.map((m) => StudyGroupMember(
-      userId: m.userId,
-      groupId: group.id,
-      role: m.role,
-      status: m.status,
-      joinDate: m.joinDate,
-      lastActive: m.lastActive,
-      contributions: m.contributions,
-    )).toList();
+    final updatedMembers = group.members
+        .map((m) => StudyGroupMember(
+              userId: m.userId,
+              groupId: group.id,
+              role: m.role,
+              status: m.status,
+              joinDate: m.joinDate,
+              lastActive: m.lastActive,
+              contributions: m.contributions,
+            ))
+        .toList();
 
     final finalGroup = StudyGroup(
       id: group.id,
@@ -630,7 +658,8 @@ class SocialLearningService {
     }
 
     // Check if user is already a member
-    final isAlreadyMember = group.members.any((m) => m.userId == _currentUserProfile!.id);
+    final isAlreadyMember =
+        group.members.any((m) => m.userId == _currentUserProfile!.id);
     if (isAlreadyMember) return false;
 
     // Check if group is full
@@ -697,27 +726,33 @@ class SocialLearningService {
   UserProfile? get currentUserProfile => _currentUserProfile;
 
   /// Get friends list
-  List<Friendship> get friends => _friendships.where((f) => f.isAccepted).toList();
+  List<Friendship> get friends =>
+      _friendships.where((f) => f.isAccepted).toList();
 
   /// Get pending friend requests (received)
-  List<Friendship> get pendingFriendRequests => 
-      _friendships.where((f) => !f.isAccepted && f.friendId == _currentUserProfile?.id).toList();
+  List<Friendship> get pendingFriendRequests => _friendships
+      .where((f) => !f.isAccepted && f.friendId == _currentUserProfile?.id)
+      .toList();
 
   /// Get sent friend requests
-  List<Friendship> get sentFriendRequests => 
-      _friendships.where((f) => !f.isAccepted && f.userId == _currentUserProfile?.id).toList();
+  List<Friendship> get sentFriendRequests => _friendships
+      .where((f) => !f.isAccepted && f.userId == _currentUserProfile?.id)
+      .toList();
 
   /// Get study groups where user is a member
-  List<StudyGroup> get myStudyGroups => 
-      _studyGroups.where((g) => g.members.any((m) => m.userId == _currentUserProfile?.id)).toList();
+  List<StudyGroup> get myStudyGroups => _studyGroups
+      .where((g) => g.members.any((m) => m.userId == _currentUserProfile?.id))
+      .toList();
 
   /// Get all public study groups (for discovery)
-  List<StudyGroup> get publicStudyGroups => 
+  List<StudyGroup> get publicStudyGroups =>
       _studyGroups.where((g) => !g.isPrivate).toList();
 
   /// Get collaborative sessions where user is involved
-  List<CollaborativeSession> get myCollaborativeSessions => 
-      _collaborativeSessions.where((s) => s.participants.contains(_currentUserProfile?.id)).toList();
+  List<CollaborativeSession> get myCollaborativeSessions =>
+      _collaborativeSessions
+          .where((s) => s.participants.contains(_currentUserProfile?.id))
+          .toList();
 
   /// Generate unique ID
   String _generateId() {
@@ -763,7 +798,9 @@ class SocialLearningService {
       'totalFriends': friends.length,
       'pendingRequests': pendingFriendRequests.length,
       'studyGroupsJoined': myStudyGroups.length,
-      'studyGroupsOwned': myStudyGroups.where((g) => g.ownerId == _currentUserProfile?.id).length,
+      'studyGroupsOwned': myStudyGroups
+          .where((g) => g.ownerId == _currentUserProfile?.id)
+          .length,
       'collaborativeSessions': myCollaborativeSessions.length,
       'profileCompleteness': _calculateProfileCompleteness(),
     };
@@ -776,8 +813,14 @@ class SocialLearningService {
     int completed = 0;
     const int total = 6;
 
-    if (_currentUserProfile!.avatar != null && _currentUserProfile!.avatar!.isNotEmpty) completed++;
-    if (_currentUserProfile!.bio != null && _currentUserProfile!.bio!.isNotEmpty) completed++;
+    if (_currentUserProfile!.avatar != null &&
+        _currentUserProfile!.avatar!.isNotEmpty) {
+      completed++;
+    }
+    if (_currentUserProfile!.bio != null &&
+        _currentUserProfile!.bio!.isNotEmpty) {
+      completed++;
+    }
     if (_currentUserProfile!.interests.isNotEmpty) completed++;
     if (_currentUserProfile!.displayName.isNotEmpty) completed++;
     if (_currentUserProfile!.username.isNotEmpty) completed++;

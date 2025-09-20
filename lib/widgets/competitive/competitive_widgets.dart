@@ -9,17 +9,17 @@ class LeaderboardWidget extends StatelessWidget {
   final int maxEntries;
 
   const LeaderboardWidget({
-    Key? key,
+    super.key,
     required this.entries,
     this.currentUserId,
     this.showRankIcons = true,
     this.maxEntries = 10,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final displayEntries = entries.take(maxEntries).toList();
-    
+
     if (displayEntries.isEmpty) {
       return Card(
         child: Padding(
@@ -31,8 +31,8 @@ class LeaderboardWidget extends StatelessWidget {
               Text(
                 'No rankings yet',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
             ],
           ),
@@ -47,8 +47,9 @@ class LeaderboardWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(12)),
             ),
             child: Row(
               children: [
@@ -60,20 +61,20 @@ class LeaderboardWidget extends StatelessWidget {
                 Text(
                   'Leaderboard',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).primaryColor,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
                 ),
               ],
             ),
           ),
-          
+
           // Entries
           ...displayEntries.asMap().entries.map((entry) {
             final index = entry.key;
             final leaderboardEntry = entry.value;
             final isCurrentUser = leaderboardEntry.userId == currentUserId;
-            
+
             return _buildLeaderboardEntry(
               context,
               leaderboardEntry,
@@ -81,9 +82,10 @@ class LeaderboardWidget extends StatelessWidget {
               isCurrentUser,
             );
           }),
-          
+
           // Show current user if not in top entries
-          if (currentUserId != null && !displayEntries.any((e) => e.userId == currentUserId)) ...[
+          if (currentUserId != null &&
+              !displayEntries.any((e) => e.userId == currentUserId)) ...[
             const Divider(),
             _buildCurrentUserEntry(context),
           ],
@@ -100,14 +102,18 @@ class LeaderboardWidget extends StatelessWidget {
   ) {
     final rank = entry.rank;
     final isTopThree = rank <= 3;
-    
+
     return Container(
       decoration: BoxDecoration(
-        color: isCurrentUser ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
-        border: isCurrentUser ? Border.all(
-          color: Theme.of(context).primaryColor,
-          width: 2,
-        ) : null,
+        color: isCurrentUser
+            ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+            : null,
+        border: isCurrentUser
+            ? Border.all(
+                color: Theme.of(context).primaryColor,
+                width: 2,
+              )
+            : null,
       ),
       child: ListTile(
         leading: _buildRankWidget(rank, isTopThree),
@@ -117,7 +123,8 @@ class LeaderboardWidget extends StatelessWidget {
               child: Text(
                 entry.displayName,
                 style: TextStyle(
-                  fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                  fontWeight:
+                      isCurrentUser ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -150,16 +157,16 @@ class LeaderboardWidget extends StatelessWidget {
             Text(
               _formatScore(entry.score, entry.category),
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isTopThree ? _getRankColor(rank) : null,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: isTopThree ? _getRankColor(rank) : null,
+                  ),
             ),
             if (entry.metadata.containsKey('level'))
               Text(
                 'Lv.${entry.metadata['level']}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
           ],
         ),
@@ -185,7 +192,7 @@ class LeaderboardWidget extends StatelessWidget {
 
     IconData icon;
     Color color;
-    
+
     switch (rank) {
       case 1:
         icon = Icons.emoji_events;
@@ -275,21 +282,21 @@ class CompetitionCard extends StatelessWidget {
   final VoidCallback? onViewDetails;
 
   const CompetitionCard({
-    Key? key,
+    super.key,
     required this.competition,
     this.isParticipating = false,
     this.onJoin,
     this.onViewDetails,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final isActive = competition.isActive && 
-                    competition.startDate.isBefore(now) && 
-                    competition.endDate.isAfter(now);
+    final isActive = competition.isActive &&
+        competition.startDate.isBefore(now) &&
+        competition.endDate.isAfter(now);
     final isUpcoming = competition.startDate.isAfter(now);
-    final timeRemaining = isActive 
+    final timeRemaining = isActive
         ? competition.endDate.difference(now)
         : competition.startDate.difference(now);
 
@@ -306,11 +313,14 @@ class CompetitionCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getStatusColor(isActive, isUpcoming).withOpacity(0.2),
+                      color: _getStatusColor(isActive, isUpcoming)
+                          .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _getStatusColor(isActive, isUpcoming)),
+                      border: Border.all(
+                          color: _getStatusColor(isActive, isUpcoming)),
                     ),
                     child: Text(
                       _getStatusText(isActive, isUpcoming),
@@ -323,9 +333,11 @@ class CompetitionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: _getTypeColor(competition.type).withOpacity(0.2),
+                      color: _getTypeColor(competition.type)
+                          .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -339,31 +351,31 @@ class CompetitionCard extends StatelessWidget {
                   ),
                   const Spacer(),
                   if (isParticipating)
-                    Icon(Icons.check_circle, color: Colors.green),
+                    const Icon(Icons.check_circle, color: Colors.green),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Title and Description
               Text(
                 competition.name,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 4),
               Text(
                 competition.description,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Competition Category
               Row(
                 children: [
@@ -383,9 +395,9 @@ class CompetitionCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Participants and Time
               Row(
                 children: [
@@ -407,24 +419,25 @@ class CompetitionCard extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               // Rewards
               if (competition.rewards.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
                   'Rewards:',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 4,
                   children: competition.rewards.take(3).map((reward) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.2),
+                        color: Colors.amber.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -438,7 +451,7 @@ class CompetitionCard extends StatelessWidget {
                   }).toList(),
                 ),
               ],
-              
+
               // Action Buttons
               if (!isParticipating && isActive) ...[
                 const SizedBox(height: 16),
@@ -527,13 +540,14 @@ class CompetitionCard extends StatelessWidget {
     }
   }
 
-  String _formatTimeRemaining(Duration timeRemaining, bool isActive, bool isUpcoming) {
+  String _formatTimeRemaining(
+      Duration timeRemaining, bool isActive, bool isUpcoming) {
     if (timeRemaining.isNegative) return 'Ended';
-    
+
     final days = timeRemaining.inDays;
     final hours = timeRemaining.inHours % 24;
     final minutes = timeRemaining.inMinutes % 60;
-    
+
     if (days > 0) {
       return '${days}d ${hours}h';
     } else if (hours > 0) {
@@ -550,10 +564,10 @@ class PeerComparisonWidget extends StatelessWidget {
   final Map<String, String> friendNames;
 
   const PeerComparisonWidget({
-    Key? key,
+    super.key,
     required this.comparisons,
     this.friendNames = const {},
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -568,8 +582,8 @@ class PeerComparisonWidget extends StatelessWidget {
               Text(
                 'No friend comparisons yet',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -591,11 +605,12 @@ class PeerComparisonWidget extends StatelessWidget {
             child: Text(
               'Friend Comparisons',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ),
-          ...comparisons.map((comparison) => _buildComparisonTile(context, comparison)),
+          ...comparisons
+              .map((comparison) => _buildComparisonTile(context, comparison)),
         ],
       ),
     );
@@ -627,7 +642,9 @@ class PeerComparisonWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            userIsAhead ? '+${_formatScore(difference, category)}' : '-${_formatScore(difference, category)}',
+            userIsAhead
+                ? '+${_formatScore(difference, category)}'
+                : '-${_formatScore(difference, category)}',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: userIsAhead ? Colors.green : Colors.orange,
@@ -636,8 +653,8 @@ class PeerComparisonWidget extends StatelessWidget {
           Text(
             '${_formatScore(userScore, category)} vs ${_formatScore(friendScore, category)}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
           ),
         ],
       ),
@@ -694,9 +711,9 @@ class CompetitiveStatsWidget extends StatelessWidget {
   final Map<String, dynamic> stats;
 
   const CompetitiveStatsWidget({
-    Key? key,
+    super.key,
     required this.stats,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -709,11 +726,10 @@ class CompetitiveStatsWidget extends StatelessWidget {
             Text(
               'Competitive Stats',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
-            
             Row(
               children: [
                 Expanded(
@@ -738,7 +754,6 @@ class CompetitiveStatsWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            
             Row(
               children: [
                 Expanded(
@@ -778,9 +793,9 @@ class CompetitiveStatsWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -789,15 +804,15 @@ class CompetitiveStatsWidget extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
+                  color: Colors.grey[600],
+                ),
             textAlign: TextAlign.center,
           ),
         ],

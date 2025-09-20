@@ -24,32 +24,32 @@ class SettingsScreen extends StatelessWidget {
             Text(
               'AI Configuration',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               'Configure AI providers and settings for intelligent study features',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
             const SizedBox(height: 16),
-            
+
             // AI Settings Widget
             const AISettingsWidget(),
-            
+
             const SizedBox(height: 32),
-            
+
             // App Settings Section
             Text(
               'App Settings',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
-            
+
             // Theme Settings
             Card(
               child: Padding(
@@ -66,9 +66,10 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Appearance',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -90,9 +91,9 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Notification Settings
             Card(
               child: Padding(
@@ -109,16 +110,18 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Notifications',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                     SwitchListTile(
                       title: const Text('Study Reminders'),
-                      subtitle: const Text('Get notified about daily study sessions'),
+                      subtitle:
+                          const Text('Get notified about daily study sessions'),
                       value: true,
                       onChanged: (value) {
                         // Future: Notification preferences
@@ -131,7 +134,8 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     SwitchListTile(
                       title: const Text('Daily Quest Notifications'),
-                      subtitle: const Text('Get notified about new daily quests'),
+                      subtitle:
+                          const Text('Get notified about new daily quests'),
                       value: true,
                       onChanged: (value) {
                         // Future: Quest notification preferences
@@ -141,9 +145,9 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Data Management
             Card(
               child: Padding(
@@ -160,9 +164,10 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Data Management',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -182,7 +187,8 @@ class SettingsScreen extends StatelessWidget {
                     ),
                     ListTile(
                       title: const Text('Clear Cache'),
-                      subtitle: const Text('Clear app cache and temporary data'),
+                      subtitle:
+                          const Text('Clear app cache and temporary data'),
                       trailing: const Icon(Icons.clear),
                       onTap: () {
                         // Show confirmation dialog
@@ -204,7 +210,8 @@ class SettingsScreen extends StatelessWidget {
                                   Navigator.of(context).pop();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Cache cleared successfully!'),
+                                      content:
+                                          Text('Cache cleared successfully!'),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -220,9 +227,9 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Account Settings
             Card(
               child: Padding(
@@ -239,9 +246,10 @@ class SettingsScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           'Account',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
@@ -256,14 +264,17 @@ class SettingsScreen extends StatelessWidget {
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('Sign Out'),
-                            content: const Text('Are you sure you want to sign out?'),
+                            content: const Text(
+                                'Are you sure you want to sign out?'),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(context).pop(false),
+                                onPressed: () =>
+                                    Navigator.of(context).pop(false),
                                 child: const Text('Cancel'),
                               ),
                               TextButton(
-                                onPressed: () => Navigator.of(context).pop(true),
+                                onPressed: () =>
+                                    Navigator.of(context).pop(true),
                                 style: TextButton.styleFrom(
                                   foregroundColor: Colors.red,
                                 ),
@@ -275,7 +286,8 @@ class SettingsScreen extends StatelessWidget {
 
                         if (shouldLogout == true && context.mounted) {
                           // Sign out the user through AppState
-                          await Provider.of<AppState>(context, listen: false).logout();
+                          await Provider.of<AppState>(context, listen: false)
+                              .logout();
                         }
                       },
                     ),
@@ -283,9 +295,9 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // App Info
             Center(
               child: Column(
@@ -293,20 +305,20 @@ class SettingsScreen extends StatelessWidget {
                   Text(
                     'StudyPals v1.0.0',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[500],
-                    ),
+                          color: Colors.grey[500],
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Made with ❤️ for better studying',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[500],
-                    ),
+                          color: Colors.grey[500],
+                        ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
           ],
         ),

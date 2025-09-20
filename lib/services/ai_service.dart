@@ -141,11 +141,11 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       } catch (e) {
         debugPrint('JSON parsing failed: $e');
         debugPrint('Attempting to repair JSON...');
-        
+
         // Try to repair the JSON and parse again
         final repairedJSON = _repairTruncatedJSON(cleanResponse);
         debugPrint('Repaired JSON: $repairedJSON');
-        
+
         try {
           cardsData = json.decode(repairedJSON) as List;
         } catch (e2) {
@@ -154,24 +154,25 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
           throw Exception('Failed to parse AI response as JSON');
         }
       }
-      
+
       debugPrint('Parsed ${cardsData.length} cards from AI response');
 
       List<FlashCard> generatedCards = cardsData
           .map((cardJson) => FlashCard(
-                id: DateTime.now().millisecondsSinceEpoch.toString() + 
+                id: DateTime.now().millisecondsSinceEpoch.toString() +
                     cardsData.indexOf(cardJson).toString(),
                 deckId: 'ai_generated',
                 type: CardType.basic,
                 front: cardJson['question'] ?? 'Question',
                 back: cardJson['answer'] ?? 'Answer',
                 multipleChoiceOptions: List<String>.from(
-                  cardJson['multipleChoiceOptions'] ?? [
-                    cardJson['answer'] ?? 'Answer',
-                    'Option B',
-                    'Option C', 
-                    'Option D'
-                  ],
+                  cardJson['multipleChoiceOptions'] ??
+                      [
+                        cardJson['answer'] ?? 'Answer',
+                        'Option B',
+                        'Option C',
+                        'Option D'
+                      ],
                 ),
                 correctAnswerIndex: cardJson['correctAnswerIndex'] ?? 0,
                 difficulty: cardJson['difficulty'] ?? 3,
@@ -180,13 +181,15 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
 
       // If we didn't get enough cards, supplement with fallback cards
       if (generatedCards.length < count) {
-        debugPrint('Generated ${generatedCards.length} cards (expected $count)');
+        debugPrint(
+            'Generated ${generatedCards.length} cards (expected $count)');
         final shortfall = count - generatedCards.length;
         debugPrint('Creating $shortfall additional fallback cards');
-        
-        final fallbackCards = _createFallbackFlashcards(subject, content, count: shortfall);
+
+        final fallbackCards =
+            _createFallbackFlashcards(subject, content, count: shortfall);
         generatedCards.addAll(fallbackCards);
-        
+
         debugPrint('Final card count: ${generatedCards.length}');
       }
 
@@ -199,13 +202,15 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
   }
 
   /// Create fallback flashcards when AI is unavailable
-  List<FlashCard> _createFallbackFlashcards(String subject, String content, {int count = 5}) {
+  List<FlashCard> _createFallbackFlashcards(String subject, String content,
+      {int count = 5}) {
     debugPrint('Creating $count fallback flashcards for $subject');
 
     final templates = [
       {
         'front': 'What is the main topic of $subject?',
-        'back': 'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
+        'back':
+            'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
         'options': [
           'Advanced theoretical research only',
           'The main topic involves fundamental concepts, principles, and problem-solving methods in $subject.',
@@ -217,7 +222,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'What are key concepts in $subject?',
-        'back': 'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
+        'back':
+            'Key concepts include the fundamental principles, theories, and practical applications within this field of study.',
         'options': [
           'Only memorization of facts',
           'Unrelated scientific theories',
@@ -229,7 +235,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'Why is studying $subject important?',
-        'back': 'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
+        'back':
+            'Studying $subject develops critical thinking, problem-solving skills, and provides knowledge applicable to real-world situations.',
         'options': [
           'It has no practical value',
           'Only for entertainment purposes',
@@ -241,7 +248,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'How can you apply $subject knowledge?',
-        'back': 'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
+        'back':
+            'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
         'options': [
           'You can apply this knowledge through hands-on practice, real-world problem solving, and connecting concepts to everyday situations.',
           'Knowledge cannot be applied practically',
@@ -253,7 +261,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'What are effective study strategies for $subject?',
-        'back': 'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
+        'back':
+            'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
         'options': [
           'Memorizing everything without understanding',
           'Effective strategies include regular practice, understanding underlying concepts, working through examples, and connecting new material to prior knowledge.',
@@ -265,7 +274,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'What tools or resources are helpful for $subject?',
-        'back': 'Helpful resources include textbooks, practice problems, online tutorials, study groups, and hands-on experimentation.',
+        'back':
+            'Helpful resources include textbooks, practice problems, online tutorials, study groups, and hands-on experimentation.',
         'options': [
           'Only expensive software',
           'Helpful resources include textbooks, practice problems, online tutorials, study groups, and hands-on experimentation.',
@@ -277,7 +287,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'How do you measure progress in $subject?',
-        'back': 'Progress can be measured through practice tests, completed exercises, understanding of complex concepts, and practical applications.',
+        'back':
+            'Progress can be measured through practice tests, completed exercises, understanding of complex concepts, and practical applications.',
         'options': [
           'Progress cannot be measured',
           'Only through final exams',
@@ -289,7 +300,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'What common mistakes should be avoided in $subject?',
-        'back': 'Common mistakes include rushing without understanding, not practicing regularly, ignoring fundamentals, and not seeking help when needed.',
+        'back':
+            'Common mistakes include rushing without understanding, not practicing regularly, ignoring fundamentals, and not seeking help when needed.',
         'options': [
           'Making mistakes is always good',
           'Common mistakes include rushing without understanding, not practicing regularly, ignoring fundamentals, and not seeking help when needed.',
@@ -301,7 +313,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'How does $subject connect to other fields?',
-        'back': '$subject often connects to other fields through shared principles, cross-disciplinary applications, and integrated problem-solving approaches.',
+        'back':
+            '$subject often connects to other fields through shared principles, cross-disciplinary applications, and integrated problem-solving approaches.',
         'options': [
           '$subject is completely isolated',
           'No connections exist between fields',
@@ -313,7 +326,8 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
       },
       {
         'front': 'What advanced topics in $subject should be explored?',
-        'back': 'Advanced topics typically involve deeper theoretical understanding, complex problem-solving, research applications, and specialized techniques.',
+        'back':
+            'Advanced topics typically involve deeper theoretical understanding, complex problem-solving, research applications, and specialized techniques.',
         'options': [
           'Advanced topics should be avoided',
           'Advanced topics typically involve deeper theoretical understanding, complex problem-solving, research applications, and specialized techniques.',
@@ -636,7 +650,7 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
             json += '"';
           }
         }
-        
+
         // Close missing braces
         for (int i = 0; i < (openBraces - closeBraces); i++) {
           json += '}';

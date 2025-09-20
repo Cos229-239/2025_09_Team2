@@ -31,10 +31,16 @@ class TodayActivitiesScreen extends StatelessWidget {
         builder: (context, taskProvider, questProvider, child) {
           final todayTasks = taskProvider.todayTasks;
           final dailyQuests = questProvider.quests;
-          final completedTasks = todayTasks.where((task) => task.status == TaskStatus.completed).toList();
-          final pendingTasks = todayTasks.where((task) => task.status != TaskStatus.completed).toList();
-          final completedQuests = dailyQuests.where((quest) => quest.isCompleted).toList();
-          final pendingQuests = dailyQuests.where((quest) => !quest.isCompleted).toList();
+          final completedTasks = todayTasks
+              .where((task) => task.status == TaskStatus.completed)
+              .toList();
+          final pendingTasks = todayTasks
+              .where((task) => task.status != TaskStatus.completed)
+              .toList();
+          final completedQuests =
+              dailyQuests.where((quest) => quest.isCompleted).toList();
+          final pendingQuests =
+              dailyQuests.where((quest) => !quest.isCompleted).toList();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -43,9 +49,9 @@ class TodayActivitiesScreen extends StatelessWidget {
               children: [
                 // Summary Card
                 _buildSummaryCard(context, todayTasks, dailyQuests),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Daily Quests Section
                 if (dailyQuests.isNotEmpty) ...[
                   _buildSectionHeader(
@@ -56,36 +62,38 @@ class TodayActivitiesScreen extends StatelessWidget {
                     Colors.purple,
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Pending Quests
                   if (pendingQuests.isNotEmpty) ...[
                     Text(
                       'Pending Quests',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.orange.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: Colors.orange.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: 8),
-                    ...pendingQuests.map((quest) => _buildQuestCard(context, quest, questProvider)),
+                    ...pendingQuests.map((quest) =>
+                        _buildQuestCard(context, quest, questProvider)),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   // Completed Quests
                   if (completedQuests.isNotEmpty) ...[
                     Text(
                       'Completed Quests',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: 8),
-                    ...completedQuests.map((quest) => _buildQuestCard(context, quest, questProvider)),
+                    ...completedQuests.map((quest) =>
+                        _buildQuestCard(context, quest, questProvider)),
                     const SizedBox(height: 24),
                   ],
                 ],
-                
+
                 // Regular Tasks Section
                 if (todayTasks.isNotEmpty) ...[
                   _buildSectionHeader(
@@ -96,39 +104,41 @@ class TodayActivitiesScreen extends StatelessWidget {
                     Colors.blue,
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Pending Tasks
                   if (pendingTasks.isNotEmpty) ...[
                     Text(
                       'Pending Tasks',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.orange.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: Colors.orange.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: 8),
-                    ...pendingTasks.map((task) => _buildTaskCard(context, task, taskProvider)),
+                    ...pendingTasks.map(
+                        (task) => _buildTaskCard(context, task, taskProvider)),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   // Completed Tasks
                   if (completedTasks.isNotEmpty) ...[
                     Text(
                       'Completed Tasks',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.w600,
-                      ),
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
                     ),
                     const SizedBox(height: 8),
-                    ...completedTasks.map((task) => _buildTaskCard(context, task, taskProvider)),
+                    ...completedTasks.map(
+                        (task) => _buildTaskCard(context, task, taskProvider)),
                   ],
                 ],
-                
+
                 // Empty state
                 if (todayTasks.isEmpty && dailyQuests.isEmpty)
                   _buildEmptyState(context),
-                
+
                 const SizedBox(height: 32),
               ],
             ),
@@ -143,14 +153,16 @@ class TodayActivitiesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, List<Task> tasks, List<DailyQuest> quests) {
-    final completedTasks = tasks.where((task) => task.status == TaskStatus.completed).length;
+  Widget _buildSummaryCard(
+      BuildContext context, List<Task> tasks, List<DailyQuest> quests) {
+    final completedTasks =
+        tasks.where((task) => task.status == TaskStatus.completed).length;
     final completedQuests = quests.where((quest) => quest.isCompleted).length;
     final totalTasks = tasks.length;
     final totalQuests = quests.length;
     final totalItems = totalTasks + totalQuests;
     final completedItems = completedTasks + completedQuests;
-    
+
     return Card(
       elevation: 4,
       child: Padding(
@@ -166,9 +178,10 @@ class TodayActivitiesScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Today\'s Progress',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       if (totalItems > 0) ...[
@@ -176,7 +189,9 @@ class TodayActivitiesScreen extends StatelessWidget {
                           value: completedItems / totalItems,
                           backgroundColor: Colors.grey.shade200,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            completedItems == totalItems ? Colors.green : Colors.blue,
+                            completedItems == totalItems
+                                ? Colors.green
+                                : Colors.blue,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -187,9 +202,10 @@ class TodayActivitiesScreen extends StatelessWidget {
                       ] else ...[
                         Text(
                           'No activities for today',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.grey.shade600,
+                                  ),
                         ),
                       ],
                     ],
@@ -205,7 +221,7 @@ class TodayActivitiesScreen extends StatelessWidget {
                   ),
               ],
             ),
-            
+
             if (totalItems > 0) ...[
               const SizedBox(height: 16),
               // Breakdown
@@ -241,7 +257,8 @@ class TodayActivitiesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressItem(BuildContext context, String label, int completed, int total, Color color, IconData icon) {
+  Widget _buildProgressItem(BuildContext context, String label, int completed,
+      int total, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -256,22 +273,23 @@ class TodayActivitiesScreen extends StatelessWidget {
           Text(
             '$completed/$total',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-            ),
+                  color: color,
+                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, String subtitle, IconData icon, Color color) {
+  Widget _buildSectionHeader(BuildContext context, String title,
+      String subtitle, IconData icon, Color color) {
     return Row(
       children: [
         Icon(icon, color: color, size: 28),
@@ -283,15 +301,15 @@ class TodayActivitiesScreen extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
               ),
               Text(
                 subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
             ],
           ),
@@ -300,7 +318,8 @@ class TodayActivitiesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskCard(BuildContext context, Task task, TaskProvider taskProvider) {
+  Widget _buildTaskCard(
+      BuildContext context, Task task, TaskProvider taskProvider) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -315,17 +334,14 @@ class TodayActivitiesScreen extends StatelessWidget {
         title: Text(
           task.title,
           style: TextStyle(
-            decoration: task.status == TaskStatus.completed 
-                ? TextDecoration.lineThrough 
+            decoration: task.status == TaskStatus.completed
+                ? TextDecoration.lineThrough
                 : null,
-            color: task.status == TaskStatus.completed 
-                ? Colors.grey 
-                : null,
+            color: task.status == TaskStatus.completed ? Colors.grey : null,
           ),
         ),
-        subtitle: task.estMinutes > 0 
-            ? Text('${task.estMinutes} minutes') 
-            : null,
+        subtitle:
+            task.estMinutes > 0 ? Text('${task.estMinutes} minutes') : null,
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -345,7 +361,8 @@ class TodayActivitiesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuestCard(BuildContext context, DailyQuest quest, DailyQuestProvider questProvider) {
+  Widget _buildQuestCard(BuildContext context, DailyQuest quest,
+      DailyQuestProvider questProvider) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
@@ -367,23 +384,27 @@ class TodayActivitiesScreen extends StatelessWidget {
                     children: [
                       Text(
                         quest.title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          decoration: quest.isCompleted ? TextDecoration.lineThrough : null,
-                          color: quest.isCompleted ? Colors.grey : null,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  decoration: quest.isCompleted
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  color: quest.isCompleted ? Colors.grey : null,
+                                ),
                       ),
                       Text(
                         quest.description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
+                              color: Colors.grey.shade600,
+                            ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.amber.shade100,
                     borderRadius: BorderRadius.circular(8),
@@ -400,7 +421,7 @@ class TodayActivitiesScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Progress bar
             Row(
               children: [
@@ -417,8 +438,8 @@ class TodayActivitiesScreen extends StatelessWidget {
                 Text(
                   quest.progressText,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
               ],
             ),
@@ -443,16 +464,16 @@ class TodayActivitiesScreen extends StatelessWidget {
             Text(
               'All caught up!',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+                    color: Colors.grey.shade600,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               'No tasks or quests for today.\nNew daily quests will appear tomorrow.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade500,
-              ),
+                    color: Colors.grey.shade500,
+                  ),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(

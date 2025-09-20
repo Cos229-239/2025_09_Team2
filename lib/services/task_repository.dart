@@ -21,7 +21,7 @@ class TaskRepository {
     if (kIsWeb) {
       return await _getTasksFromPrefs();
     }
-    
+
     // Try SQLite first, fallback to SharedPreferences on mobile if SQLite fails
     try {
       // Get database instance from the database service
@@ -34,17 +34,19 @@ class TaskRepository {
       final tasks = results
           .map((json) => Task(
                 id: json['id'] as String, // Extract unique task identifier
-                title: json['title'] as String, // Extract task title/description
+                title:
+                    json['title'] as String, // Extract task title/description
                 estMinutes: json['est_minutes']
                     as int, // Extract estimated completion time
 
                 // Handle nullable due date - parse if exists, otherwise null
                 dueAt: json['due_at'] != null
-                    ? DateTime.parse(
-                        json['due_at'] as String) // Parse ISO string to DateTime
+                    ? DateTime.parse(json['due_at']
+                        as String) // Parse ISO string to DateTime
                     : null, // No due date set
 
-                priority: json['priority'] as int, // Extract priority level (1-3)
+                priority:
+                    json['priority'] as int, // Extract priority level (1-3)
 
                 // Handle nullable tags - split comma-separated string or empty list
                 tags: (json['tags'] as String?)?.split(',') ??
@@ -68,7 +70,7 @@ class TaskRepository {
                     as String?, // Extract deck link or null
               ))
           .toList(); // Convert map result to list
-      
+
       return tasks;
     } catch (e) {
       // Fallback to SharedPreferences for web compatibility
@@ -81,7 +83,7 @@ class TaskRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final tasksJson = prefs.getStringList('tasks') ?? [];
-      
+
       final tasks = <Task>[];
       for (int i = 0; i < tasksJson.length; i++) {
         try {
@@ -91,8 +93,8 @@ class TaskRepository {
             id: taskMap['id'] as String,
             title: taskMap['title'] as String,
             estMinutes: taskMap['estMinutes'] as int,
-            dueAt: taskMap['dueAt'] != null 
-                ? DateTime.parse(taskMap['dueAt'] as String) 
+            dueAt: taskMap['dueAt'] != null
+                ? DateTime.parse(taskMap['dueAt'] as String)
                 : null,
             priority: taskMap['priority'] as int,
             tags: List<String>.from(taskMap['tags'] ?? []),
@@ -108,7 +110,7 @@ class TaskRepository {
           // Skip this task and continue with others
         }
       }
-      
+
       return tasks;
     } catch (e) {
       return <Task>[]; // Return empty list on error
@@ -120,11 +122,11 @@ class TaskRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final existingTasks = prefs.getStringList('tasks') ?? [];
-      
+
       // Parse existing tasks and find the one to update
       List<Map<String, dynamic>> taskMaps = [];
       bool taskFound = false;
-      
+
       for (String taskString in existingTasks) {
         Map<String, dynamic> taskMap = jsonDecode(taskString);
         if (taskMap['id'] == task.id) {
@@ -140,21 +142,22 @@ class TaskRepository {
             'linkedNoteId': task.linkedNoteId,
             'linkedDeckId': task.linkedDeckId,
             'createdAt': taskMap['createdAt'], // Keep original creation time
-            'updatedAt': DateTime.now().toIso8601String(), // Update modification time
+            'updatedAt':
+                DateTime.now().toIso8601String(), // Update modification time
           };
           taskFound = true;
         }
         taskMaps.add(taskMap);
       }
-      
+
       if (!taskFound) {
         return;
       }
-      
+
       // Convert back to string list and save
-      final updatedTasks = taskMaps.map((taskMap) => jsonEncode(taskMap)).toList();
+      final updatedTasks =
+          taskMaps.map((taskMap) => jsonEncode(taskMap)).toList();
       await prefs.setStringList('tasks', updatedTasks);
-      
     } catch (e) {
       rethrow;
     }
@@ -165,13 +168,12 @@ class TaskRepository {
   /// @param task - Task object to be stored in database
   /// @throws Exception if database insertion fails
   static Future<void> insertTask(Task task) async {
-    
     // On web, skip SQLite entirely and use SharedPreferences directly
     if (kIsWeb) {
       await _saveTaskToPrefs(task);
       return;
     }
-    
+
     // Try SQLite first, fallback to SharedPreferences on mobile if SQLite fails
     try {
       // Get database instance from the database service
@@ -184,7 +186,8 @@ class TaskRepository {
         'due_at': task.dueAt
             ?.toIso8601String(), // Due date as ISO string (null if no deadline)
         'priority': task.priority, // Priority level (1=low, 2=medium, 3=high)
-        'tags': task.tags.join(','), // Convert tag list to comma-separated string
+        'tags':
+            task.tags.join(','), // Convert tag list to comma-separated string
         'status': task.status
             .toString()
             .split('.')
@@ -216,7 +219,7 @@ class TaskRepository {
     try {
       final prefs = await SharedPreferences.getInstance();
       final existingTasks = prefs.getStringList('tasks') ?? [];
-      
+
       // Convert task to JSON
       final taskJson = jsonEncode({
         'id': task.id,
@@ -231,14 +234,12 @@ class TaskRepository {
         'createdAt': DateTime.now().toIso8601String(),
         'updatedAt': DateTime.now().toIso8601String(),
       });
-      
-      
+
       // Add new task to list
       existingTasks.add(taskJson);
-      
+
       // Save back to SharedPreferences
       await prefs.setStringList('tasks', existingTasks);
-      
     } catch (e) {
       rethrow;
     }
@@ -260,12 +261,11 @@ class TaskRepository {
   /// @param task - Task object with updated data (must have existing ID)
   /// @throws Exception if database update fails or task doesn't exist
   static Future<void> updateTask(Task task) async {
-    
     if (kIsWeb) {
       await _updateTaskInPrefs(task);
       return;
     }
-    
+
     // Get database instance from the database service
     final db = await DatabaseService.database;
 
