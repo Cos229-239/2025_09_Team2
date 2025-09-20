@@ -45,7 +45,6 @@ coverage/
 **/ios/Runner/GeneratedPluginRegistrant.*
 
 # Web related
-lib/generated_plugin_registrant.dart
 
 # VS Code related
 .vscode/
