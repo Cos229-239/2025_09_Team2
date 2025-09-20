@@ -4,7 +4,7 @@ import '../widgets/achievement/achievement_widgets.dart';
 
 /// Screen for displaying user achievements and progress
 class AchievementScreen extends StatefulWidget {
-  const AchievementScreen({Key? key}) : super(key: key);
+  const AchievementScreen({super.key});
 
   @override
   State<AchievementScreen> createState() => _AchievementScreenState();
@@ -187,9 +187,9 @@ class _AchievementScreenState extends State<AchievementScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -218,7 +218,7 @@ class _AchievementScreenState extends State<AchievementScreen>
     final unlockedAchievements = _gamificationService!.unlockedAchievements;
     
     if (unlockedAchievements.isEmpty) {
-      return Container(
+      return SizedBox(
         height: 100,
         child: Center(
           child: Column(
@@ -249,7 +249,7 @@ class _AchievementScreenState extends State<AchievementScreen>
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _getRarityColor(achievement.rarity).withOpacity(0.2),
+                color: _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
               ),
               child: Center(
                 child: Text(
@@ -398,9 +398,9 @@ class AchievementUnlockDialog extends StatelessWidget {
   final Achievement achievement;
 
   const AchievementUnlockDialog({
-    Key? key,
+    super.key,
     required this.achievement,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -413,7 +413,7 @@ class AchievementUnlockDialog extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              _getRarityColor(achievement.rarity).withOpacity(0.8),
+              _getRarityColor(achievement.rarity).withValues(alpha: 0.8),
               _getRarityColor(achievement.rarity),
             ],
           ),
@@ -485,7 +485,7 @@ class AchievementUnlockDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Row(
