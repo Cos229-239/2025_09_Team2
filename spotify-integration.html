@@ -700,7 +700,15 @@
             tracksTitle: document.getElementById('tracks-title')
         };
 
-        // Utility Functions
+        /**
+         * Utility Functions
+         */
+
+        /**
+         * Displays a temporary message to the user
+         * @param {string} message - The message to display
+         * @param {('error'|'success')} type - The type of message
+         */
         function showMessage(message, type = 'error') {
             const messageDiv = document.createElement('div');
             messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
@@ -725,7 +733,14 @@
                    Math.random().toString(36).substring(2, 15);
         }
 
-        // Authentication Functions
+        /**
+         * Authentication Functions
+         */
+
+        /**
+         * Initiates the Spotify OAuth connection flow
+         * Redirects the user to Spotify's authorization page
+         */
         function connectToSpotify() {
             const state = generateState();
             sessionStorage.setItem('spotify_oauth_state', state);
@@ -742,6 +757,11 @@
             window.location.href = authUrl;
         }
 
+        /**
+         * Handles the OAuth callback from Spotify
+         * Validates the state parameter and exchanges the auth code for tokens
+         * @throws {Error} If authentication fails or state is invalid
+         */
         function handleAuthCallback() {
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
@@ -765,6 +785,13 @@
             }
         }
 
+        /**
+         * Exchanges the OAuth authorization code for access and refresh tokens
+         * Stores the tokens in localStorage and updates the app state
+         * @param {string} code - The authorization code from Spotify
+         * @returns {Promise<void>}
+         * @throws {Error} If token exchange fails
+         */
         async function exchangeCodeForTokens(code) {
             try {
                 showMessage('Connecting to Spotify...', 'success');
@@ -821,7 +848,18 @@
             }
         }
 
-        // API Functions
+        /**
+         * API Functions
+         */
+
+        /**
+         * Makes an authenticated request to the Spotify API
+         * Handles token refresh if the current token is expired
+         * @param {string} endpoint - The Spotify API endpoint to call
+         * @param {Object} options - Additional fetch options
+         * @returns {Promise<Object>} The JSON response from the API
+         * @throws {Error} If the request fails or authentication is invalid
+         */
         async function makeSpotifyRequest(endpoint, options = {}) {
             if (!accessToken) {
                 throw new Error('Not authenticated with Spotify');
@@ -849,6 +887,12 @@
             return response.json();
         }
 
+        /**
+         * Refreshes the Spotify access token using the stored refresh token
+         * Updates localStorage with the new access token
+         * @returns {Promise<void>}
+         * @throws {Error} If refresh fails or no refresh token is available
+         */
         async function refreshAccessToken() {
             const refreshToken = localStorage.getItem('spotify_refresh_token');
             if (!refreshToken) {
@@ -876,6 +920,12 @@
             localStorage.setItem('spotify_expires_at', tokens.expiresAt);
         }
 
+        /**
+         * Loads the current user's Spotify profile data
+         * Updates the currentUser state and loads playlists
+         * @returns {Promise<void>}
+         * @throws {Error} If user data cannot be fetched
+         */
         async function loadUserData() {
             try {
                 const userData = await makeSpotifyRequest('/me');
@@ -895,6 +945,12 @@
             }
         }
 
+        /**
+         * Loads the user's Spotify playlists
+         * Updates the playlists state and renders the playlist list
+         * @returns {Promise<void>}
+         * @throws {Error} If playlists cannot be fetched
+         */
         async function loadPlaylists() {
             try {
                 const data = await makeSpotifyRequest('/me/playlists');
@@ -915,6 +971,13 @@
             }
         }
 
+        /**
+         * Loads the tracks for a specific playlist
+         * Updates the tracks state and renders the track list
+         * @param {string} playlistId - The Spotify ID of the playlist
+         * @returns {Promise<void>}
+         * @throws {Error} If tracks cannot be fetched
+         */
         async function loadPlaylistTracks(playlistId) {
             try {
                 const data = await makeSpotifyRequest(`/playlists/${playlistId}/tracks`);
@@ -937,6 +1000,13 @@
             }
         }
 
+        /**
+         * Searches for tracks on Spotify
+         * Updates the searchResults state and renders the results
+         * @param {string} query - The search query
+         * @returns {Promise<void>}
+         * @throws {Error} If search fails
+         */
         async function searchTracks(query) {
             try {
                 const data = await makeSpotifyRequest(`/search?q=${encodeURIComponent(query)}&type=track&limit=10`);
@@ -959,7 +1029,14 @@
             }
         }
 
-        // Rendering Functions
+        /**
+         * Rendering Functions
+         */
+
+        /**
+         * Shows the initial connection screen
+         * Hides the dashboard and disconnect button
+         */
         function showConnectionScreen() {
             elements.connectionStatus.style.display = 'block';
             elements.dashboardContent.style.display = 'none';
@@ -974,6 +1051,10 @@
             renderUserInfo();
         }
 
+        /**
+         * Renders the user's profile information
+         * Displays user's name, email, and profile picture if available
+         */
         function renderUserInfo() {
             if (currentUser) {
                 elements.userDetails.innerHTML = `
@@ -993,6 +1074,11 @@
             }
         }
 
+        /**
+         * Renders the user's playlists
+         * Displays playlist cover art, name, and track count
+         * Shows a message if no playlists are found
+         */
         function renderPlaylists() {
             if (playlists.length === 0) {
                 elements.playlistsContainer.innerHTML = `
@@ -1019,6 +1105,11 @@
             `).join('');
         }
 
+        /**
+         * Handles playlist selection
+         * Updates the current playlist and loads its tracks
+         * @param {string} playlistId - The Spotify ID of the selected playlist
+         */
         function selectPlaylist(playlistId) {
             currentPlaylist = playlists.find(p => p.id === playlistId);
             elements.tracksTitle.textContent = currentPlaylist.name;
@@ -1101,6 +1192,12 @@
             `;
         }
 
+        /**
+         * Attempts to play a track preview
+         * Note: This is a simplified implementation. In production,
+         * you would use Spotify's Web Playback SDK
+         * @param {string} trackId - The Spotify ID of the track to play
+         */
         function playTrack(trackId) {
             const track = [...tracks, ...searchResults].find(t => t.id === trackId);
             if (track && track.previewUrl) {
