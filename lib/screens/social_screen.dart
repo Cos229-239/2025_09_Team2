@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/social_learning_service.dart';
+import '../services/social_learning_service.dart' as service;
+import '../widgets/collaborative_session_room.dart';
 import '../widgets/social/social_widgets.dart';
+import '../models/collaborative_session.dart';
 
 /// Main social learning screen with tabs for different social features
 class SocialScreen extends StatefulWidget {
@@ -13,7 +15,7 @@ class SocialScreen extends StatefulWidget {
 class _SocialScreenState extends State<SocialScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  SocialLearningService? _socialService;
+  service.SocialLearningService? _socialService;
   bool _isLoading = true;
 
   @override
@@ -24,7 +26,7 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Future<void> _initializeSocialService() async {
-    _socialService = SocialLearningService();
+    _socialService = service.SocialLearningService();
     await _socialService!.initialize();
 
     // Create default profile if none exists
@@ -362,7 +364,7 @@ class _SocialScreenState extends State<SocialScreen>
       itemBuilder: (context, index) {
         final friendship = friends[index];
         // In a real app, you'd fetch the friend's profile
-        final mockProfile = UserProfile(
+        final mockProfile = service.UserProfile(
           id: friendship.friendId,
           username: 'user${friendship.friendId}',
           displayName: 'Friend ${friendship.friendId}',
@@ -423,7 +425,7 @@ class _SocialScreenState extends State<SocialScreen>
     // Mock suggested users
     final suggestedUsers = List.generate(
         10,
-        (index) => UserProfile(
+        (index) => service.UserProfile(
               id: 'suggested_$index',
               username: 'user_$index',
               displayName: 'User ${index + 1}',
@@ -675,14 +677,14 @@ class _SocialScreenState extends State<SocialScreen>
     }
   }
 
-  void _showUserProfile(UserProfile profile) {
+  void _showUserProfile(service.UserProfile profile) {
     // TODO: Implement user profile view
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Viewing ${profile.displayName}\'s profile')),
     );
   }
 
-  void _startChat(UserProfile profile) {
+  void _startChat(service.UserProfile profile) {
     // TODO: Implement chat functionality
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Starting chat with ${profile.displayName}')),
@@ -697,14 +699,14 @@ class _SocialScreenState extends State<SocialScreen>
     );
   }
 
-  void _showGroupDetails(StudyGroup group) {
+  void _showGroupDetails(service.StudyGroup group) {
     // TODO: Implement group details view
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Viewing ${group.name} details')),
     );
   }
 
-  Future<void> _joinGroup(StudyGroup group) async {
+  Future<void> _joinGroup(service.StudyGroup group) async {
     final success = await _socialService!.joinStudyGroup(groupId: group.id);
     if (success) {
       setState(() {});
@@ -731,17 +733,103 @@ class _SocialScreenState extends State<SocialScreen>
     );
   }
 
-  void _showSessionDetails(CollaborativeSession session) {
+  void _showSessionDetails(service.CollaborativeSession serviceSession) {
+    final modelSession = CollaborativeSession(
+      id: serviceSession.id,
+      name: serviceSession.name,
+      hostId: serviceSession.hostId,
+      subject: serviceSession.subject,
+      scheduledTime: serviceSession.scheduledTime,
+      description: serviceSession.description,
+      participants: serviceSession.participants,
+      groupId: serviceSession.groupId,
+      startTime: serviceSession.startTime,
+      endTime: serviceSession.endTime,
+      sessionData: serviceSession.sessionData,
+      isActive: serviceSession.isActive,
+      isRecorded: serviceSession.isRecorded,
+    );
+
     // TODO: Implement session details view
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Viewing ${session.name} details')),
+      SnackBar(content: Text('Viewing ${modelSession.name} details')),
     );
   }
 
-  void _joinSession(CollaborativeSession session) {
-    // TODO: Implement join session functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Joining ${session.name}')),
-    );
+  Future<void> _joinSession(service.CollaborativeSession serviceSession) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Attempt to join the session
+      final success = await _socialService!.joinCollaborativeSession(
+        sessionId: serviceSession.id,
+      );
+
+      // Close loading indicator
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      if (!mounted) return;
+
+      if (success) {
+        // Convert service session to model session for the room
+        final modelSession = CollaborativeSession(
+          id: serviceSession.id,
+          name: serviceSession.name,
+          hostId: serviceSession.hostId,
+          subject: serviceSession.subject,
+          scheduledTime: serviceSession.scheduledTime,
+          description: serviceSession.description,
+          participants: serviceSession.participants,
+          groupId: serviceSession.groupId,
+          startTime: serviceSession.startTime,
+          endTime: serviceSession.endTime,
+          sessionData: serviceSession.sessionData,
+          isActive: serviceSession.isActive,
+          isRecorded: serviceSession.isRecorded,
+        );
+        
+        // Navigate to the session room
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CollaborativeSessionRoom(
+              session: modelSession,
+              onLeave: () => setState(() {}), // Refresh the list when leaving
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to join session. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading indicator if still showing
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      if (!mounted) return;
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error joining session: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

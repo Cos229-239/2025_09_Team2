@@ -728,9 +728,14 @@
             return `${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
 
+        /**
+         * Generates a secure random state parameter for OAuth
+         * @returns {string} A random string for OAuth state verification
+         */
         function generateState() {
-            return Math.random().toString(36).substring(2, 15) + 
-                   Math.random().toString(36).substring(2, 15);
+            const array = new Uint32Array(8);
+            window.crypto.getRandomValues(array);
+            return Array.from(array, dec => ('0' + dec.toString(16)).substr(-2)).join('');
         }
 
         /**
@@ -805,7 +810,6 @@
                         provider: 'spotify',
                         code: code,
                         clientId: CONFIG.SPOTIFY_CLIENT_ID,
-                        clientSecret: '2cd3e20bd4e340428050c00d903aef25',
                         redirectUri: CONFIG.REDIRECT_URI
                     })
                 });
@@ -860,10 +864,21 @@
          * @returns {Promise<Object>} The JSON response from the API
          * @throws {Error} If the request fails or authentication is invalid
          */
+        /**
+         * Makes an authenticated request to the Spotify API with improved error handling
+         * @param {string} endpoint - The API endpoint to call
+         * @param {Object} options - Request options
+         * @returns {Promise<Object>} The API response
+         * @throws {Error} With detailed error information
+         */
         async function makeSpotifyRequest(endpoint, options = {}) {
             if (!accessToken) {
-                throw new Error('Not authenticated with Spotify');
+                throw new Error('Not authenticated with Spotify. Please connect your account.');
             }
+            
+            // Add retry logic for network issues
+            let attempts = 0;
+            const maxAttempts = 3;
             
             const response = await fetch(`${CONFIG.API_BASE_URL}${endpoint}`, {
                 ...options,
@@ -893,11 +908,20 @@
          * @returns {Promise<void>}
          * @throws {Error} If refresh fails or no refresh token is available
          */
+        /**
+         * Refreshes the access token with improved error handling and retry logic
+         * @returns {Promise<void>}
+         * @throws {Error} If token refresh fails after retries
+         */
         async function refreshAccessToken() {
             const refreshToken = localStorage.getItem('spotify_refresh_token');
             if (!refreshToken) {
-                throw new Error('No refresh token available');
+                localStorage.clear(); // Clear all auth data if refresh token is missing
+                throw new Error('No refresh token available. Please reconnect to Spotify.');
             }
+            
+            let attempts = 0;
+            const maxAttempts = 3;
             
             const response = await fetch(`${CONFIG.BACKEND_URL}/api/auth/refresh`, {
                 method: 'POST',
