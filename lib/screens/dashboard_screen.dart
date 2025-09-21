@@ -9,6 +9,8 @@ import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard stu
 import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
 // Import planner screen
 import 'package:studypals/screens/planner_page.dart';
+// Import Spotify integration screen
+import 'package:studypals/screens/spotify_integration_screen.dart';
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
 // Import AI widgets for intelligent study features
@@ -334,9 +336,10 @@ class DashboardHome extends StatelessWidget {
                 icon: Icons.music_note,
                 label: 'Music',
                 onTap: () {
-                  // TODO: Implement music functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Music coming soon!')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const SpotifyIntegrationScreen(),
+                    ),
                   );
                 },
               ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/app_state.dart';
-import '../widgets/ai/ai_settings_widget.dart';
+import '../../providers/app_state.dart';
+import '../../widgets/ai/ai_settings_widget.dart';
+import 'spotify_integration_screen.dart';
 
 /// Application settings screen
 /// Provides access to all app configuration options including AI settings
@@ -38,6 +39,78 @@ class SettingsScreen extends StatelessWidget {
 
             // AI Settings Widget
             const AISettingsWidget(),
+
+            const SizedBox(height: 32),
+
+            // Spotify Integration Section
+            Text(
+              'Music Integration',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Connect to Spotify to enhance your study experience with music',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 16),
+
+            // Spotify Integration Card
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.music_note,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Spotify Integration',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Connect your Spotify account to access playlists, search music, and create study playlists.',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const SpotifyIntegrationScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.music_note),
+                      label: const Text('Open Spotify Integration'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color(0xFF1DB954), // Spotify green
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
             const SizedBox(height: 32),
 

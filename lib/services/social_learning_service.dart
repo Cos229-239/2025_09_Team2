@@ -792,6 +792,42 @@ class SocialLearningService {
     await _saveUserData();
   }
 
+  /// Join a collaborative session
+  Future<bool> joinCollaborativeSession({required String sessionId}) async {
+    if (_currentUserProfile == null) return false;
+
+    final sessionIndex = _collaborativeSessions.indexWhere((s) => s.id == sessionId);
+    if (sessionIndex == -1) return false;
+
+    final session = _collaborativeSessions[sessionIndex];
+    
+    // Check if user is already in the session
+    if (session.participants.contains(_currentUserProfile!.id)) {
+      return true; // User is already in the session
+    }
+
+    // Add user to participants
+    final updatedSession = CollaborativeSession(
+      id: session.id,
+      name: session.name,
+      hostId: session.hostId,
+      groupId: session.groupId,
+      scheduledTime: session.scheduledTime,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      participants: [...session.participants, _currentUserProfile!.id],
+      subject: session.subject,
+      description: session.description,
+      sessionData: session.sessionData,
+      isActive: session.isActive,
+      isRecorded: session.isRecorded,
+    );
+
+    _collaborativeSessions[sessionIndex] = updatedSession;
+    await _saveUserData();
+    return true;
+  }
+
   /// Get social learning statistics
   Map<String, dynamic> getSocialStats() {
     return {
