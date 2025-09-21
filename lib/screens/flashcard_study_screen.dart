@@ -422,7 +422,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         _showPredictionDialog(prediction);
       }
     } catch (e) {
-      print('Error showing schedule prediction: $e');
+      debugPrint('Error showing schedule prediction: $e');
     }
   }
 

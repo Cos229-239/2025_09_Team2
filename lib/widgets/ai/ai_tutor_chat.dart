@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../models/user.dart';
+import '../../models/study_pal_persona.dart';
 
 ///// AI Study Assistant Chat Widget
 class AITutorChat extends StatefulWidget {
-  const AITutorChat({super.key});
+  final StudyPalPersona? selectedPersona;
+  
+  const AITutorChat({super.key, this.selectedPersona});
 
   @override
   State<AITutorChat> createState() => _AITutorChatState();
@@ -20,9 +23,15 @@ class _AITutorChatState extends State<AITutorChat> {
     super.initState();
 
     /// Add welcome message when chat starts
+    final persona = widget.selectedPersona;
+    final welcomeMessage = persona != null
+        ? persona.getResponseTemplate(EmotionalState.neutral).isNotEmpty
+            ? persona.getResponseTemplate(EmotionalState.neutral)
+            : "Hello! I'm ${persona.name}, your ${persona.type.displayName.toLowerCase()}. ${persona.description}"
+        : "Hi! I'm your AI study assistant. Ask me for study tips, motivation, or help with your learning!";
+    
     _messages.add(ChatMessage(
-      text:
-          "Hi! I'm your AI study assistant. Ask me for study tips, motivation, or help with your learning!",
+      text: welcomeMessage,
       isFromUser: false,
       timestamp: DateTime.now(),
     ));
@@ -119,11 +128,17 @@ class _AITutorChatState extends State<AITutorChat> {
         // For general questions, use the AI service directly for a chat response
         final aiService = aiProvider.aiService;
         if (aiService.isConfigured) {
+          final persona = widget.selectedPersona;
+          final systemPrompt = persona?.generateSystemPrompt() ?? '''
+You are a helpful AI study assistant for StudyPals. Provide helpful, encouraging responses about studying, learning, or academic success. Keep responses under 150 words and friendly.
+          ''';
+          
           final prompt = '''
-You are a helpful AI study assistant for StudyPals. The user asked: "$message"
+$systemPrompt
 
-Provide a helpful, encouraging response about studying, learning, or academic success. 
-Keep it under 100 words and friendly.
+User message: "$message"
+
+Respond in character as the specified persona.
           ''';
 
           return await aiService.testConnection()

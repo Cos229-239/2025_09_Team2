@@ -20,6 +20,8 @@ import 'package:studypals/screens/auth/auth_wrapper.dart';
 import 'package:studypals/theme/app_theme.dart';
 // Import database service for data persistence
 import 'package:studypals/services/database_service.dart';
+// Import app wrapper for global functionality like floating music button
+import 'package:studypals/widgets/common/app_wrapper.dart';
 
 /// Main entry point of the StudyPals application
 /// This function runs when the app starts up
@@ -78,11 +80,13 @@ class MyApp extends StatelessWidget {
         // App title shown in app switcher and browser tab
         title: 'StudyPals',
         // Light theme configuration for daytime usage
-        theme: AppTheme.lightTheme,
+        theme: AppTheme.rainbowParadiseTheme,
         // Dark theme configuration for nighttime usage
-        darkTheme: AppTheme.darkTheme,
-        // Starting screen - authentication wrapper determines if user sees login or dashboard
-        home: const AuthWrapper(),
+        darkTheme: AppTheme.darkParadiseTheme,
+        // Starting screen - authentication wrapper with floating music button
+        home: const AppWrapper(
+          child: AuthWrapper(),
+        ),
       ),
     );
   }
