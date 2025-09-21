@@ -12,18 +12,28 @@ import 'providers/deck_provider.dart';
 import 'providers/srs_provider.dart';
 import 'providers/daily_quest_provider.dart';
 import 'providers/ai_provider.dart';
+import 'providers/theme_provider.dart';
 
-// Import screens
-import 'screens/dashboard_screen.dart';
+// Import auth wrapper for authentication flow
+import 'screens/auth/auth_wrapper.dart';
+// Import app wrapper for global functionality
+import 'widgets/common/app_wrapper.dart';
 
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  
+  // Initialize theme provider
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+  
+  runApp(MyApp(themeProvider: themeProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final ThemeProvider themeProvider;
+  
+  const MyApp({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +41,9 @@ class MyApp extends StatelessWidget {
       providers: [
         // Core app state - should be first as other providers may depend on it
         ChangeNotifierProvider(create: (_) => AppState()),
+        
+        // Theme provider
+        ChangeNotifierProvider.value(value: themeProvider),
         
         // Feature providers
         ChangeNotifierProvider(create: (_) => PetProvider()),
@@ -43,13 +56,16 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DailyQuestProvider()),
         ChangeNotifierProvider(create: (_) => StudyPalsAIProvider()),
       ],
-      child: MaterialApp(
-        title: 'StudyPals',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        home: const DashboardScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'StudyPals',
+            theme: themeProvider.currentTheme,
+            home: const AppWrapper(
+              child: AuthWrapper(),
+            ),
+          );
+        },
       ),
     );
   }

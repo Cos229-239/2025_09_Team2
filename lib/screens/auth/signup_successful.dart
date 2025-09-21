@@ -131,7 +131,7 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                       .transparent, // Transparent to show gradient background
                   border: Border.all(
                     // Adds the original orange border
-                    color: const Color(0xFFe67e22), // Orange border
+                    color: const Color(0xFF49F9F7), // Orange border
                     width: 2,
                     // Border thickness
                   ),
@@ -258,7 +258,7 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
             // Rounded corners for modern look
             border: Border.all(
               // Border around the video
-              color: const Color(0xFFe67e22),
+              color: const Color(0xFF49F9F7),
               // Orange border to match theme
               width: 3,
               // Border thickness

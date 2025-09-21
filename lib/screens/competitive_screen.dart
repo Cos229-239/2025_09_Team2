@@ -84,17 +84,27 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFF0D1117), // Dark background
       appBar: AppBar(
-        title: const Text('Competitive Learning'),
+        title: const Text(
+          'Competitive Learning',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF161B22),
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Colors.white),
             onPressed: _refreshData,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: const Color(0xFF58A6FF),
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.grey[400],
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
             Tab(icon: Icon(Icons.leaderboard), text: 'Leaderboards'),
@@ -103,14 +113,26 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildOverviewTab(),
-          _buildLeaderboardsTab(),
-          _buildCompetitionsTab(),
-          _buildCompareTab(),
-        ],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0D1117),
+              Color(0xFF161B22),
+            ],
+          ),
+        ),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildOverviewTab(),
+            _buildLeaderboardsTab(),
+            _buildCompetitionsTab(),
+            _buildCompareTab(),
+          ],
+        ),
       ),
     );
   }
@@ -131,6 +153,12 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
           // Quick Rankings
           Card(
+            color: const Color(0xFF21262D),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -140,6 +168,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                     'Your Rankings',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -152,6 +181,12 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
           // Active Competitions
           Card(
+            color: const Color(0xFF21262D),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -163,12 +198,16 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                         'Active Competitions',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                       ),
                       const Spacer(),
                       TextButton(
                         onPressed: () => _tabController.animateTo(2),
-                        child: const Text('View All'),
+                        child: const Text(
+                          'View All',
+                          style: TextStyle(color: Color(0xFF58A6FF)),
+                        ),
                       ),
                     ],
                   ),
@@ -237,7 +276,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                 ),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 10),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white70,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -255,7 +297,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
       return const SizedBox(
         height: 100,
         child: Center(
-          child: Text('No active competitions'),
+          child: Text(
+            'No active competitions',
+            style: TextStyle(color: Colors.white, fontSize: 16),
+          ),
         ),
       );
     }
@@ -291,19 +336,41 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
         // Category and Period Selectors
         Container(
           padding: const EdgeInsets.all(16),
+          decoration: const BoxDecoration(
+            color: Color(0xFF161B22),
+            border: Border(
+              bottom: BorderSide(color: Color(0xFF30363D), width: 1),
+            ),
+          ),
           child: Row(
             children: [
               Expanded(
                 child: DropdownButtonFormField<CompetitionCategory>(
                   initialValue: _selectedCategory,
-                  decoration: const InputDecoration(
+                  dropdownColor: const Color(0xFF21262D),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
                     labelText: 'Category',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: Colors.grey[400]),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey[700]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey[700]!),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF58A6FF)),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF21262D),
                   ),
                   items: CompetitionCategory.values.map((category) {
                     return DropdownMenuItem(
                       value: category,
-                      child: Text(_getCategoryName(category)),
+                      child: Text(
+                        _getCategoryName(category),
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -319,14 +386,30 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
               Expanded(
                 child: DropdownButtonFormField<LeaderboardPeriod>(
                   initialValue: _selectedPeriod,
-                  decoration: const InputDecoration(
+                  dropdownColor: const Color(0xFF21262D),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
                     labelText: 'Period',
-                    border: OutlineInputBorder(),
+                    labelStyle: TextStyle(color: Colors.grey[400]),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey[700]!),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey[700]!),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF58A6FF)),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF21262D),
                   ),
                   items: LeaderboardPeriod.values.map((period) {
                     return DropdownMenuItem(
                       value: period,
-                      child: Text(_getPeriodName(period)),
+                      child: Text(
+                        _getPeriodName(period),
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -365,12 +448,16 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
       length: 2,
       child: Column(
         children: [
-          const TabBar(
-            tabs: [
-              Tab(text: 'Active'),
-              Tab(text: 'Upcoming'),
-            ],
-          ),
+            TabBar(
+              indicatorColor: const Color(0xFF58A6FF),
+              indicatorWeight: 3,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey[400],
+              tabs: const [
+                Tab(text: 'Active'),
+                Tab(text: 'Upcoming'),
+              ],
+            ),
           Expanded(
             child: TabBarView(
               children: [
@@ -394,7 +481,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
           children: [
             Icon(Icons.sports_score, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('No active competitions'),
+            Text(
+              'No active competitions',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
           ],
         ),
       );
@@ -431,7 +521,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
           children: [
             Icon(Icons.schedule, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('No upcoming competitions'),
+            Text(
+              'No upcoming competitions',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
           ],
         ),
       );
@@ -479,6 +572,12 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
           // Personal Best Rankings
           Card(
+            color: const Color(0xFF21262D),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -488,6 +587,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                     'Your Best Rankings',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -506,7 +606,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     final bestRanks = stats['bestRanks'] as Map<String, int>? ?? {};
 
     if (bestRanks.isEmpty) {
-      return const Text('No rankings yet');
+      return const Text(
+        'No rankings yet',
+        style: TextStyle(color: Colors.white),
+      );
     }
 
     return Column(
@@ -526,8 +629,14 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
               ),
             ),
           ),
-          title: Text(categoryName),
-          subtitle: const Text('Best rank achieved'),
+          title: Text(
+            categoryName,
+            style: const TextStyle(color: Colors.white),
+          ),
+          subtitle: const Text(
+            'Best rank achieved',
+            style: TextStyle(color: Colors.grey),
+          ),
           trailing: _getRankBadge(rank),
         );
       }).toList(),
@@ -641,6 +750,11 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF21262D),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey[800]!, width: 1),
+        ),
         child: Container(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -651,27 +765,43 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                 competition.name,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
               ),
               const SizedBox(height: 16),
-              Text(competition.description),
+              Text(
+                competition.description,
+                style: const TextStyle(color: Colors.white70),
+              ),
               const SizedBox(height: 16),
               Text(
                 'Participants: ${competition.participants.length}/${competition.maxParticipants}',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Start: ${_formatDateTime(competition.startDate)}',
+                style: const TextStyle(color: Colors.white70),
               ),
               Text(
                 'End: ${_formatDateTime(competition.endDate)}',
+                style: const TextStyle(color: Colors.white70),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF58A6FF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   child: const Text('Close'),
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
+import '../../providers/theme_provider.dart';
 import '../../widgets/ai/ai_settings_widget.dart';
 import 'spotify_integration_screen.dart';
 
@@ -8,6 +9,26 @@ import 'spotify_integration_screen.dart';
 /// Provides access to all app configuration options including AI settings
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+  
+  /// Get preview color for theme dropdown
+  Color _getThemePreviewColor(String themeName) {
+    switch (themeName) {
+      case 'Light':
+        return Colors.blue;
+      case 'Dark':
+        return Colors.grey[800]!;
+      case 'Professional':
+        return const Color(0xFF1E3A8A);
+      case 'Nature':
+        return const Color(0xFF059669);
+      case 'Sunset':
+        return const Color(0xFFEA580C);
+      case 'Cosmic':
+        return const Color(0xFF7C3AED);
+      default:
+        return Colors.blue;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -147,16 +168,49 @@ class SettingsScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('Theme'),
-                      subtitle: const Text('Light'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // Future: Theme selection
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Theme selection coming soon!'),
-                          ),
+                    Consumer<ThemeProvider>(
+                      builder: (context, themeProvider, child) {
+                        return Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'Theme',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            DropdownButton<String>(
+                              value: themeProvider.currentThemeName,
+                              items: themeProvider.availableThemes.map((themeName) {
+                                return DropdownMenuItem(
+                                  value: themeName,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        margin: const EdgeInsets.only(right: 8),
+                                        decoration: BoxDecoration(
+                                          color: _getThemePreviewColor(themeName),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      Text(themeName),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (String? themeName) {
+                                if (themeName != null) {
+                                  themeProvider.setTheme(themeName);
+                                }
+                              },
+                              underline: Container(),
+                            ),
+                          ],
                         );
                       },
                     ),

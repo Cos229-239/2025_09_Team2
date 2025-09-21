@@ -10,6 +10,7 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -94,7 +95,7 @@ class SpotifyService {
           try {
             await refreshAccessToken();
           } catch (error) {
-            print('Error refreshing token: $error');
+            debugPrint('Error refreshing token: $error');
             // Clear invalid tokens
             await clearTokens();
           }
@@ -104,7 +105,7 @@ class SpotifyService {
         await clearTokens();
       }
     } catch (e) {
-      print('Error loading stored tokens: $e');
+      debugPrint('Error loading stored tokens: $e');
       // Ensure tokens are cleared on error
       await clearTokens();
     }
@@ -123,7 +124,7 @@ class SpotifyService {
       _refreshToken = refreshToken;
       _expiresAt = expiresAt;
     } catch (e) {
-      print('Error saving tokens: $e');
+      debugPrint('Error saving tokens: $e');
     }
   }
 
@@ -139,7 +140,7 @@ class SpotifyService {
       _refreshToken = null;
       _expiresAt = null;
     } catch (e) {
-      print('Error clearing tokens: $e');
+      debugPrint('Error clearing tokens: $e');
     }
   }
 

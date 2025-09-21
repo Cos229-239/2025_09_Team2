@@ -9,11 +9,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:studypals/main.dart';
+import 'package:studypals/providers/theme_provider.dart';
 
 void main() {
   testWidgets('StudyPals app smoke test', (WidgetTester tester) async {
+    // Create a theme provider for testing
+    final themeProvider = ThemeProvider();
+    
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(themeProvider: themeProvider));
 
     // Verify that the app starts properly
     expect(find.byType(MaterialApp), findsOneWidget);
