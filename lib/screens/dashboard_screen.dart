@@ -539,11 +539,11 @@ class _DashboardHomeState extends State<DashboardHome>
                    width: 60,
                    height: 60,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
+                    color: const Color(0xFF2A3050),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                      width: 1,
+                      color: const Color(0xFFF8B67F),
+                      width: 2,
                     ),
                   ),
                   child: Column(
@@ -553,7 +553,7 @@ class _DashboardHomeState extends State<DashboardHome>
                         'SEP',
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: const Color(0xFFF8B67F),
                               letterSpacing: 1.0,
                             ),
                       ),
@@ -561,7 +561,7 @@ class _DashboardHomeState extends State<DashboardHome>
                         '${DateTime.now().day}',
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              color: const Color(0xFFF8B67F),
                             ),
                       ),
                     ],
@@ -601,8 +601,8 @@ class _DashboardHomeState extends State<DashboardHome>
                                value: progress,
                                strokeWidth: 4,
                               backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Theme.of(context).colorScheme.primary,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFFF8B67F),
                               ),
                             ),
                           ),
@@ -611,7 +611,7 @@ class _DashboardHomeState extends State<DashboardHome>
                             '${(progress * 100).round()}%',
                             style: Theme.of(context).textTheme.labelLarge?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: const Color(0xFFF8B67F),
                                 ),
                           ),
                         ],
@@ -692,7 +692,7 @@ class _DashboardHomeState extends State<DashboardHome>
                 day,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary, // Same color as Flash Cards button
+                      color: const Color(0xFFF8B67F), // Match Flash Cards border color
                       fontWeight: FontWeight.w600, // Slightly bolder to match button styling
                     ),
               ),
@@ -723,7 +723,7 @@ class _DashboardHomeState extends State<DashboardHome>
                           margin: const EdgeInsets.symmetric(horizontal: 2),
                           decoration: BoxDecoration(
                             color: isToday 
-                                ? Theme.of(context).colorScheme.primary
+                                ? const Color(0xFFF8B67F)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(6),
                           ),

@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'selected_theme';
   
-  String _currentThemeName = 'Cosmic';
+  String _currentThemeName = 'Dark';
   
   /// Current theme name
   String get currentThemeName => _currentThemeName;
@@ -30,7 +30,7 @@ class ThemeProvider extends ChangeNotifier {
     if (AppTheme.availableThemes.contains(themeName)) {
       _currentThemeName = themeName;
     } else {
-      _currentThemeName = 'Cosmic';
+      _currentThemeName = 'Dark';
     }
     
     notifyListeners();
