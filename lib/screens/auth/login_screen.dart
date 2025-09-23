@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Import app state provider to manage authentication status
 import 'package:studypals/providers/app_state.dart';
-// Import User model for creating user objects
+// Import User model for demo login
 import 'package:studypals/models/user.dart';
+// Import Firebase services
+import 'package:studypals/services/firebase_auth_service.dart';
+import 'package:studypals/services/firestore_service.dart';
+import 'package:studypals/screens/auth/email_verification_screen.dart';
 import 'package:studypals/screens/auth/signup_screen.dart';
 
 /// Modern login screen that matches the app's Material 3 design system
@@ -281,15 +285,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         )
-                      : Row(
+                      : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.login,
                               size: 20,
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               'Sign In',
                               style: TextStyle(
                                 fontSize: 16,
@@ -316,15 +320,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.play_arrow,
                         size: 18,
                       ),
-                      const SizedBox(width: 8),
-                      const Text(
+                      SizedBox(width: 8),
+                      Text(
                         'Try Demo',
                         style: TextStyle(
                           fontSize: 14,
@@ -391,20 +395,61 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final appState = Provider.of<AppState>(context, listen: false);
-      final user = await appState.signInUser(
+      final firebaseAuthService = FirebaseAuthService();
+      final firestoreService = FirestoreService();
+      
+      // Sign in with Firebase
+      final result = await firebaseAuthService.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      if (user != null && mounted) {
-        // Login successful - AuthWrapper will handle navigation
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Welcome back, ${user.name}!'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        );
+      if (result.success && result.user != null) {
+        // Check if email is verified
+        if (!result.user!.emailVerified) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Please verify your email before logging in.'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+            
+            // Navigate to email verification screen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EmailVerificationScreen(
+                  email: _emailController.text.trim(),
+                  displayName: result.user!.displayName ?? 'User',
+                ),
+              ),
+            );
+          }
+          return;
+        }
+        
+        // Update last active timestamp in Firestore
+        await firestoreService.updateLastActive();
+
+        if (mounted) {
+          // Login successful - AuthWrapper will handle navigation
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome back, ${result.user!.displayName ?? 'User'}!'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

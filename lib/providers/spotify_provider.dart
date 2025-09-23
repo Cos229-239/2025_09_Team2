@@ -1,12 +1,11 @@
-/**
- * StudyPals Spotify Integration - Provider
- * 
- * This provider manages the state for Spotify integration functionality.
- * It coordinates between the UI and the Spotify service.
- * 
- * @author StudyPals Team
- * @version 1.0.0
- */
+/// StudyPals Spotify Integration - Provider
+///
+/// This provider manages the state for Spotify integration functionality.
+/// It coordinates between the UI and the Spotify service.
+///
+/// @author StudyPals Team
+/// @version 1.0.0
+library spotify_provider;
 
 import 'package:flutter/foundation.dart';
 import '../models/spotify_models.dart';

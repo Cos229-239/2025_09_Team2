@@ -10,6 +10,8 @@ import 'package:studypals/screens/settings_screen.dart'; // Settings and configu
 import 'package:studypals/screens/planner_page.dart';
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
+// Import animated particle background
+import 'package:studypals/widgets/common/animated_particle_background.dart';
 // Import AI widgets for intelligent study features
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
 import 'package:studypals/widgets/ai/ai_assistant_widget.dart'; // AI Assistant with persona selection
@@ -254,80 +256,97 @@ class _DashboardHomeState extends State<DashboardHome>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      body: AnimatedParticleBackground(
+        gradientColors: const [
+          Color(0xFF515B9B), // Lighter blue-purple from Figma
+          Color(0xFF1C1F35), // Darker blue-gray from Figma
+        ],
+        particleCount: 60,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            // Home tab - responsive dashboard content
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Fixed header section
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.1,
+                      child: _buildHeader(context),
+                    ),
 
-      // Tab-based body
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Home tab - original dashboard content
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header section with greeting and actions
-                  _buildHeader(context),
+                       const SizedBox(height: 8),
 
-                  const SizedBox(height: 20),
+                    // Flexible calendar section
+                    Expanded(
+                      flex: 4,
+                      child: _buildCalendarSection(context),
+                    ),
 
-                  // Calendar and Tasks section
-                  _buildCalendarSection(context),
+                       const SizedBox(height: 8),
 
-                  const SizedBox(height: 20),
+                    // Flexible cards row
+                    Expanded(
+                      flex: 2,
+                      child: _buildCardsAndNotesRow(context),
+                    ),
 
-                  // Flash Cards and Notes row
-                  _buildCardsAndNotesRow(context),
+                       const SizedBox(height: 8),
 
-                  const SizedBox(height: 20),
+                    // Flexible AI assistant section
+                    const Expanded(
+                      flex: 2,
+                      child: AIAssistantWidget(),
+                    ),
 
-                  // AI Assistant section
-                  const AIAssistantWidget(),
-
-                  // Add bottom padding to account for the fixed bottom bar
-                  const SizedBox(height: 100),
-                ],
+                       const SizedBox(height: 8),
+                  ],
+                ),
               ),
             ),
-          ),
-          // Tasks tab
-          _buildTasksTab(),
-          // Stats tab
-          _buildStatsTab(),
-          // Pet tab
-          _buildPetTab(),
-        ],
+            // Tasks tab
+            _buildTasksTab(),
+            // Stats tab
+            _buildStatsTab(),
+            // Pet tab
+            _buildPetTab(),
+          ],
+        ),
       ),
 
       // Bottom navigation bar with Home, Tasks, Stats, and Pet buttons
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(left: 16, right: 16, top: 16), // Remove bottom margin
         decoration: BoxDecoration(
-          color: Theme.of(context).cardTheme.color,
-          borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-              ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
-              : BorderRadius.circular(16),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-            width: 1,
+          color: const Color(0xFF2A3050), // Same color as Flash Cards container
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+            // No bottom radius to make it look like it runs off screen
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.2) ?? 
-                     Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-              blurRadius: 12,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.1) ?? 
-                     Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-              blurRadius: 6,
-              spreadRadius: -2,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: const Border(
+            top: BorderSide(color: Color(0xFFF8B67F), width: 2),
+            left: BorderSide(color: Color(0xFFF8B67F), width: 2),
+            right: BorderSide(color: Color(0xFFF8B67F), width: 2),
+            // No bottom border to enhance the "runs off screen" effect
+          ),
+           boxShadow: [
+             BoxShadow(
+               color: Colors.black.withValues(alpha: 0.25),
+               blurRadius: 10,
+               spreadRadius: 0,
+               offset: const Offset(0, -4), // Shadow going upward
+             ),
+             BoxShadow(
+               color: Colors.black.withValues(alpha: 0.12),
+               blurRadius: 5,
+               spreadRadius: 0,
+               offset: const Offset(0, -2), // Shadow going upward
+             ),
+           ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -485,42 +504,40 @@ class _DashboardHomeState extends State<DashboardHome>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
+        color: const Color(0xFF2A3050),
         borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
             ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
             : BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-          width: 1,
+          color: const Color(0xFFF8B67F),
+          width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.2) ?? 
-                   Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-            blurRadius: 12,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: const Offset(0, 3),
           ),
           BoxShadow(
-            color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.1) ?? 
-                   Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-            blurRadius: 6,
-            spreadRadius: -2,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 4,
+            spreadRadius: 0,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+       child: Padding(
+         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
             // Left side - Today's Progress with circular indicator
             Column(
               children: [
-                // Date display
-                Container(
-                  width: 80,
-                  height: 80,
+                 // Date display
+                 Container(
+                   width: 60,
+                   height: 60,
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
@@ -550,39 +567,39 @@ class _DashboardHomeState extends State<DashboardHome>
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                       const SizedBox(height: 8),
+                 
+                 // Today's Progress label and circular progress
+                 Text(
+                   'Todays\nProgress',
+                   textAlign: TextAlign.center,
+                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                         color: Theme.of(context).colorScheme.onSurface,
+                         fontWeight: FontWeight.w500,
+                       ),
+                 ),
+                 const SizedBox(height: 6),
                 
-                // Today's Progress label and circular progress
-                Text(
-                  'Todays\nProgress',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                
-                // Circular progress indicator
-                Consumer<TaskProvider>(
-                  builder: (context, taskProvider, child) {
-                    final completedTasks = taskProvider.tasks
-                        .where((task) => task.status == TaskStatus.completed)
-                        .length;
-                    final totalTasks = taskProvider.tasks.length;
-                    final progress = totalTasks > 0 ? completedTasks / totalTasks : 0.0;
-                    
-                    return SizedBox(
-                      width: 60,
-                      height: 60,
+                 // Circular progress indicator
+                 Consumer<TaskProvider>(
+                   builder: (context, taskProvider, child) {
+                     final completedTasks = taskProvider.tasks
+                         .where((task) => task.status == TaskStatus.completed)
+                         .length;
+                     final totalTasks = taskProvider.tasks.length;
+                     final progress = totalTasks > 0 ? completedTasks / totalTasks : 0.0;
+                     
+                     return SizedBox(
+                       width: 50,
+                       height: 50,
                       child: Stack(
                         alignment: Alignment.center, // This centers the stack contents
                         children: [
                           // Position the circular progress indicator
-                          Positioned.fill(
-                            child: CircularProgressIndicator(
-                              value: progress,
-                              strokeWidth: 6,
+                           Positioned.fill(
+                             child: CircularProgressIndicator(
+                               value: progress,
+                               strokeWidth: 4,
                               backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
                               valueColor: AlwaysStoppedAnimation<Color>(
                                 Theme.of(context).colorScheme.primary,
@@ -605,7 +622,7 @@ class _DashboardHomeState extends State<DashboardHome>
               ],
             ),
 
-            const SizedBox(width: 20),
+             const SizedBox(width: 16),
 
             // Right side - Calendar grid
             Expanded(
@@ -639,7 +656,11 @@ class _DashboardHomeState extends State<DashboardHome>
                   const SizedBox(height: 16),
                   
                   // Calendar grid
-                  _buildCalendarGrid(context),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: _buildCalendarGrid(context),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -676,9 +697,9 @@ class _DashboardHomeState extends State<DashboardHome>
                     ),
               ),
             ),
-          ).toList(),
-        ),
-        const SizedBox(height: 8),
+           ).toList(),
+         ),
+         const SizedBox(height: 4),
         
         // Calendar days grid
         ...List.generate((daysInMonth + startWeekday + 6) ~/ 7, (weekIndex) {
@@ -687,7 +708,7 @@ class _DashboardHomeState extends State<DashboardHome>
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+                 padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(7, (dayIndex) {
@@ -696,8 +717,8 @@ class _DashboardHomeState extends State<DashboardHome>
                     final isToday = isCurrentMonth && dayNumber == now.day;
                     
                     return Expanded(
-                      child: SizedBox(
-                        height: 32,
+                       child: SizedBox(
+                         height: 28,
                         child: isCurrentMonth ? Container(
                           margin: const EdgeInsets.symmetric(horizontal: 2),
                           decoration: BoxDecoration(
@@ -724,10 +745,10 @@ class _DashboardHomeState extends State<DashboardHome>
                 ),
               ),
               // Add horizontal line after each row except the last one
-              if (!isLastWeek)
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 4),
+               if (!isLastWeek)
+                 Container(
+                   height: 1,
+                   margin: const EdgeInsets.symmetric(vertical: 2),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                   ),
@@ -744,35 +765,32 @@ class _DashboardHomeState extends State<DashboardHome>
   Widget _buildCardsAndNotesRow(BuildContext context) {
     return Row(
       children: [
-        // Flash Cards section
-        Expanded(
-          child: Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardTheme.color,
-              borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-                  ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
-                  : BorderRadius.circular(16),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.2) ?? 
-                         Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.1) ??
-                         Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+         // Flash Cards section
+         Expanded(
+           child: Container(
+             decoration: BoxDecoration(
+               color: const Color(0xFF2A3050),
+               borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
+                   ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
+                   : BorderRadius.circular(16),
+               border: Border.all(
+                 color: const Color(0xFFF8B67F),
+                 width: 2,
+               ),
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.black.withValues(alpha: 0.15),
+                   blurRadius: 8,
+                   spreadRadius: 0,
+                   offset: const Offset(0, 3),
+                 ),
+                 BoxShadow(
+                   color: Colors.black.withValues(alpha: 0.08),
+                   blurRadius: 4,
+                   spreadRadius: 0,
+                   offset: const Offset(0, 1),
+                 ),
+               ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -781,39 +799,39 @@ class _DashboardHomeState extends State<DashboardHome>
                   // Navigate to flash cards
                   widget.onNavigate?.call(3); // Decks tab
                 },
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Flash Cards',
+                 borderRadius: BorderRadius.circular(14),
+                 child: Container(
+                   padding: const EdgeInsets.all(16),
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.center,
+                     mainAxisAlignment: MainAxisAlignment.center,
+                     children: [
+                       Text(
+                         'Flash Cards',
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Theme.of(context).colorScheme.onSurface,
                                 ),
                       ),
-                      const SizedBox(height: 12),
+                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary, // Match Progress button
+                          color: const Color(0xFFF8B67F),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                              color: const Color(0xFFF8B67F).withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.style,
                           size: 24,
-                          color: Theme.of(context).colorScheme.onPrimary, // Match Progress button
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -826,35 +844,32 @@ class _DashboardHomeState extends State<DashboardHome>
 
         const SizedBox(width: 16),
 
-        // Notes section
-        Expanded(
-          child: Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardTheme.color,
-              borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-                  ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
-                  : BorderRadius.circular(16),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.2) ?? 
-                         Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 4),
-                ),
-                BoxShadow(
-                  color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.1) ??
-                         Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-                  blurRadius: 6,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+         // Notes section
+         Expanded(
+           child: Container(
+             decoration: BoxDecoration(
+               color: const Color(0xFF2A3050),
+               borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
+                   ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
+                   : BorderRadius.circular(16),
+               border: Border.all(
+                 color: const Color(0xFFF8B67F),
+                 width: 2,
+               ),
+               boxShadow: [
+                 BoxShadow(
+                   color: Colors.black.withValues(alpha: 0.15),
+                   blurRadius: 8,
+                   spreadRadius: 0,
+                   offset: const Offset(0, 3),
+                 ),
+                 BoxShadow(
+                   color: Colors.black.withValues(alpha: 0.08),
+                   blurRadius: 4,
+                   spreadRadius: 0,
+                   offset: const Offset(0, 1),
+                 ),
+               ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -863,39 +878,39 @@ class _DashboardHomeState extends State<DashboardHome>
                   // Navigate to notes
                   widget.onNavigate?.call(2); // Notes tab
                 },
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Notes',
+                 borderRadius: BorderRadius.circular(14),
+                 child: Container(
+                   padding: const EdgeInsets.all(16),
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.center,
+                     mainAxisAlignment: MainAxisAlignment.center,
+                     children: [
+                       Text(
+                         'Notes',
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: Theme.of(context).colorScheme.onSurface,
                                 ),
                       ),
-                      const SizedBox(height: 12),
+                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary, // Match Progress button
+                          color: const Color(0xFFF8B67F),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                              color: const Color(0xFFF8B67F).withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
                           ],
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.note_alt,
                           size: 24,
-                          color: Theme.of(context).colorScheme.onPrimary, // Match Progress button
+                          color: Colors.white,
                         ),
                       ),
                     ],
@@ -1215,54 +1230,48 @@ class _DashboardHomeState extends State<DashboardHome>
 
 
   /// Build individual navigation button matching the image layout
-  Widget _buildNavButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icon container with selection styling
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: isSelected 
-                        ? null 
-                        : Border.all(
-                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 24,
-                    color: isSelected 
-                        ? Theme.of(context).colorScheme.onPrimary
-                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  ),
-                ),
+   Widget _buildNavButton(
+     BuildContext context, {
+     required IconData icon,
+     required String label,
+     required bool isSelected,
+     required VoidCallback onTap,
+   }) {
+     return Expanded(
+       child: Material(
+         color: Colors.transparent,
+         child: InkWell(
+           onTap: onTap,
+           borderRadius: BorderRadius.circular(16),
+           child: Container(
+             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+             child: Column(
+               mainAxisSize: MainAxisSize.min,
+               children: [
+                 // Icon container with selection styling
+                 Container(
+                   padding: const EdgeInsets.all(12),
+                   decoration: BoxDecoration(
+                     color: const Color(0xFF2A3050),
+                     borderRadius: BorderRadius.circular(16),
+                     border: Border.all(
+                       color: const Color(0xFFF8B67F),
+                       width: isSelected ? 2 : 1,
+                     ),
+                   ),
+                   child: Icon(
+                     icon,
+                     size: 28,
+                     color: const Color(0xFFF8B67F),
+                   ),
+                 ),
                 const SizedBox(height: 4),
                 // Label text
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: isSelected 
-                            ? Theme.of(context).colorScheme.primary
+                            ? const Color(0xFFF8B67F)
                             : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                         fontSize: 11,
@@ -1821,7 +1830,7 @@ class _NotesScreenState extends State<NotesScreen>
                 ],
               ),
               if (!quest.isCompleted) ...[
-                const SizedBox(height: 12),
+                       const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(

@@ -263,30 +263,27 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
     return Consumer<StudyPalsAIProvider>(
       builder: (context, aiProvider, child) {
         return Container(
-          height: 140,
           decoration: BoxDecoration(
-            color: Theme.of(context).cardTheme.color,
+            color: const Color(0xFF2A3050),
             borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
                 ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
                 : BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-              width: 1,
+              color: const Color(0xFFF8B67F),
+              width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.2) ?? 
-                       Theme.of(context).colorScheme.shadow.withValues(alpha: 0.2),
-                blurRadius: 12,
-                spreadRadius: 1,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 8,
+                spreadRadius: 0,
+                offset: const Offset(0, 3),
               ),
               BoxShadow(
-                color: Theme.of(context).cardTheme.shadowColor?.withValues(alpha: 0.1) ??
-                       Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
-                blurRadius: 6,
-                spreadRadius: -2,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                spreadRadius: 0,
+                offset: const Offset(0, 1),
               ),
             ],
           ),

@@ -1,10 +1,9 @@
 // Import Flutter's material design components for UI elements
 import 'package:flutter/material.dart';
-// Import Provider package for accessing global app state
-import 'package:provider/provider.dart';
-// Import app state provider to manage authentication status
-import 'package:studypals/providers/app_state.dart';
-import 'package:studypals/screens/auth/signup_successful.dart';
+// Import Firebase services
+import 'package:studypals/services/firebase_auth_service.dart';
+import 'package:studypals/services/firestore_service.dart';
+import 'package:studypals/screens/auth/email_verification_screen.dart';
 
 /// Modern signup screen that matches the app's Material 3 design system
 class SignupScreenNew extends StatefulWidget {
@@ -484,27 +483,52 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
     });
 
     try {
-      final appState = Provider.of<AppState>(context, listen: false);
-      final user = await appState.registerUser(
-        name: _nameController.text.trim(),
+      final firebaseAuthService = FirebaseAuthService();
+      final firestoreService = FirestoreService();
+      
+      // Sign up with Firebase
+      final result = await firebaseAuthService.signUpWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
+        displayName: _nameController.text.trim(),
       );
 
-      if (user != null && mounted) {
-        // Registration successful
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Welcome to StudyPals, ${user.name}!'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-          ),
+      if (result.success && result.user != null) {
+        // Create user profile in Firestore
+        await firestoreService.createUserProfile(
+          uid: result.user!.uid,
+          email: _emailController.text.trim(),
+          displayName: _nameController.text.trim(),
         );
-        
-        // Navigate to signup successful screen or dashboard
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SignupSuccessfulScreen()),
-        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created! Please verify your email.'),
+              backgroundColor: null,
+            ),
+          );
+          
+          // Navigate to email verification screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EmailVerificationScreen(
+                email: _emailController.text.trim(),
+                displayName: _nameController.text.trim(),
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
