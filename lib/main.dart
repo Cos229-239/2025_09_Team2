@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 // Import all providers
 import 'providers/app_state.dart';
@@ -22,6 +23,19 @@ import 'widgets/common/app_wrapper.dart';
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: "AIzaSyCmtkUPudyPMjUMkRjmjSnAHRKV4NpByyo",
+      authDomain: "studypals-9f7e1.firebaseapp.com",
+      projectId: "studypals-9f7e1", 
+      storageBucket: "studypals-9f7e1.firebasestorage.app",
+      messagingSenderId: "251508884392",
+      appId: "1:251508884392:web:7a842b1e9867506d09539d",
+      measurementId: "G-1J3NYP637K",
+    ),
+  );
   
   // Initialize theme provider
   final themeProvider = ThemeProvider();

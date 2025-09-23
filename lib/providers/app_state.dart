@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user.dart';
-import '../services/local_auth_service.dart';
+import '../services/firebase_auth_service.dart';
+import '../services/firestore_service.dart';
 import '../services/ai_service.dart';
 import 'ai_provider.dart';
 
@@ -8,7 +11,8 @@ class AppState extends ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
   String? _error;
-  final LocalAuthService _authService = LocalAuthService();
+  final FirebaseAuthService _authService = FirebaseAuthService();
+  final FirestoreService _firestoreService = FirestoreService();
   StudyPalsAIProvider? _aiProvider;
 
   User? get currentUser => _currentUser;
@@ -27,14 +31,60 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _initializeApp() async {
+    // Listen to Firebase auth state changes
+    firebase_auth.FirebaseAuth.instance.authStateChanges().listen((firebase_auth.User? firebaseUser) {
+      _handleAuthStateChange(firebaseUser);
+    });
+    
     await _checkAuthState();
+  }
+
+  Future<void> _handleAuthStateChange(firebase_auth.User? firebaseUser) async {
+    if (firebaseUser != null && firebaseUser.emailVerified) {
+      // User is signed in and email is verified
+      try {
+        final userProfile = await _firestoreService.getUserProfile(firebaseUser.uid);
+        if (userProfile != null) {
+          _currentUser = User(
+            id: firebaseUser.uid,
+            email: firebaseUser.email ?? '',
+            name: userProfile['displayName'] ?? firebaseUser.displayName ?? 'User',
+          );
+        } else {
+          // Create user profile if it doesn't exist
+          await _firestoreService.createUserProfile(
+            uid: firebaseUser.uid,
+            email: firebaseUser.email ?? '',
+            displayName: firebaseUser.displayName ?? 'User',
+          );
+          _currentUser = User(
+            id: firebaseUser.uid,
+            email: firebaseUser.email ?? '',
+            name: firebaseUser.displayName ?? 'User',
+          );
+        }
+        
+        // Auto-configure AI upon successful login
+        await _configureAIOnLogin();
+        
+        // Update last active timestamp
+        await _firestoreService.updateLastActive();
+      } catch (e) {
+        debugPrint('Error handling auth state change: $e');
+        _setError('Failed to load user profile: ${e.toString()}');
+      }
+    } else {
+      // User is signed out or email not verified
+      _currentUser = null;
+    }
+    notifyListeners();
   }
 
   Future<void> _checkAuthState() async {
     try {
       _setLoading(true);
-      _currentUser = await _authService.getCurrentUser();
-      notifyListeners();
+      final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+      await _handleAuthStateChange(firebaseUser);
     } catch (e) {
       _setError('Failed to check authentication state: ${e.toString()}');
     } finally {
@@ -51,15 +101,31 @@ class AppState extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      final user = await _authService.registerWithEmail(
-        name: name,
+      final result = await _authService.signUpWithEmailAndPassword(
         email: email,
         password: password,
+        displayName: name,
       );
 
-      // Don't set current user - they need to verify email first
-      notifyListeners();
-      return user;
+      if (result.success && result.user != null) {
+        // Create user profile in Firestore
+        await _firestoreService.createUserProfile(
+          uid: result.user!.uid,
+          email: email,
+          displayName: name,
+        );
+        
+        // Don't set current user - they need to verify email first
+        notifyListeners();
+        return User(
+          id: result.user!.uid,
+          email: email,
+          name: name,
+        );
+      } else {
+        _setError(result.message);
+        return null;
+      }
     } catch (e) {
       _setError(e.toString());
       return null;
@@ -76,18 +142,28 @@ class AppState extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      final user = await _authService.signInWithEmail(
+      final result = await _authService.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      _currentUser = user;
-
-      // Auto-configure Google AI upon successful login
-      await _configureAIOnLogin();
-
-      notifyListeners();
-      return user;
+      if (result.success && result.user != null) {
+        if (!result.user!.emailVerified) {
+          _setError('Please verify your email before signing in.');
+          return null;
+        }
+        
+        // The auth state listener will handle setting _currentUser
+        // Just return a user object for the UI
+        return User(
+          id: result.user!.uid,
+          email: result.user!.email ?? email,
+          name: result.user!.displayName ?? 'User',
+        );
+      } else {
+        _setError(result.message);
+        return null;
+      }
     } catch (e) {
       _setError(e.toString());
       return null;
@@ -116,7 +192,7 @@ class AppState extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      await _authService.resetPassword(email: email);
+      await _authService.sendPasswordResetEmail(email);
     } catch (e) {
       _setError(e.toString());
     } finally {
@@ -154,14 +230,29 @@ class AppState extends ChangeNotifier {
       _setLoading(true);
       _clearError();
 
-      final updatedUser = await _authService.updateProfile(
-        name: name,
-        email: email,
-      );
+      final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null) {
+        // Update display name in Firebase Auth
+        await firebaseUser.updateDisplayName(name);
+        
+        // Update profile in Firestore
+        await _firestoreService.updateUserProfile(
+          firebaseUser.uid,
+          {
+            'displayName': name,
+            'lastActiveAt': FieldValue.serverTimestamp(),
+          },
+        );
 
-      if (updatedUser != null) {
-        _currentUser = updatedUser;
-        notifyListeners();
+        // Update local user object
+        if (_currentUser != null) {
+          _currentUser = User(
+            id: _currentUser!.id,
+            email: _currentUser!.email,
+            name: name,
+          );
+          notifyListeners();
+        }
       }
     } catch (e) {
       _setError('Profile update failed: ${e.toString()}');
@@ -174,7 +265,12 @@ class AppState extends ChangeNotifier {
     try {
       _setLoading(true);
       if (_currentUser != null) {
-        await _authService.deleteAccount(_currentUser!.email);
+        // Delete user data from Firestore
+        await _firestoreService.deleteUserData(_currentUser!.id);
+        
+        // Delete Firebase Auth account
+        await _authService.deleteAccount();
+        
         _currentUser = null;
         notifyListeners();
       }
@@ -210,14 +306,16 @@ class AppState extends ChangeNotifier {
 
   // Debug method to clear all stored data
   Future<void> clearAllData() async {
-    await _authService.clearAllData();
-    _currentUser = null;
-    notifyListeners();
+    try {
+      await signOut();
+    } catch (e) {
+      debugPrint('Error clearing data: $e');
+    }
   }
 
   // Add a method to clear all users and reset everything
   Future<void> resetAllUserData() async {
-    await _authService.clearAllData();
+    await clearAllData();
     _currentUser = null;
     _error = null;
     _isLoading = false;
