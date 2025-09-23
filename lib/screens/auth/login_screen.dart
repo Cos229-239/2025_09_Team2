@@ -285,15 +285,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         )
-                      : Row(
+                      : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.login,
                               size: 20,
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
+                            SizedBox(width: 8),
+                            Text(
                               'Sign In',
                               style: TextStyle(
                                 fontSize: 16,
@@ -320,15 +320,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.play_arrow,
                         size: 18,
                       ),
-                      const SizedBox(width: 8),
-                      const Text(
+                      SizedBox(width: 8),
+                      Text(
                         'Try Demo',
                         style: TextStyle(
                           fontSize: 14,
@@ -410,7 +410,7 @@ class _LoginScreenState extends State<LoginScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Please verify your email before logging in.'),
+                content: const Text('Please verify your email before logging in.'),
                 backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );

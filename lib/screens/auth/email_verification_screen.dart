@@ -186,9 +186,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.8),
-              Theme.of(context).colorScheme.secondary.withOpacity(0.6),
-              Theme.of(context).colorScheme.tertiary.withOpacity(0.4),
+              Theme.of(context).colorScheme.primary.withAlpha((0.8 * 255).round()),
+              Theme.of(context).colorScheme.secondary.withAlpha((0.6 * 255).round()),
+              Theme.of(context).colorScheme.tertiary.withAlpha((0.4 * 255).round()),
             ],
           ),
         ),
@@ -221,11 +221,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           width: MediaQuery.of(context).size.width > 600 ? 200 : 150,
           height: MediaQuery.of(context).size.width > 600 ? 200 : 150,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withAlpha((0.9 * 255).round()),
             borderRadius: BorderRadius.circular(100),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withAlpha((0.1 * 255).round()),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -260,7 +260,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         Text(
           'Your AI-powered study companion',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withAlpha((0.9 * 255).round()),
             fontSize: 16,
           ),
         ),
@@ -272,11 +272,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withAlpha((0.95 * 255).round()),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withAlpha((0.1 * 255).round()),
             blurRadius: 20,
             offset: const Offset(0, 5),
           ),
@@ -311,7 +311,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           Text(
             'We\'ve sent a verification link to:',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withAlpha((0.7 * 255).round()),
             ),
             textAlign: TextAlign.center,
           ),
@@ -328,7 +328,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           Text(
             'Click the verification link in your email to activate your account and start your study journey!',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              color: Theme.of(context).colorScheme.onSurface.withAlpha((0.8 * 255).round()),
             ),
             textAlign: TextAlign.center,
           ),
@@ -336,7 +336,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -461,7 +461,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       child: Text(
         'Back to Login',
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white.withAlpha((0.9 * 255).round()),
           decoration: TextDecoration.underline,
         ),
       ),

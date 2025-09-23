@@ -15,7 +15,8 @@ dependencies:
   sqflite: ^2.3.0
   sqflite_common_ffi_web: ^0.4.2+1
   path: ^1.8.3
-  flutter_markdown: ^0.6.18
+  markdown: ^7.2.1
+  flutter_widget_from_html: ^0.14.11
   shared_preferences: ^2.2.2
   uuid: ^4.2.1
   video_player: ^2.8.1
