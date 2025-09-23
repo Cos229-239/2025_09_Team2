@@ -13,7 +13,7 @@ import '../providers/pet_provider.dart';
 class LiveSessionScreen extends StatefulWidget {
   final SocialSession session;
 
-  const LiveSessionScreen({Key? key, required this.session}) : super(key: key);
+  const LiveSessionScreen({super.key, required this.session});
 
   @override
   State<LiveSessionScreen> createState() => _LiveSessionScreenState();
@@ -270,7 +270,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
               const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: progress,
-                backgroundColor: colorScheme.surfaceVariant,
+                backgroundColor: colorScheme.surfaceContainerHighest,
                 valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
               ),
             ],
@@ -310,14 +310,14 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
                       
                       if (_isAnswerSubmitted) {
                         if (isCorrect) {
-                          backgroundColor = Colors.green.withOpacity(0.2);
+                          backgroundColor = Colors.green.withValues(alpha: 0.2);
                           borderColor = Colors.green;
                         } else if (isSelected && !isCorrect) {
-                          backgroundColor = Colors.red.withOpacity(0.2);
+                          backgroundColor = Colors.red.withValues(alpha: 0.2);
                           borderColor = Colors.red;
                         }
                       } else if (isSelected) {
-                        backgroundColor = colorScheme.primary.withOpacity(0.2);
+                        backgroundColor = colorScheme.primary.withValues(alpha: 0.2);
                         borderColor = colorScheme.primary;
                       }
 
@@ -376,7 +376,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
                           ),
                         ),
                       );
-                    }).toList(),
+                    }),
 
                     const SizedBox(height: 24),
 
@@ -613,17 +613,20 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
           ),
           TextButton(
             onPressed: () async {
-              Navigator.of(context).pop(); // Close dialog
-              
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
               final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
+              
+              navigator.pop(); // Close dialog
+              
               try {
                 await socialProvider.endSession(widget.session.id);
                 if (mounted) {
-                  Navigator.of(context).pop(); // Exit live session
+                  navigator.pop(); // Exit live session
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text('Error ending session: $e'),
                       backgroundColor: Colors.red,

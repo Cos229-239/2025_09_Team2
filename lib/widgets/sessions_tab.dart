@@ -7,7 +7,7 @@ import '../providers/social_session_provider.dart';
 import '../widgets/schedule_session_screen.dart';
 
 class SessionsTab extends StatefulWidget {
-  const SessionsTab({Key? key}) : super(key: key);
+  const SessionsTab({super.key});
 
   @override
   State<SessionsTab> createState() => _SessionsTabState();
@@ -40,7 +40,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
           child: TabBar(
             controller: _tabController,
             labelColor: colorScheme.primary,
-            unselectedLabelColor: colorScheme.onSurface.withOpacity(0.6),
+            unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
             indicatorColor: colorScheme.primary,
             tabs: const [
               Tab(text: 'Upcoming'),
@@ -234,7 +234,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                 session.description,
                 style: TextStyle(
                   fontSize: 14,
-                  color: colorScheme.onSurface.withOpacity(0.7),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -249,7 +249,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   DateFormat('MMM dd, hh:mm a').format(session.scheduledTime),
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -259,7 +259,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   _formatDuration(session.duration),
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -273,7 +273,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   '${session.participantCount}/${session.maxParticipants} participants',
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -283,7 +283,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   'Host: ${session.hostName}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -380,7 +380,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                     session.type.displayName,
                     style: TextStyle(
                       fontSize: 12,
-                      color: colorScheme.onSurface.withOpacity(0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -403,7 +403,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                 '${session.participantCount} participants active',
                 style: TextStyle(
                   fontSize: 14,
-                  color: colorScheme.onSurface.withOpacity(0.7),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 16),
@@ -449,9 +449,9 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
             // Header with completion status
             Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 20),
+                const Icon(Icons.check_circle, color: Colors.green, size: 20),
                 const SizedBox(width: 8),
-                Text(
+                const Text(
                   'Completed',
                   style: TextStyle(
                     color: Colors.green,
@@ -462,9 +462,9 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                 const Spacer(),
                 Text(
                   session.type.displayName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: Colors.grey,
                   ),
                 ),
               ],
@@ -491,7 +491,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   DateFormat('MMM dd, yyyy').format(session.scheduledTime),
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -501,7 +501,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   '${session.participantCount} participants',
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -535,7 +535,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
             Icon(
               icon,
               size: 80,
-              color: colorScheme.onSurface.withOpacity(0.3),
+              color: colorScheme.onSurface.withValues(alpha: 0.3),
             ),
             const SizedBox(height: 16),
             Text(
@@ -543,7 +543,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 8),
@@ -552,7 +552,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: colorScheme.onSurface.withOpacity(0.5),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -660,7 +660,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
       
       try {

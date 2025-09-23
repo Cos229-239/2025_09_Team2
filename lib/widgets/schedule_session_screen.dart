@@ -7,7 +7,7 @@ import '../providers/social_session_provider.dart';
 import '../providers/deck_provider.dart';
 
 class ScheduleSessionScreen extends StatefulWidget {
-  const ScheduleSessionScreen({Key? key}) : super(key: key);
+  const ScheduleSessionScreen({super.key});
 
   @override
   State<ScheduleSessionScreen> createState() => _ScheduleSessionScreenState();
@@ -135,7 +135,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<SessionType>(
-              value: _selectedType,
+              initialValue: _selectedType,
               decoration: const InputDecoration(
                 labelText: 'Session Type',
                 border: OutlineInputBorder(),
@@ -201,7 +201,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                         Text(
                           'Date & Time',
                           style: TextStyle(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                             fontSize: 12,
                           ),
                         ),
@@ -222,7 +222,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<Duration>(
-              value: _selectedDuration,
+              initialValue: _selectedDuration,
               decoration: const InputDecoration(
                 labelText: 'Duration',
                 border: OutlineInputBorder(),
@@ -287,7 +287,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     child: Text(
                       'No decks available. Create some flashcard decks first!',
                       style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.7),
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -303,7 +303,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     subtitle: Text(
                       '${deck.cards.length} cards',
                       style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                         fontSize: 12,
                       ),
                     ),
@@ -362,7 +362,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     child: Text(
                       'No friends available. Add some friends first!',
                       style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.7),
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
                         fontSize: 14,
                       ),
                     ),
@@ -459,12 +459,12 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
               subtitle: Text(
                 'Allow anyone to join',
                 style: TextStyle(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                   fontSize: 12,
                 ),
               ),
               value: _isPublic,
-              activeColor: colorScheme.primary,
+              activeThumbColor: colorScheme.primary,
               onChanged: (bool value) {
                 setState(() {
                   _isPublic = value;
@@ -525,13 +525,13 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
-    if (pickedDate != null) {
+    if (pickedDate != null && mounted) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDateTime),
       );
 
-      if (pickedTime != null) {
+      if (pickedTime != null && mounted) {
         setState(() {
           _selectedDateTime = DateTime(
             pickedDate.year,
