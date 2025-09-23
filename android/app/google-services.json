@@ -1,44 +1,26 @@
 {
   "project_info": {
     "project_number": "251508884392",
-    "project_id": "studypals-917e1",
-    "storage_bucket": "studypals-917e1.appspot.com"
+    "project_id": "studypals-9f7e1",
+    "storage_bucket": "studypals-9f7e1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:691657749386:android:your-android-app-id",
+        "mobilesdk_app_id": "1:251508884392:android:4d55ab8b067df67809539d",
         "android_client_info": {
           "package_name": "com.example.studypals"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "691657749386-your-android-oauth-client-id.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.studypals",
-            "certificate_hash": "your-certificate-hash"
-          }
-        },
-        {
-          "client_id": "691657749386-your-web-oauth-client-id.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "your-android-api-key"
+          "current_key": "AIzaSyALMGBRttLlv1E3kwXZNNZRgYfu-9wEKug"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "691657749386-your-web-oauth-client-id.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
