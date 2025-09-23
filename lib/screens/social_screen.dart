@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/social_learning_service.dart' as service;
-import '../widgets/collaborative_session_room.dart';
 import '../widgets/social/social_widgets.dart';
-import '../models/collaborative_session.dart';
+import '../widgets/sessions_tab.dart';
+import '../providers/social_session_provider.dart';
 
 /// Main social learning screen with tabs for different social features
 class SocialScreen extends StatefulWidget {
@@ -28,6 +29,12 @@ class _SocialScreenState extends State<SocialScreen>
   Future<void> _initializeSocialService() async {
     _socialService = service.SocialLearningService();
     await _socialService!.initialize();
+
+    // Initialize social session provider if available
+    if (mounted) {
+      final socialSessionProvider = Provider.of<SocialSessionProvider>(context, listen: false);
+      await socialSessionProvider.initialize();
+    }
 
     // Create default profile if none exists
     if (_socialService!.currentUserProfile == null) {
@@ -545,41 +552,10 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Widget _buildSessionsTab() {
-    final sessions = _socialService!.myCollaborativeSessions;
-
-    if (sessions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.video_call, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text('No study sessions yet'),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _scheduleSession,
-              icon: const Icon(Icons.add),
-              label: const Text('Schedule Session'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: sessions.length,
-      itemBuilder: (context, index) {
-        final session = sessions[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: CollaborativeSessionCard(
-            session: session,
-            canJoin: true,
-            onTap: () => _showSessionDetails(session),
-            onJoin: () => _joinSession(session),
-          ),
-        );
+    // Use our new comprehensive sessions tab with social session functionality
+    return Consumer<SocialSessionProvider>(
+      builder: (context, provider, child) {
+        return const SessionsTab();
       },
     );
   }
@@ -596,11 +572,8 @@ class _SocialScreenState extends State<SocialScreen>
           onPressed: _createStudyGroup,
           child: const Icon(Icons.group_add),
         );
-      case 3: // Sessions tab
-        return FloatingActionButton(
-          onPressed: _scheduleSession,
-          child: const Icon(Icons.video_call),
-        );
+      case 3: // Sessions tab - handled by the SessionsTab widget itself
+        return null; // The SessionsTab widget manages its own floating action button
       default:
         return null;
     }
@@ -725,111 +698,5 @@ class _SocialScreenState extends State<SocialScreen>
     }
   }
 
-  // Session Methods
-  void _scheduleSession() {
-    // TODO: Implement schedule session dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Schedule session - Coming soon!')),
-    );
-  }
-
-  void _showSessionDetails(service.CollaborativeSession serviceSession) {
-    final modelSession = CollaborativeSession(
-      id: serviceSession.id,
-      name: serviceSession.name,
-      hostId: serviceSession.hostId,
-      subject: serviceSession.subject,
-      scheduledTime: serviceSession.scheduledTime,
-      description: serviceSession.description,
-      participants: serviceSession.participants,
-      groupId: serviceSession.groupId,
-      startTime: serviceSession.startTime,
-      endTime: serviceSession.endTime,
-      sessionData: serviceSession.sessionData,
-      isActive: serviceSession.isActive,
-      isRecorded: serviceSession.isRecorded,
-    );
-
-    // TODO: Implement session details view
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Viewing ${modelSession.name} details')),
-    );
-  }
-
-  Future<void> _joinSession(service.CollaborativeSession serviceSession) async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-
-      // Attempt to join the session
-      final success = await _socialService!.joinCollaborativeSession(
-        sessionId: serviceSession.id,
-      );
-
-      // Close loading indicator
-      if (mounted) {
-        Navigator.pop(context);
-      }
-
-      if (!mounted) return;
-
-      if (success) {
-        // Convert service session to model session for the room
-        final modelSession = CollaborativeSession(
-          id: serviceSession.id,
-          name: serviceSession.name,
-          hostId: serviceSession.hostId,
-          subject: serviceSession.subject,
-          scheduledTime: serviceSession.scheduledTime,
-          description: serviceSession.description,
-          participants: serviceSession.participants,
-          groupId: serviceSession.groupId,
-          startTime: serviceSession.startTime,
-          endTime: serviceSession.endTime,
-          sessionData: serviceSession.sessionData,
-          isActive: serviceSession.isActive,
-          isRecorded: serviceSession.isRecorded,
-        );
-        
-        // Navigate to the session room
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CollaborativeSessionRoom(
-              session: modelSession,
-              onLeave: () => setState(() {}), // Refresh the list when leaving
-            ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to join session. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      // Close loading indicator if still showing
-      if (mounted) {
-        Navigator.pop(context);
-      }
-
-      if (!mounted) return;
-
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error joining session: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  // Session Methods - Now handled by SessionsTab widget
 }

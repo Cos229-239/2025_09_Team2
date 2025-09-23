@@ -265,6 +265,222 @@ class QuizService {
     };
   }
 
+  /// Creates a multiplayer quiz session for a social study session
+  Future<QuizSession?> createMultiplayerQuizSession({
+    required List<Deck> decks,
+    required String socialSessionId,
+    required List<String> participantIds,
+    int maxQuestions = 20,
+  }) async {
+    // Combine cards from all selected decks
+    final allQuizCards = <FlashCard>[];
+    for (final deck in decks) {
+      final deckCards = deck.cards
+          .where((card) =>
+              card.multipleChoiceOptions.isNotEmpty &&
+              card.multipleChoiceOptions.length >= 2)
+          .toList();
+      allQuizCards.addAll(deckCards);
+    }
+
+    if (allQuizCards.isEmpty) {
+      debugPrint('No quiz cards available for multiplayer session');
+      return null;
+    }
+
+    // Shuffle and limit questions for multiplayer
+    allQuizCards.shuffle();
+    final selectedCards = allQuizCards.take(maxQuestions).toList();
+
+    final sessionId = _generateSessionId();
+    final deckTitles = decks.map((d) => d.title).join(', ');
+    
+    final session = QuizSession(
+      id: sessionId,
+      deckId: socialSessionId, // Use social session ID as reference
+      deckTitle: "Multiplayer Quiz: $deckTitles",
+      cardIds: selectedCards.map((card) => card.id).toList(),
+      startTime: DateTime.now(),
+      isMultiplayer: true,
+      socialSessionId: socialSessionId,
+      participantIds: participantIds,
+    );
+
+    _activeSessions[sessionId] = session;
+
+    debugPrint(
+        'Created multiplayer quiz session with ${selectedCards.length} questions for ${participantIds.length} participants');
+    return session;
+  }
+
+  /// Record an answer for a specific participant in a multiplayer quiz
+  Future<QuizSession?> recordMultiplayerAnswer({
+    required String sessionId,
+    required String participantId,
+    required String cardId,
+    required int selectedOptionIndex,
+    required int correctOptionIndex,
+    required Deck deck,
+    required PetProvider petProvider,
+  }) async {
+    final session = _activeSessions[sessionId];
+    if (session == null || !session.isMultiplayer || session.isCompleted) {
+      return null;
+    }
+
+    if (!session.participantIds.contains(participantId)) {
+      debugPrint('Participant $participantId not found in session');
+      return null;
+    }
+
+    // Create quiz answer
+    final isCorrect = selectedOptionIndex == correctOptionIndex;
+    final card = deck.cards.firstWhere((c) => c.id == cardId);
+    final expEarned = isCorrect ? card.calculateExpReward() : 0;
+
+    final answer = QuizAnswer(
+      cardId: cardId,
+      selectedOptionIndex: selectedOptionIndex,
+      correctOptionIndex: correctOptionIndex,
+      isCorrect: isCorrect,
+      answeredAt: DateTime.now(),
+      expEarned: expEarned,
+    );
+
+    // Update session with participant answer
+    final updatedSession = session.recordParticipantAnswer(participantId, answer);
+    _activeSessions[sessionId] = updatedSession;
+
+    debugPrint(
+        'Multiplayer answer recorded for $participantId: ${isCorrect ? "CORRECT" : "INCORRECT"} (+$expEarned EXP)');
+    return updatedSession;
+  }
+
+  /// Complete a multiplayer quiz session and calculate results for all participants
+  Future<QuizSession?> completeMultiplayerQuizSession(
+      String sessionId, PetProvider petProvider) async {
+    final session = _activeSessions[sessionId];
+    if (session == null || !session.isMultiplayer || session.isCompleted) {
+      return null;
+    }
+
+    final participantScores = session.participantScores;
+    final participantResults = <String, Map<String, dynamic>>{};
+
+    int totalExpAwarded = 0;
+
+    // Calculate results for each participant
+    for (final participantId in session.participantIds) {
+      final participantAnswers = session.participantAnswers[participantId] ?? [];
+      final correctAnswers = participantAnswers.where((a) => a.isCorrect).length;
+      final score = participantAnswers.isNotEmpty ? correctAnswers / participantAnswers.length : 0.0;
+      final expEarned = participantAnswers.fold(0, (sum, answer) => sum + answer.expEarned);
+
+      participantResults[participantId] = {
+        'score': score,
+        'correctAnswers': correctAnswers,
+        'totalAnswers': participantAnswers.length,
+        'expEarned': expEarned,
+        'rank': 0, // Will be calculated after all scores are known
+      };
+
+      totalExpAwarded += expEarned;
+    }
+
+    // Calculate rankings
+    final sortedParticipants = participantResults.entries.toList()
+      ..sort((a, b) => b.value['score'].compareTo(a.value['score']));
+
+    for (int i = 0; i < sortedParticipants.length; i++) {
+      participantResults[sortedParticipants[i].key]!['rank'] = i + 1;
+    }
+
+    // Create completed session
+    final completedSession = session.copyWith(
+      isCompleted: true,
+      endTime: DateTime.now(),
+      sessionData: {
+        'participantResults': participantResults,
+        'winner': sortedParticipants.isNotEmpty ? sortedParticipants.first.key : null,
+        'averageScore': participantScores.values.isNotEmpty 
+            ? participantScores.values.reduce((a, b) => a + b) / participantScores.length 
+            : 0.0,
+      },
+    );
+
+    _activeSessions[sessionId] = completedSession;
+    await _saveQuizSession(completedSession);
+
+    debugPrint('Multiplayer quiz completed with $totalExpAwarded total EXP awarded');
+    return completedSession;
+  }
+
+  /// Get multiplayer quiz results for a specific participant
+  Map<String, dynamic>? getMultiplayerResults(String sessionId, String participantId) {
+    final session = _activeSessions[sessionId];
+    if (session == null || !session.isMultiplayer || !session.isCompleted) {
+      return null;
+    }
+
+    final sessionData = session.sessionData;
+    if (sessionData == null) return null;
+
+    final participantResults = sessionData['participantResults'] as Map<String, dynamic>?;
+    if (participantResults == null) return null;
+
+    final userResults = participantResults[participantId];
+    if (userResults == null) return null;
+
+    return {
+      'score': userResults['score'],
+      'correctAnswers': userResults['correctAnswers'],
+      'totalAnswers': userResults['totalAnswers'],
+      'expEarned': userResults['expEarned'],
+      'rank': userResults['rank'],
+      'totalParticipants': session.participantIds.length,
+      'winner': sessionData['winner'],
+      'averageScore': sessionData['averageScore'],
+      'isWinner': sessionData['winner'] == participantId,
+    };
+  }
+
+  /// Get leaderboard for a multiplayer session
+  List<Map<String, dynamic>> getMultiplayerLeaderboard(String sessionId) {
+    final session = _activeSessions[sessionId];
+    if (session == null || !session.isMultiplayer) {
+      return [];
+    }
+
+    final leaderboard = <Map<String, dynamic>>[];
+    final participantScores = session.participantScores;
+
+    for (final participantId in session.participantIds) {
+      final participantAnswers = session.participantAnswers[participantId] ?? [];
+      final score = participantScores[participantId] ?? 0.0;
+      final correctAnswers = participantAnswers.where((a) => a.isCorrect).length;
+      final expEarned = participantAnswers.fold(0, (sum, answer) => sum + answer.expEarned);
+
+      leaderboard.add({
+        'participantId': participantId,
+        'score': score,
+        'correctAnswers': correctAnswers,
+        'totalAnswers': participantAnswers.length,
+        'expEarned': expEarned,
+        'percentage': (score * 100).round(),
+      });
+    }
+
+    // Sort by score descending
+    leaderboard.sort((a, b) => b['score'].compareTo(a['score']));
+
+    // Add rank
+    for (int i = 0; i < leaderboard.length; i++) {
+      leaderboard[i]['rank'] = i + 1;
+    }
+
+    return leaderboard;
+  }
+
   /// Clears all quiz data (for testing or reset functionality)
   Future<void> clearAllData() async {
     _activeSessions.clear();
