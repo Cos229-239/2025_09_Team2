@@ -1,4 +1,6 @@
 # Flutter/Dart specific
+**/doc/api/
+**/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -7,6 +9,13 @@
 .pub/
 build/
 coverage/
+
+# Platform specific generated files
+**/ios/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/windows/flutter/ephemeral/
+**/GeneratedPluginRegistrant.*
 
 # Android related
 **/android/**/gradle-wrapper.jar
