@@ -118,9 +118,9 @@ class ParticlePainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.1);
 
     for (final particle in particles) {
-      // Update particle position with ultra slow movement
-      particle.x += cos(particle.direction) * particle.speed * 0.0008; // Ultra reduced movement factor
-      particle.y += sin(particle.direction) * particle.speed * 0.0008;
+  // Update particle position with slightly more movement (still subtle)
+  particle.x += cos(particle.direction) * particle.speed * 0.002;
+  particle.y += sin(particle.direction) * particle.speed * 0.002;
 
       // Wrap around screen edges
       if (particle.x > 1.0) particle.x = 0.0;
