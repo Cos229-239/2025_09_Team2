@@ -8,6 +8,9 @@ import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard stu
 import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
 // Import planner screen
 import 'package:studypals/screens/planner_page.dart';
+// Import creation screens for notes and tasks
+import 'package:studypals/screens/create_note_screen.dart'; // Note creation screen
+import 'package:studypals/screens/create_task_screen.dart'; // Task creation screen
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
 // Import animated particle background
@@ -2124,18 +2127,30 @@ class _NotesScreenState extends State<NotesScreen>
 
   /// Create new note
   void _createNote() {
-    // TODO: Navigate to note creation screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Note creation coming soon!')),
-    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CreateNoteScreen(),
+      ),
+    ).then((result) {
+      // Refresh the notes list if a note was successfully created
+      if (result == true && mounted) {
+        Provider.of<NoteProvider>(context, listen: false).loadNotes();
+      }
+    });
   }
 
   /// Create new task
   void _createTask() {
-    // TODO: Navigate to task creation screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Task creation coming soon!')),
-    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CreateTaskScreen(),
+      ),
+    ).then((result) {
+      // Refresh the tasks list if a task was successfully created
+      if (result == true && mounted) {
+        Provider.of<TaskProvider>(context, listen: false).loadTasks();
+      }
+    });
   }
 
   /// Edit existing note
