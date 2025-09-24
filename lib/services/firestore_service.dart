@@ -7,10 +7,34 @@ import 'package:flutter/foundation.dart';
 class FirestoreService {
   static final FirestoreService _instance = FirestoreService._internal();
   factory FirestoreService() => _instance;
-  FirestoreService._internal();
+  FirestoreService._internal() {
+    _initializeFirestore();
+  }
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  
+  /// Initialize Firestore with offline support
+  void _initializeFirestore() {
+    try {
+      // Enable offline persistence for better connectivity
+      if (!kIsWeb) {
+        // Mobile platforms can use offline persistence
+        _firestore.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+      }
+      
+      if (kDebugMode) {
+        print('✅ Firestore configured with offline support');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Firestore offline configuration issue: $e');
+      }
+    }
+  }
 
   // Collection references
   CollectionReference get usersCollection => _firestore.collection('users');

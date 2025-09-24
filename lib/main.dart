@@ -40,6 +40,19 @@ void main() async {
     if (kDebugMode) {
       print('✅ Firebase initialized successfully');
     }
+    
+    // Enable Firestore offline persistence for better connectivity
+    try {
+      // Note: This is only needed for mobile platforms, web handles it differently
+      if (!kIsWeb) {
+        // Import Firestore and enable persistence
+        // This will be handled by the FirestoreService when it's first used
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ Firestore offline persistence setup issue: $e');
+      }
+    }
   } catch (e) {
     if (kDebugMode) {
       print('❌ Firebase initialization error: $e');
