@@ -91,7 +91,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
         );
 
         // Add the deck to the deck provider
-        deckProvider.addDeck(newDeck);
+        await deckProvider.addDeck(newDeck);
 
         // Show success dialog
         if (mounted) {
