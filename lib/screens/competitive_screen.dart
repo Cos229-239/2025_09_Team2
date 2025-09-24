@@ -2,6 +2,20 @@ import 'package:flutter/material.dart';
 import '../services/competitive_learning_service.dart';
 import '../widgets/competitive/competitive_widgets.dart';
 
+// TODO: Competitive Screen - Missing Real Competition Features
+// - Competitive learning service is completely placeholder implementation
+// - No real leaderboard data from Firebase or other backend
+// - Missing real-time competition updates and notifications
+// - No actual user matching for competitions
+// - Missing reward system and achievement unlocking
+// - No integration with real user performance data
+// - Missing anti-cheating measures and validation
+// - No seasonal competitions or tournaments
+// - Missing social features for competitive interactions
+// - No analytics for competitive performance tracking
+// - Missing integration with study progress validation
+// - No real-time spectator mode for competitions
+
 /// Main competitive learning screen
 class CompetitiveScreen extends StatefulWidget {
   const CompetitiveScreen({super.key});

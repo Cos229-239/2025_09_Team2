@@ -5,6 +5,22 @@ import '../../models/study_pal_persona.dart';
 import 'ai_tutor_chat.dart';
 
 /// AI Assistant Widget with Persona Selection
+/// 
+/// TODO: AI ASSISTANT WIDGET IMPLEMENTATION GAPS
+/// - Current implementation has persona selection UI but NO REAL AI INTEGRATION
+/// - Persona selection doesn't affect actual AI behavior or responses
+/// - Need to implement real AI personality adaptation based on selected persona
+/// - Missing integration with actual AI service for personalized responses
+/// - Need to implement proper conversation context and memory management
+/// - Missing real-time learning and adaptation based on user interactions
+/// - Need to implement proper AI training data and knowledge base integration
+/// - Missing integration with user study progress for contextual assistance
+/// - Need to implement proper conversation export and history management
+/// - Missing integration with voice input and speech-to-text capabilities
+/// - Need to implement proper AI response validation and safety filtering
+/// - Missing integration with multi-modal AI (text, image, audio responses)
+/// - Need to implement proper AI performance monitoring and optimization
+/// - Missing integration with user feedback system for AI improvement
 class AIAssistantWidget extends StatefulWidget {
   const AIAssistantWidget({super.key});
 

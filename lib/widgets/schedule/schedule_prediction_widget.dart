@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../services/predictive_scheduling_service.dart';
 
+// TODO: Schedule Prediction Widget - Missing AI and Prediction Features
+// - Predictive scheduling service is mostly placeholder implementation
+// - No actual machine learning or AI algorithms for schedule optimization
+// - Missing integration with real user behavior data
+// - No A/B testing for schedule recommendations
+// - Missing personalization based on user performance patterns
+// - No integration with external calendars for conflict detection
+// - Missing weather and external factors consideration
+// - No social learning schedule coordination
+// - Missing predictive analytics for success probability
+// - No schedule adaptation based on real-time feedback
+// - Missing notification system for schedule changes
+// - No export functionality for predicted schedules
+
 /// Widget for displaying study schedule predictions
 class SchedulePredictionWidget extends StatelessWidget {
   final StudySchedulePrediction prediction;

@@ -1,6 +1,26 @@
 import 'package:flutter/material.dart';
 import '../models/social_session.dart';
 
+// TODO: Live Session Screen - Critical Video Calling Implementation Gaps
+// - Current implementation is 100% FAKE - NO REAL VIDEO CALLING OR LIVE FEATURES
+// - Need to implement real WebRTC integration for video/audio calling
+// - Missing proper signaling server implementation for peer-to-peer connections
+// - Need to implement real-time screen sharing capabilities
+// - Missing integration with actual video/audio streaming services
+// - Need to implement proper NAT traversal and STUN/TURN server support
+// - Missing real-time collaborative whiteboard and drawing tools
+// - Need to implement proper session management and participant controls
+// - Missing integration with Firebase for real-time session state synchronization
+// - Need to implement proper bandwidth adaptation and quality controls
+// - Missing recording and playback functionality for study sessions
+// - Need to implement proper audio/video device selection and management
+// - Missing integration with calendar for session scheduling and reminders
+// - Need to implement proper security and privacy controls for live sessions
+// - Missing accessibility features for hearing/vision impaired participants
+// - Need to implement proper error handling for connection failures
+// - Missing integration with study materials sharing and synchronization
+// - Need to implement proper session analytics and participation tracking
+
 class LiveSessionScreen extends StatefulWidget {
   final SocialSession session;
 
@@ -38,6 +58,15 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     super.dispose();
   }
 
+  /// TODO: MOCK DATA LOADING - REPLACE WITH REAL IMPLEMENTATION
+  /// - Current method loads only hardcoded fake participants and messages
+  /// - Need to implement real-time participant loading from Firebase/Firestore
+  /// - Missing integration with user profiles and authentication
+  /// - Need to implement real-time message synchronization across all participants
+  /// - Missing proper participant permission and role management
+  /// - Need to implement real participant status tracking (online/offline, audio/video state)
+  /// - Missing integration with study session actual data and progress
+  /// - Need to implement proper session history and message persistence
   void _loadMockData() {
     // Load mock participants
     _participants.addAll([

@@ -25,6 +25,26 @@ import '../models/spotify_models.dart';
 /// - Storing and refreshing tokens
 /// - Making authenticated API requests
 /// - Handling API errors and retries
+/// 
+/// TODO: CRITICAL SPOTIFY SERVICE IMPLEMENTATION GAPS
+/// - Current implementation is 100% PLACEHOLDER/MOCK - NO REAL SPOTIFY INTEGRATION
+/// - Need to implement actual Spotify Web API integration with proper credentials
+/// - Missing proper OAuth 2.0 PKCE flow implementation for mobile apps
+/// - Need to implement deep linking for OAuth callback handling
+/// - Missing real-time playback control and player state management
+/// - Need to implement proper error handling for Spotify API rate limits
+/// - Missing integration with Spotify Connect for device management
+/// - Need to implement proper scope management for different permission levels
+/// - Missing cached response system to reduce API calls and improve performance
+/// - Need to implement proper token refresh background service
+/// - Missing integration with study session features (focus music, study playlists)
+/// - Need to implement playlist analysis for study effectiveness tracking
+/// - Missing music recommendation system based on study subjects/mood
+/// - Need to implement proper audio analysis for concentration-friendly music
+/// - Missing social features integration (shared study playlists, music sharing)
+/// - Need to implement offline playlist caching for study sessions
+/// - Missing integration with do-not-disturb and focus modes
+/// - Need to implement proper cleanup of expired tokens and session data
 class SpotifyService {
   /// Storage key for the OAuth access token in SharedPreferences
   static const String _storageKeyAccessToken = 'spotify_access_token';
@@ -57,6 +77,16 @@ class SpotifyService {
   }
 
   /// Initialize the service by loading stored tokens
+  /// 
+  /// TODO: INITIALIZATION IMPROVEMENTS NEEDED
+  /// - Current initialization is basic token loading only
+  /// - Need to implement proper service health checks during initialization
+  /// - Missing connectivity verification and API endpoint testing
+  /// - Need to implement proper migration handling for config changes
+  /// - Missing user preference loading for playback settings
+  /// - Need to implement background token refresh scheduling
+  /// - Missing device registration and Spotify Connect setup
+  /// - Need proper error recovery and fallback mechanisms during initialization
   Future<void> initialize() async {
     await _loadStoredTokens();
   }

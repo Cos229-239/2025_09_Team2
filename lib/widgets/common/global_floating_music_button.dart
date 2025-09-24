@@ -3,6 +3,22 @@ import '../../screens/spotify_integration_screen.dart';
 
 /// A global floating music button that persists across all app screens
 /// Uses an Overlay to stay visible during navigation
+/// 
+/// TODO: GLOBAL FLOATING MUSIC BUTTON IMPLEMENTATION GAPS
+/// - Current implementation is UI ONLY - NO REAL MUSIC PLAYBACK FUNCTIONALITY
+/// - Button redirects to Spotify screen but no actual music integration
+/// - Need to implement real music player controls (play, pause, skip, volume)
+/// - Missing integration with actual music streaming services
+/// - Need to implement proper music state management across app navigation
+/// - Missing now playing information display (song title, artist, album art)
+/// - Need to implement proper audio session management and interruption handling
+/// - Missing integration with device media controls and lock screen controls
+/// - Need to implement proper background audio playback capabilities
+/// - Missing integration with user's music preferences and study playlists
+/// - Need to implement proper accessibility features for music controls
+/// - Missing integration with focus modes and study session audio management
+/// - Need to implement proper error handling for music service failures
+/// - Missing battery optimization for background music playback
 class GlobalFloatingMusicButton {
   static OverlayEntry? _overlayEntry;
   static bool _isVisible = false;

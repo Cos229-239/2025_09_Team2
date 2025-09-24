@@ -14,6 +14,22 @@ import 'package:studypals/providers/deck_provider.dart';
 /// Widget displaying key study statistics and progress metrics
 /// Shows task completion, deck count, review progress, pet level, and study streak
 /// Provides at-a-glance overview of user's study progress and engagement
+/// 
+/// TODO: QUICK STATS WIDGET IMPLEMENTATION IMPROVEMENTS NEEDED
+/// - Current implementation shows basic statistics but missing advanced analytics
+/// - Need to implement real-time statistics updates with WebSocket connections
+/// - Missing time-based statistics (daily, weekly, monthly progress)
+/// - Need to implement interactive statistics with drill-down capabilities
+/// - Missing personalized goal tracking and progress visualization
+/// - Need to implement statistics export and sharing functionality
+/// - Missing comparison statistics (vs. friends, vs. previous periods)
+/// - Need to implement proper loading states and error handling for statistics
+/// - Missing accessibility features for statistics display
+/// - Need to implement statistics caching and offline display
+/// - Missing visual graphs and charts for better data representation
+/// - Need to implement statistics filtering and customization options
+/// - Missing integration with achievement system for milestone notifications
+/// - Need to implement proper statistics animations and transitions
 class QuickStatsWidget extends StatelessWidget {
   // Constructor with optional key for widget identification
   const QuickStatsWidget({super.key});

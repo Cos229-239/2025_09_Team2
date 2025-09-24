@@ -13,6 +13,20 @@ import '../services/predictive_scheduling_service.dart' as scheduling;
 import '../widgets/schedule/schedule_prediction_widget.dart';
 import 'deck_completion_screen.dart';
 
+// TODO: Flashcard Study Screen - Missing Advanced Study Features
+// - No spaced repetition algorithm integration (SM-2, etc.)
+// - Missing adaptive difficulty adjustment based on performance
+// - No integration with active recall techniques
+// - Missing study analytics and performance tracking
+// - No image/audio support for multimedia flashcards
+// - Missing collaborative study sessions with real-time sync
+// - No voice input/output for hands-free studying
+// - Missing gamification elements (streaks, points, badges)
+// - No integration with external content sources
+// - Missing study break reminders and focus management
+// - No advanced card types (cloze deletion, image occlusion)
+// - Missing export/import functionality for study data
+
 /// Flashcard study interface for reviewing cards in a deck
 class FlashcardStudyScreen extends StatefulWidget {
   final Deck deck;

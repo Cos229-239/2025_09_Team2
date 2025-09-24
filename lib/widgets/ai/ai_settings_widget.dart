@@ -3,6 +3,20 @@ import 'package:provider/provider.dart';
 import 'package:studypals/providers/ai_provider.dart';
 import 'package:studypals/services/ai_service.dart';
 
+// TODO: AI Settings Widget - Critical Implementation Gaps
+// - No actual API key validation or storage
+// - Settings saved to SharedPreferences but not encrypted
+// - Missing secure storage for API keys (should use flutter_secure_storage)
+// - No connection timeout handling
+// - Missing provider-specific configuration options
+// - No usage monitoring or API cost tracking
+// - Local AI providers (Ollama) not actually implemented
+// - Missing batch operation settings
+// - No model selection (GPT-3.5, GPT-4, etc.)
+// - Missing custom prompt templates configuration
+// - No error logging for failed API calls
+// - User preferences for AI response style not implemented
+
 /// AI Configuration and Settings Widget
 class AISettingsWidget extends StatefulWidget {
   const AISettingsWidget({super.key});

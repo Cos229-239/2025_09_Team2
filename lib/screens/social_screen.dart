@@ -9,6 +9,20 @@ import 'user_profile_screen.dart';
 import 'chat_screen.dart';
 import 'group_details_screen.dart';
 
+// TODO: Social Screen - Major Social Feature Implementation Gaps
+// - Social learning service is completely placeholder-based
+// - No real user authentication or profile management
+// - Missing real-time friend status and presence indicators
+// - No actual social matching algorithms or friend suggestions
+// - Missing integration with study progress sharing
+// - No real-time collaborative features
+// - Missing social gamification and leaderboards
+// - No content sharing or study resource exchange
+// - Missing social notification system
+// - No privacy controls or social settings
+// - Missing social analytics and engagement tracking
+// - No integration with external social platforms
+
 /// Main social learning screen with tabs for different social features
 class SocialScreen extends StatefulWidget {
   const SocialScreen({super.key});

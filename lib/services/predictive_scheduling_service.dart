@@ -1,6 +1,25 @@
 import 'dart:math';
 import '../models/study_pal_persona.dart';
 
+/// TODO: CRITICAL PREDICTIVE SCHEDULING SERVICE IMPLEMENTATION GAPS
+/// - Current implementation is THEORETICAL MODEL ONLY - NO REAL AI PREDICTION
+/// - All scheduling predictions are based on simple algorithms, not machine learning
+/// - Need to implement real machine learning integration for predictive analysis
+/// - Missing integration with actual user study performance data
+/// - Need to implement real-time learning and adaptation based on user behavior
+/// - Missing integration with calendar and availability data
+/// - Need to implement proper data collection for training prediction models
+/// - Missing integration with external factors (weather, calendar events, etc.)
+/// - Need to implement A/B testing for scheduling recommendation effectiveness
+/// - Missing integration with user feedback loop for recommendation improvement
+/// - Need to implement proper data privacy and anonymization for ML training
+/// - Missing integration with collaborative filtering and social learning patterns
+/// - Need to implement proper model versioning and continuous learning
+/// - Missing integration with real-time study performance tracking
+/// - Need to implement proper recommendation explanation and transparency
+/// - Missing integration with adaptive difficulty and content selection
+/// - Need to implement proper fallback mechanisms when predictions fail
+
 /// Represents different times of day for scheduling
 enum TimeOfDay {
   earlyMorning, // 5-8 AM

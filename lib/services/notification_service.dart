@@ -6,6 +6,26 @@ import '../models/daily_quest.dart';
 
 /// Service for managing app notifications with quiz expiration and review scheduling
 /// Integrates with quest system and SRS to generate timely notifications
+/// 
+/// TODO: CRITICAL NOTIFICATION SERVICE IMPLEMENTATION GAPS
+/// - Current implementation is LOCAL ONLY - NO PUSH NOTIFICATIONS OR FCM INTEGRATION
+/// - Need to implement Firebase Cloud Messaging (FCM) for real push notifications
+/// - Missing proper notification scheduling with Android/iOS native schedulers
+/// - Need to implement notification channels and categories for better organization
+/// - Missing integration with device notification settings and permissions
+/// - Need to implement proper background task scheduling for notification generation
+/// - Missing notification analytics and delivery tracking
+/// - Need to implement notification personalization based on user behavior
+/// - Missing notification throttling and rate limiting to prevent spam
+/// - Need to implement proper notification localization and time zone handling  
+/// - Missing integration with user presence and do-not-disturb modes
+/// - Need to implement notification grouping and bundling for better UX
+/// - Missing notification action buttons and deep linking
+/// - Need to implement proper notification sound and vibration patterns
+/// - Missing notification delivery confirmation and retry mechanisms
+/// - Need to implement notification A/B testing for effectiveness optimization
+/// - Missing integration with cross-platform notification synchronization
+/// - Need to implement notification template system for consistent messaging
 class NotificationService {
   static const String _notificationsKey = 'app_notifications';
   static const String _lastNotificationCheckKey = 'last_notification_check';
@@ -294,6 +314,18 @@ class NotificationService {
   }
 
   /// Schedule recurring notification checks (placeholder for background tasks)
+  /// 
+  /// TODO: BACKGROUND TASK SCHEDULING CRITICAL IMPROVEMENTS NEEDED
+  /// - Current implementation is PLACEHOLDER ONLY - no actual background scheduling
+  /// - Need to implement proper iOS/Android background task registration
+  /// - Missing integration with WorkManager (Android) and Background App Refresh (iOS)
+  /// - Need to implement proper notification scheduling with platform native APIs
+  /// - Missing battery optimization handling and background execution limits
+  /// - Need to implement proper background sync for notification data
+  /// - Missing integration with system notification scheduling services
+  /// - Need to implement proper wake-up alarms for critical notifications
+  /// - Missing notification timing optimization based on user activity patterns
+  /// - Need to implement proper error handling for background task failures
   Future<void> scheduleRecurringChecks() async {
     try {
       final prefs = await SharedPreferences.getInstance();

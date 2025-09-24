@@ -1,3 +1,17 @@
+// TODO: Main App Entry Point - Critical Issues and Missing Features
+// - Database service is legacy/deprecated and needs replacement with Firebase
+// - Missing Firebase initialization and configuration
+// - No error boundary or crash reporting setup
+// - Missing deep link handling configuration
+// - No background task initialization
+// - Missing app lifecycle management
+// - No analytics initialization (Google Analytics, Firebase Analytics)
+// - Missing push notification configuration
+// - No offline capability management
+// - Missing app update checking mechanism
+// - No security initialization (certificate pinning, etc.)
+// - Missing accessibility configuration
+
 // Import Flutter's core material design library for UI components
 import 'package:flutter/material.dart';
 // Import Provider package for state management across the app

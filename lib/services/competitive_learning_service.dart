@@ -3,6 +3,26 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// TODO: CRITICAL COMPETITIVE LEARNING SERVICE IMPLEMENTATION GAPS
+/// - Current implementation uses ONLY local storage - NO REAL COMPETITIVE FEATURES
+/// - Need to implement real-time leaderboards with Firebase/Firestore integration
+/// - Missing actual multi-user competition and ranking systems
+/// - Need to implement proper anti-cheating and score verification mechanisms
+/// - Missing real-time competition updates and live scoring
+/// - Need to implement proper tournament bracket and elimination systems
+/// - Missing integration with push notifications for competition updates
+/// - Need to implement proper reward distribution and prize management
+/// - Missing social features for competition discussions and team formation
+/// - Need to implement proper matchmaking based on skill level and performance
+/// - Missing integration with study analytics for fair competition scoring
+/// - Need to implement proper competition scheduling and time zone handling
+/// - Missing integration with social sharing and achievement celebrations
+/// - Need to implement proper competition moderation and dispute resolution
+/// - Missing accessibility features for competitive features
+/// - Need to implement proper competition analytics and effectiveness tracking
+/// - Missing integration with educational standards for subject-based competitions
+/// - Need to implement proper seasonal competitions and special events
+
 /// Represents different types of competitions
 enum CompetitionType {
   daily,

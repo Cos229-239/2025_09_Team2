@@ -273,6 +273,25 @@ class Streak {
 }
 
 /// Achievement and gamification service
+/// TODO: CRITICAL ACHIEVEMENT GAMIFICATION SERVICE IMPLEMENTATION GAPS
+/// - Current implementation uses only local SharedPreferences - NO CLOUD SYNC
+/// - Need to implement full Firebase/Firestore integration for cross-device sync
+/// - Missing real-time achievement tracking and progress updates
+/// - Need to implement proper social achievement sharing and notifications
+/// - Missing integration with actual study performance and learning analytics
+/// - Need to implement dynamic achievement generation based on user behavior
+/// - Missing proper reward redemption system and virtual economy
+/// - Need to implement achievement leaderboards and social comparisons
+/// - Missing integration with push notifications for achievement unlocks
+/// - Need to implement seasonal and time-limited achievements
+/// - Missing proper analytics tracking for gamification effectiveness
+/// - Need to implement achievement difficulty balancing and A/B testing
+/// - Missing integration with social features for achievement celebrations
+/// - Need to implement proper fraud detection for achievement manipulation
+/// - Missing accessibility features for achievement notifications and rewards
+/// - Need to implement achievement import/export for account migration
+/// - Missing integration with study streaks and habit formation psychology
+/// - Need to implement proper achievement categorization and filtering
 class AchievementGamificationService {
   static const String _progressKey = 'achievement_progress';
   static const String _levelKey = 'user_level';
@@ -292,6 +311,18 @@ class AchievementGamificationService {
   List<Reward> _earnedRewards = [];
 
   /// Initialize the service
+  /// 
+  /// TODO: INITIALIZATION CRITICAL IMPROVEMENTS NEEDED
+  /// - Current initialization only loads local data from SharedPreferences
+  /// - Need to implement proper Firebase/Firestore initialization and data sync
+  /// - Missing user authentication verification and data migration handling
+  /// - Need to implement proper error handling for data corruption or conflicts
+  /// - Missing integration with remote achievement definitions and updates
+  /// - Need to implement proper offline/online state handling and data reconciliation
+  /// - Missing initialization of real-time listeners for social achievement updates
+  /// - Need to implement proper user onboarding flow for gamification features
+  /// - Missing integration with analytics service for gamification tracking
+  /// - Need to implement proper achievement definition versioning and updates
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
     await _loadUserData();

@@ -3,6 +3,20 @@ import 'package:provider/provider.dart';
 import '../../models/notification.dart';
 import '../../providers/notification_provider.dart';
 
+// TODO: Notification Panel - Missing Core Notification Features
+// - No actual push notifications integration (Firebase Cloud Messaging)
+// - Settings save functionality shows success message but doesn't persist
+// - Missing real-time notification delivery system
+// - No notification scheduling and delivery management
+// - Missing notification sound and vibration customization
+// - No notification categories and custom channels
+// - Missing notification templates and personalization
+// - No bulk notification management (select multiple, batch actions)
+// - Missing notification analytics and engagement tracking
+// - No notification history and archival system
+// - Missing deep link handling for notification navigation
+// - No notification preview and test functionality
+
 /// LinkedIn-style notification panel widget with filtering and interaction features
 /// Displays notifications in a modern, professional layout with read/unread states
 class NotificationPanel extends StatelessWidget {

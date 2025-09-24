@@ -1,5 +1,25 @@
 /// User model representing a StudyPals application user
 /// Contains all user data including preferences, profile, and authentication status
+/// 
+/// TODO: CRITICAL USER MODEL IMPLEMENTATION GAPS
+/// - Current model structure is basic and missing many essential user features
+/// - Need to implement proper user roles and permissions system
+/// - Missing integration with social features (friends, followers, groups)
+/// - Need to implement user achievement and gamification data structure
+/// - Missing proper subscription and billing information management
+/// - Need to implement user study statistics and learning analytics
+/// - Missing integration with device management and session tracking
+/// - Need to implement proper user preference synchronization across devices
+/// - Missing user activity feed and interaction history
+/// - Need to implement proper user verification levels and trust scores
+/// - Missing integration with educational institution verification system
+/// - Need to implement user content creation and sharing permissions
+/// - Missing proper user data export and portability features
+/// - Need to implement user reporting and moderation history
+/// - Missing integration with accessibility preferences and requirements
+/// - Need to implement proper user onboarding progress tracking
+/// - Missing integration with external service connections (Google, Spotify, etc.)
+/// - Need to implement user study streak and habit tracking data
 class User {
   // Core Identity Fields
   final String id; // Unique identifier for the user (Firebase UID)

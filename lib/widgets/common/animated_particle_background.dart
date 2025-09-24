@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+// TODO: Animated Particle Background - Performance and Feature Gaps
+// - No particle physics or collision detection
+// - Missing interactive particles that respond to touch
+// - No dynamic particle count based on device performance
+// - Missing different particle shapes and effects
+// - No optimization for low-end devices (performance scaling)
+// - Missing particle trails or motion blur effects
+// - No sound interaction or audio-visual synchronization
+// - Missing seasonal or theme-based particle variations
+// - No GPU acceleration for large particle counts
+// - Missing particle pooling for memory efficiency
+// - No customizable particle behaviors or patterns
+// - Missing accessibility considerations for motion sensitivity
+
 class AnimatedParticleBackground extends StatefulWidget {
   final Widget child;
   final List<Color> gradientColors;
