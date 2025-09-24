@@ -19,6 +19,7 @@ import 'package:studypals/widgets/common/animated_particle_background.dart';
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
 import 'package:studypals/widgets/ai/ai_assistant_widget.dart'; // AI Assistant with persona selection
 import 'package:studypals/widgets/common/modern_hamburger_menu.dart'; // Modern hamburger menu
+import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/app_state.dart'; // Global app state for authentication
 import 'package:studypals/providers/task_provider.dart'; // Task management state
@@ -141,7 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         switch (index) {
           case 1: // Planner
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const PlannerScreen()),
+              MaterialPageRoute(builder: (context) => const UnifiedPlannerScreen()),
             );
             break;
           case 2: // Notes
@@ -504,36 +505,47 @@ class _DashboardHomeState extends State<DashboardHome>
 
   /// Build the calendar section matching the attached image layout
   Widget _buildCalendarSection(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 0),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A3050),
-        borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-            ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
-            : BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFFF8B67F),
-          width: 2,
+    return InkWell(
+      onTap: () {
+        // Navigate to enhanced calendar when calendar section is tapped
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const UnifiedPlannerScreen(),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A3050),
+          borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
+              ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
+              : BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFFF8B67F),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 8,
+              spreadRadius: 0,
+              offset: const Offset(0, 3),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 4,
+              spreadRadius: 0,
+              offset: const Offset(0, 1),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 8,
-            spreadRadius: 0,
-            offset: const Offset(0, 3),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 4,
-            spreadRadius: 0,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-       child: Padding(
-         padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
             // Left side - Today's Progress with circular indicator
             Column(
               children: [
@@ -668,9 +680,10 @@ class _DashboardHomeState extends State<DashboardHome>
               ),
             ),
           ],
-        ),
-      ),
-    );
+        ), // Close Row
+        ), // Close Padding
+      ), // Close Container
+    ); // Close InkWell
   }
 
   /// Build the calendar grid matching the image
@@ -722,23 +735,35 @@ class _DashboardHomeState extends State<DashboardHome>
                     return Expanded(
                        child: SizedBox(
                          height: 28,
-                        child: isCurrentMonth ? Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            color: isToday 
-                                ? const Color(0xFFF8B67F)
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Center(
-                            child: Text(
-                              dayNumber.toString(),
-                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                    color: isToday 
-                                        ? Theme.of(context).colorScheme.onPrimary
-                                        : Theme.of(context).colorScheme.onSurface,
-                                    fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                                  ),
+                        child: isCurrentMonth ? InkWell(
+                          onTap: () {
+                            // Navigate to enhanced calendar when day is tapped
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UnifiedPlannerScreen(),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(6),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: isToday 
+                                  ? const Color(0xFFF8B67F)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Center(
+                              child: Text(
+                                dayNumber.toString(),
+                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                      color: isToday 
+                                          ? Theme.of(context).colorScheme.onPrimary
+                                          : Theme.of(context).colorScheme.onSurface,
+                                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                              ),
                             ),
                           ),
                         ) : const SizedBox(),

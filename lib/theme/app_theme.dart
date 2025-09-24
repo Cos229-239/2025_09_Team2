@@ -191,7 +191,7 @@ class AppTheme {
         color: surfaceColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
+          side: const BorderSide(
             color: primaryColor,
             width: 2.0,
           ),
@@ -228,13 +228,13 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: primaryColor, width: 2),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
         labelStyle: TextStyle(color: primaryColor.withValues(alpha: 0.7)),
       ),
       
       // App bar theme
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: surfaceColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -247,31 +247,31 @@ class AppTheme {
         indicatorColor: primaryColor.withValues(alpha: 0.3),
         backgroundColor: surfaceColor,
         elevation: 0,
-        labelTextStyle: MaterialStateProperty.resolveWith((states) {
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
           return TextStyle(
-            color: states.contains(MaterialState.selected) ? primaryColor : Colors.white70,
+            color: states.contains(WidgetState.selected) ? primaryColor : Colors.white70,
             fontSize: 12,
           );
         }),
       ),
       
       // Dialog theme
-      dialogTheme: DialogThemeData(
+      dialogTheme: const DialogThemeData(
         backgroundColor: surfaceColor,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
           side: BorderSide(color: primaryColor, width: 2),
         ),
       ),
       
       // Bottom sheet theme
-      bottomSheetTheme: BottomSheetThemeData(
+      bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: surfaceColor,
         elevation: 0,
         modalBackgroundColor: surfaceColor,
         shape: RoundedRectangleBorder(
-          borderRadius: const BorderRadius.vertical(
+          borderRadius: BorderRadius.vertical(
             top: Radius.circular(20),
           ),
           side: BorderSide(color: primaryColor, width: 2),
@@ -279,14 +279,14 @@ class AppTheme {
       ),
       
       // Progress indicator theme
-      progressIndicatorTheme: ProgressIndicatorThemeData(
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: primaryColor,
         linearTrackColor: surfaceColor,
         circularTrackColor: surfaceColor,
       ),
       
       // Icon theme
-      iconTheme: IconThemeData(
+      iconTheme: const IconThemeData(
         color: primaryColor,
         size: 24,
       ),

@@ -40,9 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: AnimatedParticleBackground(
-        gradientColors: [
-          const Color(0xFF2A3050),
-          const Color(0xFF3A4268),
+        gradientColors: const [
+          Color(0xFF2A3050),
+          Color(0xFF3A4268),
         ],
         child: SafeArea(
           child: SingleChildScrollView(

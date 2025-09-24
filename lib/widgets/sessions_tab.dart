@@ -5,6 +5,9 @@ import 'package:intl/intl.dart';
 import '../models/social_session.dart';
 import '../providers/social_session_provider.dart';
 import '../widgets/schedule_session_screen.dart';
+import '../screens/live_session_screen.dart';
+import '../screens/session_details_screen.dart';
+import '../screens/session_results_screen.dart';
 
 class SessionsTab extends StatefulWidget {
   const SessionsTab({super.key});
@@ -687,57 +690,28 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
   }
 
   void _joinLiveSession(SocialSession session) {
-    // TODO: Navigate to live session screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Live session feature coming soon!'),
-        backgroundColor: Colors.blue,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LiveSessionScreen(session: session),
       ),
     );
   }
 
   void _viewSessionDetails(SocialSession session) {
-    // TODO: Show session details dialog or navigate to details screen
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(session.title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Type: ${session.type.displayName}'),
-            const SizedBox(height: 8),
-            Text('Host: ${session.hostName}'),
-            const SizedBox(height: 8),
-            Text('Scheduled: ${DateFormat('MMM dd, yyyy hh:mm a').format(session.scheduledTime)}'),
-            const SizedBox(height: 8),
-            Text('Duration: ${_formatDuration(session.duration)}'),
-            const SizedBox(height: 8),
-            Text('Participants: ${session.participantCount}/${session.maxParticipants}'),
-            const SizedBox(height: 8),
-            if (session.description.isNotEmpty) ...[
-              Text('Description: ${session.description}'),
-              const SizedBox(height: 8),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SessionDetailsScreen(session: session),
       ),
     );
   }
 
   void _viewSessionResults(SocialSession session) {
-    // TODO: Navigate to session results screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Session results feature coming soon!'),
-        backgroundColor: Colors.blue,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SessionResultsScreen(session: session),
       ),
     );
   }

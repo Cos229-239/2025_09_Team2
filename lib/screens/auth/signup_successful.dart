@@ -91,9 +91,9 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
       // Provides basic app structure with app bar and body
       body: AnimatedParticleBackground(
         // Animated background with particles
-        gradientColors: [
-          const Color(0xFF2A3050),
-          const Color(0xFF3A4268),
+        gradientColors: const [
+          Color(0xFF2A3050),
+          Color(0xFF3A4268),
         ],
         child: Container(
           // Main container for the screen content

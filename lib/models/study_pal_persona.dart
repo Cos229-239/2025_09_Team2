@@ -1,9 +1,3 @@
-/// StudyPal AI Persona System
-/// 
-/// This file defines the different AI tutor personalities that users can choose from,
-/// each with unique teaching styles, tones, and response patterns.
-library study_pal_persona;
-
 enum PersonaType {
   mentor,     // Calm, wise, patient teacher
   coach,      // Motivational, energetic, goal-oriented

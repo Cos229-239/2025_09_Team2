@@ -864,4 +864,17 @@ class SocialLearningService {
 
     return completed / total;
   }
+
+  /// Decline a friend request
+  Future<bool> declineFriendRequest(String friendshipId) async {
+    final friendshipIndex =
+        _friendships.indexWhere((f) => f.id == friendshipId);
+    if (friendshipIndex == -1) return false;
+
+    // Remove the friendship request
+    _friendships.removeAt(friendshipIndex);
+    
+    await _saveUserData();
+    return true;
+  }
 }

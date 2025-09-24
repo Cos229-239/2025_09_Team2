@@ -74,7 +74,7 @@ class SpotifyService {
   /// - Logs errors for debugging purposes
   /// - Maintains null state for tokens if loading fails
   /// 
-  /// @returns Future<void> - Completes when tokens are loaded
+  /// @returns Future that completes when tokens are loaded
   Future<void> _loadStoredTokens() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -282,7 +282,7 @@ class SpotifyService {
   /// - Clears tokens on critical failures
   /// - Throws specific exceptions for different failure cases
   /// 
-  /// @returns Future<String> The new access token
+  /// @returns Future String containing the new access token
   /// @throws AuthenticationException if refresh token is missing or invalid
   /// @throws NetworkException if request fails
   Future<String> refreshAccessToken() async {
@@ -344,7 +344,7 @@ class SpotifyService {
   /// 
   /// @param endpoint The API endpoint to call
   /// @param queryParams Optional query parameters
-  /// @returns Future<Map<String, dynamic>> JSON response data
+  /// @returns Future Map containing JSON response data
   /// @throws Exception for various error conditions
   Future<Map<String, dynamic>> _makeRequest(String endpoint,
       {Map<String, String>? queryParams, int retryCount = 0}) async {
@@ -427,7 +427,7 @@ class SpotifyService {
   /// - Throws if API request fails
   /// - Handles token refresh automatically
   /// 
-  /// @returns Future<SpotifyUser> containing user profile data
+  /// @returns Future SpotifyUser containing user profile data
   /// @throws Exception if request fails or user not authenticated
   Future<SpotifyUser> getCurrentUser() async {
     final data = await _makeRequest('/me');
@@ -449,7 +449,7 @@ class SpotifyService {
   /// - Maintains playlist order from Spotify
   /// - Includes playlist images and track counts
   /// 
-  /// @returns List<SpotifyPlaylist> containing user's playlists
+  /// @returns List of SpotifyPlaylist containing user's playlists
   /// @throws Exception if request fails or user not authenticated
   Future<List<SpotifyPlaylist>> getUserPlaylists({int limit = 50}) async {
     final data = await _makeRequest('/me/playlists',
@@ -476,7 +476,7 @@ class SpotifyService {
   /// - Deserializes to full SpotifyTrack objects
   /// - Maintains playlist order
   /// 
-  /// @returns List<SpotifyTrack> containing playlist tracks
+  /// @returns List of SpotifyTrack containing playlist tracks
   /// @throws Exception if request fails or playlist not found
   Future<List<SpotifyTrack>> getPlaylistTracks(String playlistId,
       {int limit = 100}) async {
@@ -510,7 +510,7 @@ class SpotifyService {
   /// - Orders by relevance
   /// - Includes full track metadata
   /// 
-  /// @returns List<SpotifyTrack> containing matching tracks
+  /// @returns List of SpotifyTrack containing matching tracks
   /// @throws Exception if search fails or query invalid
   Future<List<SpotifyTrack>> searchTracks(String query,
       {int limit = 10}) async {
@@ -731,7 +731,7 @@ class SpotifyService {
   /// - Clears all stored tokens
   /// - Resets service state
   /// 
-  /// @returns Future<void> - Completes when disconnection is finished
+  /// @returns Future that completes when disconnection is finished
   Future<void> disconnect() async {
     await clearTokens();
   }

@@ -15,6 +15,11 @@ import 'providers/daily_quest_provider.dart';
 import 'providers/ai_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/social_session_provider.dart';
+import 'providers/calendar_provider.dart';
+import 'providers/planner_provider.dart';
+
+// Import services
+import 'services/social_learning_service.dart';
 
 // Import auth wrapper for authentication flow
 import 'screens/auth/auth_wrapper.dart';
@@ -71,7 +76,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DailyQuestProvider()),
         ChangeNotifierProvider(create: (_) => StudyPalsAIProvider()),
         ChangeNotifierProvider(create: (_) => SocialSessionProvider()),
-        ChangeNotifierProvider(create: (_) => SocialSessionProvider()),
+        ChangeNotifierProvider(create: (_) => CalendarProvider()),
+        ChangeNotifierProvider(create: (_) => PlannerProvider()),
+        
+        // Services
+        Provider(create: (_) => SocialLearningService()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

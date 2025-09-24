@@ -92,7 +92,7 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   /// - Main body that changes based on connection state
   /// - Conditional loading indicators
   /// 
-  /// Uses Consumer<SpotifyProvider> to react to state changes in:
+  /// Uses Consumer(SpotifyProvider) to react to state changes in:
   /// - Connection status
   /// - Authentication state
   /// - Loading state
