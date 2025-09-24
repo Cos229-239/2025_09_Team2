@@ -434,35 +434,127 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Widget _buildFindPeople() {
-    // Mock suggested users
-    final suggestedUsers = List.generate(
-        10,
-        (index) => service.UserProfile(
-              id: 'suggested_$index',
-              username: 'user_$index',
-              displayName: 'User ${index + 1}',
-              bio: 'Love studying and learning new things!',
-              joinDate: DateTime.now().subtract(Duration(days: index * 10)),
-              level: 10 + index,
-              totalXP: 1000 + (index * 200),
-              title: index > 5 ? 'Advanced' : 'Intermediate',
-              interests: ['Math', 'Science', 'History'][index % 3] == 'Math'
-                  ? ['Math', 'Physics']
-                  : ['Science', 'Biology'],
-            ));
+    return FutureBuilder<List<service.UserProfile>>(
+      future: _socialService?.getUsersForDiscovery(limit: 20) ?? Future.value([]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Finding StudyPal users...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: suggestedUsers.length,
-      itemBuilder: (context, index) {
-        final user = suggestedUsers[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: UserProfileCard(
-            profile: user,
-            onTap: () => _showUserProfile(user),
-            onAddFriendTap: () => _sendFriendRequest(user.id),
-          ),
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load users',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please check your connection and try again',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Trigger a rebuild to retry
+                      setState(() {});
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final users = snapshot.data ?? [];
+
+        if (users.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.people_outline,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No users found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Be the first to invite friends to StudyPals!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final user = users[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: UserProfileCard(
+                profile: user,
+                onTap: () => _showUserProfile(user),
+                onAddFriendTap: () => _sendFriendRequest(user.id),
+              ),
+            );
+          },
         );
       },
     );
