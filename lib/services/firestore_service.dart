@@ -263,6 +263,44 @@ class FirestoreService {
     }
   }
 
+  /// Create a new deck with cards for user
+  Future<String?> createDeckWithCards({
+    required String uid,
+    required String title,
+    required String description,
+    required List<Map<String, dynamic>> cards,
+    String category = 'General',
+    List<String> tags = const [],
+  }) async {
+    try {
+      final deckData = {
+        'uid': uid,
+        'title': title,
+        'description': description,
+        'category': category,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'cardCount': cards.length,
+        'studyCount': 0,
+        'averageScore': 0.0,
+        'isPublic': false,
+        'tags': tags,
+        'cards': cards, // Store the actual flashcards
+      };
+
+      final docRef = await decksCollection.add(deckData);
+      if (kDebugMode) {
+        print('✅ Created deck with ${cards.length} cards. ID: ${docRef.id}');
+      }
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating deck with cards: $e');
+      }
+      return null;
+    }
+  }
+
   /// Get user's decks
   Future<List<Map<String, dynamic>>> getUserDecks(String uid) async {
     try {
@@ -388,6 +426,433 @@ class FirestoreService {
     return tasksCollection
         .where('uid', isEqualTo: uid)
         .orderBy('dueDate', descending: false)
+        .snapshots();
+  }
+
+  // ==================== ENHANCED TASK MANAGEMENT METHODS ====================
+
+  /// Create a new task using the full Task model
+  Future<String?> createFullTask(String uid, Map<String, dynamic> taskData) async {
+    try {
+      final taskWithMeta = {
+        ...taskData,
+        'uid': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'isArchived': false,
+      };
+
+      final docRef = await tasksCollection.add(taskWithMeta);
+      if (kDebugMode) {
+        print('✅ Created full task: ${docRef.id}');
+      }
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating full task: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get all tasks for a user using the full Task model
+  Future<List<Map<String, dynamic>>> getUserFullTasks(String uid) async {
+    try {
+      final querySnapshot = await tasksCollection
+          .where('uid', isEqualTo: uid)
+          .where('isArchived', isEqualTo: false)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final tasks = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+
+      if (kDebugMode) {
+        print('✅ Retrieved ${tasks.length} full tasks for user: $uid');
+      }
+      return tasks;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error retrieving full tasks: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Update an existing task using the full Task model
+  Future<bool> updateFullTask(String taskId, Map<String, dynamic> updateData) async {
+    try {
+      await tasksCollection.doc(taskId).update({
+        ...updateData,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Updated full task: $taskId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating full task: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Delete (archive) a task using the full Task model
+  Future<bool> deleteFullTask(String taskId) async {
+    try {
+      await tasksCollection.doc(taskId).update({
+        'isArchived': true,
+        'archivedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Archived full task: $taskId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error archiving full task: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get real-time user tasks stream using the full Task model
+  Stream<QuerySnapshot> getUserFullTasksStream(String uid) {
+    return tasksCollection
+        .where('uid', isEqualTo: uid)
+        .where('isArchived', isEqualTo: false)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  // ==================== NOTES MANAGEMENT METHODS ====================
+
+  /// Create a new note for user
+  Future<String?> createNote({
+    required String uid,
+    required String title,
+    required String contentMd,
+    List<String> tags = const [],
+  }) async {
+    try {
+      final noteData = {
+        'uid': uid,
+        'title': title,
+        'contentMd': contentMd,
+        'tags': tags,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'wordCount': contentMd.split(' ').length,
+        'isArchived': false,
+      };
+
+      final docRef = await notesCollection.add(noteData);
+      if (kDebugMode) {
+        print('✅ Created note with ID: ${docRef.id}');
+      }
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating note: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get user's notes
+  Future<List<Map<String, dynamic>>> getUserNotes(String uid) async {
+    try {
+      final querySnapshot = await notesCollection
+          .where('uid', isEqualTo: uid)
+          .where('isArchived', isEqualTo: false)
+          .orderBy('updatedAt', descending: true)
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error getting user notes: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Update an existing note
+  Future<bool> updateNote({
+    required String noteId,
+    required String uid,
+    String? title,
+    String? contentMd,
+    List<String>? tags,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      if (title != null) updateData['title'] = title;
+      if (contentMd != null) {
+        updateData['contentMd'] = contentMd;
+        updateData['wordCount'] = contentMd.split(' ').length;
+      }
+      if (tags != null) updateData['tags'] = tags;
+
+      await notesCollection.doc(noteId).update(updateData);
+      if (kDebugMode) {
+        print('✅ Updated note: $noteId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating note: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Delete a note (soft delete by archiving)
+  Future<bool> deleteNote(String noteId) async {
+    try {
+      await notesCollection.doc(noteId).update({
+        'isArchived': true,
+        'archivedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Archived note: $noteId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error archiving note: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get real-time user notes stream
+  Stream<QuerySnapshot> getUserNotesStream(String uid) {
+    return notesCollection
+        .where('uid', isEqualTo: uid)
+        .where('isArchived', isEqualTo: false)
+        .orderBy('updatedAt', descending: true)
+        .snapshots();
+  }
+
+  // ==================== DAILY QUEST MANAGEMENT METHODS ====================
+
+  /// Collection reference for daily quests
+  CollectionReference get dailyQuestsCollection => _firestore.collection('dailyQuests');
+
+  /// Create a new daily quest for user
+  Future<String?> createDailyQuest(String uid, Map<String, dynamic> questData) async {
+    try {
+      final questWithMeta = {
+        ...questData,
+        'uid': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'isArchived': false,
+      };
+
+      final docRef = await dailyQuestsCollection.add(questWithMeta);
+      if (kDebugMode) {
+        print('✅ Created daily quest: ${docRef.id}');
+      }
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating daily quest: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get all daily quests for a specific user
+  Future<List<Map<String, dynamic>>> getUserDailyQuests(String uid) async {
+    try {
+      final querySnapshot = await dailyQuestsCollection
+          .where('uid', isEqualTo: uid)
+          .where('isArchived', isEqualTo: false)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      final quests = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+
+      if (kDebugMode) {
+        print('✅ Retrieved ${quests.length} daily quests for user: $uid');
+      }
+      return quests;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error retrieving daily quests: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Update an existing daily quest
+  Future<bool> updateDailyQuest(String questId, Map<String, dynamic> updateData) async {
+    try {
+      await dailyQuestsCollection.doc(questId).update({
+        ...updateData,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Updated daily quest: $questId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating daily quest: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Delete (archive) a daily quest
+  Future<bool> deleteDailyQuest(String questId) async {
+    try {
+      await dailyQuestsCollection.doc(questId).update({
+        'isArchived': true,
+        'archivedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Archived daily quest: $questId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error archiving daily quest: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get real-time user daily quests stream
+  Stream<QuerySnapshot> getUserDailyQuestsStream(String uid) {
+    return dailyQuestsCollection
+        .where('uid', isEqualTo: uid)
+        .where('isArchived', isEqualTo: false)
+        .orderBy('createdAt', descending: true)
+        .snapshots();
+  }
+
+  // ==================== CALENDAR EVENT MANAGEMENT METHODS ====================
+
+  /// Collection reference for calendar events
+  CollectionReference get calendarEventsCollection => _firestore.collection('calendarEvents');
+
+  /// Create a new calendar event for user
+  Future<String?> createCalendarEvent(String uid, Map<String, dynamic> eventData) async {
+    try {
+      final eventWithMeta = {
+        ...eventData,
+        'uid': uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'isArchived': false,
+      };
+
+      final docRef = await calendarEventsCollection.add(eventWithMeta);
+      if (kDebugMode) {
+        print('✅ Created calendar event: ${docRef.id}');
+      }
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating calendar event: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get all calendar events for a specific user
+  Future<List<Map<String, dynamic>>> getUserCalendarEvents(String uid) async {
+    try {
+      final querySnapshot = await calendarEventsCollection
+          .where('uid', isEqualTo: uid)
+          .where('isArchived', isEqualTo: false)
+          .orderBy('startTime', descending: false)
+          .get();
+
+      final events = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+
+      if (kDebugMode) {
+        print('✅ Retrieved ${events.length} calendar events for user: $uid');
+      }
+      return events;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error retrieving calendar events: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Update an existing calendar event
+  Future<bool> updateCalendarEvent(String eventId, Map<String, dynamic> updateData) async {
+    try {
+      await calendarEventsCollection.doc(eventId).update({
+        ...updateData,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Updated calendar event: $eventId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating calendar event: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Delete (archive) a calendar event
+  Future<bool> deleteCalendarEvent(String eventId) async {
+    try {
+      await calendarEventsCollection.doc(eventId).update({
+        'isArchived': true,
+        'archivedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Archived calendar event: $eventId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error archiving calendar event: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get real-time user calendar events stream
+  Stream<QuerySnapshot> getUserCalendarEventsStream(String uid) {
+    return calendarEventsCollection
+        .where('uid', isEqualTo: uid)
+        .where('isArchived', isEqualTo: false)
+        .orderBy('startTime', descending: false)
         .snapshots();
   }
 
