@@ -6,13 +6,18 @@ import 'dart:developer' as developer;
 import 'package:studypals/models/review.dart';
 // Import FlashCard model for card-review relationships
 import 'package:studypals/models/card.dart';
+// Import Firestore service for review data persistence
+import 'package:studypals/services/firestore_service.dart';
 
 /// Provider for managing spaced repetition system (SRS) and review scheduling
 /// Implements SM-2 algorithm for optimal learning intervals and review timing
 /// Uses ChangeNotifier to notify UI widgets when review data changes
+/// Integrates with Firebase/Firestore for real-time review data persistence
 class SRSProvider extends ChangeNotifier {
-  // List of all card reviews with scheduling information
-  final List<Review> _reviews = [];
+  final FirestoreService _firestoreService = FirestoreService();
+
+  // List of all card reviews with scheduling information (cached from Firestore)
+  List<Review> _reviews = [];
 
   // Loading state flag to show/hide loading indicators in UI
   bool _isLoading = false;
@@ -30,8 +35,8 @@ class SRSProvider extends ChangeNotifier {
   /// @return List of Review objects that are ready for study
   List<Review> get dueReviews {
     final now = DateTime.now(); // Get current timestamp
-    // Filter reviews where due date has passed (is before now)
-    return _reviews.where((r) => r.dueAt.isBefore(now)).toList();
+    // Filter reviews where due date has passed (is before now or equal)
+    return _reviews.where((r) => r.dueAt.isBefore(now) || r.dueAt.isAtSameMomentAs(now)).toList();
   }
 
   /// Getter for count of reviews currently due for study
@@ -39,19 +44,25 @@ class SRSProvider extends ChangeNotifier {
   /// @return Integer count of reviews ready for study
   int get dueCount => dueReviews.length;
 
-  /// Loads all review data from persistent storage (database)
+  /// Initialize the SRSProvider and load review data from Firestore
+  /// Call this when the provider is first created
+  Future<void> initialize() async {
+    await loadReviews();
+  }
+
+  /// Loads all review data from Firestore
   /// Sets loading state and handles errors gracefully with logging
   Future<void> loadReviews() async {
     _isLoading = true; // Set loading state to true
     notifyListeners(); // Notify UI to show loading indicators
 
     try {
-      // Database loading will be implemented when repository layer is added
-      // For now, reviews list remains empty until user starts reviewing cards
-      // _reviews = await ReviewRepository.getAllReviews();
+      _reviews = await _firestoreService.getUserReviews();
+      developer.log('Loaded ${_reviews.length} reviews from Firestore', name: 'SRSProvider');
     } catch (e) {
       // Log any errors that occur during review loading for debugging
       developer.log('Error loading reviews: $e', name: 'SRSProvider');
+      _reviews = []; // Reset to empty list on error
     } finally {
       _isLoading = false; // Always clear loading state
       notifyListeners(); // Notify UI that loading is complete
@@ -60,62 +71,35 @@ class SRSProvider extends ChangeNotifier {
 
   /// Records a review session result and updates spaced repetition scheduling
   /// Uses SM-2 algorithm to calculate next review date based on performance
+  /// Automatically saves changes to Firestore
   /// @param card - The FlashCard that was reviewed
   /// @param grade - User's performance grade (again, hard, good, easy)
-  void recordReview(FlashCard card, ReviewGrade grade) {
-    // Find existing review for this card
-    final existingReviewIndex = _reviews.indexWhere(
-      (r) => r.cardId == card.id, // Match by card ID
-    );
+  Future<void> recordReview(FlashCard card, ReviewGrade grade) async {
+    try {
+      // Update review with grade using Firestore service (handles SM-2 algorithm)
+      final updatedReview = await _firestoreService.updateReviewWithGrade(card.id, grade);
+      
+      if (updatedReview != null) {
+        // Update local cache
+        final existingIndex = _reviews.indexWhere((r) => r.cardId == card.id);
+        if (existingIndex != -1) {
+          _reviews[existingIndex] = updatedReview;
+        } else {
+          _reviews.add(updatedReview);
+        }
 
-    Review updatedReview;
+        developer.log(
+          'Review recorded for card ${card.id}: Grade=$grade, Next due=${updatedReview.dueAt}',
+          name: 'SRSProvider'
+        );
 
-    if (existingReviewIndex != -1) {
-      // If review already exists
-      // Update existing review with new grade using SM-2 algorithm
-      final existingReview = _reviews[existingReviewIndex];
-      updatedReview =
-          existingReview.updateWithGrade(grade); // Calculate new intervals
-      _reviews[existingReviewIndex] =
-          updatedReview; // Replace with updated review
-    } else {
-      // If this is a new card
-      // Create new review with initial SM-2 parameters
-      updatedReview = Review(
-        cardId: card.id, // Link to the reviewed card
-        userId:
-            'user123', // Placeholder user ID (will be replaced with auth system)
-        dueAt: _getInitialDueDate(grade), // Calculate first review date
-        ease: 2.5, // Default ease factor from SM-2
-        interval: 1, // Start with 1-day interval
-        reps: 1, // First repetition
-        lastGrade: grade, // Store the performance grade
-        lastReviewed: DateTime.now(), // Mark current time as review time
-      );
-      _reviews.add(updatedReview); // Add new review to collection
-    }
-
-    // Notify UI that review data has changed
-    notifyListeners();
-  }
-
-  /// Calculates initial due date for new cards based on first review performance
-  /// Different grades result in different initial intervals
-  /// @param grade - User's performance grade on first review
-  /// @return DateTime when card should next be reviewed
-  DateTime _getInitialDueDate(ReviewGrade grade) {
-    switch (grade) {
-      case ReviewGrade.again: // Complete failure
-        return DateTime.now()
-            .add(const Duration(minutes: 10)); // Review again in 10 minutes
-      case ReviewGrade.hard: // Difficult recall
-        return DateTime.now()
-            .add(const Duration(days: 1)); // Review again tomorrow
-      case ReviewGrade.good: // Normal recall
-        return DateTime.now()
-            .add(const Duration(days: 1)); // Review again tomorrow
-      case ReviewGrade.easy: // Very easy recall
-        return DateTime.now().add(const Duration(days: 3)); // Review in 3 days
+        // Notify UI that review data has changed
+        notifyListeners();
+      } else {
+        developer.log('Failed to record review for card ${card.id}', name: 'SRSProvider');
+      }
+    } catch (e) {
+      developer.log('Error recording review: $e', name: 'SRSProvider');
     }
   }
 
@@ -134,39 +118,114 @@ class SRSProvider extends ChangeNotifier {
   /// Resets review progress for a specific card (removes from SRS)
   /// Used when user wants to restart learning a card from the beginning
   /// @param cardId - ID of the card to reset
-  void resetReview(String cardId) {
-    // Remove all reviews for the specified card
-    _reviews.removeWhere((r) => r.cardId == cardId);
-    notifyListeners(); // Notify UI of the change
+  Future<void> resetReview(String cardId) async {
+    try {
+      final success = await _firestoreService.deleteReview(cardId);
+      if (success) {
+        // Remove from local cache
+        _reviews.removeWhere((r) => r.cardId == cardId);
+        notifyListeners(); // Notify UI of the change
+        developer.log('Review reset for card: $cardId', name: 'SRSProvider');
+      } else {
+        developer.log('Failed to reset review for card: $cardId', name: 'SRSProvider');
+      }
+    } catch (e) {
+      developer.log('Error resetting review: $e', name: 'SRSProvider');
+    }
   }
 
   /// Generates statistics about review activity and card progress
   /// Used for displaying progress analytics and study insights
-  /// @return Map containing various review statistics
-  Map<String, int> getReviewStats() {
-    final today = DateTime.now(); // Get current date
+  /// @return Map containing various review statistics  
+  Future<Map<String, int>> getReviewStats() async {
+    try {
+      // Calculate local stats for current state
+      final today = DateTime.now();
+      final todayReviews = _reviews
+          .where((r) =>
+                  r.lastReviewed != null && // Has been reviewed
+                  r.lastReviewed!.day == today.day && // Same day
+                  r.lastReviewed!.month == today.month && // Same month
+                  r.lastReviewed!.year == today.year // Same year
+              )
+          .toList();
 
-    // Filter reviews that were completed today
-    final todayReviews = _reviews
-        .where((r) =>
-                r.lastReviewed != null && // Has been reviewed
-                r.lastReviewed!.day == today.day && // Same day
-                r.lastReviewed!.month == today.month && // Same month
-                r.lastReviewed!.year == today.year // Same year
-            )
-        .toList();
+      // Return comprehensive statistics about review progress
+      return {
+        'total': _reviews.length, // Total cards in SRS system
+        'due': dueCount, // Cards due for review now
+        'reviewedToday': todayReviews.length, // Cards reviewed today
+        'learning': _reviews
+            .where((r) => r.interval < 7)
+            .length, // Cards in learning phase (< 1 week)
+        'mature': _reviews
+            .where((r) => r.interval >= 21)
+            .length, // Mature cards (≥ 3 weeks)
+      };
+    } catch (e) {
+      developer.log('Error getting review stats: $e', name: 'SRSProvider');
+      return {
+        'total': 0,
+        'due': 0,
+        'reviewedToday': 0,
+        'learning': 0,
+        'mature': 0,
+      };
+    }
+  }
 
-    // Return comprehensive statistics about review progress
-    return {
-      'total': _reviews.length, // Total cards in SRS system
-      'due': dueCount, // Cards due for review now
-      'reviewedToday': todayReviews.length, // Cards reviewed today
-      'learning': _reviews
-          .where((r) => r.interval < 7)
-          .length, // Cards in learning phase (< 1 week)
-      'mature': _reviews
-          .where((r) => r.interval >= 21)
-          .length, // Mature cards (≥ 3 weeks)
-    };
+  /// Gets a real-time stream of due reviews from Firestore
+  /// Use this for widgets that need live updates of due reviews
+  /// @return Stream of due Review objects
+  Stream<List<Review>> getDueReviewsStream() {
+    return _firestoreService.getDueReviewsStream();
+  }
+
+  /// Create a new review for a card (first time studying)
+  /// @param cardId - ID of the card to create review for
+  /// @return Created Review object or null if failed
+  Future<Review?> createReview(String cardId) async {
+    try {
+      final newReview = await _firestoreService.createReview(cardId);
+      if (newReview != null) {
+        _reviews.add(newReview);
+        notifyListeners();
+        developer.log('New review created for card: $cardId', name: 'SRSProvider');
+      }
+      return newReview;
+    } catch (e) {
+      developer.log('Error creating review: $e', name: 'SRSProvider');
+      return null;
+    }
+  }
+
+  /// Get review for a specific card
+  /// @param cardId - Card ID to get review for
+  /// @return Review object or null if not found
+  Future<Review?> getCardReview(String cardId) async {
+    try {
+      // First check local cache
+      final localReview = _reviews.where((r) => r.cardId == cardId).firstOrNull;
+      if (localReview != null) {
+        return localReview;
+      }
+
+      // If not in cache, fetch from Firestore
+      final review = await _firestoreService.getCardReview(cardId);
+      if (review != null) {
+        _reviews.add(review);
+        notifyListeners();
+      }
+      return review;
+    } catch (e) {
+      developer.log('Error getting card review: $e', name: 'SRSProvider');
+      return null;
+    }
+  }
+
+  @override
+  void dispose() {
+    // Clean up any streams or listeners if needed
+    super.dispose();
   }
 }

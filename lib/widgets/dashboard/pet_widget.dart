@@ -25,6 +25,25 @@ class PetWidget extends StatelessWidget {
         final pet =
             petProvider.currentPet; // Get current pet data from provider
 
+        if (pet == null) {
+          return Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Loading your Study Pal...',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
         // Card container providing elevation and material design appearance
         return Card(
           elevation: 4, // Shadow depth for visual hierarchy

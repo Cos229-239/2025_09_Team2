@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firestore_service.dart';
 
+// TODO: FIRESTORE INTEGRATION NEEDED - Social data using SharedPreferences instead of Firestore   
+
 /// Represents a user's privacy settings
 enum PrivacyLevel {
   public,

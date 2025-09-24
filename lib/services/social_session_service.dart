@@ -5,6 +5,10 @@ import 'dart:math';
 
 import '../models/social_session.dart';
 
+// TODO: FIRESTORE INTEGRATION NEEDED - Social sessions using SharedPreferences instead of Firestore
+// import 'package:firebase_auth/firebase_auth.dart';
+// import 'firestore_service.dart';
+
 /// Service for managing social study sessions
 class SocialSessionService extends ChangeNotifier {
   static const String _sessionsKey = 'social_sessions';
