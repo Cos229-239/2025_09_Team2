@@ -15,7 +15,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   final _titleController = TextEditingController();
   final _tagsController = TextEditingController();
   final _estMinutesController = TextEditingController(text: '30');
-  
+
   int _selectedPriority = 1; // Default to low priority
   DateTime? _selectedDueDate;
   bool _isLoading = false;
@@ -108,15 +108,18 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildPriorityCard(1, 'Low', Colors.green, Icons.keyboard_arrow_down),
+                    child: _buildPriorityCard(
+                        1, 'Low', Colors.green, Icons.keyboard_arrow_down),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildPriorityCard(2, 'Medium', Colors.orange, Icons.remove),
+                    child: _buildPriorityCard(
+                        2, 'Medium', Colors.orange, Icons.remove),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildPriorityCard(3, 'High', Colors.red, Icons.keyboard_arrow_up),
+                    child: _buildPriorityCard(
+                        3, 'High', Colors.red, Icons.keyboard_arrow_up),
                   ),
                 ],
               ),
@@ -141,7 +144,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                               ? 'Select due date (optional)'
                               : 'Due: ${_formatDate(_selectedDueDate!)}',
                           style: TextStyle(
-                            color: _selectedDueDate == null ? Colors.grey[600] : null,
+                            color: _selectedDueDate == null
+                                ? Colors.grey[600]
+                                : null,
                           ),
                         ),
                       ),
@@ -165,7 +170,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 controller: _tagsController,
                 decoration: const InputDecoration(
                   labelText: 'Tags',
-                  hintText: 'Enter tags separated by commas (e.g. study, homework, urgent)',
+                  hintText:
+                      'Enter tags separated by commas (e.g. study, homework, urgent)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.local_offer),
                 ),
@@ -226,9 +232,10 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
   }
 
-  Widget _buildPriorityCard(int priority, String label, Color color, IconData icon) {
+  Widget _buildPriorityCard(
+      int priority, String label, Color color, IconData icon) {
     final isSelected = _selectedPriority == priority;
-    
+
     return Card(
       elevation: isSelected ? 4 : 1,
       color: isSelected ? color.withValues(alpha: 0.1) : null,
@@ -307,7 +314,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
     try {
       final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-      
+
       // Parse tags
       final tags = _tagsController.text
           .split(',')

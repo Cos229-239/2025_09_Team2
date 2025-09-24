@@ -12,43 +12,44 @@ import 'pet_provider.dart';
 class CalendarProvider with ChangeNotifier {
   // Current selected date in the calendar
   DateTime _selectedDay = DateTime.now();
-  
+
   // Calendar format (month, 2weeks, week)
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  
+
   // Focused day for calendar navigation
   DateTime _focusedDay = DateTime.now();
-  
+
   // All unified calendar events from all sources
   final Map<DateTime, List<CalendarEvent>> _events = {};
-  
+
   // Events filtered by current selection criteria
   List<CalendarEvent> _filteredEvents = [];
-  
+
   // Active event type filters
-  final Set<CalendarEventType> _activeFilters = Set.from(CalendarEventType.values);
-  
+  final Set<CalendarEventType> _activeFilters =
+      Set.from(CalendarEventType.values);
+
   // Event status filters
   final Set<CalendarEventStatus> _statusFilters = {
     CalendarEventStatus.scheduled,
     CalendarEventStatus.inProgress,
   };
-  
+
   // Priority filters (1=low, 2=medium, 3=high)
   final Set<int> _priorityFilters = {1, 2, 3};
-  
+
   // Search query for event filtering
   String _searchQuery = '';
-  
+
   // Loading state
   bool _isLoading = false;
-  
+
   // Error state
   String? _errorMessage;
-  
+
   // Auto-refresh settings
   bool _autoRefresh = true;
-  
+
   // Reference to other providers for data synchronization
   TaskProvider? _taskProvider;
   DailyQuestProvider? _questProvider;
@@ -79,13 +80,13 @@ class CalendarProvider with ChangeNotifier {
     _questProvider = questProvider;
     _socialProvider = socialProvider;
     _petProvider = petProvider;
-    
+
     // Set up listeners for real-time updates
     _setupProviderListeners();
-    
+
     // Initial data load
     refreshAllEvents();
-    
+
     // Set up auto-refresh if enabled
     if (_autoRefresh) {
       _setupAutoRefresh();
@@ -101,7 +102,9 @@ class CalendarProvider with ChangeNotifier {
   /// Gets events occurring in a date range
   List<CalendarEvent> getEventsInRange(DateTime start, DateTime end) {
     final events = <CalendarEvent>[];
-    for (var day = start; day.isBefore(end) || day.isAtSameMomentAs(end); day = day.add(const Duration(days: 1))) {
+    for (var day = start;
+        day.isBefore(end) || day.isAtSameMomentAs(end);
+        day = day.add(const Duration(days: 1))) {
       events.addAll(getEventsForDay(day));
     }
     return events;
@@ -112,26 +115,26 @@ class CalendarProvider with ChangeNotifier {
     final now = DateTime.now();
     final sevenDaysFromNow = now.add(const Duration(days: 7));
     return getEventsInRange(now, sevenDaysFromNow)
-      .where((event) => event.startTime.isAfter(now))
-      .toList()
+        .where((event) => event.startTime.isAfter(now))
+        .toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
   /// Gets overdue events
   List<CalendarEvent> getOverdueEvents() {
     return _events.values
-      .expand((events) => events)
-      .where((event) => event.isOverdue)
-      .toList()
+        .expand((events) => events)
+        .where((event) => event.isOverdue)
+        .toList()
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
   /// Gets events happening right now
   List<CalendarEvent> getCurrentEvents() {
     return _events.values
-      .expand((events) => events)
-      .where((event) => event.isHappeningNow)
-      .toList();
+        .expand((events) => events)
+        .where((event) => event.isHappeningNow)
+        .toList();
   }
 
   /// Updates selected day and refreshes filtered events
@@ -198,7 +201,8 @@ class CalendarProvider with ChangeNotifier {
     _activeFilters.clear();
     _activeFilters.addAll(CalendarEventType.values);
     _statusFilters.clear();
-    _statusFilters.addAll([CalendarEventStatus.scheduled, CalendarEventStatus.inProgress]);
+    _statusFilters.addAll(
+        [CalendarEventStatus.scheduled, CalendarEventStatus.inProgress]);
     _priorityFilters.clear();
     _priorityFilters.addAll({1, 2, 3});
     _searchQuery = '';
@@ -255,7 +259,7 @@ class CalendarProvider with ChangeNotifier {
   }) async {
     try {
       _setLoading(true);
-      
+
       final event = CalendarEvent(
         id: _generateEventId(type),
         title: title,
@@ -270,7 +274,8 @@ class CalendarProvider with ChangeNotifier {
         icon: type.defaultIcon,
         tags: tags,
         isEditable: true,
-        isCompletable: type == CalendarEventType.task || type == CalendarEventType.dailyQuest,
+        isCompletable: type == CalendarEventType.task ||
+            type == CalendarEventType.dailyQuest,
         estimatedMinutes: estimatedMinutes,
         participants: participants,
         location: location,
@@ -283,10 +288,10 @@ class CalendarProvider with ChangeNotifier {
 
       // Add to internal events map
       _addEventToMap(event);
-      
+
       // Create corresponding object in appropriate provider
       await _createSourceObject(event);
-      
+
       _updateFilteredEvents();
       return event;
     } catch (e) {
@@ -301,13 +306,13 @@ class CalendarProvider with ChangeNotifier {
   Future<CalendarEvent?> updateEvent(CalendarEvent event) async {
     try {
       _setLoading(true);
-      
+
       // Update in internal events map
       _updateEventInMap(event);
-      
+
       // Update source object if needed
       await _updateSourceObject(event);
-      
+
       _updateFilteredEvents();
       return event;
     } catch (e) {
@@ -322,13 +327,13 @@ class CalendarProvider with ChangeNotifier {
   Future<bool> deleteEvent(CalendarEvent event) async {
     try {
       _setLoading(true);
-      
+
       // Remove from internal events map
       _removeEventFromMap(event);
-      
+
       // Delete source object if needed
       await _deleteSourceObject(event);
-      
+
       _updateFilteredEvents();
       return true;
     } catch (e) {
@@ -342,21 +347,21 @@ class CalendarProvider with ChangeNotifier {
   /// Marks an event as completed
   Future<bool> completeEvent(CalendarEvent event) async {
     if (!event.isCompletable) return false;
-    
+
     final updatedEvent = event.copyWith(
       status: CalendarEventStatus.completed,
       updatedAt: DateTime.now(),
     );
-    
+
     return await updateEvent(updatedEvent) != null;
   }
 
   /// Schedules study break reminders based on study sessions
   void scheduleStudyBreaks() {
     final studyEvents = _events.values
-      .expand((events) => events)
-      .where((event) => event.type == CalendarEventType.studySession)
-      .toList();
+        .expand((events) => events)
+        .where((event) => event.type == CalendarEventType.studySession)
+        .toList();
 
     for (final studyEvent in studyEvents) {
       if (studyEvent.duration != null && studyEvent.duration!.inMinutes >= 45) {
@@ -370,7 +375,7 @@ class CalendarProvider with ChangeNotifier {
         _addEventToMap(breakEvent);
       }
     }
-    
+
     _updateFilteredEvents();
     notifyListeners();
   }
@@ -382,15 +387,17 @@ class CalendarProvider with ChangeNotifier {
     DateTime? preferredDate,
   }) {
     final suggestions = <CalendarEvent>[];
-    final targetDate = preferredDate ?? DateTime.now().add(const Duration(days: 1));
-    
+    final targetDate =
+        preferredDate ?? DateTime.now().add(const Duration(days: 1));
+
     // Find available time slots
     final availableSlots = _findAvailableTimeSlots(
       date: targetDate,
       durationMinutes: durationMinutes,
     );
-    
-    for (final slot in availableSlots.take(3)) { // Top 3 suggestions
+
+    for (final slot in availableSlots.take(3)) {
+      // Top 3 suggestions
       final suggestion = CalendarEvent(
         id: 'suggestion_${DateTime.now().millisecondsSinceEpoch}',
         title: 'Suggested ${eventType.displayName}',
@@ -408,22 +415,24 @@ class CalendarProvider with ChangeNotifier {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       suggestions.add(suggestion);
     }
-    
+
     return suggestions;
   }
 
   /// Gets calendar statistics
   Map<String, dynamic> getCalendarStats() {
     final allEvents = _events.values.expand((events) => events).toList();
-    
+
     return {
       'totalEvents': allEvents.length,
       'upcomingEvents': getUpcomingEvents().length,
       'overdueEvents': getOverdueEvents().length,
-      'completedEvents': allEvents.where((e) => e.status == CalendarEventStatus.completed).length,
+      'completedEvents': allEvents
+          .where((e) => e.status == CalendarEventStatus.completed)
+          .length,
       'eventsByType': _getEventCountByType(allEvents),
       'eventsByPriority': _getEventCountByPriority(allEvents),
       'averageEventsPerDay': _getAverageEventsPerDay(),
@@ -463,10 +472,10 @@ class CalendarProvider with ChangeNotifier {
 
   Future<void> _refreshTaskEvents() async {
     if (_taskProvider == null) return;
-    
+
     final tasks = _taskProvider!.tasks;
     _removeEventsByType(CalendarEventType.task);
-    
+
     for (final task in tasks) {
       final event = CalendarEvent.fromTask(task);
       _addEventToMap(event);
@@ -475,10 +484,10 @@ class CalendarProvider with ChangeNotifier {
 
   Future<void> _refreshQuestEvents() async {
     if (_questProvider == null) return;
-    
+
     final quests = _questProvider!.quests;
     _removeEventsByType(CalendarEventType.dailyQuest);
-    
+
     for (final quest in quests) {
       final event = CalendarEvent.fromDailyQuest(quest);
       _addEventToMap(event);
@@ -487,10 +496,10 @@ class CalendarProvider with ChangeNotifier {
 
   Future<void> _refreshSocialEvents() async {
     if (_socialProvider == null) return;
-    
+
     final sessions = _socialProvider!.allSessions;
     _removeEventsByType(CalendarEventType.socialSession);
-    
+
     for (final session in sessions) {
       final event = CalendarEvent.fromSocialSession(session);
       _addEventToMap(event);
@@ -499,10 +508,10 @@ class CalendarProvider with ChangeNotifier {
 
   Future<void> _refreshPetCareEvents() async {
     if (_petProvider == null) return;
-    
+
     final pet = _petProvider!.currentPet;
     _removeEventsByType(CalendarEventType.petCare);
-    
+
     // Create pet care reminders for different care types
     for (final careType in PetCareType.values) {
       final event = CalendarEvent.fromPetCare(pet, careType);
@@ -511,17 +520,18 @@ class CalendarProvider with ChangeNotifier {
   }
 
   void _addEventToMap(CalendarEvent event) {
-    final day = DateTime(event.startTime.year, event.startTime.month, event.startTime.day);
+    final day = DateTime(
+        event.startTime.year, event.startTime.month, event.startTime.day);
     if (_events[day] == null) {
       _events[day] = [];
     }
-    
+
     // Remove existing event with same ID if any
     _events[day]!.removeWhere((e) => e.id == event.id);
-    
+
     // Add new event
     _events[day]!.add(event);
-    
+
     // Sort events by start time
     _events[day]!.sort((a, b) => a.startTime.compareTo(b.startTime));
   }
@@ -531,7 +541,7 @@ class CalendarProvider with ChangeNotifier {
     for (final dayEvents in _events.values) {
       dayEvents.removeWhere((e) => e.id == event.id);
     }
-    
+
     // Add to new day
     _addEventToMap(event);
   }
@@ -550,34 +560,34 @@ class CalendarProvider with ChangeNotifier {
 
   void _updateFilteredEvents() {
     final selectedDayEvents = getEventsForDay(_selectedDay);
-    
+
     _filteredEvents = selectedDayEvents.where((event) {
       // Filter by event type
       if (!_activeFilters.contains(event.type)) return false;
-      
+
       // Filter by status
       if (!_statusFilters.contains(event.status)) return false;
-      
+
       // Filter by priority
       if (!_priorityFilters.contains(event.priority)) return false;
-      
+
       // Filter by search query
       if (_searchQuery.isNotEmpty) {
         final query = _searchQuery.toLowerCase();
         return event.title.toLowerCase().contains(query) ||
-               event.description.toLowerCase().contains(query) ||
-               event.tags.any((tag) => tag.toLowerCase().contains(query));
+            event.description.toLowerCase().contains(query) ||
+            event.tags.any((tag) => tag.toLowerCase().contains(query));
       }
-      
+
       return true;
     }).toList();
-    
+
     // Sort filtered events
     _filteredEvents.sort((a, b) {
       // First by start time
       final timeComparison = a.startTime.compareTo(b.startTime);
       if (timeComparison != 0) return timeComparison;
-      
+
       // Then by priority (high to low)
       return b.priority.compareTo(a.priority);
     });
@@ -611,7 +621,7 @@ class CalendarProvider with ChangeNotifier {
 
   Future<void> _updateSourceObject(CalendarEvent event) async {
     if (event.sourceObject == null) return;
-    
+
     switch (event.type) {
       case CalendarEventType.task:
         // Update task in task provider
@@ -623,7 +633,7 @@ class CalendarProvider with ChangeNotifier {
 
   Future<void> _deleteSourceObject(CalendarEvent event) async {
     if (event.sourceObject == null) return;
-    
+
     switch (event.type) {
       case CalendarEventType.task:
         // Delete task from task provider
@@ -639,36 +649,38 @@ class CalendarProvider with ChangeNotifier {
   }) {
     final slots = <DateTime>[];
     final existingEvents = getEventsForDay(date);
-    
+
     // Define working hours (9 AM to 9 PM)
     final startHour = 9;
     final endHour = 21;
-    
+
     // Check each 30-minute slot
     for (int hour = startHour; hour < endHour; hour++) {
       for (int minute = 0; minute < 60; minute += 30) {
-        final slotStart = DateTime(date.year, date.month, date.day, hour, minute);
+        final slotStart =
+            DateTime(date.year, date.month, date.day, hour, minute);
         final slotEnd = slotStart.add(Duration(minutes: durationMinutes));
-        
+
         // Check if this slot conflicts with existing events
         final hasConflict = existingEvents.any((event) {
           return (slotStart.isBefore(event.endTime ?? event.startTime) &&
-                 slotEnd.isAfter(event.startTime));
+              slotEnd.isAfter(event.startTime));
         });
-        
+
         if (!hasConflict && slotEnd.hour < endHour) {
           slots.add(slotStart);
         }
       }
     }
-    
+
     return slots;
   }
 
   Map<String, int> _getEventCountByType(List<CalendarEvent> events) {
     final counts = <String, int>{};
     for (final event in events) {
-      counts[event.type.displayName] = (counts[event.type.displayName] ?? 0) + 1;
+      counts[event.type.displayName] =
+          (counts[event.type.displayName] ?? 0) + 1;
     }
     return counts;
   }
@@ -683,7 +695,8 @@ class CalendarProvider with ChangeNotifier {
 
   double _getAverageEventsPerDay() {
     if (_events.isEmpty) return 0.0;
-    final totalEvents = _events.values.fold(0, (sum, events) => sum + events.length);
+    final totalEvents =
+        _events.values.fold(0, (sum, events) => sum + events.length);
     return totalEvents / _events.length;
   }
 
@@ -691,12 +704,13 @@ class CalendarProvider with ChangeNotifier {
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 7));
-    
+
     final studyEvents = getEventsInRange(weekStart, weekEnd)
-      .where((event) => event.type == CalendarEventType.studySession || 
-                      event.type == CalendarEventType.socialSession)
-      .toList();
-    
+        .where((event) =>
+            event.type == CalendarEventType.studySession ||
+            event.type == CalendarEventType.socialSession)
+        .toList();
+
     return studyEvents.fold(0, (total, event) {
       return total + (event.estimatedMinutes ?? 0);
     });
@@ -727,7 +741,7 @@ class CalendarProvider with ChangeNotifier {
     _questProvider?.removeListener(_onQuestsChanged);
     _socialProvider?.removeListener(_onSocialChanged);
     _petProvider?.removeListener(_onPetChanged);
-    
+
     super.dispose();
   }
 }

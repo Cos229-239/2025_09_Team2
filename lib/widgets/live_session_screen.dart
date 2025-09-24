@@ -19,14 +19,15 @@ class LiveSessionScreen extends StatefulWidget {
   State<LiveSessionScreen> createState() => _LiveSessionScreenState();
 }
 
-class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProviderStateMixin {
+class _LiveSessionScreenState extends State<LiveSessionScreen>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   QuizSession? _quizSession;
   FlashCard? _currentCard;
   int _selectedOptionIndex = -1;
   bool _isAnswerSubmitted = false;
   bool _isLoading = false;
-  
+
   @override
   void initState() {
     super.initState();
@@ -54,12 +55,13 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
     try {
       final deckProvider = Provider.of<DeckProvider>(context, listen: false);
       final quizService = Provider.of<QuizService>(context, listen: false);
-      
+
       // Get decks for this session
       final sessionDecks = widget.session.deckIds
           .map((deckId) => deckProvider.decks.firstWhere(
                 (deck) => deck.id == deckId,
-                orElse: () => Deck(id: deckId, title: 'Unknown Deck', cards: []),
+                orElse: () =>
+                    Deck(id: deckId, title: 'Unknown Deck', cards: []),
               ))
           .where((deck) => deck.cards.isNotEmpty)
           .toList();
@@ -98,20 +100,21 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
   }
 
   void _loadCurrentCard() {
-    if (_quizSession == null || _quizSession!.currentQuestionIndex >= _quizSession!.cardIds.length) {
+    if (_quizSession == null ||
+        _quizSession!.currentQuestionIndex >= _quizSession!.cardIds.length) {
       return;
     }
 
     final deckProvider = Provider.of<DeckProvider>(context, listen: false);
     final cardId = _quizSession!.cardIds[_quizSession!.currentQuestionIndex];
-    
+
     // Find the card in any of the session decks
     for (final deckId in widget.session.deckIds) {
       final deck = deckProvider.decks.firstWhere(
         (d) => d.id == deckId,
         orElse: () => Deck(id: deckId, title: 'Unknown', cards: []),
       );
-      
+
       for (final card in deck.cards) {
         if (card.id == cardId) {
           setState(() {
@@ -237,7 +240,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
     }
 
     final colorScheme = Theme.of(context).colorScheme;
-    final progress = (_quizSession!.currentQuestionIndex + 1) / _quizSession!.totalQuestions;
+    final progress =
+        (_quizSession!.currentQuestionIndex + 1) / _quizSession!.totalQuestions;
 
     return Column(
       children: [
@@ -299,15 +303,19 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
                     const SizedBox(height: 24),
 
                     // Multiple choice options
-                    ..._currentCard!.multipleChoiceOptions.asMap().entries.map((entry) {
+                    ..._currentCard!.multipleChoiceOptions
+                        .asMap()
+                        .entries
+                        .map((entry) {
                       final index = entry.key;
                       final option = entry.value;
                       final isSelected = _selectedOptionIndex == index;
-                      final isCorrect = index == _currentCard!.correctAnswerIndex;
+                      final isCorrect =
+                          index == _currentCard!.correctAnswerIndex;
 
                       Color? backgroundColor;
                       Color? borderColor;
-                      
+
                       if (_isAnswerSubmitted) {
                         if (isCorrect) {
                           backgroundColor = Colors.green.withValues(alpha: 0.2);
@@ -317,18 +325,21 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
                           borderColor = Colors.red;
                         }
                       } else if (isSelected) {
-                        backgroundColor = colorScheme.primary.withValues(alpha: 0.2);
+                        backgroundColor =
+                            colorScheme.primary.withValues(alpha: 0.2);
                         borderColor = colorScheme.primary;
                       }
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: InkWell(
-                          onTap: _isAnswerSubmitted ? null : () {
-                            setState(() {
-                              _selectedOptionIndex = index;
-                            });
-                          },
+                          onTap: _isAnswerSubmitted
+                              ? null
+                              : () {
+                                  setState(() {
+                                    _selectedOptionIndex = index;
+                                  });
+                                },
                           borderRadius: BorderRadius.circular(12),
                           child: Container(
                             padding: const EdgeInsets.all(16),
@@ -351,10 +362,13 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
                                       color: borderColor ?? colorScheme.outline,
                                       width: 2,
                                     ),
-                                    color: isSelected ? (borderColor ?? colorScheme.primary) : null,
+                                    color: isSelected
+                                        ? (borderColor ?? colorScheme.primary)
+                                        : null,
                                   ),
                                   child: isSelected
-                                      ? const Icon(Icons.check, color: Colors.white, size: 16)
+                                      ? const Icon(Icons.check,
+                                          color: Colors.white, size: 16)
                                       : null,
                                 ),
                                 const SizedBox(width: 16),
@@ -368,8 +382,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
                                   ),
                                 ),
                                 if (_isAnswerSubmitted && isCorrect)
-                                  const Icon(Icons.check_circle, color: Colors.green),
-                                if (_isAnswerSubmitted && isSelected && !isCorrect)
+                                  const Icon(Icons.check_circle,
+                                      color: Colors.green),
+                                if (_isAnswerSubmitted &&
+                                    isSelected &&
+                                    !isCorrect)
                                   const Icon(Icons.cancel, color: Colors.red),
                               ],
                             ),
@@ -384,13 +401,15 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _selectedOptionIndex == -1 
-                            ? null 
-                            : _isAnswerSubmitted 
+                        onPressed: _selectedOptionIndex == -1
+                            ? null
+                            : _isAnswerSubmitted
                                 ? _nextQuestion
                                 : _submitAnswer,
                         child: Text(
-                          _isAnswerSubmitted ? 'Next Question' : 'Submit Answer',
+                          _isAnswerSubmitted
+                              ? 'Next Question'
+                              : 'Submit Answer',
                           style: const TextStyle(fontSize: 16),
                         ),
                       ),
@@ -448,7 +467,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
   }
 
   void _submitAnswer() async {
-    if (_selectedOptionIndex == -1 || _quizSession == null || _currentCard == null) return;
+    if (_selectedOptionIndex == -1 ||
+        _quizSession == null ||
+        _currentCard == null) {
+      return;
+    }
 
     setState(() {
       _isAnswerSubmitted = true;
@@ -457,18 +480,19 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
     try {
       final quizService = Provider.of<QuizService>(context, listen: false);
       final petProvider = Provider.of<PetProvider>(context, listen: false);
-      final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
-      
+      final socialProvider =
+          Provider.of<SocialSessionProvider>(context, listen: false);
+
       // Find the deck containing this card
       final deckProvider = Provider.of<DeckProvider>(context, listen: false);
       Deck? cardDeck;
-      
+
       for (final deckId in widget.session.deckIds) {
         final deck = deckProvider.decks.firstWhere(
           (d) => d.id == deckId,
           orElse: () => Deck(id: deckId, title: 'Unknown', cards: []),
         );
-        
+
         if (deck.cards.any((c) => c.id == _currentCard!.id)) {
           cardDeck = deck;
           break;
@@ -520,7 +544,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
     try {
       final quizService = Provider.of<QuizService>(context, listen: false);
       final petProvider = Provider.of<PetProvider>(context, listen: false);
-      
+
       final completedSession = await quizService.completeMultiplayerQuizSession(
         _quizSession!.id,
         petProvider,
@@ -542,9 +566,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
   }
 
   void _showQuizResults(QuizSession completedSession) {
-    final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
+    final socialProvider =
+        Provider.of<SocialSessionProvider>(context, listen: false);
     final results = Provider.of<QuizService>(context, listen: false)
-        .getMultiplayerResults(completedSession.id, socialProvider.currentUserId);
+        .getMultiplayerResults(
+            completedSession.id, socialProvider.currentUserId);
 
     if (results != null) {
       showDialog(
@@ -556,10 +582,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
             mainAxisSize: MainAxisSize.min,
             children: [
               Text('Score: ${(results['score'] * 100).round()}%'),
-              Text('Correct Answers: ${results['correctAnswers']}/${results['totalAnswers']}'),
-              Text('Rank: ${results['rank']} of ${results['totalParticipants']}'),
+              Text(
+                  'Correct Answers: ${results['correctAnswers']}/${results['totalAnswers']}'),
+              Text(
+                  'Rank: ${results['rank']} of ${results['totalParticipants']}'),
               Text('EXP Earned: ${results['expEarned']}'),
-              if (results['isWinner']) 
+              if (results['isWinner'])
                 const Text('🎉 Congratulations! You won!'),
             ],
           ),
@@ -605,7 +633,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('End Session'),
-        content: const Text('Are you sure you want to end this session for all participants?'),
+        content: const Text(
+            'Are you sure you want to end this session for all participants?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -615,10 +644,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
             onPressed: () async {
               final navigator = Navigator.of(context);
               final scaffoldMessenger = ScaffoldMessenger.of(context);
-              final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
-              
+              final socialProvider =
+                  Provider.of<SocialSessionProvider>(context, listen: false);
+
               navigator.pop(); // Close dialog
-              
+
               try {
                 await socialProvider.endSession(widget.session.id);
                 if (mounted) {
@@ -654,15 +684,17 @@ class _LiveSessionScreenState extends State<LiveSessionScreen> with TickerProvid
             itemCount: widget.session.participantIds.length,
             itemBuilder: (context, index) {
               final participantId = widget.session.participantIds[index];
-              final participantName = widget.session.participantNames[participantId] ?? 'Unknown';
+              final participantName =
+                  widget.session.participantNames[participantId] ?? 'Unknown';
               final isHost = participantId == widget.session.hostId;
-              
+
               return ListTile(
                 leading: CircleAvatar(
                   child: Text(participantName[0].toUpperCase()),
                 ),
                 title: Text(participantName),
-                trailing: isHost ? const Icon(Icons.star, color: Colors.amber) : null,
+                trailing:
+                    isHost ? const Icon(Icons.star, color: Colors.amber) : null,
               );
             },
           ),

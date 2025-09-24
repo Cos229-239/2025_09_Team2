@@ -73,11 +73,11 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                 itemBuilder: (context, index) {
                   final persona = _personas[index];
                   final isSelected = _selectedPersona?.type == persona.type;
-                  
+
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     elevation: isSelected ? 4 : 1,
-                    color: isSelected 
+                    color: isSelected
                         ? Theme.of(context).colorScheme.primaryContainer
                         : null,
                     child: InkWell(
@@ -100,7 +100,9 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(30),
                               ),
                               child: Center(
@@ -139,14 +141,16 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                                         decoration: BoxDecoration(
                                           color: _getPersonaColor(persona.type)
                                               .withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                         child: Text(
                                           persona.type.displayName,
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
-                                            color: _getPersonaColor(persona.type),
+                                            color:
+                                                _getPersonaColor(persona.type),
                                           ),
                                         ),
                                       ),
@@ -173,8 +177,10 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                                   Wrap(
                                     spacing: 4,
                                     children: [
-                                      _buildTraitChip(persona.traits.communicationStyle),
-                                      _buildTraitChip(persona.traits.energyLevel),
+                                      _buildTraitChip(
+                                          persona.traits.communicationStyle),
+                                      _buildTraitChip(
+                                          persona.traits.energyLevel),
                                     ],
                                   ),
                                 ],
@@ -265,8 +271,10 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
         return Container(
           decoration: BoxDecoration(
             color: const Color(0xFF2A3050),
-            borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-                ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
+            borderRadius: Theme.of(context).cardTheme.shape
+                    is RoundedRectangleBorder
+                ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder)
+                    .borderRadius
                 : BorderRadius.circular(16),
             border: Border.all(
               color: const Color(0xFFF8B67F),
@@ -290,8 +298,8 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: aiProvider.isAIEnabled 
-                  ? _showAIChat 
+              onTap: aiProvider.isAIEnabled
+                  ? _showAIChat
                   : () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -313,18 +321,23 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                         Expanded(
                           child: Text(
                             'AI Assistant',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                 ),
                             textAlign: TextAlign.center,
                           ),
                         ),
                         IconButton(
-                          onPressed: aiProvider.isAIEnabled ? _showPersonaMenu : null,
+                          onPressed:
+                              aiProvider.isAIEnabled ? _showPersonaMenu : null,
                           icon: Icon(
                             Icons.menu,
-                            color: aiProvider.isAIEnabled 
+                            color: aiProvider.isAIEnabled
                                 ? Theme.of(context).colorScheme.primary
                                 : Colors.grey,
                             size: 20,
@@ -338,9 +351,9 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Avatar and status
                     if (aiProvider.isAIEnabled) ...[
                       Row(
@@ -349,11 +362,14 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _getPersonaColor(_selectedPersona?.type ?? PersonaType.mentor),
+                              color: _getPersonaColor(
+                                  _selectedPersona?.type ?? PersonaType.mentor),
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _getPersonaColor(_selectedPersona?.type ?? PersonaType.mentor)
+                                  color: _getPersonaColor(
+                                          _selectedPersona?.type ??
+                                              PersonaType.mentor)
                                       .withValues(alpha: 0.3),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
@@ -371,13 +387,20 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                             children: [
                               Text(
                                 _selectedPersona?.name ?? 'AI Assistant',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
                               Text(
-                                _selectedPersona?.type.displayName ?? 'Assistant',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                _selectedPersona?.type.displayName ??
+                                    'Assistant',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: Colors.grey[600],
                                       fontSize: 10,
                                     ),

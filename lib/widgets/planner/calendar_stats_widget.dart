@@ -29,8 +29,8 @@ class CalendarStatsWidget extends StatelessWidget {
                     Text(
                       'Calendar Overview',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     IconButton(
                       onPressed: provider.refreshAllEvents,
@@ -85,7 +85,8 @@ class CalendarStatsWidget extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Event type distribution
-                _buildEventTypeDistribution(context, stats['eventsByType'] ?? {}),
+                _buildEventTypeDistribution(
+                    context, stats['eventsByType'] ?? {}),
               ],
             ),
           ),
@@ -118,9 +119,9 @@ class CalendarStatsWidget extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const Spacer(),
               Container(
@@ -151,7 +152,10 @@ class CalendarStatsWidget extends StatelessWidget {
                       Icon(
                         event.icon,
                         size: 16,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -165,8 +169,11 @@ class CalendarStatsWidget extends StatelessWidget {
                       Text(
                         event.formattedTime,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                            ),
                       ),
                     ],
                   ),
@@ -177,9 +184,9 @@ class CalendarStatsWidget extends StatelessWidget {
               Text(
                 '+${events.length - 3} more',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w500,
-                ),
+                      color: color,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
           ],
         ],
@@ -252,9 +259,9 @@ class CalendarStatsWidget extends StatelessWidget {
               Text(
                 value,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
@@ -262,9 +269,12 @@ class CalendarStatsWidget extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-              fontWeight: FontWeight.w500,
-            ),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ],
       ),
@@ -273,7 +283,7 @@ class CalendarStatsWidget extends StatelessWidget {
 
   Widget _buildStudyTimeCard(BuildContext context, int studyMinutes) {
     final hours = studyMinutes / 60;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -304,9 +314,9 @@ class CalendarStatsWidget extends StatelessWidget {
               Text(
                 'Study Time This Week',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
@@ -316,9 +326,9 @@ class CalendarStatsWidget extends StatelessWidget {
               Text(
                 '${hours.toStringAsFixed(1)} hours',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -328,13 +338,17 @@ class CalendarStatsWidget extends StatelessWidget {
                     Text(
                       '$studyMinutes minutes total',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
+                          ),
                     ),
                     const SizedBox(height: 4),
                     _buildProgressBar(
                       context,
-                      progress: (hours / 40).clamp(0.0, 1.0), // Target: 40 hours/week
+                      progress:
+                          (hours / 40).clamp(0.0, 1.0), // Target: 40 hours/week
                       color: Theme.of(context).primaryColor,
                     ),
                   ],
@@ -346,16 +360,20 @@ class CalendarStatsWidget extends StatelessWidget {
           Text(
             _getStudyTimeEncouragement(hours),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-              fontStyle: FontStyle.italic,
-            ),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.8),
+                  fontStyle: FontStyle.italic,
+                ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildProgressBar(BuildContext context, {required double progress, required Color color}) {
+  Widget _buildProgressBar(BuildContext context,
+      {required double progress, required Color color}) {
     return Container(
       height: 6,
       decoration: BoxDecoration(
@@ -387,15 +405,17 @@ class CalendarStatsWidget extends StatelessWidget {
         Text(
           'Event Distribution',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 12),
         ...eventsByType.entries.map((entry) {
-          final percentage = eventsByType.values.fold(0, (sum, value) => sum + value) > 0
-              ? (entry.value / eventsByType.values.fold(0, (sum, value) => sum + value))
-              : 0.0;
-          
+          final percentage =
+              eventsByType.values.fold(0, (sum, value) => sum + value) > 0
+                  ? (entry.value /
+                      eventsByType.values.fold(0, (sum, value) => sum + value))
+                  : 0.0;
+
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Row(
@@ -423,8 +443,8 @@ class CalendarStatsWidget extends StatelessWidget {
                   child: Text(
                     '${entry.value}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                     textAlign: TextAlign.end,
                   ),
                 ),
@@ -484,11 +504,10 @@ class CompactCalendarStats extends StatelessWidget {
                 Text(
                   'Today\'s Schedule',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 12),
-                
                 if (currentEvents.isNotEmpty) ...[
                   _buildQuickStat(
                     context,
@@ -499,7 +518,6 @@ class CompactCalendarStats extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                 ],
-                
                 if (overdueEvents.isNotEmpty) ...[
                   _buildQuickStat(
                     context,
@@ -510,7 +528,6 @@ class CompactCalendarStats extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                 ],
-                
                 _buildQuickStat(
                   context,
                   'Upcoming',
@@ -518,9 +535,7 @@ class CompactCalendarStats extends StatelessWidget {
                   Colors.blue,
                   Icons.schedule,
                 ),
-                
                 const SizedBox(height: 16),
-                
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(

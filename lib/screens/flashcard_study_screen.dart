@@ -33,12 +33,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   bool _showAnswer = false;
   // Individual quiz mode removed - only deck-based quizzes are supported
   final QuizService _quizService = QuizService();
-  final scheduling.PredictiveSchedulingService _schedulingService = scheduling.PredictiveSchedulingService();
+  final scheduling.PredictiveSchedulingService _schedulingService =
+      scheduling.PredictiveSchedulingService();
   bool _hasCompletedDeck = false; // Track if user has gone through all cards
 
   // Track which cards have been studied in this session (by card ID)
   final Set<String> _studiedCardIds = {};
-  
+
   // Track which cards have been studied specifically in study mode (not quiz mode)
   final Set<String> _studyModeCardIds = {};
 
@@ -55,7 +56,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         return currentQuizCard;
       }
     }
-    
+
     // Normal study mode - use the current card index
     final card = widget.deck.cards[_currentCardIndex];
     return _quizService.getCardWithAttempts(card);
@@ -65,7 +66,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   void initState() {
     super.initState();
     _loadCardState();
-    
+
     // If starting in quiz mode, start a deck quiz
     if (widget.startInQuizMode) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -86,7 +87,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     // Card state loading simplified for study mode only
     final card = _currentCard;
     _quizService.getCardWithAttempts(card);
-    
+
     // Mark the card as studied after a short delay (gives user time to read it)
     Timer(const Duration(seconds: 3), () {
       if (mounted) {
@@ -98,7 +99,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   void _nextCard() {
     // Mark current card as studied before moving to next
     _markCardAsStudied(_currentCard);
-    
+
     setState(() {
       if (_currentCardIndex < widget.deck.cards.length - 1) {
         _currentCardIndex++;
@@ -117,7 +118,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   void _previousCard() {
     // Mark current card as studied before moving to previous
     _markCardAsStudied(_currentCard);
-    
+
     setState(() {
       if (_currentCardIndex > 0) {
         _currentCardIndex--;
@@ -133,7 +134,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       _showAnswer = !_showAnswer;
       // Individual quiz mode removed
     });
-    
+
     // If showing answer for the first time, count as studying a card
     if (_showAnswer) {
       _markCardAsStudied(_currentCard);
@@ -144,13 +145,14 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   Future<void> _startDeckQuiz() async {
     // Initialize quiz service
     await _quizService.initialize();
-    
+
     // Create quiz session
     final session = await _quizService.createQuizSession(widget.deck);
-    
+
     if (session == null) {
       // Show error message
-      final statusMessage = await _quizService.getDeckQuizStatusDescription(widget.deck.id);
+      final statusMessage =
+          await _quizService.getDeckQuizStatusDescription(widget.deck.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -176,7 +178,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   /// Handles answering a question in deck quiz mode
   Future<void> _answerDeckQuizQuestion(int selectedIndex) async {
     if (_currentQuizSession == null || _quizSessionId == null) return;
-    
+
     final currentCard = _getCurrentQuizCard();
     if (currentCard == null) return;
 
@@ -208,25 +210,27 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
     // Note: Quest progress is updated when the entire quiz session completes,
     // not for each individual question
-    
+
     // Show immediate feedback
     if (mounted) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
           String message;
           Color backgroundColor;
-          
+
           if (isSkipped) {
-            message = 'Question skipped. Correct answer: ${currentCard.multipleChoiceOptions[correctIndex]}';
+            message =
+                'Question skipped. Correct answer: ${currentCard.multipleChoiceOptions[correctIndex]}';
             backgroundColor = Colors.orange;
           } else if (isCorrect) {
             message = 'Correct! +$expEarned EXP';
             backgroundColor = Colors.green;
           } else {
-            message = 'Incorrect. The correct answer was ${currentCard.multipleChoiceOptions[correctIndex]}';
+            message =
+                'Incorrect. The correct answer was ${currentCard.multipleChoiceOptions[correctIndex]}';
             backgroundColor = Colors.red;
           }
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
@@ -262,25 +266,27 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   /// Gets the current card for deck quiz mode
   FlashCard? _getCurrentQuizCard() {
     if (_currentQuizSession == null) return null;
-    return _quizService.getCurrentQuestionCard(_currentQuizSession!, widget.deck);
+    return _quizService.getCurrentQuestionCard(
+        _currentQuizSession!, widget.deck);
   }
 
   /// Shows the final results of the deck quiz
   void _showDeckQuizResults(QuizSession session) {
     final results = QuizResults.fromSession(session);
-    
+
     // Update daily quest progress for completing a quiz (1 quiz = 1 deck completion)
-    final questProvider = Provider.of<DailyQuestProvider>(context, listen: false);
+    final questProvider =
+        Provider.of<DailyQuestProvider>(context, listen: false);
     questProvider.onQuizTaken(); // One quiz completed (deck-based)
-    
+
     // Check if perfect score achieved
     if (results.isPerfectScore) {
       questProvider.onPerfectScore(); // Perfect score quest
     }
-    
+
     // Note: EXP is already awarded in QuizService._completeQuizSession()
     // No need to award it again here to avoid duplicate EXP
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -304,7 +310,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 16),
-            
+
             // Score breakdown
             Container(
               padding: const EdgeInsets.all(12),
@@ -318,19 +324,24 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Final Score:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Final Score:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       Text(
                         '${(results.scorePercentage * 100).round()}% (${results.letterGrade})',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: results.scorePercentage >= 0.8 ? Colors.green : Colors.orange,
+                          color: results.scorePercentage >= 0.8
+                              ? Colors.green
+                              : Colors.orange,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('Correct: ${results.correctAnswers}/${results.totalQuestions}'),
-                  Text('Time: ${results.timeSpent.inMinutes}m ${results.timeSpent.inSeconds % 60}s'),
+                  Text(
+                      'Correct: ${results.correctAnswers}/${results.totalQuestions}'),
+                  Text(
+                      'Time: ${results.timeSpent.inMinutes}m ${results.timeSpent.inSeconds % 60}s'),
                   Text('EXP Earned: +${results.totalExpEarned}'),
                 ],
               ),
@@ -345,7 +356,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             },
             child: const Text('Done'),
           ),
-          if (results.scorePercentage < 0.8) // Allow retry if score is below 80%
+          if (results.scorePercentage <
+              0.8) // Allow retry if score is below 80%
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close dialog
@@ -386,15 +398,16 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   void _triggerSchedulePrediction() async {
     try {
       // Get subject from deck tags or title
-      final subject = widget.deck.tags.isNotEmpty 
-          ? widget.deck.tags.first 
+      final subject = widget.deck.tags.isNotEmpty
+          ? widget.deck.tags.first
           : widget.deck.title.split(' ').first;
 
       // Record the current study session
       final now = DateTime.now();
       final sessionMetrics = scheduling.StudySessionMetrics(
         timestamp: now,
-        sessionLength: const Duration(minutes: 30), // Estimated session duration
+        sessionLength:
+            const Duration(minutes: 30), // Estimated session duration
         totalQuestions: widget.deck.cards.length,
         correctAnswers: _getEstimatedCorrectAnswers(),
         averageResponseTime: 5.0, // Estimated 5 seconds per question
@@ -437,7 +450,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
   /// Gets estimated retention score
   double _getEstimatedRetentionScore() {
-    if (_isDeckQuizMode && _currentQuizSession != null && _currentQuizSession!.finalScore != null) {
+    if (_isDeckQuizMode &&
+        _currentQuizSession != null &&
+        _currentQuizSession!.finalScore != null) {
       return _currentQuizSession!.finalScore!;
     }
     return _hasCompletedDeck ? 0.75 : 0.6;
@@ -457,14 +472,22 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   /// Maps weekday int to DayOfWeek enum
   scheduling.DayOfWeek _getDayOfWeek(int weekday) {
     switch (weekday) {
-      case 1: return scheduling.DayOfWeek.monday;
-      case 2: return scheduling.DayOfWeek.tuesday;
-      case 3: return scheduling.DayOfWeek.wednesday;
-      case 4: return scheduling.DayOfWeek.thursday;
-      case 5: return scheduling.DayOfWeek.friday;
-      case 6: return scheduling.DayOfWeek.saturday;
-      case 7: return scheduling.DayOfWeek.sunday;
-      default: return scheduling.DayOfWeek.monday;
+      case 1:
+        return scheduling.DayOfWeek.monday;
+      case 2:
+        return scheduling.DayOfWeek.tuesday;
+      case 3:
+        return scheduling.DayOfWeek.wednesday;
+      case 4:
+        return scheduling.DayOfWeek.thursday;
+      case 5:
+        return scheduling.DayOfWeek.friday;
+      case 6:
+        return scheduling.DayOfWeek.saturday;
+      case 7:
+        return scheduling.DayOfWeek.sunday;
+      default:
+        return scheduling.DayOfWeek.monday;
     }
   }
 
@@ -540,14 +563,30 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   /// Formats DateTime for display
   String _formatDateTime(DateTime dateTime) {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+
     final dayName = days[dateTime.weekday - 1];
     final monthName = months[dateTime.month - 1];
-    final hour = dateTime.hour == 0 ? 12 : dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    final hour = dateTime.hour == 0
+        ? 12
+        : dateTime.hour > 12
+            ? dateTime.hour - 12
+            : dateTime.hour;
     final amPm = dateTime.hour < 12 ? 'AM' : 'PM';
-    
+
     return '$dayName, $monthName ${dateTime.day} at $hour:${dateTime.minute.toString().padLeft(2, '0')} $amPm';
   }
 
@@ -570,18 +609,14 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             vertical: 6,
           ),
           decoration: BoxDecoration(
-            color: _showAnswer
-                ? Colors.green.shade100
-                : Colors.blue.shade100,
+            color: _showAnswer ? Colors.green.shade100 : Colors.blue.shade100,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             _showAnswer ? 'ANSWER' : 'QUESTION',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: _showAnswer
-                  ? Colors.green.shade700
-                  : Colors.blue.shade700,
+              color: _showAnswer ? Colors.green.shade700 : Colors.blue.shade700,
             ),
           ),
         ),
@@ -593,9 +628,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           child: Center(
             child: SingleChildScrollView(
               child: Text(
-                _showAnswer
-                    ? _currentCard.back
-                    : _currentCard.front,
+                _showAnswer ? _currentCard.back : _currentCard.front,
                 style: const TextStyle(
                   fontSize: 20,
                   height: 1.4,
@@ -614,7 +647,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     if (_isDeckQuizMode && _currentQuizSession != null) {
       return _buildDeckQuizInterface();
     }
-    
+
     // For non-deck mode, just show the regular card interface
     return _buildCardInterface();
   }
@@ -632,8 +665,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
     // Check if current question has been answered
     final currentAnswerIndex = _currentQuizSession!.currentQuestionIndex;
-    final hasAnswered = _currentQuizSession!.answers.length > currentAnswerIndex;
-    final currentAnswer = hasAnswered ? _currentQuizSession!.answers[currentAnswerIndex] : null;
+    final hasAnswered =
+        _currentQuizSession!.answers.length > currentAnswerIndex;
+    final currentAnswer =
+        hasAnswered ? _currentQuizSession!.answers[currentAnswerIndex] : null;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -681,7 +716,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               Text(
                 ' (${(_currentQuizSession!.currentScore * 100).round()}%)',
                 style: TextStyle(
-                  color: _currentQuizSession!.currentScore >= 0.8 ? Colors.green : Colors.orange,
+                  color: _currentQuizSession!.currentScore >= 0.8
+                      ? Colors.green
+                      : Colors.orange,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -710,10 +747,11 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             itemCount: currentCard.multipleChoiceOptions.length,
             itemBuilder: (context, index) {
               final option = currentCard.multipleChoiceOptions[index];
-              final isSelected = hasAnswered && currentAnswer!.selectedOptionIndex == index;
+              final isSelected =
+                  hasAnswered && currentAnswer!.selectedOptionIndex == index;
               final isCorrect = index == currentCard.correctAnswerIndex;
               final showResult = hasAnswered;
-              
+
               Color? buttonColor;
               if (showResult) {
                 if (isSelected && isCorrect) {
@@ -728,7 +766,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ElevatedButton(
-                  onPressed: !hasAnswered ? () => _answerDeckQuizQuestion(index) : null,
+                  onPressed: !hasAnswered
+                      ? () => _answerDeckQuizQuestion(index)
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     foregroundColor: buttonColor != null ? Colors.white : null,
@@ -768,7 +808,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: currentAnswer!.isCorrect ? Colors.green.shade100 : Colors.red.shade100,
+              color: currentAnswer!.isCorrect
+                  ? Colors.green.shade100
+                  : Colors.red.shade100,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -780,11 +822,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  currentAnswer.isCorrect 
+                  currentAnswer.isCorrect
                       ? 'Correct! +${currentAnswer.expEarned} EXP'
                       : 'Incorrect',
                   style: TextStyle(
-                    color: currentAnswer.isCorrect ? Colors.green.shade700 : Colors.red.shade700,
+                    color: currentAnswer.isCorrect
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -800,22 +844,25 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   void _markCardAsStudied(FlashCard card) {
     // Track overall card viewing (for internal tracking)
     _studiedCardIds.add(card.id);
-    
+
     // Only count towards "study flashcards" quest when NOT in quiz mode
     // Quiz mode has its own separate quest tracking
     if (!_isDeckQuizMode) {
       // Only count each card once for study mode quest progress
       if (!_studyModeCardIds.contains(card.id)) {
         _studyModeCardIds.add(card.id);
-        
+
         // Update daily quest progress for studying a card
-        final questProvider = Provider.of<DailyQuestProvider>(context, listen: false);
+        final questProvider =
+            Provider.of<DailyQuestProvider>(context, listen: false);
         questProvider.onCardStudied();
-        
-        debugPrint('Card studied in study mode: ${card.id} (Study quest progress: ${_studyModeCardIds.length})');
+
+        debugPrint(
+            'Card studied in study mode: ${card.id} (Study quest progress: ${_studyModeCardIds.length})');
       }
     } else {
-      debugPrint('Card viewed in quiz mode: ${card.id} (not counted toward study quest)');
+      debugPrint(
+          'Card viewed in quiz mode: ${card.id} (not counted toward study quest)');
     }
   }
 
@@ -884,7 +931,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
-                    child: _isDeckQuizMode ? _buildQuizInterface() : _buildCardInterface(),
+                    child: _isDeckQuizMode
+                        ? _buildQuizInterface()
+                        : _buildCardInterface(),
                   ),
                 ),
               ),
@@ -911,7 +960,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
                   // Quiz progress info
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade100,
                       borderRadius: BorderRadius.circular(16),
@@ -927,8 +977,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
                   // Skip question (for now, just mark as incorrect)
                   ElevatedButton.icon(
-                    onPressed: (_isDeckQuizMode && _currentQuizSession != null && 
-                               _currentQuizSession!.answers.length <= _currentQuizSession!.currentQuestionIndex)
+                    onPressed: (_isDeckQuizMode &&
+                            _currentQuizSession != null &&
+                            _currentQuizSession!.answers.length <=
+                                _currentQuizSession!.currentQuestionIndex)
                         ? () => _answerDeckQuizQuestion(-1) // -1 indicates skip
                         : null,
                     icon: const Icon(Icons.skip_next),
@@ -960,8 +1012,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   if (!_isDeckQuizMode)
                     ElevatedButton.icon(
                       onPressed: _toggleAnswer,
-                      icon: Icon(
-                          _showAnswer ? Icons.visibility_off : Icons.visibility),
+                      icon: Icon(_showAnswer
+                          ? Icons.visibility_off
+                          : Icons.visibility),
                       label: Text(_showAnswer ? 'Hide Answer' : 'Show Answer'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
@@ -991,8 +1044,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               const SizedBox(height: 16),
 
               // Deck quiz starter button - only show after completing deck study
-              if (!_isDeckQuizMode && _hasCompletedDeck && widget.deck.cards.where((card) => 
-                  card.multipleChoiceOptions.isNotEmpty).length >= 2) ...[
+              if (!_isDeckQuizMode &&
+                  _hasCompletedDeck &&
+                  widget.deck.cards
+                          .where(
+                              (card) => card.multipleChoiceOptions.isNotEmpty)
+                          .length >=
+                      2) ...[
                 Center(
                   child: ElevatedButton.icon(
                     onPressed: _startDeckQuiz,
@@ -1031,19 +1089,22 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   if (!_isDeckQuizMode)
                     TextButton.icon(
                       onPressed: _toggleAnswer,
-                      icon: Icon(_showAnswer ? Icons.visibility_off : Icons.visibility),
+                      icon: Icon(_showAnswer
+                          ? Icons.visibility_off
+                          : Icons.visibility),
                       label: Text(_showAnswer ? 'Hide Answer' : 'Show Answer'),
                     ),
-                  
+
                   const SizedBox(width: 16),
-                  
+
                   // Quiz cooldown/status info
                   if (!_quizService.canTakeQuiz(_currentCard))
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: _currentCard.lastQuizCorrect == true 
-                            ? Colors.green.shade100 
+                        color: _currentCard.lastQuizCorrect == true
+                            ? Colors.green.shade100
                             : Colors.orange.shade100,
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -1051,20 +1112,20 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            _currentCard.lastQuizCorrect == true 
-                                ? Icons.check_circle_outline 
+                            _currentCard.lastQuizCorrect == true
+                                ? Icons.check_circle_outline
                                 : Icons.schedule,
                             size: 16,
-                            color: _currentCard.lastQuizCorrect == true 
-                                ? Colors.green.shade700 
+                            color: _currentCard.lastQuizCorrect == true
+                                ? Colors.green.shade700
                                 : Colors.orange.shade700,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             _quizService.getQuizStatusDescription(_currentCard),
                             style: TextStyle(
-                              color: _currentCard.lastQuizCorrect == true 
-                                  ? Colors.green.shade700 
+                              color: _currentCard.lastQuizCorrect == true
+                                  ? Colors.green.shade700
                                   : Colors.orange.shade700,
                               fontSize: 12,
                             ),
@@ -1091,7 +1152,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _currentCard.multipleChoiceOptions.isNotEmpty 
+                      _currentCard.multipleChoiceOptions.isNotEmpty
                           ? 'Tip: Take the quiz to earn EXP for your pet!'
                           : 'Tip: Try to answer before revealing the solution!',
                       style: TextStyle(

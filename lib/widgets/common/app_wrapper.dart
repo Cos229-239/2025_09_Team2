@@ -19,7 +19,7 @@ class _AppWrapperState extends State<AppWrapper> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Show the floating music button after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -39,7 +39,7 @@ class _AppWrapperState extends State<AppWrapper> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     // Handle app lifecycle changes
     switch (state) {
       case AppLifecycleState.resumed:

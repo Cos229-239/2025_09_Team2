@@ -49,9 +49,11 @@ class _ChatScreenState extends State<ChatScreen> {
         ChatMessage(
           id: '2',
           senderId: widget.socialService.currentUserProfile?.id ?? '',
-          senderName: widget.socialService.currentUserProfile?.displayName ?? 'You',
+          senderName:
+              widget.socialService.currentUserProfile?.displayName ?? 'You',
           message: 'Yes! I\'ve prepared some notes. What time works for you?',
-          timestamp: DateTime.now().subtract(const Duration(hours: 1, minutes: 45)),
+          timestamp:
+              DateTime.now().subtract(const Duration(hours: 1, minutes: 45)),
           isMe: true,
         ),
         ChatMessage(
@@ -59,13 +61,15 @@ class _ChatScreenState extends State<ChatScreen> {
           senderId: widget.otherUser.id,
           senderName: widget.otherUser.displayName,
           message: 'How about 3 PM? We can meet in the virtual study room.',
-          timestamp: DateTime.now().subtract(const Duration(hours: 1, minutes: 30)),
+          timestamp:
+              DateTime.now().subtract(const Duration(hours: 1, minutes: 30)),
           isMe: false,
         ),
         ChatMessage(
           id: '4',
           senderId: widget.socialService.currentUserProfile?.id ?? '',
-          senderName: widget.socialService.currentUserProfile?.displayName ?? 'You',
+          senderName:
+              widget.socialService.currentUserProfile?.displayName ?? 'You',
           message: 'Perfect! See you at 3 PM 📚',
           timestamp: DateTime.now().subtract(const Duration(hours: 1)),
           isMe: true,
@@ -87,7 +91,8 @@ class _ChatScreenState extends State<ChatScreen> {
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               backgroundImage: widget.otherUser.avatar != null
                   ? NetworkImage(widget.otherUser.avatar!)
                   : null,
@@ -111,13 +116,16 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Text(
                     widget.otherUser.displayName,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     widget.otherUser.isOnline ? 'Online' : 'Offline',
                     style: TextStyle(
                       fontSize: 12,
-                      color: widget.otherUser.isOnline ? Colors.green : Colors.grey,
+                      color: widget.otherUser.isOnline
+                          ? Colors.green
+                          : Colors.grey,
                     ),
                   ),
                 ],
@@ -156,7 +164,7 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          
+
           // Typing indicator
           if (_isTyping)
             Container(
@@ -165,7 +173,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   CircleAvatar(
                     radius: 12,
-                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                     child: Text(
                       widget.otherUser.displayName[0].toUpperCase(),
                       style: TextStyle(
@@ -179,7 +190,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     '${widget.otherUser.displayName} is typing...',
                     style: TextStyle(
                       fontStyle: FontStyle.italic,
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -188,13 +202,16 @@ class _ChatScreenState extends State<ChatScreen> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.6),
                     ),
                   ),
                 ],
               ),
             ),
-          
+
           // Message Input
           _buildMessageInput(),
         ],
@@ -206,13 +223,15 @@ class _ChatScreenState extends State<ChatScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: message.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            message.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!message.isMe) ...[
             CircleAvatar(
               radius: 16,
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               child: Text(
                 message.senderName[0].toUpperCase(),
                 style: TextStyle(
@@ -223,7 +242,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: 8),
           ],
-          
           Flexible(
             child: Container(
               constraints: BoxConstraints(
@@ -237,7 +255,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 borderRadius: BorderRadius.circular(20),
                 border: !message.isMe
                     ? Border.all(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withValues(alpha: 0.2),
                       )
                     : null,
               ),
@@ -258,20 +279,26 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: TextStyle(
                       fontSize: 11,
                       color: message.isMe
-                          ? Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.7)
-                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          ? Theme.of(context)
+                              .colorScheme
+                              .onPrimary
+                              .withValues(alpha: 0.7)
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          
           if (message.isMe) ...[
             const SizedBox(width: 8),
             CircleAvatar(
               radius: 16,
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               child: Text(
                 'You'[0].toUpperCase(),
                 style: TextStyle(
@@ -305,7 +332,6 @@ class _ChatScreenState extends State<ChatScreen> {
               icon: const Icon(Icons.add_circle_outline),
               tooltip: 'Attach',
             ),
-            
             Expanded(
               child: TextField(
                 controller: _messageController,
@@ -329,15 +355,17 @@ class _ChatScreenState extends State<ChatScreen> {
                 maxLines: 5,
               ),
             ),
-            
             const SizedBox(width: 8),
-            
             IconButton(
-              onPressed: _messageController.text.trim().isEmpty ? null : _sendMessage,
+              onPressed:
+                  _messageController.text.trim().isEmpty ? null : _sendMessage,
               icon: Icon(
                 Icons.send,
                 color: _messageController.text.trim().isEmpty
-                    ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)
+                    ? Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.4)
                     : Theme.of(context).colorScheme.primary,
               ),
               tooltip: 'Send',
@@ -354,7 +382,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _isTyping = true;
       });
-      
+
       // Hide typing indicator after 3 seconds
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
@@ -414,7 +442,8 @@ class _ChatScreenState extends State<ChatScreen> {
     // Generate contextual responses based on keywords
     String response;
     if (originalMessage.toLowerCase().contains('study')) {
-      response = 'Great! Let\'s set up a study session. What time works for you?';
+      response =
+          'Great! Let\'s set up a study session. What time works for you?';
     } else if (originalMessage.toLowerCase().contains('help')) {
       response = 'I\'d be happy to help! What do you need assistance with?';
     } else if (originalMessage.toLowerCase().contains('thanks')) {
@@ -557,7 +586,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void _startVideoCall() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Starting video call with ${widget.otherUser.displayName} - Coming soon!'),
+        content: Text(
+            'Starting video call with ${widget.otherUser.displayName} - Coming soon!'),
       ),
     );
   }
@@ -565,7 +595,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void _startVoiceCall() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Starting voice call with ${widget.otherUser.displayName} - Coming soon!'),
+        content: Text(
+            'Starting voice call with ${widget.otherUser.displayName} - Coming soon!'),
       ),
     );
   }
@@ -656,7 +687,8 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Block user functionality - Coming soon!')),
+                const SnackBar(
+                    content: Text('Block user functionality - Coming soon!')),
               );
             },
             style: FilledButton.styleFrom(

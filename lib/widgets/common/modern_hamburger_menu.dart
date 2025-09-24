@@ -18,7 +18,8 @@ class ModernHamburgerMenu extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -64,7 +65,7 @@ class ModernHamburgerMenu extends StatelessWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            
+
             // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
@@ -95,10 +96,11 @@ class ModernHamburgerMenu extends StatelessWidget {
                     children: [
                       Text(
                         'StudyPals',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                       ),
                       Text(
                         'Navigate to features',
@@ -176,17 +178,17 @@ class ModernHamburgerMenu extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-                  
+
                   // Divider
                   Divider(
                     color: Colors.grey[300],
                     thickness: 1,
                     height: 32,
                   ),
-                  
+
                   // Additional quick actions
                   _buildQuickActionRow(context),
-                  
+
                   const SizedBox(height: 24),
                 ],
               ),
@@ -236,7 +238,10 @@ class ModernHamburgerMenu extends StatelessWidget {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -247,7 +252,7 @@ class ModernHamburgerMenu extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Content
                 Expanded(
                   child: Column(
@@ -255,9 +260,10 @@ class ModernHamburgerMenu extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -269,7 +275,7 @@ class ModernHamburgerMenu extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 // Arrow
                 Icon(
                   Icons.arrow_forward_ios,

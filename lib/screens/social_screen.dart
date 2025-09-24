@@ -36,7 +36,8 @@ class _SocialScreenState extends State<SocialScreen>
 
     // Initialize social session provider if available
     if (mounted) {
-      final socialSessionProvider = Provider.of<SocialSessionProvider>(context, listen: false);
+      final socialSessionProvider =
+          Provider.of<SocialSessionProvider>(context, listen: false);
       await socialSessionProvider.initialize();
     }
 
@@ -654,10 +655,10 @@ class _SocialScreenState extends State<SocialScreen>
   Future<void> _performDeclineFriendRequest(String friendshipId) async {
     try {
       final success = await _socialService!.declineFriendRequest(friendshipId);
-      
+
       if (mounted) {
         setState(() {}); // Refresh the UI
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -819,9 +820,9 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Search Bar
             TextField(
               controller: _searchController,
@@ -842,9 +843,9 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
               ),
               onChanged: _onSearchChanged,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Search Filters
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -860,9 +861,9 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Search Results
             Expanded(
               child: _buildSearchResults(),
@@ -934,9 +935,10 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
           margin: const EdgeInsets.symmetric(vertical: 4),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               child: Text(
-                user.displayName.isNotEmpty 
+                user.displayName.isNotEmpty
                     ? user.displayName[0].toUpperCase()
                     : user.username[0].toUpperCase(),
                 style: TextStyle(
@@ -958,7 +960,10 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -967,14 +972,18 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
                     padding: const EdgeInsets.only(top: 4),
                     child: Wrap(
                       spacing: 4,
-                      children: user.interests.take(3).map((interest) => Chip(
-                        label: Text(
-                          interest,
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                      )).toList(),
+                      children: user.interests
+                          .take(3)
+                          .map((interest) => Chip(
+                                label: Text(
+                                  interest,
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              ))
+                          .toList(),
                     ),
                   ),
               ],
@@ -1031,7 +1040,7 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
       if (mounted) {
         final query = _searchController.text.toLowerCase();
         final mockUsers = _generateMockSearchResults(query);
-        
+
         setState(() {
           _searchResults.clear();
           _searchResults.addAll(mockUsers);
@@ -1044,13 +1053,16 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
   List<service.UserProfile> _generateMockSearchResults(String query) {
     // Generate mock search results based on query
     final mockUsers = <service.UserProfile>[];
-    
-    if (query.contains('math') || query.contains('science') || query.contains('study')) {
+
+    if (query.contains('math') ||
+        query.contains('science') ||
+        query.contains('study')) {
       mockUsers.add(service.UserProfile(
         id: 'search_1',
         username: 'mathexpert2024',
         displayName: 'Alex Chen',
-        bio: 'Mathematics enthusiast and tutor. Love helping others understand complex concepts!',
+        bio:
+            'Mathematics enthusiast and tutor. Love helping others understand complex concepts!',
         joinDate: DateTime.now().subtract(const Duration(days: 180)),
         level: 15,
         totalXP: 2500,
@@ -1065,12 +1077,15 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
       ));
     }
 
-    if (query.contains('prog') || query.contains('code') || query.contains('tech')) {
+    if (query.contains('prog') ||
+        query.contains('code') ||
+        query.contains('tech')) {
       mockUsers.add(service.UserProfile(
         id: 'search_2',
         username: 'codemaster',
         displayName: 'Sarah Johnson',
-        bio: 'Full-stack developer and computer science student. Always learning new technologies.',
+        bio:
+            'Full-stack developer and computer science student. Always learning new technologies.',
         joinDate: DateTime.now().subtract(const Duration(days: 90)),
         level: 12,
         totalXP: 1800,
@@ -1086,12 +1101,15 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
       ));
     }
 
-    if (query.contains('history') || query.contains('art') || query.contains('literature')) {
+    if (query.contains('history') ||
+        query.contains('art') ||
+        query.contains('literature')) {
       mockUsers.add(service.UserProfile(
         id: 'search_3',
         username: 'historybuff',
         displayName: 'Michael Rodriguez',
-        bio: 'History major with a passion for ancient civilizations and art history.',
+        bio:
+            'History major with a passion for ancient civilizations and art history.',
         joinDate: DateTime.now().subtract(const Duration(days: 45)),
         level: 8,
         totalXP: 950,
@@ -1135,7 +1153,8 @@ class _SearchUsersDialogState extends State<_SearchUsersDialog> {
     try {
       final success = await widget.socialService.sendFriendRequest(
         friendId: user.id,
-        message: 'Hi! I found your profile through search. Would you like to be study partners?',
+        message:
+            'Hi! I found your profile through search. Would you like to be study partners?',
       );
 
       if (mounted) {
@@ -1226,9 +1245,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
               'Send a friend request to connect with other study partners.',
               style: TextStyle(color: Colors.grey),
             ),
-            
             const SizedBox(height: 16),
-            
             TextFormField(
               controller: _usernameController,
               decoration: const InputDecoration(
@@ -1242,9 +1259,9 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                 if (value == null || value.trim().isEmpty) {
                   return 'Please enter a username or email';
                 }
-                
+
                 final trimmed = value.trim();
-                
+
                 // Check for email format
                 if (trimmed.contains('@')) {
                   if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(trimmed)) {
@@ -1269,13 +1286,11 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                     }
                   }
                 }
-                
+
                 return null;
               },
             ),
-            
             const SizedBox(height: 16),
-            
             TextFormField(
               controller: _messageController,
               decoration: const InputDecoration(
@@ -1292,9 +1307,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                 return null;
               },
             ),
-            
             const SizedBox(height: 8),
-            
             Row(
               children: [
                 const Icon(Icons.info_outline, size: 16, color: Colors.grey),
@@ -1303,8 +1316,8 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
                   child: Text(
                     'The user will receive a notification about your friend request.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey,
-                    ),
+                          color: Colors.grey,
+                        ),
                   ),
                 ),
               ],
@@ -1341,7 +1354,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
     try {
       final input = _usernameController.text.trim();
       String friendId;
-      
+
       // Convert username/email to user ID (in a real app, this would involve API calls)
       if (input.contains('@')) {
         // Email case - simulate finding user by email
@@ -1361,7 +1374,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -1390,7 +1403,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
     } catch (e) {
       if (mounted) {
         Navigator.of(context).pop();
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error sending friend request: $e'),
@@ -1478,9 +1491,9 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                 Text(
                   'Create Study Group',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
@@ -1499,9 +1512,10 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                       // Group Name
                       Text(
                         'Group Name *',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
@@ -1528,9 +1542,10 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                       // Description
                       Text(
                         'Description',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
@@ -1549,9 +1564,10 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                       // Subject
                       Text(
                         'Subject *',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
@@ -1579,9 +1595,10 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                       // Topics
                       Text(
                         'Study Topics',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       Wrap(
@@ -1601,11 +1618,14 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                                 }
                               });
                             },
-                            backgroundColor: isSelected 
+                            backgroundColor: isSelected
                                 ? Theme.of(context).colorScheme.primaryContainer
                                 : null,
-                            selectedColor: Theme.of(context).colorScheme.primaryContainer,
-                            checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                            selectedColor:
+                                Theme.of(context).colorScheme.primaryContainer,
+                            checkmarkColor: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
                           );
                         }).toList(),
                       ),
@@ -1614,15 +1634,17 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                       // Privacy Settings
                       Text(
                         'Privacy',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       SegmentedButton<String>(
                         segments: const [
                           ButtonSegment(value: 'Public', label: Text('Public')),
-                          ButtonSegment(value: 'Private', label: Text('Private')),
+                          ButtonSegment(
+                              value: 'Private', label: Text('Private')),
                         ],
                         selected: {_privacy},
                         onSelectionChanged: (selection) {
@@ -1636,9 +1658,10 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                       // Max Members
                       Text(
                         'Maximum Members: $_maxMembers',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                       ),
                       const SizedBox(height: 8),
                       Slider(
@@ -1657,7 +1680,8 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
                       // Group Settings
                       SwitchListTile(
                         title: Text('Allow members to invite others'),
-                        subtitle: Text('Members can send invitations to join the group'),
+                        subtitle: Text(
+                            'Members can send invitations to join the group'),
                         value: _allowInvites,
                         onChanged: (value) {
                           setState(() {
@@ -1726,7 +1750,8 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
             Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Study group "${_groupNameController.text}" created successfully!'),
+              child: Text(
+                  'Study group "${_groupNameController.text}" created successfully!'),
             ),
           ],
         ),

@@ -17,7 +17,7 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isLoadingAction = false;
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,42 +35,42 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           children: [
             // Profile Header
             _buildProfileHeader(),
-            
+
             const SizedBox(height: 16),
-            
+
             // Action Buttons
             _buildActionButtons(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Profile Information
             _buildProfileInfo(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Study Stats
             if (widget.userProfile.progressPrivacy != PrivacyLevel.private ||
                 _isFriend())
               _buildStudyStats(),
-              
+
             const SizedBox(height: 24),
-            
+
             // Interests
-            if (widget.userProfile.interests.isNotEmpty)
-              _buildInterests(),
-              
+            if (widget.userProfile.interests.isNotEmpty) _buildInterests(),
+
             const SizedBox(height: 24),
-            
+
             // Achievements
             if (widget.userProfile.achievements.isNotEmpty)
               _buildAchievements(),
-              
+
             const SizedBox(height: 24),
-            
+
             // Recent Activity
-            if (_isFriend() || widget.userProfile.progressPrivacy == PrivacyLevel.public)
+            if (_isFriend() ||
+                widget.userProfile.progressPrivacy == PrivacyLevel.public)
               _buildRecentActivity(),
-              
+
             const SizedBox(height: 32),
           ],
         ),
@@ -81,7 +81,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget _buildProfileHeader() {
     final isOnline = widget.userProfile.isOnline;
     final lastActive = widget.userProfile.lastActive;
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -104,15 +104,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isOnline 
-                        ? Colors.green 
+                    color: isOnline
+                        ? Colors.green
                         : Colors.grey.withValues(alpha: 0.3),
                     width: 3,
                   ),
                 ),
                 child: CircleAvatar(
                   radius: 50,
-                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withValues(alpha: 0.1),
                   backgroundImage: widget.userProfile.avatar != null
                       ? NetworkImage(widget.userProfile.avatar!)
                       : null,
@@ -147,29 +150,32 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Display Name
           Text(
             widget.userProfile.displayName,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-          
+
           const SizedBox(height: 4),
-          
+
           // Username
           Text(
             '@${widget.userProfile.username}',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
+                ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Status
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -181,28 +187,32 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
               const SizedBox(width: 4),
               Text(
-                isOnline 
+                isOnline
                     ? 'Online'
                     : lastActive != null
                         ? 'Last seen ${_formatLastActive(lastActive)}'
                         : 'Offline',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: isOnline ? Colors.green : Colors.grey,
-                ),
+                      color: isOnline ? Colors.green : Colors.grey,
+                    ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 12),
-          
+
           // Level and Title
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -283,13 +293,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             'About',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-          
+
           const SizedBox(height: 12),
-          
-          if (widget.userProfile.bio != null && widget.userProfile.bio!.isNotEmpty)
+
+          if (widget.userProfile.bio != null &&
+              widget.userProfile.bio!.isNotEmpty)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -297,7 +308,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
                 ),
               ),
               child: Text(widget.userProfile.bio!),
@@ -307,41 +321,55 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                color: Theme.of(context)
+                    .colorScheme
+                    .surface
+                    .withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
                 ),
               ),
               child: Text(
                 'This user hasn\'t added a bio yet.',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
                   fontStyle: FontStyle.italic,
                 ),
               ),
             ),
-            
+
           const SizedBox(height: 16),
-          
+
           // Join date and mutual friends
           Row(
             children: [
               Icon(
                 Icons.calendar_month,
                 size: 16,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
               const SizedBox(width: 4),
               Text(
                 'Joined ${_formatJoinDate(widget.userProfile.joinDate)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                ),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
+                    ),
               ),
               const Spacer(),
-              if (!_isCurrentUser())
-                _buildMutualFriends(),
+              if (!_isCurrentUser()) _buildMutualFriends(),
             ],
           ),
         ],
@@ -351,7 +379,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Widget _buildMutualFriends() {
     final mutualCount = _getMutualFriendsCount();
-    
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -364,8 +392,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         Text(
           '$mutualCount mutual friends',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
+              ),
         ),
       ],
     );
@@ -380,12 +411,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             'Study Stats',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-          
           const SizedBox(height: 12),
-          
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -393,7 +422,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2),
               ),
             ),
             child: Row(
@@ -408,7 +440,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 Container(
                   width: 1,
                   height: 40,
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
                 ),
                 Expanded(
                   child: _buildStatItem(
@@ -420,7 +455,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 Container(
                   width: 1,
                   height: 40,
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
                 ),
                 Expanded(
                   child: _buildStatItem(
@@ -448,14 +486,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
+              ),
         ),
       ],
     );
@@ -470,22 +511,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             'Interests',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-          
           const SizedBox(height: 12),
-          
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: widget.userProfile.interests.map((interest) => Chip(
-              label: Text(interest),
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              labelStyle: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            )).toList(),
+            children: widget.userProfile.interests
+                .map((interest) => Chip(
+                      label: Text(interest),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.1),
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ))
+                .toList(),
           ),
         ],
       ),
@@ -501,12 +545,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             'Achievements',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-          
           const SizedBox(height: 12),
-          
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -514,13 +556,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2),
               ),
             ),
             child: Text(
               'Achievements will be displayed here when available.',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -539,12 +587,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Text(
             'Recent Activity',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
-          
           const SizedBox(height: 12),
-          
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -552,13 +598,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2),
               ),
             ),
             child: Text(
               'Recent activity will be shown here when available.',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -591,7 +643,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   String _formatJoinDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date).inDays;
-    
+
     if (difference < 30) {
       return '$difference days ago';
     } else if (difference < 365) {
@@ -606,7 +658,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   String _formatLastActive(DateTime lastActive) {
     final now = DateTime.now();
     final difference = now.difference(lastActive);
-    
+
     if (difference.inMinutes < 60) {
       return '${difference.inMinutes} min ago';
     } else if (difference.inHours < 24) {
@@ -699,7 +751,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void _startChat() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Starting chat with ${widget.userProfile.displayName} - Coming soon!'),
+        content: Text(
+            'Starting chat with ${widget.userProfile.displayName} - Coming soon!'),
       ),
     );
   }
@@ -707,7 +760,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void _shareProfile() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Sharing ${widget.userProfile.displayName}\'s profile - Coming soon!'),
+        content: Text(
+            'Sharing ${widget.userProfile.displayName}\'s profile - Coming soon!'),
       ),
     );
   }

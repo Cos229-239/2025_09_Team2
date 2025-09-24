@@ -141,7 +141,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                 value: 'leave',
                 child: ListTile(
                   leading: Icon(Icons.exit_to_app, color: Colors.red),
-                  title: Text('Leave Session', style: TextStyle(color: Colors.red)),
+                  title: Text('Leave Session',
+                      style: TextStyle(color: Colors.red)),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),
@@ -233,7 +234,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      _isScreenSharing ? 'Screen Sharing Active' : 'No video stream',
+                      _isScreenSharing
+                          ? 'Screen Sharing Active'
+                          : 'No video stream',
                       style: const TextStyle(color: Colors.white54),
                     ),
                   ],
@@ -263,7 +266,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             CircleAvatar(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
                               child: Text(
                                 participant.name[0].toUpperCase(),
                                 style: const TextStyle(color: Colors.white),
@@ -470,9 +474,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                             children: [
                               Text(
                                 message.senderName,
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               if (message.isHost) ...[
                                 const SizedBox(width: 4),
@@ -520,7 +527,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
             border: Border(
               top: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -598,7 +608,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
               if (participant.isHost) ...[
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.orange,
                     borderRadius: BorderRadius.circular(4),
@@ -631,7 +642,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
             ],
           ),
           trailing: PopupMenuButton<String>(
-            onSelected: (action) => _handleParticipantAction(action, participant),
+            onSelected: (action) =>
+                _handleParticipantAction(action, participant),
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'mute',
@@ -681,7 +693,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isMicEnabled ? 'Microphone enabled' : 'Microphone disabled'),
+        content:
+            Text(_isMicEnabled ? 'Microphone enabled' : 'Microphone disabled'),
         backgroundColor: _isMicEnabled ? Colors.green : Colors.red,
       ),
     );
@@ -705,8 +718,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(_isScreenSharing 
-            ? 'Screen sharing started' 
+        content: Text(_isScreenSharing
+            ? 'Screen sharing started'
             : 'Screen sharing stopped'),
         backgroundColor: Colors.blue,
       ),
@@ -718,7 +731,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear Whiteboard'),
-        content: const Text('Are you sure you want to clear the whiteboard? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to clear the whiteboard? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -802,7 +816,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Leave Session'),
-        content: const Text('Are you sure you want to leave this live session?'),
+        content:
+            const Text('Are you sure you want to leave this live session?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

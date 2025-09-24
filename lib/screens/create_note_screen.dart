@@ -98,7 +98,8 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
                 controller: _tagsController,
                 decoration: const InputDecoration(
                   labelText: 'Tags',
-                  hintText: 'Enter tags separated by commas (e.g. study, math, exam)',
+                  hintText:
+                      'Enter tags separated by commas (e.g. study, math, exam)',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.local_offer),
                 ),
@@ -170,7 +171,7 @@ class _CreateNoteScreenState extends State<CreateNoteScreen> {
 
     try {
       final noteProvider = Provider.of<NoteProvider>(context, listen: false);
-      
+
       // Parse tags
       final tags = _tagsController.text
           .split(',')

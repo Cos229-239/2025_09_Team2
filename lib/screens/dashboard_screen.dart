@@ -142,7 +142,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         switch (index) {
           case 1: // Planner
             Navigator.of(context).push(
-              MaterialPageRoute(builder: (context) => const UnifiedPlannerScreen()),
+              MaterialPageRoute(
+                  builder: (context) => const UnifiedPlannerScreen()),
             );
             break;
           case 2: // Notes
@@ -282,7 +283,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       child: _buildHeader(context),
                     ),
 
-                       const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
                     // Flexible calendar section
                     Expanded(
@@ -290,7 +291,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       child: _buildCalendarSection(context),
                     ),
 
-                       const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
                     // Flexible cards row
                     Expanded(
@@ -298,7 +299,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       child: _buildCardsAndNotesRow(context),
                     ),
 
-                       const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
                     // Flexible AI assistant section
                     const Expanded(
@@ -306,7 +307,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       child: AIAssistantWidget(),
                     ),
 
-                       const SizedBox(height: 8),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -323,7 +324,8 @@ class _DashboardHomeState extends State<DashboardHome>
 
       // Bottom navigation bar with Home, Tasks, Stats, and Pet buttons
       bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(left: 16, right: 16, top: 16), // Remove bottom margin
+        margin: const EdgeInsets.only(
+            left: 16, right: 16, top: 16), // Remove bottom margin
         decoration: BoxDecoration(
           color: const Color(0xFF2A3050), // Same color as Flash Cards container
           borderRadius: const BorderRadius.only(
@@ -337,20 +339,20 @@ class _DashboardHomeState extends State<DashboardHome>
             right: BorderSide(color: Color(0xFFF8B67F), width: 2),
             // No bottom border to enhance the "runs off screen" effect
           ),
-           boxShadow: [
-             BoxShadow(
-               color: Colors.black.withValues(alpha: 0.25),
-               blurRadius: 10,
-               spreadRadius: 0,
-               offset: const Offset(0, -4), // Shadow going upward
-             ),
-             BoxShadow(
-               color: Colors.black.withValues(alpha: 0.12),
-               blurRadius: 5,
-               spreadRadius: 0,
-               offset: const Offset(0, -2), // Shadow going upward
-             ),
-           ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.25),
+              blurRadius: 10,
+              spreadRadius: 0,
+              offset: const Offset(0, -4), // Shadow going upward
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 5,
+              spreadRadius: 0,
+              offset: const Offset(0, -2), // Shadow going upward
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -371,8 +373,12 @@ class _DashboardHomeState extends State<DashboardHome>
                         children: [
                           Text(
                             'XP $currentXP/$maxXP',
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
@@ -384,7 +390,9 @@ class _DashboardHomeState extends State<DashboardHome>
                       Container(
                         height: 8,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHigh,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: ClipRRect(
@@ -403,7 +411,7 @@ class _DashboardHomeState extends State<DashboardHome>
                   );
                 },
               ),
-              
+
               // Navigation buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -460,7 +468,7 @@ class _DashboardHomeState extends State<DashboardHome>
         // Hamburger menu at the top left
         const ModernHamburgerMenu(),
         const SizedBox(width: 12),
-        
+
         // Main content
         Expanded(
           child: Column(
@@ -493,7 +501,7 @@ class _DashboardHomeState extends State<DashboardHome>
             ],
           ),
         ),
-        
+
         // Action buttons on the right
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -520,8 +528,10 @@ class _DashboardHomeState extends State<DashboardHome>
         margin: const EdgeInsets.symmetric(horizontal: 0),
         decoration: BoxDecoration(
           color: const Color(0xFF2A3050),
-          borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-              ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
+          borderRadius: Theme.of(context).cardTheme.shape
+                  is RoundedRectangleBorder
+              ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder)
+                  .borderRadius
               : BorderRadius.circular(16),
           border: Border.all(
             color: const Color(0xFFF8B67F),
@@ -546,141 +556,161 @@ class _DashboardHomeState extends State<DashboardHome>
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-            // Left side - Today's Progress with circular indicator
-            Column(
-              children: [
-                 // Date display
-                 Container(
-                   width: 60,
-                   height: 60,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A3050),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFF8B67F),
-                      width: 2,
+              // Left side - Today's Progress with circular indicator
+              Column(
+                children: [
+                  // Date display
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A3050),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFF8B67F),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'SEP',
+                          style:
+                              Theme.of(context).textTheme.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFF8B67F),
+                                    letterSpacing: 1.0,
+                                  ),
+                        ),
+                        Text(
+                          '${DateTime.now().day}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFFF8B67F),
+                              ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'SEP',
-                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFF8B67F),
-                              letterSpacing: 1.0,
-                            ),
-                      ),
-                      Text(
-                        '${DateTime.now().day}',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFFF8B67F),
-                            ),
-                      ),
-                    ],
+                  const SizedBox(height: 8),
+
+                  // Today's Progress label and circular progress
+                  Text(
+                    'Todays\nProgress',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
-                ),
-                       const SizedBox(height: 8),
-                 
-                 // Today's Progress label and circular progress
-                 Text(
-                   'Todays\nProgress',
-                   textAlign: TextAlign.center,
-                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                         color: Theme.of(context).colorScheme.onSurface,
-                         fontWeight: FontWeight.w500,
-                       ),
-                 ),
-                 const SizedBox(height: 6),
-                
-                 // Circular progress indicator
-                 Consumer<TaskProvider>(
-                   builder: (context, taskProvider, child) {
-                     final completedTasks = taskProvider.tasks
-                         .where((task) => task.status == TaskStatus.completed)
-                         .length;
-                     final totalTasks = taskProvider.tasks.length;
-                     final progress = totalTasks > 0 ? completedTasks / totalTasks : 0.0;
-                     
-                     return SizedBox(
-                       width: 50,
-                       height: 50,
-                      child: Stack(
-                        alignment: Alignment.center, // This centers the stack contents
-                        children: [
-                          // Position the circular progress indicator
-                           Positioned.fill(
-                             child: CircularProgressIndicator(
-                               value: progress,
-                               strokeWidth: 4,
-                              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                Color(0xFFF8B67F),
+                  const SizedBox(height: 6),
+
+                  // Circular progress indicator
+                  Consumer<TaskProvider>(
+                    builder: (context, taskProvider, child) {
+                      final completedTasks = taskProvider.tasks
+                          .where((task) => task.status == TaskStatus.completed)
+                          .length;
+                      final totalTasks = taskProvider.tasks.length;
+                      final progress =
+                          totalTasks > 0 ? completedTasks / totalTasks : 0.0;
+
+                      return SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: Stack(
+                          alignment: Alignment
+                              .center, // This centers the stack contents
+                          children: [
+                            // Position the circular progress indicator
+                            Positioned.fill(
+                              child: CircularProgressIndicator(
+                                value: progress,
+                                strokeWidth: 4,
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHigh,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  Color(0xFFF8B67F),
+                                ),
                               ),
                             ),
-                          ),
-                          // Center the text exactly in the middle
-                          Text(
-                            '${(progress * 100).round()}%',
-                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: const Color(0xFFF8B67F),
-                                ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-
-             const SizedBox(width: 16),
-
-            // Right side - Calendar grid
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Month navigation header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Icon(
-                        Icons.chevron_left,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                        size: 20,
-                      ),
-                      Text(
-                        'SEPTEMBER',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.0,
+                            // Center the text exactly in the middle
+                            Text(
+                              '${(progress * 100).round()}%',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFF8B67F),
+                                  ),
                             ),
-                      ),
-                      Icon(
-                        Icons.chevron_right,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Calendar grid
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: _buildCalendarGrid(context),
-                    ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
-            ),
-          ],
-        ), // Close Row
+
+              const SizedBox(width: 16),
+
+              // Right side - Calendar grid
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Month navigation header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(
+                          Icons.chevron_left,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.7),
+                          size: 20,
+                        ),
+                        Text(
+                          'SEPTEMBER',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.0,
+                              ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.7),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Calendar grid
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: _buildCalendarGrid(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ), // Close Row
         ), // Close Padding
       ), // Close Container
     ); // Close InkWell
@@ -693,92 +723,115 @@ class _DashboardHomeState extends State<DashboardHome>
     final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
     final daysInMonth = lastDayOfMonth.day;
     final startWeekday = firstDayOfMonth.weekday % 7; // Sunday = 0
-    
+
     // Week day headers
     const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    
+
     return Column(
       children: [
         // Week day headers
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: weekDays.map((day) => 
-            Expanded(
-              child: Text(
-                day,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: const Color(0xFFF8B67F), // Match Flash Cards border color
-                      fontWeight: FontWeight.w600, // Slightly bolder to match button styling
-                    ),
-              ),
-            ),
-           ).toList(),
-         ),
-         const SizedBox(height: 4),
-        
+          children: weekDays
+              .map(
+                (day) => Expanded(
+                  child: Text(
+                    day,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: const Color(
+                              0xFFF8B67F), // Match Flash Cards border color
+                          fontWeight: FontWeight
+                              .w600, // Slightly bolder to match button styling
+                        ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 4),
+
         // Calendar days grid
         ...List.generate((daysInMonth + startWeekday + 6) ~/ 7, (weekIndex) {
-          final isLastWeek = weekIndex == ((daysInMonth + startWeekday + 6) ~/ 7) - 1;
-          
+          final isLastWeek =
+              weekIndex == ((daysInMonth + startWeekday + 6) ~/ 7) - 1;
+
           return Column(
             children: [
               Padding(
-                 padding: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(7, (dayIndex) {
-                    final dayNumber = weekIndex * 7 + dayIndex - startWeekday + 1;
-                    final isCurrentMonth = dayNumber > 0 && dayNumber <= daysInMonth;
+                    final dayNumber =
+                        weekIndex * 7 + dayIndex - startWeekday + 1;
+                    final isCurrentMonth =
+                        dayNumber > 0 && dayNumber <= daysInMonth;
                     final isToday = isCurrentMonth && dayNumber == now.day;
-                    
+
                     return Expanded(
-                       child: SizedBox(
-                         height: 28,
-                        child: isCurrentMonth ? InkWell(
-                          onTap: () {
-                            // Navigate to enhanced calendar when day is tapped
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const UnifiedPlannerScreen(),
-                              ),
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(6),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
-                            decoration: BoxDecoration(
-                              color: isToday 
-                                  ? const Color(0xFFF8B67F)
-                                  : Colors.transparent,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Center(
-                              child: Text(
-                                dayNumber.toString(),
-                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                      color: isToday 
-                                          ? Theme.of(context).colorScheme.onPrimary
-                                          : Theme.of(context).colorScheme.onSurface,
-                                      fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                      child: SizedBox(
+                        height: 28,
+                        child: isCurrentMonth
+                            ? InkWell(
+                                onTap: () {
+                                  // Navigate to enhanced calendar when day is tapped
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const UnifiedPlannerScreen(),
                                     ),
-                              ),
-                            ),
-                          ),
-                        ) : const SizedBox(),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(6),
+                                child: Container(
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 2),
+                                  decoration: BoxDecoration(
+                                    color: isToday
+                                        ? const Color(0xFFF8B67F)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      dayNumber.toString(),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelMedium
+                                          ?.copyWith(
+                                            color: isToday
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface,
+                                            fontWeight: isToday
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(),
                       ),
                     );
                   }),
                 ),
               ),
               // Add horizontal line after each row except the last one
-               if (!isLastWeek)
-                 Container(
-                   height: 1,
-                   margin: const EdgeInsets.symmetric(vertical: 2),
+              if (!isLastWeek)
+                Container(
+                  height: 1,
+                  margin: const EdgeInsets.symmetric(vertical: 2),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.3),
                   ),
                 ),
             ],
@@ -788,37 +841,39 @@ class _DashboardHomeState extends State<DashboardHome>
     );
   }
 
-
   /// Build flash cards and notes row with login screen styling
   Widget _buildCardsAndNotesRow(BuildContext context) {
     return Row(
       children: [
-         // Flash Cards section
-         Expanded(
-           child: Container(
-             decoration: BoxDecoration(
-               color: const Color(0xFF2A3050),
-               borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-                   ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
-                   : BorderRadius.circular(16),
-               border: Border.all(
-                 color: const Color(0xFFF8B67F),
-                 width: 2,
-               ),
-               boxShadow: [
-                 BoxShadow(
-                   color: Colors.black.withValues(alpha: 0.15),
-                   blurRadius: 8,
-                   spreadRadius: 0,
-                   offset: const Offset(0, 3),
-                 ),
-                 BoxShadow(
-                   color: Colors.black.withValues(alpha: 0.08),
-                   blurRadius: 4,
-                   spreadRadius: 0,
-                   offset: const Offset(0, 1),
-                 ),
-               ],
+        // Flash Cards section
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A3050),
+              borderRadius:
+                  Theme.of(context).cardTheme.shape is RoundedRectangleBorder
+                      ? (Theme.of(context).cardTheme.shape
+                              as RoundedRectangleBorder)
+                          .borderRadius
+                      : BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFFF8B67F),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -827,22 +882,24 @@ class _DashboardHomeState extends State<DashboardHome>
                   // Navigate to flash cards
                   widget.onNavigate?.call(3); // Decks tab
                 },
-                 borderRadius: BorderRadius.circular(14),
-                 child: Container(
-                   padding: const EdgeInsets.all(16),
-                   child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.center,
-                     mainAxisAlignment: MainAxisAlignment.center,
-                     children: [
-                       Text(
-                         'Flash Cards',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Flash Cards',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
-                       const SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -850,7 +907,8 @@ class _DashboardHomeState extends State<DashboardHome>
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFF8B67F).withValues(alpha: 0.3),
+                              color: const Color(0xFFF8B67F)
+                                  .withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -872,32 +930,35 @@ class _DashboardHomeState extends State<DashboardHome>
 
         const SizedBox(width: 16),
 
-         // Notes section
-         Expanded(
-           child: Container(
-             decoration: BoxDecoration(
-               color: const Color(0xFF2A3050),
-               borderRadius: Theme.of(context).cardTheme.shape is RoundedRectangleBorder
-                   ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder).borderRadius
-                   : BorderRadius.circular(16),
-               border: Border.all(
-                 color: const Color(0xFFF8B67F),
-                 width: 2,
-               ),
-               boxShadow: [
-                 BoxShadow(
-                   color: Colors.black.withValues(alpha: 0.15),
-                   blurRadius: 8,
-                   spreadRadius: 0,
-                   offset: const Offset(0, 3),
-                 ),
-                 BoxShadow(
-                   color: Colors.black.withValues(alpha: 0.08),
-                   blurRadius: 4,
-                   spreadRadius: 0,
-                   offset: const Offset(0, 1),
-                 ),
-               ],
+        // Notes section
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A3050),
+              borderRadius:
+                  Theme.of(context).cardTheme.shape is RoundedRectangleBorder
+                      ? (Theme.of(context).cardTheme.shape
+                              as RoundedRectangleBorder)
+                          .borderRadius
+                      : BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFFF8B67F),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 3),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
             child: Material(
               color: Colors.transparent,
@@ -906,22 +967,24 @@ class _DashboardHomeState extends State<DashboardHome>
                   // Navigate to notes
                   widget.onNavigate?.call(2); // Notes tab
                 },
-                 borderRadius: BorderRadius.circular(14),
-                 child: Container(
-                   padding: const EdgeInsets.all(16),
-                   child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.center,
-                     mainAxisAlignment: MainAxisAlignment.center,
-                     children: [
-                       Text(
-                         'Notes',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Notes',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                       ),
-                       const SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -929,7 +992,8 @@ class _DashboardHomeState extends State<DashboardHome>
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFF8B67F).withValues(alpha: 0.3),
+                              color: const Color(0xFFF8B67F)
+                                  .withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -1208,9 +1272,7 @@ class _DashboardHomeState extends State<DashboardHome>
               ? Colors.green.withValues(alpha: 0.2)
               : Colors.blue.withValues(alpha: 0.2),
           child: Icon(
-            task.status == TaskStatus.completed
-                ? Icons.check
-                : Icons.task_alt,
+            task.status == TaskStatus.completed ? Icons.check : Icons.task_alt,
             color: task.status == TaskStatus.completed
                 ? Colors.green
                 : Colors.blue,
@@ -1242,7 +1304,7 @@ class _DashboardHomeState extends State<DashboardHome>
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
-    
+
     if (difference.inDays == 0) {
       return 'Today';
     } else if (difference.inDays == 1) {
@@ -1256,52 +1318,55 @@ class _DashboardHomeState extends State<DashboardHome>
     }
   }
 
-
   /// Build individual navigation button matching the image layout
-   Widget _buildNavButton(
-     BuildContext context, {
-     required IconData icon,
-     required String label,
-     required bool isSelected,
-     required VoidCallback onTap,
-   }) {
-     return Expanded(
-       child: Material(
-         color: Colors.transparent,
-         child: InkWell(
-           onTap: onTap,
-           borderRadius: BorderRadius.circular(16),
-           child: Container(
-             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
-             child: Column(
-               mainAxisSize: MainAxisSize.min,
-               children: [
-                 // Icon container with selection styling
-                 Container(
-                   padding: const EdgeInsets.all(12),
-                   decoration: BoxDecoration(
-                     color: const Color(0xFF2A3050),
-                     borderRadius: BorderRadius.circular(16),
-                     border: Border.all(
-                       color: const Color(0xFFF8B67F),
-                       width: isSelected ? 2 : 1,
-                     ),
-                   ),
-                   child: Icon(
-                     icon,
-                     size: 28,
-                     color: const Color(0xFFF8B67F),
-                   ),
-                 ),
+  Widget _buildNavButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon container with selection styling
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A3050),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFF8B67F),
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 28,
+                    color: const Color(0xFFF8B67F),
+                  ),
+                ),
                 const SizedBox(height: 4),
                 // Label text
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: isSelected 
+                        color: isSelected
                             ? const Color(0xFFF8B67F)
-                            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
                         fontSize: 11,
                       ),
                   textAlign: TextAlign.center,
@@ -1858,7 +1923,7 @@ class _NotesScreenState extends State<NotesScreen>
                 ],
               ),
               if (!quest.isCompleted) ...[
-                       const SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -2152,11 +2217,13 @@ class _NotesScreenState extends State<NotesScreen>
 
   /// Create new note
   void _createNote() {
-    Navigator.of(context).push(
+    Navigator.of(context)
+        .push(
       MaterialPageRoute(
         builder: (context) => const CreateNoteScreen(),
       ),
-    ).then((result) {
+    )
+        .then((result) {
       // Refresh the notes list if a note was successfully created
       if (result == true && mounted) {
         Provider.of<NoteProvider>(context, listen: false).loadNotes();
@@ -2166,11 +2233,13 @@ class _NotesScreenState extends State<NotesScreen>
 
   /// Create new task
   void _createTask() {
-    Navigator.of(context).push(
+    Navigator.of(context)
+        .push(
       MaterialPageRoute(
         builder: (context) => const CreateTaskScreen(),
       ),
-    ).then((result) {
+    )
+        .then((result) {
       // Refresh the tasks list if a task was successfully created
       if (result == true && mounted) {
         Provider.of<TaskProvider>(context, listen: false).loadTasks();

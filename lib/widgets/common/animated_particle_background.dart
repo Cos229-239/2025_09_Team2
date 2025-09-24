@@ -14,7 +14,8 @@ class AnimatedParticleBackground extends StatefulWidget {
   });
 
   @override
-  State<AnimatedParticleBackground> createState() => _AnimatedParticleBackgroundState();
+  State<AnimatedParticleBackground> createState() =>
+      _AnimatedParticleBackgroundState();
 }
 
 class _AnimatedParticleBackgroundState extends State<AnimatedParticleBackground>
@@ -27,7 +28,8 @@ class _AnimatedParticleBackgroundState extends State<AnimatedParticleBackground>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(minutes: 5), // Ultra slow 5-minute animation cycle
+      duration:
+          const Duration(minutes: 5), // Ultra slow 5-minute animation cycle
       vsync: this,
     );
 
@@ -118,9 +120,9 @@ class ParticlePainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.1);
 
     for (final particle in particles) {
-  // Update particle position with slightly more movement (still subtle)
-  particle.x += cos(particle.direction) * particle.speed * 0.002;
-  particle.y += sin(particle.direction) * particle.speed * 0.002;
+      // Update particle position with slightly more movement (still subtle)
+      particle.x += cos(particle.direction) * particle.speed * 0.002;
+      particle.y += sin(particle.direction) * particle.speed * 0.002;
 
       // Wrap around screen edges
       if (particle.x > 1.0) particle.x = 0.0;

@@ -48,49 +48,52 @@ class SocialSessionService extends ChangeNotifier {
   List<SocialSession> get allSessions => _sessions.values.toList();
 
   /// Get sessions hosted by current user
-  List<SocialSession> get hostedSessions => 
+  List<SocialSession> get hostedSessions =>
       _sessions.values.where((s) => s.hostId == _currentUserId).toList();
 
   /// Get sessions where current user is a participant
-  List<SocialSession> get joinedSessions => 
-      _sessions.values.where((s) => 
-          s.participantIds.contains(_currentUserId) && s.hostId != _currentUserId).toList();
+  List<SocialSession> get joinedSessions => _sessions.values
+      .where((s) =>
+          s.participantIds.contains(_currentUserId) &&
+          s.hostId != _currentUserId)
+      .toList();
 
   /// Get upcoming sessions
   List<SocialSession> get upcomingSessions {
     final now = DateTime.now();
     return _sessions.values
-        .where((s) => s.status == SessionStatus.scheduled && s.scheduledTime.isAfter(now))
+        .where((s) =>
+            s.status == SessionStatus.scheduled && s.scheduledTime.isAfter(now))
         .toList()
       ..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
   }
 
   /// Get live sessions
-  List<SocialSession> get liveSessions => 
+  List<SocialSession> get liveSessions =>
       _sessions.values.where((s) => s.status == SessionStatus.live).toList();
 
   /// Get completed sessions
-  List<SocialSession> get completedSessions => 
-      _sessions.values.where((s) => s.status == SessionStatus.completed).toList();
+  List<SocialSession> get completedSessions => _sessions.values
+      .where((s) => s.status == SessionStatus.completed)
+      .toList();
 
   /// Get sessions that can be joined
-  List<SocialSession> get joinableSessions => 
-      _sessions.values
-          .where((s) => s.canJoin && s.hostId != _currentUserId && 
-                       !s.participantIds.contains(_currentUserId))
-          .toList();
+  List<SocialSession> get joinableSessions => _sessions.values
+      .where((s) =>
+          s.canJoin &&
+          s.hostId != _currentUserId &&
+          !s.participantIds.contains(_currentUserId))
+      .toList();
 
   /// Get pending invitations for current user
-  List<SessionInvitation> get pendingInvitations => 
-      _invitations.values
-          .where((i) => i.toUserId == _currentUserId && i.status == InvitationStatus.pending)
-          .toList();
+  List<SessionInvitation> get pendingInvitations => _invitations.values
+      .where((i) =>
+          i.toUserId == _currentUserId && i.status == InvitationStatus.pending)
+      .toList();
 
   /// Get sent invitations from current user
-  List<SessionInvitation> get sentInvitations => 
-      _invitations.values
-          .where((i) => i.fromUserId == _currentUserId)
-          .toList();
+  List<SessionInvitation> get sentInvitations =>
+      _invitations.values.where((i) => i.fromUserId == _currentUserId).toList();
 
   /// Get mock friends list
   Map<String, String> get friends => Map.unmodifiable(_mockFriends);
@@ -108,7 +111,7 @@ class SocialSessionService extends ChangeNotifier {
     bool isPublic = false,
   }) async {
     final sessionId = _generateSessionId();
-    
+
     final session = SocialSession(
       id: sessionId,
       hostId: _currentUserId,
@@ -135,15 +138,17 @@ class SocialSessionService extends ChangeNotifier {
     await _sendInvitations(session, invitedFriendIds);
 
     notifyListeners();
-    debugPrint('Session scheduled: ${session.title} for ${session.scheduledTime}');
+    debugPrint(
+        'Session scheduled: ${session.title} for ${session.scheduledTime}');
     return session;
   }
 
   /// Send invitations to friends
-  Future<void> _sendInvitations(SocialSession session, List<String> friendIds) async {
+  Future<void> _sendInvitations(
+      SocialSession session, List<String> friendIds) async {
     for (final friendId in friendIds) {
       final friendName = _mockFriends[friendId] ?? 'Unknown Friend';
-      
+
       final invitation = SessionInvitation(
         id: _generateInvitationId(),
         sessionId: session.id,
@@ -160,7 +165,8 @@ class SocialSessionService extends ChangeNotifier {
     }
 
     await _saveInvitations();
-    debugPrint('Sent ${friendIds.length} invitations for session ${session.title}');
+    debugPrint(
+        'Sent ${friendIds.length} invitations for session ${session.title}');
   }
 
   /// Respond to a session invitation
@@ -170,7 +176,8 @@ class SocialSessionService extends ChangeNotifier {
       return false;
     }
 
-    final newStatus = accept ? InvitationStatus.accepted : InvitationStatus.declined;
+    final newStatus =
+        accept ? InvitationStatus.accepted : InvitationStatus.declined;
     final updatedInvitation = invitation.copyWith(
       status: newStatus,
       respondedAt: DateTime.now(),
@@ -189,8 +196,9 @@ class SocialSessionService extends ChangeNotifier {
 
     await _saveInvitations();
     notifyListeners();
-    
-    debugPrint('Invitation ${accept ? "accepted" : "declined"} for session ${invitation.sessionId}');
+
+    debugPrint(
+        'Invitation ${accept ? "accepted" : "declined"} for session ${invitation.sessionId}');
     return true;
   }
 
@@ -205,10 +213,14 @@ class SocialSessionService extends ChangeNotifier {
       return true; // Already joined
     }
 
-    final userName = userId == _currentUserId ? _currentUserName : (_mockFriends[userId] ?? 'Unknown User');
-    
-    final updatedParticipants = List<String>.from(session.participantIds)..add(userId);
-    final updatedParticipantNames = Map<String, String>.from(session.participantNames);
+    final userName = userId == _currentUserId
+        ? _currentUserName
+        : (_mockFriends[userId] ?? 'Unknown User');
+
+    final updatedParticipants = List<String>.from(session.participantIds)
+      ..add(userId);
+    final updatedParticipantNames =
+        Map<String, String>.from(session.participantNames);
     updatedParticipantNames[userId] = userName;
 
     final updatedSession = session.copyWith(
@@ -236,8 +248,10 @@ class SocialSessionService extends ChangeNotifier {
       return false;
     }
 
-    final updatedParticipants = List<String>.from(session.participantIds)..remove(userId);
-    final updatedParticipantNames = Map<String, String>.from(session.participantNames);
+    final updatedParticipants = List<String>.from(session.participantIds)
+      ..remove(userId);
+    final updatedParticipantNames =
+        Map<String, String>.from(session.participantNames);
     updatedParticipantNames.remove(userId);
 
     final updatedSession = session.copyWith(
@@ -249,14 +263,17 @@ class SocialSessionService extends ChangeNotifier {
     await _saveSessions();
     notifyListeners();
 
-    debugPrint('User ${session.participantNames[userId]} left session ${session.title}');
+    debugPrint(
+        'User ${session.participantNames[userId]} left session ${session.title}');
     return true;
   }
 
   /// Start a session (host only)
   Future<SocialSession?> startSession(String sessionId) async {
     final session = _sessions[sessionId];
-    if (session == null || session.hostId != _currentUserId || session.status != SessionStatus.scheduled) {
+    if (session == null ||
+        session.hostId != _currentUserId ||
+        session.status != SessionStatus.scheduled) {
       return null;
     }
 
@@ -274,9 +291,12 @@ class SocialSessionService extends ChangeNotifier {
   }
 
   /// End a session (host only)
-  Future<SocialSession?> endSession(String sessionId, {Map<String, dynamic>? finalData}) async {
+  Future<SocialSession?> endSession(String sessionId,
+      {Map<String, dynamic>? finalData}) async {
     final session = _sessions[sessionId];
-    if (session == null || session.hostId != _currentUserId || session.status != SessionStatus.live) {
+    if (session == null ||
+        session.hostId != _currentUserId ||
+        session.status != SessionStatus.live) {
       return null;
     }
 
@@ -297,13 +317,18 @@ class SocialSessionService extends ChangeNotifier {
   /// Cancel a session (host only)
   Future<bool> cancelSession(String sessionId, String reason) async {
     final session = _sessions[sessionId];
-    if (session == null || session.hostId != _currentUserId || session.status != SessionStatus.scheduled) {
+    if (session == null ||
+        session.hostId != _currentUserId ||
+        session.status != SessionStatus.scheduled) {
       return false;
     }
 
     final cancelledSession = session.copyWith(
       status: SessionStatus.cancelled,
-      sessionData: {'cancellationReason': reason, 'cancelledAt': DateTime.now().toIso8601String()},
+      sessionData: {
+        'cancellationReason': reason,
+        'cancelledAt': DateTime.now().toIso8601String()
+      },
     );
 
     _sessions[sessionId] = cancelledSession;
@@ -323,10 +348,10 @@ class SocialSessionService extends ChangeNotifier {
   bool canJoinSession(String sessionId, String userId) {
     final session = _sessions[sessionId];
     if (session == null) return false;
-    
-    return session.canJoin && 
-           !session.participantIds.contains(userId) &&
-           session.hostId != userId;
+
+    return session.canJoin &&
+        !session.participantIds.contains(userId) &&
+        session.hostId != userId;
   }
 
   /// Get sessions happening today
@@ -336,8 +361,9 @@ class SocialSessionService extends ChangeNotifier {
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     return _sessions.values
-        .where((s) => s.scheduledTime.isAfter(startOfDay) && 
-                     s.scheduledTime.isBefore(endOfDay))
+        .where((s) =>
+            s.scheduledTime.isAfter(startOfDay) &&
+            s.scheduledTime.isBefore(endOfDay))
         .toList()
       ..sort((a, b) => a.scheduledTime.compareTo(b.scheduledTime));
   }
@@ -346,7 +372,9 @@ class SocialSessionService extends ChangeNotifier {
   Map<String, dynamic> getSessionStats() {
     final hosted = hostedSessions.length;
     final joined = joinedSessions.length;
-    final completed = completedSessions.where((s) => s.participantIds.contains(_currentUserId)).length;
+    final completed = completedSessions
+        .where((s) => s.participantIds.contains(_currentUserId))
+        .length;
     final totalParticipants = _sessions.values
         .where((s) => s.participantIds.contains(_currentUserId))
         .map((s) => s.participantCount)
@@ -357,7 +385,8 @@ class SocialSessionService extends ChangeNotifier {
       'sessionsJoined': joined,
       'sessionsCompleted': completed,
       'totalParticipants': totalParticipants,
-      'averageParticipants': completed > 0 ? (totalParticipants / completed).round() : 0,
+      'averageParticipants':
+          completed > 0 ? (totalParticipants / completed).round() : 0,
     };
   }
 
@@ -390,9 +419,10 @@ class SocialSessionService extends ChangeNotifier {
 
   Future<void> _loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
-    _currentUserId = prefs.getString(_userIdKey) ?? 'user_${Random().nextInt(10000)}';
+    _currentUserId =
+        prefs.getString(_userIdKey) ?? 'user_${Random().nextInt(10000)}';
     _currentUserName = prefs.getString(_userNameKey) ?? 'Study Buddy';
-    
+
     // Save if new
     await prefs.setString(_userIdKey, _currentUserId);
     await prefs.setString(_userNameKey, _currentUserName);
@@ -405,7 +435,7 @@ class SocialSessionService extends ChangeNotifier {
     if (sessionsJson != null) {
       final sessionsMap = jsonDecode(sessionsJson) as Map<String, dynamic>;
       _sessions.clear();
-      
+
       for (final entry in sessionsMap.entries) {
         try {
           _sessions[entry.key] = SocialSession.fromJson(entry.value);
@@ -418,7 +448,8 @@ class SocialSessionService extends ChangeNotifier {
 
   Future<void> _saveSessions() async {
     final prefs = await SharedPreferences.getInstance();
-    final sessionsMap = _sessions.map((key, session) => MapEntry(key, session.toJson()));
+    final sessionsMap =
+        _sessions.map((key, session) => MapEntry(key, session.toJson()));
     await prefs.setString(_sessionsKey, jsonEncode(sessionsMap));
   }
 
@@ -427,9 +458,10 @@ class SocialSessionService extends ChangeNotifier {
     final invitationsJson = prefs.getString(_invitationsKey);
 
     if (invitationsJson != null) {
-      final invitationsMap = jsonDecode(invitationsJson) as Map<String, dynamic>;
+      final invitationsMap =
+          jsonDecode(invitationsJson) as Map<String, dynamic>;
       _invitations.clear();
-      
+
       for (final entry in invitationsMap.entries) {
         try {
           _invitations[entry.key] = SessionInvitation.fromJson(entry.value);
@@ -442,7 +474,8 @@ class SocialSessionService extends ChangeNotifier {
 
   Future<void> _saveInvitations() async {
     final prefs = await SharedPreferences.getInstance();
-    final invitationsMap = _invitations.map((key, inv) => MapEntry(key, inv.toJson()));
+    final invitationsMap =
+        _invitations.map((key, inv) => MapEntry(key, inv.toJson()));
     await prefs.setString(_invitationsKey, jsonEncode(invitationsMap));
   }
 
@@ -453,7 +486,7 @@ class SocialSessionService extends ChangeNotifier {
     for (final entry in _sessions.entries) {
       final session = entry.value;
       // Mark sessions as expired if they were scheduled more than 24 hours ago and never started
-      if (session.status == SessionStatus.scheduled && 
+      if (session.status == SessionStatus.scheduled &&
           now.difference(session.scheduledTime).inHours > 24) {
         expiredSessions.add(entry.key);
       }
@@ -474,11 +507,11 @@ class SocialSessionService extends ChangeNotifier {
   Future<void> setCurrentUser(String userId, String userName) async {
     _currentUserId = userId;
     _currentUserName = userName;
-    
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userIdKey, userId);
     await prefs.setString(_userNameKey, userName);
-    
+
     notifyListeners();
   }
 }

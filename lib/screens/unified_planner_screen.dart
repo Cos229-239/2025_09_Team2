@@ -209,7 +209,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
     return Consumer<CalendarProvider>(
       builder: (context, provider, child) {
         final todayEvents = provider.getEventsForDay(DateTime.now());
-        
+
         if (todayEvents.isEmpty) {
           return Center(
             child: Column(
@@ -218,21 +218,30 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                 Icon(
                   Icons.event_available,
                   size: 64,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No events scheduled for today',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.6),
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Tap the + button to create your first event',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
+                      ),
                 ),
               ],
             ),
@@ -282,9 +291,9 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
             Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(width: 8),
             Container(
@@ -352,8 +361,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   Text(
                     event.title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -361,17 +370,24 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   Text(
                     event.formattedTime,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.7),
+                        ),
                   ),
-                  if (event.description.isNotEmpty && event.description != event.title)
+                  if (event.description.isNotEmpty &&
+                      event.description != event.title)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         event.description,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                            ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -383,7 +399,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
               children: [
                 if (event.isHappeningNow)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.green,
                       borderRadius: BorderRadius.circular(8),
@@ -399,7 +416,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   ),
                 if (event.isOverdue)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(8),
@@ -421,7 +439,10 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                           : Icons.check_circle_outline,
                       color: event.status == CalendarEventStatus.completed
                           ? Colors.green
-                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.5),
                     ),
                     onPressed: () => _toggleEventCompletion(event),
                     tooltip: event.status == CalendarEventStatus.completed
@@ -477,7 +498,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
             ],
           ),
         ),
-        
+
         // Time column
         if (showTime)
           SizedBox(
@@ -488,20 +509,23 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                 Text(
                   DateFormat.jm().format(event.startTime),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 if (event.endTime != null)
                   Text(
                     DateFormat.jm().format(event.endTime!),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
                   ),
               ],
             ),
           ),
-        
+
         // Event card
         Expanded(
           child: Container(
@@ -520,8 +544,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
         Text(
           'Quick Actions',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -605,21 +629,21 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                     Text(
                       'Calendar Filters',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Customize your view',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
                     ),
                   ],
                 ),
               ),
-              
+
               // Event type filters
               const Padding(
                 padding: EdgeInsets.all(16),
@@ -634,20 +658,20 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   onChanged: (value) => provider.toggleEventTypeFilter(type),
                 );
               }),
-              
+
               const Divider(),
-              
+
               // Status filters
               const Padding(
                 padding: EdgeInsets.all(16),
                 child: Text('Status'),
               ),
               ...CalendarEventStatus.values.map((status) {
-                if (status == CalendarEventStatus.expired || 
+                if (status == CalendarEventStatus.expired ||
                     status == CalendarEventStatus.postponed) {
                   return const SizedBox.shrink();
                 }
-                
+
                 final isActive = provider.statusFilters.contains(status);
                 return CheckboxListTile(
                   title: Text(status.name),
@@ -655,9 +679,9 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   onChanged: (value) => provider.toggleStatusFilter(status),
                 );
               }),
-              
+
               const Divider(),
-              
+
               // Auto-refresh toggle
               SwitchListTile(
                 title: const Text('Auto Refresh'),
@@ -665,7 +689,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                 value: provider.autoRefresh,
                 onChanged: provider.setAutoRefresh,
               ),
-              
+
               // Clear filters
               ListTile(
                 leading: const Icon(Icons.clear_all),
@@ -684,7 +708,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
 
   void _handleMenuAction(String action) {
     final provider = Provider.of<CalendarProvider>(context, listen: false);
-    
+
     switch (action) {
       case 'refresh':
         provider.refreshAllEvents();
@@ -697,8 +721,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              provider.autoRefresh 
-                  ? 'Auto refresh enabled' 
+              provider.autoRefresh
+                  ? 'Auto refresh enabled'
                   : 'Auto refresh disabled',
             ),
           ),
@@ -732,7 +756,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
           return Container(
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: ListView(
               controller: scrollController,
@@ -750,7 +775,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Event header
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -774,17 +799,23 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                         children: [
                           Text(
                             event.title,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             event.type.displayName,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: event.color,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: event.color,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
                         ],
                       ),
@@ -804,7 +835,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Event details
                 if (event.description.isNotEmpty) ...[
                   _buildDetailSection(
@@ -814,14 +845,14 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 _buildDetailSection(
                   'Time',
                   event.formattedTime,
                   Icons.schedule,
                 ),
                 const SizedBox(height: 16),
-                
+
                 if (event.location != null) ...[
                   _buildDetailSection(
                     'Location',
@@ -830,7 +861,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 if (event.tags.isNotEmpty) ...[
                   _buildDetailSection(
                     'Tags',
@@ -839,7 +870,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 if (event.estimatedMinutes != null) ...[
                   _buildDetailSection(
                     'Duration',
@@ -848,7 +879,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                   ),
                   const SizedBox(height: 24),
                 ],
-                
+
                 // Action buttons
                 Row(
                   children: [
@@ -895,14 +926,17 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
             Icon(
               icon,
               size: 16,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.7),
             ),
             const SizedBox(width: 8),
             Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),
@@ -1001,8 +1035,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
               Text(
                 'Smart Schedule Suggestions',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               const SizedBox(height: 16),
               if (suggestions.isEmpty)
@@ -1018,7 +1052,8 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                       trailing: ElevatedButton(
                         onPressed: () async {
                           final navigator = Navigator.of(context);
-                          final scaffoldMessenger = ScaffoldMessenger.of(context);
+                          final scaffoldMessenger =
+                              ScaffoldMessenger.of(context);
                           navigator.pop();
                           final event = await provider.createEvent(
                             title: 'Study Session',
@@ -1028,7 +1063,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
                             endTime: suggestion.endTime,
                             estimatedMinutes: suggestion.estimatedMinutes,
                           );
-                          
+
                           if (event != null && mounted) {
                             scaffoldMessenger.showSnackBar(
                               const SnackBar(

@@ -1,8 +1,8 @@
 /// StudyPals Spotify Integration - Service Layer
-/// 
+///
 /// This service class handles all Spotify API interactions and replaces
 /// the backend functionality from spotify-server.js.
-/// 
+///
 /// @author StudyPals Team
 /// @version 1.0.0
 library;
@@ -19,7 +19,7 @@ import '../models/spotify_models.dart';
 
 /// Service class that handles all Spotify API interactions and authentication.
 /// This service manages the OAuth flow, token storage, and API requests.
-/// 
+///
 /// Key responsibilities:
 /// - Managing authentication state
 /// - Storing and refreshing tokens
@@ -63,29 +63,31 @@ class SpotifyService {
 
   /// Load tokens from local storage
   /// Loads authentication tokens from persistent storage.
-  /// 
+  ///
   /// This method:
   /// 1. Retrieves stored tokens from SharedPreferences
   /// 2. Checks if tokens are present and valid
   /// 3. Automatically refreshes the access token if expired
-  /// 
+  ///
   /// Error handling:
   /// - Silently fails if storage access fails
   /// - Logs errors for debugging purposes
   /// - Maintains null state for tokens if loading fails
-  /// 
+  ///
   /// @returns Future that completes when tokens are loaded
   Future<void> _loadStoredTokens() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Load all tokens at once to maintain consistency
       final storedAccessToken = prefs.getString(_storageKeyAccessToken);
       final storedRefreshToken = prefs.getString(_storageKeyRefreshToken);
       final storedExpiresAt = prefs.getInt(_storageKeyExpiresAt);
 
       // Only update tokens if we have valid data
-      if (storedAccessToken != null && storedRefreshToken != null && storedExpiresAt != null) {
+      if (storedAccessToken != null &&
+          storedRefreshToken != null &&
+          storedExpiresAt != null) {
         _accessToken = storedAccessToken;
         _refreshToken = storedRefreshToken;
         _expiresAt = storedExpiresAt;
@@ -149,25 +151,25 @@ class SpotifyService {
 
   /// Generate OAuth authorization URL
   /// Generates the OAuth authorization URL for Spotify login.
-  /// 
+  ///
   /// This URL is opened in a browser where the user can:
   /// 1. Login to their Spotify account
   /// 2. Review the requested permissions
   /// 3. Approve or deny the application's access
-  /// 
+  ///
   /// Security Features:
   /// - Generates random state parameter for CSRF protection
   /// - Stores state for validation on callback
   /// - Uses configured redirect URI
   /// - Requests minimum required permissions
-  /// 
+  ///
   /// @returns String Complete URL for OAuth authorization
   /// @throws Exception if configuration is invalid
   String generateAuthUrl() {
     if (SpotifyConfig.clientId.isEmpty) {
       throw Exception('Client ID not configured');
     }
-    
+
     if (SpotifyConfig.redirectUri.isEmpty) {
       throw Exception('Redirect URI not configured');
     }
@@ -178,7 +180,7 @@ class SpotifyService {
 
     // Generate and store random state for CSRF protection
     _currentAuthState = _generateRandomString();
-    
+
     // Build the required OAuth parameters
     final params = {
       'client_id': SpotifyConfig.clientId,
@@ -213,21 +215,21 @@ class SpotifyService {
 
   /// Exchange authorization code for tokens
   /// Exchanges an authorization code for access and refresh tokens.
-  /// 
+  ///
   /// This is the second step of the OAuth flow, called after the user
   /// authorizes the application and we receive a temporary code.
-  /// 
+  ///
   /// Flow:
   /// 1. Sends code to Spotify's token endpoint
   /// 2. Receives access and refresh tokens
   /// 3. Stores tokens for future use
   /// 4. Returns token information
-  /// 
+  ///
   /// Error handling:
   /// - Throws exception if network request fails
   /// - Throws exception if Spotify returns an error response
   /// - Validates token data before storing
-  /// 
+  ///
   /// @param code The authorization code received from Spotify OAuth redirect
   /// @returns SpotifyTokens containing access and refresh tokens
   /// @throws Exception if token exchange fails
@@ -271,17 +273,17 @@ class SpotifyService {
   }
 
   /// Refresh access token using refresh token
-  /// 
+  ///
   /// This method attempts to get a new access token using the stored refresh token.
   /// If the refresh fails due to an invalid refresh token, it clears all tokens
   /// to force re-authentication.
-  /// 
+  ///
   /// Error Handling:
   /// - Validates refresh token presence
   /// - Handles HTTP errors gracefully
   /// - Clears tokens on critical failures
   /// - Throws specific exceptions for different failure cases
-  /// 
+  ///
   /// @returns Future String containing the new access token
   /// @throws AuthenticationException if refresh token is missing or invalid
   /// @throws NetworkException if request fails
@@ -313,9 +315,11 @@ class SpotifyService {
             ((responseData['expires_in'] as int) * 1000);
 
         // If we got a new refresh token, update it
-        final newRefreshToken = responseData['refresh_token'] as String? ?? _refreshToken!;
+        final newRefreshToken =
+            responseData['refresh_token'] as String? ?? _refreshToken!;
 
-        await _saveTokens(responseData['access_token'], newRefreshToken, expiresAt);
+        await _saveTokens(
+            responseData['access_token'], newRefreshToken, expiresAt);
         return responseData['access_token'];
       } else if (response.statusCode == 401 || response.statusCode == 400) {
         // Invalid or expired refresh token
@@ -335,13 +339,13 @@ class SpotifyService {
   static const int _maxRetries = 3;
 
   /// Make authenticated request to Spotify API
-  /// 
+  ///
   /// Features:
   /// - Automatic token refresh on 401 errors
   /// - Request retry on temporary failures
   /// - Timeout handling
   /// - Rate limit handling
-  /// 
+  ///
   /// @param endpoint The API endpoint to call
   /// @param queryParams Optional query parameters
   /// @returns Future Map containing JSON response data
@@ -374,16 +378,19 @@ class SpotifyService {
           // Token expired, try to refresh and retry
           if (retryCount < _maxRetries) {
             await refreshAccessToken();
-            return _makeRequest(endpoint, queryParams: queryParams, retryCount: retryCount + 1);
+            return _makeRequest(endpoint,
+                queryParams: queryParams, retryCount: retryCount + 1);
           }
           throw Exception('Authentication failed after $_maxRetries attempts');
 
         case 429:
           // Rate limited, wait and retry
-          final retryAfter = int.tryParse(response.headers['retry-after'] ?? '5') ?? 5;
+          final retryAfter =
+              int.tryParse(response.headers['retry-after'] ?? '5') ?? 5;
           if (retryCount < _maxRetries) {
             await Future.delayed(Duration(seconds: retryAfter));
-            return _makeRequest(endpoint, queryParams: queryParams, retryCount: retryCount + 1);
+            return _makeRequest(endpoint,
+                queryParams: queryParams, retryCount: retryCount + 1);
           }
           throw Exception('Rate limited by Spotify API');
 
@@ -396,7 +403,8 @@ class SpotifyService {
           // Server error, retry with backoff
           if (retryCount < _maxRetries) {
             await Future.delayed(Duration(seconds: pow(2, retryCount) as int));
-            return _makeRequest(endpoint, queryParams: queryParams, retryCount: retryCount + 1);
+            return _makeRequest(endpoint,
+                queryParams: queryParams, retryCount: retryCount + 1);
           }
           throw Exception('Spotify API server error: ${response.statusCode}');
 
@@ -405,7 +413,8 @@ class SpotifyService {
       }
     } on TimeoutException {
       if (retryCount < _maxRetries) {
-        return _makeRequest(endpoint, queryParams: queryParams, retryCount: retryCount + 1);
+        return _makeRequest(endpoint,
+            queryParams: queryParams, retryCount: retryCount + 1);
       }
       throw Exception('Spotify API request timed out');
     } catch (e) {
@@ -414,19 +423,19 @@ class SpotifyService {
   }
 
   /// Retrieves the current user's Spotify profile information.
-  /// 
+  ///
   /// This method fetches the authenticated user's profile data including:
   /// - User ID
   /// - Display name
   /// - Email (if permission granted)
   /// - Profile image
   /// - Subscription status
-  /// 
+  ///
   /// Error Handling:
   /// - Throws if not authenticated
   /// - Throws if API request fails
   /// - Handles token refresh automatically
-  /// 
+  ///
   /// @returns Future SpotifyUser containing user profile data
   /// @throws Exception if request fails or user not authenticated
   Future<SpotifyUser> getCurrentUser() async {
@@ -435,20 +444,20 @@ class SpotifyService {
   }
 
   /// Retrieves the authenticated user's playlists.
-  /// 
+  ///
   /// Features:
   /// - Fetches both owned and followed playlists
   /// - Supports pagination through limit parameter
   /// - Returns playlist metadata and basic track info
-  /// 
+  ///
   /// Parameters:
   /// @param limit Maximum number of playlists to return (default: 50)
-  /// 
+  ///
   /// Response Handling:
   /// - Deserializes JSON to SpotifyPlaylist objects
   /// - Maintains playlist order from Spotify
   /// - Includes playlist images and track counts
-  /// 
+  ///
   /// @returns List of SpotifyPlaylist containing user's playlists
   /// @throws Exception if request fails or user not authenticated
   Future<List<SpotifyPlaylist>> getUserPlaylists({int limit = 50}) async {
@@ -461,21 +470,21 @@ class SpotifyService {
   }
 
   /// Retrieves tracks from a specific playlist.
-  /// 
+  ///
   /// Features:
   /// - Fetches full track metadata
   /// - Supports pagination through limit parameter
   /// - Includes track ordering from playlist
-  /// 
+  ///
   /// Parameters:
   /// @param playlistId Spotify ID of the playlist to fetch
   /// @param limit Maximum number of tracks to return (default: 100)
-  /// 
+  ///
   /// Response Processing:
   /// - Extracts tracks from playlist track wrapper
   /// - Deserializes to full SpotifyTrack objects
   /// - Maintains playlist order
-  /// 
+  ///
   /// @returns List of SpotifyTrack containing playlist tracks
   /// @throws Exception if request fails or playlist not found
   Future<List<SpotifyTrack>> getPlaylistTracks(String playlistId,
@@ -489,27 +498,27 @@ class SpotifyService {
   }
 
   /// Searches Spotify's catalog for tracks matching a query.
-  /// 
+  ///
   /// Search Capabilities:
   /// - Matches track titles
   /// - Matches artist names
   /// - Matches album titles
   /// - Supports partial matches
-  /// 
+  ///
   /// Parameters:
   /// @param query Search string to match against Spotify catalog
   /// @param limit Maximum number of results to return (default: 10)
-  /// 
+  ///
   /// Query Tips:
   /// - Can include track name, artist, album
   /// - More specific queries yield better results
   /// - Supports Unicode characters
-  /// 
+  ///
   /// Response Processing:
   /// - Deserializes to SpotifyTrack objects
   /// - Orders by relevance
   /// - Includes full track metadata
-  /// 
+  ///
   /// @returns List of SpotifyTrack containing matching tracks
   /// @throws Exception if search fails or query invalid
   Future<List<SpotifyTrack>> searchTracks(String query,
@@ -524,26 +533,26 @@ class SpotifyService {
   }
 
   /// Creates a new playlist for the authenticated user.
-  /// 
+  ///
   /// Features:
   /// - Creates empty playlist
   /// - Sets visibility (public/private)
   /// - Adds optional description
-  /// 
+  ///
   /// Parameters:
   /// @param name Name of the playlist to create
   /// @param description Optional description of the playlist
   /// @param isPublic Whether the playlist is public (default: false)
-  /// 
+  ///
   /// Validation:
   /// - Checks authentication status
   /// - Validates name is not empty
   /// - Verifies user has playlist creation permission
-  /// 
+  ///
   /// Response:
   /// - Returns created playlist details
   /// - Includes Spotify-generated playlist ID
-  /// 
+  ///
   /// @returns SpotifyPlaylist representing the created playlist
   /// @throws Exception if creation fails or user not authenticated
   Future<SpotifyPlaylist> createPlaylist(String name,
@@ -564,18 +573,20 @@ class SpotifyService {
         throw Exception('Could not determine user ID');
       }
 
-      final response = await http.post(
-        Uri.parse('${SpotifyConfig.apiBaseUrl}/users/${user.id}/playlists'),
-        headers: {
-          'Authorization': 'Bearer $_accessToken',
-          'Content-Type': 'application/json',
-        },
-        body: json.encode({
-          'name': name.trim(),
-          'description': description?.trim(),
-          'public': isPublic,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            Uri.parse('${SpotifyConfig.apiBaseUrl}/users/${user.id}/playlists'),
+            headers: {
+              'Authorization': 'Bearer $_accessToken',
+              'Content-Type': 'application/json',
+            },
+            body: json.encode({
+              'name': name.trim(),
+              'description': description?.trim(),
+              'public': isPublic,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
 
       final responseData = json.decode(response.body);
 
@@ -586,7 +597,8 @@ class SpotifyService {
       } else if (response.statusCode == 401) {
         await refreshAccessToken();
         // Retry once after token refresh
-        return createPlaylist(name, description: description, isPublic: isPublic);
+        return createPlaylist(name,
+            description: description, isPublic: isPublic);
       } else {
         throw Exception('Failed to create playlist: ${response.statusCode}');
       }
@@ -598,26 +610,26 @@ class SpotifyService {
   }
 
   /// Adds tracks to an existing Spotify playlist.
-  /// 
+  ///
   /// Features:
   /// - Adds multiple tracks in one request
   /// - Maintains add order in playlist
   /// - Handles duplicate checking
-  /// 
+  ///
   /// Parameters:
   /// @param playlistId Spotify ID of the target playlist
   /// @param trackUris List of Spotify track URIs to add
-  /// 
+  ///
   /// URI Format:
   /// - Must be valid Spotify track URIs
   /// - Format: "spotify:track:1234567890abcdef"
-  /// 
+  ///
   /// Error Handling:
   /// - Validates authentication status
   /// - Checks playlist modification permissions
   /// - Verifies valid track URIs
   /// - Handles API errors gracefully
-  /// 
+  ///
   /// Request Format:
   /// ```json
   /// {
@@ -627,7 +639,7 @@ class SpotifyService {
   ///   ]
   /// }
   /// ```
-  /// 
+  ///
   /// @throws Exception if addition fails or user not authenticated
   /// @returns void - Completes when tracks are added successfully
   Future<void> addTracksToPlaylist(
@@ -658,24 +670,24 @@ class SpotifyService {
   }
 
   /// Initiates the OAuth authentication flow in the system browser.
-  /// 
+  ///
   /// Process Flow:
   /// 1. Generates authentication URL with state
   /// 2. Opens system browser
   /// 3. User logs in to Spotify
   /// 4. User authorizes application
   /// 5. Redirect back to application
-  /// 
+  ///
   /// Security Features:
   /// - Uses state parameter for CSRF protection
   /// - Opens in system browser for secure login
   /// - Validates redirect URI
-  /// 
+  ///
   /// Error Handling:
   /// - Checks if URL can be launched
   /// - Handles browser launch failures
   /// - Reports launch errors clearly
-  /// 
+  ///
   /// @throws Exception if browser cannot be launched
   Future<void> launchAuthFlow() async {
     final authUrl = generateAuthUrl();
@@ -689,22 +701,22 @@ class SpotifyService {
   }
 
   /// Generates a cryptographically secure random string for OAuth state.
-  /// 
+  ///
   /// Features:
   /// - 32 characters long
   /// - Uses alphanumeric characters
   /// - Random distribution for security
-  /// 
+  ///
   /// Character Set:
   /// - Lowercase letters (a-z)
   /// - Uppercase letters (A-Z)
   /// - Numbers (0-9)
-  /// 
+  ///
   /// Usage:
   /// - OAuth state parameter
   /// - CSRF protection
   /// - Request validation
-  /// 
+  ///
   /// @returns String - 32 character random string
   String _generateRandomString() {
     const chars =
@@ -715,22 +727,22 @@ class SpotifyService {
   }
 
   /// Disconnects from Spotify by clearing all stored tokens.
-  /// 
+  ///
   /// Actions:
   /// 1. Clears access token
   /// 2. Clears refresh token
   /// 3. Clears expiration timestamp
-  /// 
+  ///
   /// Security:
   /// - Removes all stored credentials
   /// - Invalidates current session
   /// - Requires re-authentication for future access
-  /// 
+  ///
   /// State Changes:
   /// - Sets isAuthenticated to false
   /// - Clears all stored tokens
   /// - Resets service state
-  /// 
+  ///
   /// @returns Future that completes when disconnection is finished
   Future<void> disconnect() async {
     await clearTokens();

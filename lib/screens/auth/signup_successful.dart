@@ -184,7 +184,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                                 children: [
                                   SizedBox(
                                       height:
-                                          MediaQuery.of(context).size.height > 700
+                                          MediaQuery.of(context).size.height >
+                                                  700
                                               ? 60
                                               : 20),
                                   // Responsive top spacing
@@ -192,7 +193,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                                   // Builds the video mascot section
                                   SizedBox(
                                       height:
-                                          MediaQuery.of(context).size.height > 700
+                                          MediaQuery.of(context).size.height >
+                                                  700
                                               ? 32
                                               : 16),
                                   // Responsive space between video and text
@@ -207,7 +209,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                                   ),
                                   SizedBox(
                                       height:
-                                          MediaQuery.of(context).size.height > 700
+                                          MediaQuery.of(context).size.height >
+                                                  700
                                               ? 40
                                               : 20),
                                   // Responsive space between text and button
@@ -215,7 +218,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                                   // Return to Login button
                                   SizedBox(
                                       height:
-                                          MediaQuery.of(context).size.height > 700
+                                          MediaQuery.of(context).size.height >
+                                                  700
                                               ? 30
                                               : 15),
                                   // Responsive space between button and smiley
@@ -226,7 +230,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                                   ),
                                   SizedBox(
                                       height:
-                                          MediaQuery.of(context).size.height > 700
+                                          MediaQuery.of(context).size.height >
+                                                  700
                                               ? 60
                                               : 20),
                                   // Responsive space at bottom

@@ -45,7 +45,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   Future<void> _loadGroupData() async {
     // Simulate loading group data
     await Future.delayed(const Duration(seconds: 1));
-    
+
     // Mock data - in a real app, this would come from the service
     _members = [
       service.UserProfile(
@@ -121,8 +121,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       ),
     ];
 
-    _isMember = widget.group.members.any((member) => member.userId == 'current_user_id');
-    
+    _isMember = widget.group.members
+        .any((member) => member.userId == 'current_user_id');
+
     setState(() {
       _isLoading = false;
     });
@@ -172,7 +173,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                   value: 'leave',
                   child: ListTile(
                     leading: Icon(Icons.exit_to_app, color: Colors.red),
-                    title: Text('Leave Group', style: TextStyle(color: Colors.red)),
+                    title: Text('Leave Group',
+                        style: TextStyle(color: Colors.red)),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -209,17 +211,30 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                         children: [
                           Text(
                             widget.group.name,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
+                                ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            widget.group.subjects.isNotEmpty ? widget.group.subjects.first : 'General',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
-                            ),
+                            widget.group.subjects.isNotEmpty
+                                ? widget.group.subjects.first
+                                : 'General',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer
+                                      .withValues(alpha: 0.8),
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Row(
@@ -227,20 +242,30 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                               Icon(
                                 Icons.people,
                                 size: 16,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer
+                                    .withValues(alpha: 0.8),
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${_members.length}/${widget.group.maxMembers} members',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer
+                                          .withValues(alpha: 0.8),
+                                    ),
                               ),
                               const SizedBox(width: 16),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: widget.group.isPrivate 
+                                  color: widget.group.isPrivate
                                       ? Colors.orange.withValues(alpha: 0.2)
                                       : Colors.green.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
@@ -250,7 +275,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
-                                    color: widget.group.isPrivate ? Colors.orange[700] : Colors.green[700],
+                                    color: widget.group.isPrivate
+                                        ? Colors.orange[700]
+                                        : Colors.green[700],
                                   ),
                                 ),
                               ),
@@ -266,8 +293,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                   Text(
                     widget.group.description,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.9),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer
+                              .withValues(alpha: 0.9),
+                        ),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -339,8 +369,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
           Text(
             'Pending Requests',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           ..._pendingRequests.map((user) => _buildPendingRequestTile(user)),
@@ -349,8 +379,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         Text(
           'Members (${_members.length})',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         const SizedBox(height: 8),
         ..._members.map((user) => _buildMemberTile(user)),
@@ -360,7 +390,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
 
   Widget _buildMemberTile(service.UserProfile user) {
     final isAdmin = user.id == widget.group.ownerId;
-    
+
     return ListTile(
       leading: Stack(
         children: [
@@ -421,7 +451,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
           if (_isMember && !isAdmin)
             const PopupMenuItem(
               value: 'remove',
-              child: Text('Remove from Group', style: TextStyle(color: Colors.red)),
+              child: Text('Remove from Group',
+                  style: TextStyle(color: Colors.red)),
             ),
         ],
       ),
@@ -539,7 +570,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
             icon: Icon(Icons.upload),
             label: Text('Upload Resource'),
             style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
           ),
       ],
@@ -584,7 +616,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(accept 
+        content: Text(accept
             ? '${user.displayName} has been added to the group'
             : '${user.displayName}\'s request has been declined'),
         backgroundColor: accept ? Colors.green : Colors.orange,
