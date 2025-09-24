@@ -10,73 +10,73 @@ import 'pet.dart';
 class CalendarEvent {
   /// Unique identifier for this calendar event
   final String id;
-  
+
   /// Display title for the event
   final String title;
-  
+
   /// Detailed description of the event
   final String description;
-  
+
   /// Type of event (task, quest, session, etc.)
   final CalendarEventType type;
-  
+
   /// Start date and time of the event
   final DateTime startTime;
-  
+
   /// End date and time of the event (optional for all-day events)
   final DateTime? endTime;
-  
+
   /// Whether this is an all-day event
   final bool isAllDay;
-  
+
   /// Priority level (1 = low, 2 = medium, 3 = high)
   final int priority;
-  
+
   /// Current status of the event
   final CalendarEventStatus status;
-  
+
   /// Color to display this event in the calendar
   final Color color;
-  
+
   /// Icon to represent this event type
   final IconData icon;
-  
+
   /// Tags for categorization and filtering
   final List<String> tags;
-  
+
   /// Reference to the original object (Task, DailyQuest, etc.)
   final dynamic sourceObject;
-  
+
   /// Whether this event can be edited
   final bool isEditable;
-  
+
   /// Whether this event can be completed/marked as done
   final bool isCompletable;
-  
+
   /// Progress percentage (0.0 to 1.0) for trackable events
   final double? progress;
-  
+
   /// Estimated duration in minutes (for tasks and sessions)
   final int? estimatedMinutes;
-  
+
   /// Participants (for social sessions)
   final List<String>? participants;
-  
+
   /// Location or meeting link (for social sessions)
   final String? location;
-  
+
   /// Whether this is a recurring event
   final bool isRecurring;
-  
+
   /// Recurrence pattern (daily, weekly, monthly)
   final RecurrencePattern? recurrencePattern;
-  
+
   /// Reminder settings
   final List<EventReminder> reminders;
-  
+
   /// Creation timestamp
   final DateTime createdAt;
-  
+
   /// Last updated timestamp
   final DateTime updatedAt;
 
@@ -141,9 +141,11 @@ class CalendarEvent {
       endTime: quest.expiresAt,
       isAllDay: true,
       priority: quest.priority,
-      status: quest.isCompleted 
-        ? CalendarEventStatus.completed 
-        : (quest.isExpired ? CalendarEventStatus.expired : CalendarEventStatus.scheduled),
+      status: quest.isCompleted
+          ? CalendarEventStatus.completed
+          : (quest.isExpired
+              ? CalendarEventStatus.expired
+              : CalendarEventStatus.scheduled),
       color: _getQuestTypeColor(quest.type),
       icon: _getQuestTypeIcon(quest.type),
       tags: [quest.type.displayName],
@@ -185,7 +187,7 @@ class CalendarEvent {
   factory CalendarEvent.fromPetCare(Pet pet, PetCareType careType) {
     final now = DateTime.now();
     final nextCareTime = _getNextCareTime(careType, pet);
-    
+
     return CalendarEvent(
       id: 'pet_${pet.userId}_${careType.name}',
       title: 'Pet Care: ${careType.displayName}',
@@ -227,7 +229,8 @@ class CalendarEvent {
     return CalendarEvent(
       id: 'study_$id',
       title: title,
-      description: 'Personal study session${deckIds.isNotEmpty ? ' with ${deckIds.length} deck(s)' : ''}',
+      description:
+          'Personal study session${deckIds.isNotEmpty ? ' with ${deckIds.length} deck(s)' : ''}',
       type: CalendarEventType.studySession,
       startTime: startTime,
       endTime: startTime.add(Duration(minutes: durationMinutes)),
@@ -302,9 +305,9 @@ class CalendarEvent {
   /// Checks if this event is overdue
   bool get isOverdue {
     final now = DateTime.now();
-    return endTime != null && 
-           now.isAfter(endTime!) && 
-           status == CalendarEventStatus.scheduled;
+    return endTime != null &&
+        now.isAfter(endTime!) &&
+        status == CalendarEventStatus.scheduled;
   }
 
   /// Gets the duration of this event
@@ -386,7 +389,9 @@ class CalendarEvent {
       'isAllDay': isAllDay,
       'priority': priority,
       'status': status.name,
-      'color': (color.r * 255.0).round() << 16 | (color.g * 255.0).round() << 8 | (color.b * 255.0).round(),
+      'color': (color.r * 255.0).round() << 16 |
+          (color.g * 255.0).round() << 8 |
+          (color.b * 255.0).round(),
       'icon': icon.codePoint,
       'tags': tags,
       'isEditable': isEditable,
@@ -414,7 +419,8 @@ class CalendarEvent {
       endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
       isAllDay: json['isAllDay'] ?? false,
       priority: json['priority'] ?? 1,
-      status: CalendarEventStatus.values.firstWhere((e) => e.name == json['status']),
+      status: CalendarEventStatus.values
+          .firstWhere((e) => e.name == json['status']),
       color: Color(json['color']),
       icon: IconData(json['icon'], fontFamily: 'MaterialIcons'),
       tags: List<String>.from(json['tags'] ?? []),
@@ -422,15 +428,19 @@ class CalendarEvent {
       isCompletable: json['isCompletable'] ?? false,
       progress: json['progress']?.toDouble(),
       estimatedMinutes: json['estimatedMinutes'],
-      participants: json['participants'] != null ? List<String>.from(json['participants']) : null,
+      participants: json['participants'] != null
+          ? List<String>.from(json['participants'])
+          : null,
       location: json['location'],
       isRecurring: json['isRecurring'] ?? false,
-      recurrencePattern: json['recurrencePattern'] != null 
-        ? RecurrencePattern.fromJson(json['recurrencePattern']) 
-        : null,
+      recurrencePattern: json['recurrencePattern'] != null
+          ? RecurrencePattern.fromJson(json['recurrencePattern'])
+          : null,
       reminders: json['reminders'] != null
-        ? (json['reminders'] as List).map((r) => EventReminder.fromJson(r)).toList()
-        : [],
+          ? (json['reminders'] as List)
+              .map((r) => EventReminder.fromJson(r))
+              .toList()
+          : [],
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
     );
@@ -450,7 +460,8 @@ class CalendarEvent {
     }
   }
 
-  static CalendarEventStatus _sessionStatusToCalendarStatus(SessionStatus status) {
+  static CalendarEventStatus _sessionStatusToCalendarStatus(
+      SessionStatus status) {
     switch (status) {
       case SessionStatus.scheduled:
         return CalendarEventStatus.scheduled;
@@ -466,71 +477,105 @@ class CalendarEvent {
   // Helper methods for colors
   static Color _getPriorityColor(int priority) {
     switch (priority) {
-      case 1: return Colors.blue;
-      case 2: return Colors.orange;
-      case 3: return Colors.red;
-      default: return Colors.grey;
+      case 1:
+        return Colors.blue;
+      case 2:
+        return Colors.orange;
+      case 3:
+        return Colors.red;
+      default:
+        return Colors.grey;
     }
   }
 
   static Color _getQuestTypeColor(QuestType type) {
     switch (type) {
-      case QuestType.study: return Colors.blue;
-      case QuestType.quiz: return Colors.purple;
-      case QuestType.streak: return Colors.orange;
-      case QuestType.perfectScore: return Colors.yellow;
-      case QuestType.timeSpent: return Colors.green;
-      case QuestType.newCards: return Colors.cyan;
-      case QuestType.review: return Colors.indigo;
+      case QuestType.study:
+        return Colors.blue;
+      case QuestType.quiz:
+        return Colors.purple;
+      case QuestType.streak:
+        return Colors.orange;
+      case QuestType.perfectScore:
+        return Colors.yellow;
+      case QuestType.timeSpent:
+        return Colors.green;
+      case QuestType.newCards:
+        return Colors.cyan;
+      case QuestType.review:
+        return Colors.indigo;
     }
   }
 
   static Color _getSessionTypeColor(SessionType type) {
     switch (type) {
-      case SessionType.quiz: return Colors.purple;
-      case SessionType.study: return Colors.blue;
-      case SessionType.challenge: return Colors.red;
-      case SessionType.group: return Colors.green;
+      case SessionType.quiz:
+        return Colors.purple;
+      case SessionType.study:
+        return Colors.blue;
+      case SessionType.challenge:
+        return Colors.red;
+      case SessionType.group:
+        return Colors.green;
     }
   }
 
   static Color _getPetMoodColor(PetMood mood) {
     switch (mood) {
-      case PetMood.happy: return Colors.green;
-      case PetMood.sleepy: return Colors.red;
-      case PetMood.excited: return Colors.orange;
-      case PetMood.content: return Colors.blue;
+      case PetMood.happy:
+        return Colors.green;
+      case PetMood.sleepy:
+        return Colors.red;
+      case PetMood.excited:
+        return Colors.orange;
+      case PetMood.content:
+        return Colors.blue;
     }
   }
 
   // Helper methods for icons
   static IconData _getQuestTypeIcon(QuestType type) {
     switch (type) {
-      case QuestType.study: return Icons.book;
-      case QuestType.quiz: return Icons.quiz;
-      case QuestType.streak: return Icons.local_fire_department;
-      case QuestType.perfectScore: return Icons.star;
-      case QuestType.timeSpent: return Icons.timer;
-      case QuestType.newCards: return Icons.fiber_new;
-      case QuestType.review: return Icons.refresh;
+      case QuestType.study:
+        return Icons.book;
+      case QuestType.quiz:
+        return Icons.quiz;
+      case QuestType.streak:
+        return Icons.local_fire_department;
+      case QuestType.perfectScore:
+        return Icons.star;
+      case QuestType.timeSpent:
+        return Icons.timer;
+      case QuestType.newCards:
+        return Icons.fiber_new;
+      case QuestType.review:
+        return Icons.refresh;
     }
   }
 
   static IconData _getSessionTypeIcon(SessionType type) {
     switch (type) {
-      case SessionType.quiz: return Icons.quiz;
-      case SessionType.study: return Icons.group_work;
-      case SessionType.challenge: return Icons.emoji_events;
-      case SessionType.group: return Icons.groups;
+      case SessionType.quiz:
+        return Icons.quiz;
+      case SessionType.study:
+        return Icons.group_work;
+      case SessionType.challenge:
+        return Icons.emoji_events;
+      case SessionType.group:
+        return Icons.groups;
     }
   }
 
   static IconData _getPetCareIcon(PetCareType type) {
     switch (type) {
-      case PetCareType.feed: return Icons.restaurant;
-      case PetCareType.play: return Icons.sports_esports;
-      case PetCareType.clean: return Icons.cleaning_services;
-      case PetCareType.exercise: return Icons.directions_run;
+      case PetCareType.feed:
+        return Icons.restaurant;
+      case PetCareType.play:
+        return Icons.sports_esports;
+      case PetCareType.clean:
+        return Icons.cleaning_services;
+      case PetCareType.exercise:
+        return Icons.directions_run;
     }
   }
 
@@ -563,7 +608,8 @@ class CalendarEvent {
   }
 
   static String _formatTime(DateTime time) {
-    final hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
+    final hour =
+        time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
     final minute = time.minute.toString().padLeft(2, '0');
     final amPm = time.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $amPm';
@@ -605,19 +651,27 @@ enum PetCareType {
 extension PetCareTypeExtension on PetCareType {
   String get displayName {
     switch (this) {
-      case PetCareType.feed: return 'Feed';
-      case PetCareType.play: return 'Play';
-      case PetCareType.clean: return 'Clean';
-      case PetCareType.exercise: return 'Exercise';
+      case PetCareType.feed:
+        return 'Feed';
+      case PetCareType.play:
+        return 'Play';
+      case PetCareType.clean:
+        return 'Clean';
+      case PetCareType.exercise:
+        return 'Exercise';
     }
   }
 
   String get description {
     switch (this) {
-      case PetCareType.feed: return 'feed';
-      case PetCareType.play: return 'play with';
-      case PetCareType.clean: return 'clean up after';
-      case PetCareType.exercise: return 'exercise';
+      case PetCareType.feed:
+        return 'feed';
+      case PetCareType.play:
+        return 'play with';
+      case PetCareType.clean:
+        return 'clean up after';
+      case PetCareType.exercise:
+        return 'exercise';
     }
   }
 }
@@ -640,10 +694,13 @@ class RecurrencePattern {
     this.maxOccurrences,
   });
 
-  factory RecurrencePattern.daily() => const RecurrencePattern(type: RecurrenceType.daily);
-  factory RecurrencePattern.weekly() => const RecurrencePattern(type: RecurrenceType.weekly);
-  factory RecurrencePattern.monthly() => const RecurrencePattern(type: RecurrenceType.monthly);
-  
+  factory RecurrencePattern.daily() =>
+      const RecurrencePattern(type: RecurrenceType.daily);
+  factory RecurrencePattern.weekly() =>
+      const RecurrencePattern(type: RecurrenceType.weekly);
+  factory RecurrencePattern.monthly() =>
+      const RecurrencePattern(type: RecurrenceType.monthly);
+
   factory RecurrencePattern.custom({int? hours, int? days, int? weeks}) {
     if (hours != null) {
       return RecurrencePattern(type: RecurrenceType.hourly, interval: hours);
@@ -670,7 +727,9 @@ class RecurrencePattern {
     return RecurrencePattern(
       type: RecurrenceType.values.firstWhere((e) => e.name == json['type']),
       interval: json['interval'] ?? 1,
-      daysOfWeek: json['daysOfWeek'] != null ? List<int>.from(json['daysOfWeek']) : null,
+      daysOfWeek: json['daysOfWeek'] != null
+          ? List<int>.from(json['daysOfWeek'])
+          : null,
       dayOfMonth: json['dayOfMonth'],
       endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
       maxOccurrences: json['maxOccurrences'],
@@ -729,46 +788,76 @@ enum ReminderType {
 extension CalendarEventTypeExtension on CalendarEventType {
   String get displayName {
     switch (this) {
-      case CalendarEventType.task: return 'Task';
-      case CalendarEventType.dailyQuest: return 'Daily Quest';
-      case CalendarEventType.socialSession: return 'Social Session';
-      case CalendarEventType.studySession: return 'Study Session';
-      case CalendarEventType.petCare: return 'Pet Care';
-      case CalendarEventType.breakReminder: return 'Break';
-      case CalendarEventType.deadline: return 'Deadline';
-      case CalendarEventType.exam: return 'Exam';
-      case CalendarEventType.meeting: return 'Meeting';
-      case CalendarEventType.custom: return 'Event';
+      case CalendarEventType.task:
+        return 'Task';
+      case CalendarEventType.dailyQuest:
+        return 'Daily Quest';
+      case CalendarEventType.socialSession:
+        return 'Social Session';
+      case CalendarEventType.studySession:
+        return 'Study Session';
+      case CalendarEventType.petCare:
+        return 'Pet Care';
+      case CalendarEventType.breakReminder:
+        return 'Break';
+      case CalendarEventType.deadline:
+        return 'Deadline';
+      case CalendarEventType.exam:
+        return 'Exam';
+      case CalendarEventType.meeting:
+        return 'Meeting';
+      case CalendarEventType.custom:
+        return 'Event';
     }
   }
 
   IconData get defaultIcon {
     switch (this) {
-      case CalendarEventType.task: return Icons.task_alt;
-      case CalendarEventType.dailyQuest: return Icons.emoji_events;
-      case CalendarEventType.socialSession: return Icons.group_work;
-      case CalendarEventType.studySession: return Icons.school;
-      case CalendarEventType.petCare: return Icons.pets;
-      case CalendarEventType.breakReminder: return Icons.free_breakfast;
-      case CalendarEventType.deadline: return Icons.schedule;
-      case CalendarEventType.exam: return Icons.quiz;
-      case CalendarEventType.meeting: return Icons.meeting_room;
-      case CalendarEventType.custom: return Icons.event;
+      case CalendarEventType.task:
+        return Icons.task_alt;
+      case CalendarEventType.dailyQuest:
+        return Icons.emoji_events;
+      case CalendarEventType.socialSession:
+        return Icons.group_work;
+      case CalendarEventType.studySession:
+        return Icons.school;
+      case CalendarEventType.petCare:
+        return Icons.pets;
+      case CalendarEventType.breakReminder:
+        return Icons.free_breakfast;
+      case CalendarEventType.deadline:
+        return Icons.schedule;
+      case CalendarEventType.exam:
+        return Icons.quiz;
+      case CalendarEventType.meeting:
+        return Icons.meeting_room;
+      case CalendarEventType.custom:
+        return Icons.event;
     }
   }
 
   Color get defaultColor {
     switch (this) {
-      case CalendarEventType.task: return Colors.blue;
-      case CalendarEventType.dailyQuest: return Colors.purple;
-      case CalendarEventType.socialSession: return Colors.green;
-      case CalendarEventType.studySession: return Colors.orange;
-      case CalendarEventType.petCare: return Colors.brown;
-      case CalendarEventType.breakReminder: return Colors.teal;
-      case CalendarEventType.deadline: return Colors.red;
-      case CalendarEventType.exam: return Colors.deepPurple;
-      case CalendarEventType.meeting: return Colors.indigo;
-      case CalendarEventType.custom: return Colors.grey;
+      case CalendarEventType.task:
+        return Colors.blue;
+      case CalendarEventType.dailyQuest:
+        return Colors.purple;
+      case CalendarEventType.socialSession:
+        return Colors.green;
+      case CalendarEventType.studySession:
+        return Colors.orange;
+      case CalendarEventType.petCare:
+        return Colors.brown;
+      case CalendarEventType.breakReminder:
+        return Colors.teal;
+      case CalendarEventType.deadline:
+        return Colors.red;
+      case CalendarEventType.exam:
+        return Colors.deepPurple;
+      case CalendarEventType.meeting:
+        return Colors.indigo;
+      case CalendarEventType.custom:
+        return Colors.grey;
     }
   }
 }

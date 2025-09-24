@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 // Import all providers
 import 'providers/app_state.dart';
@@ -29,30 +31,32 @@ import 'widgets/common/app_wrapper.dart';
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: const FirebaseOptions(
-      apiKey: "AIzaSyCEtnDvfNnzgtMSZmNy00NTRhLWlxNTAtZm",
-      authDomain: "studypals-9f7e1.firebaseapp.com",
-      projectId: "studypals-9f7e1",
-      storageBucket: "studypals-9f7e1.firebaseapp.com",
-      messagingSenderId: "251508884392",
-      appId: "1:251508884392:web:7a842b1e9867506d09539d",
-      measurementId: "G-1J3NYP637K",
-    ),
-  );
-  
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (kDebugMode) {
+      print('✅ Firebase initialized successfully');
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      print('❌ Firebase initialization error: $e');
+    }
+    rethrow;
+  }
+
   // Initialize theme provider
   final themeProvider = ThemeProvider();
   await themeProvider.initialize();
-  
+
   runApp(MyApp(themeProvider: themeProvider));
 }
 
 class MyApp extends StatelessWidget {
   final ThemeProvider themeProvider;
-  
+
   const MyApp({super.key, required this.themeProvider});
 
   @override
@@ -61,10 +65,10 @@ class MyApp extends StatelessWidget {
       providers: [
         // Core app state - should be first as other providers may depend on it
         ChangeNotifierProvider(create: (_) => AppState()),
-        
+
         // Theme provider
         ChangeNotifierProvider.value(value: themeProvider),
-        
+
         // Feature providers
         ChangeNotifierProvider(create: (_) => PetProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
@@ -78,7 +82,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SocialSessionProvider()),
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
         ChangeNotifierProvider(create: (_) => PlannerProvider()),
-        
+
         // Services
         Provider(create: (_) => SocialLearningService()),
       ],

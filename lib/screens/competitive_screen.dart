@@ -448,16 +448,16 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
       length: 2,
       child: Column(
         children: [
-            TabBar(
-              indicatorColor: const Color(0xFF58A6FF),
-              indicatorWeight: 3,
-              labelColor: Colors.white,
-              unselectedLabelColor: Colors.grey[400],
-              tabs: const [
-                Tab(text: 'Active'),
-                Tab(text: 'Upcoming'),
-              ],
-            ),
+          TabBar(
+            indicatorColor: const Color(0xFF58A6FF),
+            indicatorWeight: 3,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey[400],
+            tabs: const [
+              Tab(text: 'Active'),
+              Tab(text: 'Upcoming'),
+            ],
+          ),
           Expanded(
             child: TabBarView(
               children: [

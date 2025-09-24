@@ -15,7 +15,7 @@ void main() {
   testWidgets('StudyPals app smoke test', (WidgetTester tester) async {
     // Create a theme provider for testing
     final themeProvider = ThemeProvider();
-    
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(MyApp(themeProvider: themeProvider));
 

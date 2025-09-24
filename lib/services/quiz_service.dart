@@ -294,7 +294,7 @@ class QuizService {
 
     final sessionId = _generateSessionId();
     final deckTitles = decks.map((d) => d.title).join(', ');
-    
+
     final session = QuizSession(
       id: sessionId,
       deckId: socialSessionId, // Use social session ID as reference
@@ -348,7 +348,8 @@ class QuizService {
     );
 
     // Update session with participant answer
-    final updatedSession = session.recordParticipantAnswer(participantId, answer);
+    final updatedSession =
+        session.recordParticipantAnswer(participantId, answer);
     _activeSessions[sessionId] = updatedSession;
 
     debugPrint(
@@ -371,10 +372,15 @@ class QuizService {
 
     // Calculate results for each participant
     for (final participantId in session.participantIds) {
-      final participantAnswers = session.participantAnswers[participantId] ?? [];
-      final correctAnswers = participantAnswers.where((a) => a.isCorrect).length;
-      final score = participantAnswers.isNotEmpty ? correctAnswers / participantAnswers.length : 0.0;
-      final expEarned = participantAnswers.fold(0, (sum, answer) => sum + answer.expEarned);
+      final participantAnswers =
+          session.participantAnswers[participantId] ?? [];
+      final correctAnswers =
+          participantAnswers.where((a) => a.isCorrect).length;
+      final score = participantAnswers.isNotEmpty
+          ? correctAnswers / participantAnswers.length
+          : 0.0;
+      final expEarned =
+          participantAnswers.fold(0, (sum, answer) => sum + answer.expEarned);
 
       participantResults[participantId] = {
         'score': score,
@@ -401,9 +407,11 @@ class QuizService {
       endTime: DateTime.now(),
       sessionData: {
         'participantResults': participantResults,
-        'winner': sortedParticipants.isNotEmpty ? sortedParticipants.first.key : null,
-        'averageScore': participantScores.values.isNotEmpty 
-            ? participantScores.values.reduce((a, b) => a + b) / participantScores.length 
+        'winner':
+            sortedParticipants.isNotEmpty ? sortedParticipants.first.key : null,
+        'averageScore': participantScores.values.isNotEmpty
+            ? participantScores.values.reduce((a, b) => a + b) /
+                participantScores.length
             : 0.0,
       },
     );
@@ -411,12 +419,14 @@ class QuizService {
     _activeSessions[sessionId] = completedSession;
     await _saveQuizSession(completedSession);
 
-    debugPrint('Multiplayer quiz completed with $totalExpAwarded total EXP awarded');
+    debugPrint(
+        'Multiplayer quiz completed with $totalExpAwarded total EXP awarded');
     return completedSession;
   }
 
   /// Get multiplayer quiz results for a specific participant
-  Map<String, dynamic>? getMultiplayerResults(String sessionId, String participantId) {
+  Map<String, dynamic>? getMultiplayerResults(
+      String sessionId, String participantId) {
     final session = _activeSessions[sessionId];
     if (session == null || !session.isMultiplayer || !session.isCompleted) {
       return null;
@@ -425,7 +435,8 @@ class QuizService {
     final sessionData = session.sessionData;
     if (sessionData == null) return null;
 
-    final participantResults = sessionData['participantResults'] as Map<String, dynamic>?;
+    final participantResults =
+        sessionData['participantResults'] as Map<String, dynamic>?;
     if (participantResults == null) return null;
 
     final userResults = participantResults[participantId];
@@ -455,10 +466,13 @@ class QuizService {
     final participantScores = session.participantScores;
 
     for (final participantId in session.participantIds) {
-      final participantAnswers = session.participantAnswers[participantId] ?? [];
+      final participantAnswers =
+          session.participantAnswers[participantId] ?? [];
       final score = participantScores[participantId] ?? 0.0;
-      final correctAnswers = participantAnswers.where((a) => a.isCorrect).length;
-      final expEarned = participantAnswers.fold(0, (sum, answer) => sum + answer.expEarned);
+      final correctAnswers =
+          participantAnswers.where((a) => a.isCorrect).length;
+      final expEarned =
+          participantAnswers.fold(0, (sum, answer) => sum + answer.expEarned);
 
       leaderboard.add({
         'participantId': participantId,

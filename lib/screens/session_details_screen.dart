@@ -80,7 +80,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                   value: 'delete',
                   child: ListTile(
                     leading: Icon(Icons.delete, color: Colors.red),
-                    title: Text('Delete Session', style: TextStyle(color: Colors.red)),
+                    title: Text('Delete Session',
+                        style: TextStyle(color: Colors.red)),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -93,14 +94,18 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
           // Session header with key info
           Container(
             padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.3),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getStatusColor(),
                         borderRadius: BorderRadius.circular(12),
@@ -116,7 +121,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.secondary,
                         borderRadius: BorderRadius.circular(12),
@@ -136,16 +142,19 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                 Text(
                   widget.session.title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 if (widget.session.description.isNotEmpty)
                   Text(
                     widget.session.description,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-                    ),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.8),
+                        ),
                   ),
                 const SizedBox(height: 12),
                 _buildQuickInfoRow(),
@@ -190,7 +199,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
         ),
         const SizedBox(width: 4),
         Text(
-          DateFormat('MMM dd, yyyy • HH:mm').format(widget.session.scheduledTime),
+          DateFormat('MMM dd, yyyy • HH:mm')
+              .format(widget.session.scheduledTime),
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(width: 16),
@@ -209,7 +219,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
           Icon(
             Icons.timer,
             size: 16,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 4),
           Text(
@@ -237,15 +248,16 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                   Text(
                     'Session Information',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 12),
                   _buildInfoRow('Host', widget.session.hostName, Icons.person),
                   const SizedBox(height: 8),
                   _buildInfoRow(
                     'Date & Time',
-                    DateFormat('EEEE, MMM dd, yyyy at HH:mm').format(widget.session.scheduledTime),
+                    DateFormat('EEEE, MMM dd, yyyy at HH:mm')
+                        .format(widget.session.scheduledTime),
                     Icons.calendar_today,
                   ),
                   const SizedBox(height: 8),
@@ -283,8 +295,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                     Text(
                       'Description',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 12),
                     Text(widget.session.description),
@@ -304,26 +316,33 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                     Text(
                       'Study Decks',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                     const SizedBox(height: 12),
                     Wrap(
                       spacing: 8,
-                      children: widget.session.deckIds.map((deckId) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Deck ${deckId.substring(0, 8)}...',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      )).toList(),
+                      children: widget.session.deckIds
+                          .map((deckId) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Deck ${deckId.substring(0, 8)}...',
+                                  style: TextStyle(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ))
+                          .toList(),
                     ),
                   ],
                 ),
@@ -340,12 +359,13 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                   Text(
                     'Requirements',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 12),
                   _buildRequirement('Stable internet connection', true),
-                  _buildRequirement('Camera and microphone (recommended)', false),
+                  _buildRequirement(
+                      'Camera and microphone (recommended)', false),
                   _buildRequirement('Study materials ready', false),
                   _buildRequirement('Quiet environment', false),
                 ],
@@ -365,8 +385,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
         Text(
           '$label: ',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+                fontWeight: FontWeight.w500,
+              ),
         ),
         Expanded(
           child: Text(
@@ -386,16 +406,18 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
           Icon(
             isRequired ? Icons.circle : Icons.circle_outlined,
             size: 8,
-            color: isRequired ? Colors.red : Theme.of(context).colorScheme.primary,
+            color:
+                isRequired ? Colors.red : Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               requirement,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: isRequired ? FontWeight.w500 : FontWeight.normal,
-                color: isRequired ? Colors.red : null,
-              ),
+                    fontWeight:
+                        isRequired ? FontWeight.w500 : FontWeight.normal,
+                    color: isRequired ? Colors.red : null,
+                  ),
             ),
           ),
         ],
@@ -440,9 +462,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
             itemCount: widget.session.participantIds.length,
             itemBuilder: (context, index) {
               final participantId = widget.session.participantIds[index];
-              final participantName = widget.session.participantNames[participantId] ?? 'Unknown User';
+              final participantName =
+                  widget.session.participantNames[participantId] ??
+                      'Unknown User';
               final isHost = participantId == widget.session.hostId;
-              
+
               return ListTile(
                 leading: Stack(
                   children: [
@@ -474,7 +498,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                     if (isHost) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.orange,
                           borderRadius: BorderRadius.circular(4),
@@ -491,9 +516,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                     ],
                   ],
                 ),
-                subtitle: Text('Joined ${_getJoinedTime(widget.session.createdAt)}'),
+                subtitle:
+                    Text('Joined ${_getJoinedTime(widget.session.createdAt)}'),
                 trailing: PopupMenuButton<String>(
-                  onSelected: (action) => _handleParticipantAction(action, participantId, participantName),
+                  onSelected: (action) => _handleParticipantAction(
+                      action, participantId, participantName),
                   itemBuilder: (context) => [
                     const PopupMenuItem(
                       value: 'profile',
@@ -516,7 +543,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                         value: 'remove',
                         child: ListTile(
                           leading: Icon(Icons.person_remove, color: Colors.red),
-                          title: Text('Remove', style: TextStyle(color: Colors.red)),
+                          title: Text('Remove',
+                              style: TextStyle(color: Colors.red)),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
@@ -530,7 +558,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Container(
@@ -545,8 +574,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         Text(
           label,
@@ -596,7 +625,10 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.5),
                 style: BorderStyle.solid,
               ),
             ),
@@ -611,8 +643,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                 Text(
                   'Upload Study Materials',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -639,7 +671,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: _getMaterialColor(material.type).withValues(alpha: 0.1),
+                    backgroundColor:
+                        _getMaterialColor(material.type).withValues(alpha: 0.1),
                     child: Icon(
                       _getMaterialIcon(material.type),
                       color: _getMaterialColor(material.type),
@@ -657,7 +690,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                     ],
                   ),
                   trailing: PopupMenuButton<String>(
-                    onSelected: (action) => _handleMaterialAction(action, material),
+                    onSelected: (action) =>
+                        _handleMaterialAction(action, material),
                     itemBuilder: (context) => [
                       const PopupMenuItem(
                         value: 'download',
@@ -680,7 +714,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                           value: 'delete',
                           child: ListTile(
                             leading: Icon(Icons.delete, color: Colors.red),
-                            title: Text('Delete', style: TextStyle(color: Colors.red)),
+                            title: Text('Delete',
+                                style: TextStyle(color: Colors.red)),
                             contentPadding: EdgeInsets.zero,
                           ),
                         ),
@@ -710,7 +745,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
         id: '2',
         senderId: '2',
         senderName: 'Sarah Chen',
-        message: 'Thanks for organizing this! I have some questions about Chapter 5.',
+        message:
+            'Thanks for organizing this! I have some questions about Chapter 5.',
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
         isHost: false,
       ),
@@ -755,14 +791,18 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
                             children: [
                               Text(
                                 message.senderName,
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                               ),
                               if (message.isHost) ...[
                                 const SizedBox(width: 4),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 4, vertical: 1),
                                   decoration: BoxDecoration(
                                     color: Colors.orange,
                                     borderRadius: BorderRadius.circular(4),
@@ -803,7 +843,10 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               border: Border(
                 top: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outline
+                      .withValues(alpha: 0.2),
                 ),
               ),
             ),
@@ -895,7 +938,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               ),
               child: const Text('Leave'),
             ),
@@ -908,10 +952,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
   String _getStatusText() {
     final now = DateTime.now();
     final sessionStart = widget.session.scheduledTime;
-    
+
     if (now.isAfter(sessionStart)) {
       return 'LIVE';
-    } else if (now.isAfter(sessionStart.subtract(const Duration(minutes: 15)))) {
+    } else if (now
+        .isAfter(sessionStart.subtract(const Duration(minutes: 15)))) {
       return 'STARTING SOON';
     } else {
       return 'SCHEDULED';
@@ -921,10 +966,11 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
   Color _getStatusColor() {
     final now = DateTime.now();
     final sessionStart = widget.session.scheduledTime;
-    
+
     if (now.isAfter(sessionStart)) {
       return Colors.red;
-    } else if (now.isAfter(sessionStart.subtract(const Duration(minutes: 15)))) {
+    } else if (now
+        .isAfter(sessionStart.subtract(const Duration(minutes: 15)))) {
       return Colors.orange;
     } else {
       return Colors.blue;
@@ -932,7 +978,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
   }
 
   bool _canJoinSession() {
-    return widget.session.participantIds.length < widget.session.maxParticipants;
+    return widget.session.participantIds.length <
+        widget.session.maxParticipants;
   }
 
   bool _isSessionHost() {
@@ -944,13 +991,14 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
   }
 
   bool _canDeleteMaterial(SessionMaterial material) {
-    return _isSessionHost() || material.uploadedBy == 'current_user'; // Mock check
+    return _isSessionHost() ||
+        material.uploadedBy == 'current_user'; // Mock check
   }
 
   String _getJoinedTime(DateTime joinedAt) {
     final now = DateTime.now();
     final difference = now.difference(joinedAt);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {
@@ -963,7 +1011,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
   String _getUploadedTime(DateTime uploadedAt) {
     final now = DateTime.now();
     final difference = now.difference(uploadedAt);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays} days ago';
     } else if (difference.inHours > 0) {
@@ -976,7 +1024,7 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
   String _getMessageTime(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d';
     } else if (difference.inHours > 0) {
@@ -1097,7 +1145,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
     }
   }
 
-  void _handleParticipantAction(String action, String participantId, String participantName) {
+  void _handleParticipantAction(
+      String action, String participantId, String participantName) {
     switch (action) {
       case 'profile':
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1142,7 +1191,8 @@ class _SessionDetailsScreenState extends State<SessionDetailsScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Session'),
-        content: const Text('Are you sure you want to delete this session? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete this session? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

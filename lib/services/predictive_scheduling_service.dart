@@ -4,12 +4,12 @@ import '../models/study_pal_persona.dart';
 /// Represents different times of day for scheduling
 enum TimeOfDay {
   earlyMorning, // 5-8 AM
-  morning,     // 8-11 AM
-  midday,      // 11 AM-2 PM
-  afternoon,   // 2-5 PM
-  evening,     // 5-8 PM
-  night,       // 8-11 PM
-  lateNight,   // 11 PM-5 AM
+  morning, // 8-11 AM
+  midday, // 11 AM-2 PM
+  afternoon, // 2-5 PM
+  evening, // 5-8 PM
+  night, // 8-11 PM
+  lateNight, // 11 PM-5 AM
 }
 
 /// Days of the week
@@ -63,17 +63,24 @@ class StudySessionMetrics {
     required this.completedSession,
   });
 
-  double get accuracyRate => totalQuestions > 0 ? correctAnswers / totalQuestions : 0.0;
-  
+  double get accuracyRate =>
+      totalQuestions > 0 ? correctAnswers / totalQuestions : 0.0;
+
   double get efficiencyScore {
     // Use service weights for calculation (would access via service instance in real implementation)
     final accuracyWeight = accuracyRate * 0.3;
     final focusWeight = focusScore * 0.25;
     final retentionWeight = retentionScore * 0.2;
     final completionWeight = completedSession ? 0.15 : 0.0;
-    final moodWeight = dominantEmotion == EmotionalState.confident || 
-                      dominantEmotion == EmotionalState.excited ? 0.1 : 0.0;
-    return accuracyWeight + focusWeight + retentionWeight + completionWeight + moodWeight;
+    final moodWeight = dominantEmotion == EmotionalState.confident ||
+            dominantEmotion == EmotionalState.excited
+        ? 0.1
+        : 0.0;
+    return accuracyWeight +
+        focusWeight +
+        retentionWeight +
+        completionWeight +
+        moodWeight;
   }
 }
 
@@ -140,7 +147,8 @@ class CircadianAnalysis {
 
 /// Comprehensive predictive scheduling service
 class PredictiveSchedulingService {
-  static final PredictiveSchedulingService _instance = PredictiveSchedulingService._internal();
+  static final PredictiveSchedulingService _instance =
+      PredictiveSchedulingService._internal();
   factory PredictiveSchedulingService() => _instance;
   PredictiveSchedulingService._internal();
 
@@ -149,12 +157,12 @@ class PredictiveSchedulingService {
   /// Record a completed study session for learning
   void recordStudySession(StudySessionMetrics metrics) {
     _sessionHistory.add(metrics);
-    
+
     // Keep only recent history (last 100 sessions for performance)
     if (_sessionHistory.length > 100) {
       _sessionHistory.removeAt(0);
     }
-    
+
     // Trigger pattern analysis update
     _updateLearningPatterns();
   }
@@ -169,7 +177,7 @@ class PredictiveSchedulingService {
   }) {
     final patterns = _analyzePerformancePatterns();
     final circadian = _analyzeCircadianRhythm();
-    
+
     // Find optimal time slot
     final optimalTime = _findOptimalTimeSlot(
       targetDate: targetDate,
@@ -177,14 +185,14 @@ class PredictiveSchedulingService {
       circadian: circadian,
       availableTime: availableTime,
     );
-    
+
     // Determine optimal difficulty
     final optimalDifficulty = _predictOptimalDifficulty(
       timeOfDay: _getTimeOfDay(optimalTime.hour),
       patterns: patterns,
       persona: persona,
     );
-    
+
     // Recommend subjects
     final recommendedSubjects = _recommendSubjects(
       availableSubjects: availableSubjects,
@@ -192,7 +200,7 @@ class PredictiveSchedulingService {
       timeOfDay: _getTimeOfDay(optimalTime.hour),
       difficulty: optimalDifficulty,
     );
-    
+
     // Estimate optimal duration
     final estimatedDuration = _estimateOptimalDuration(
       timeOfDay: _getTimeOfDay(optimalTime.hour),
@@ -200,10 +208,10 @@ class PredictiveSchedulingService {
       patterns: patterns,
       persona: persona,
     );
-    
+
     // Calculate confidence score
     final confidence = _calculateConfidenceScore(patterns, circadian);
-    
+
     // Generate reasoning
     final reasoning = _generateSchedulingReasoning(
       optimalTime: optimalTime,
@@ -212,7 +220,7 @@ class PredictiveSchedulingService {
       patterns: patterns,
       persona: persona,
     );
-    
+
     return StudySchedulePrediction(
       recommendedTime: optimalTime,
       estimatedDuration: estimatedDuration,
@@ -221,9 +229,13 @@ class PredictiveSchedulingService {
       confidenceScore: confidence,
       reasoning: reasoning,
       optimizationFactors: {
-        'timeOptimization': patterns.timePerformanceMap[_getTimeOfDay(optimalTime.hour)] ?? 0.5,
-        'dayOptimization': patterns.dayPerformanceMap[_getDayOfWeek(optimalTime.weekday)] ?? 0.5,
-        'circadianAlignment': circadian.hourlyAlertness[optimalTime.hour] ?? 0.5,
+        'timeOptimization':
+            patterns.timePerformanceMap[_getTimeOfDay(optimalTime.hour)] ?? 0.5,
+        'dayOptimization':
+            patterns.dayPerformanceMap[_getDayOfWeek(optimalTime.weekday)] ??
+                0.5,
+        'circadianAlignment':
+            circadian.hourlyAlertness[optimalTime.hour] ?? 0.5,
         'difficultyMatch': 0.8, // Simplified calculation
         'subjectRelevance': 0.7, // Simplified calculation
       },
@@ -240,13 +252,13 @@ class PredictiveSchedulingService {
     final predictions = <StudySchedulePrediction>[];
     final patterns = _analyzePerformancePatterns();
     final circadian = _analyzeCircadianRhythm();
-    
+
     for (int day = 0; day < 7; day++) {
       final currentDate = weekStart.add(Duration(days: day));
-      
+
       // Get subjects that need study time
       final subjectsForDay = _distributeSubjectsAcrossDays(subjectHours, day);
-      
+
       if (subjectsForDay.isNotEmpty) {
         final prediction = _generateDaySchedule(
           date: currentDate,
@@ -255,13 +267,13 @@ class PredictiveSchedulingService {
           circadian: circadian,
           persona: persona,
         );
-        
+
         if (prediction != null) {
           predictions.add(prediction);
         }
       }
     }
-    
+
     return predictions;
   }
 
@@ -271,55 +283,61 @@ class PredictiveSchedulingService {
       // Return default patterns for new users
       return _getDefaultPerformancePattern();
     }
-    
+
     // Calculate performance by time of day
     final timePerformanceMap = <TimeOfDay, double>{};
     final dayPerformanceMap = <DayOfWeek, double>{};
     final difficultyTimePreferences = <StudyDifficulty, TimeOfDay>{};
-    
+
     for (final timeOfDay in TimeOfDay.values) {
-      final sessionsAtTime = _sessionHistory.where((s) => s.timeOfDay == timeOfDay).toList();
+      final sessionsAtTime =
+          _sessionHistory.where((s) => s.timeOfDay == timeOfDay).toList();
       if (sessionsAtTime.isNotEmpty) {
         final avgPerformance = sessionsAtTime
-            .map((s) => s.efficiencyScore)
-            .reduce((a, b) => a + b) / sessionsAtTime.length;
+                .map((s) => s.efficiencyScore)
+                .reduce((a, b) => a + b) /
+            sessionsAtTime.length;
         timePerformanceMap[timeOfDay] = avgPerformance;
       } else {
         timePerformanceMap[timeOfDay] = 0.5; // Default neutral performance
       }
     }
-    
+
     // Calculate performance by day of week
     for (final dayOfWeek in DayOfWeek.values) {
-      final sessionsOnDay = _sessionHistory.where((s) => s.dayOfWeek == dayOfWeek).toList();
+      final sessionsOnDay =
+          _sessionHistory.where((s) => s.dayOfWeek == dayOfWeek).toList();
       if (sessionsOnDay.isNotEmpty) {
         final avgPerformance = sessionsOnDay
-            .map((s) => s.efficiencyScore)
-            .reduce((a, b) => a + b) / sessionsOnDay.length;
+                .map((s) => s.efficiencyScore)
+                .reduce((a, b) => a + b) /
+            sessionsOnDay.length;
         dayPerformanceMap[dayOfWeek] = avgPerformance;
       } else {
         dayPerformanceMap[dayOfWeek] = 0.5;
       }
     }
-    
+
     // Find best times for each difficulty level
     for (final difficulty in StudyDifficulty.values) {
-      final sessionsByDifficulty = _sessionHistory.where((s) => s.difficulty == difficulty).toList();
+      final sessionsByDifficulty =
+          _sessionHistory.where((s) => s.difficulty == difficulty).toList();
       if (sessionsByDifficulty.isNotEmpty) {
         final timePerformanceForDifficulty = <TimeOfDay, double>{};
-        
+
         for (final timeOfDay in TimeOfDay.values) {
           final sessionsAtTimeAndDifficulty = sessionsByDifficulty
               .where((s) => s.timeOfDay == timeOfDay)
               .toList();
           if (sessionsAtTimeAndDifficulty.isNotEmpty) {
             final avgPerformance = sessionsAtTimeAndDifficulty
-                .map((s) => s.efficiencyScore)
-                .reduce((a, b) => a + b) / sessionsAtTimeAndDifficulty.length;
+                    .map((s) => s.efficiencyScore)
+                    .reduce((a, b) => a + b) /
+                sessionsAtTimeAndDifficulty.length;
             timePerformanceForDifficulty[timeOfDay] = avgPerformance;
           }
         }
-        
+
         if (timePerformanceForDifficulty.isNotEmpty) {
           final bestTime = timePerformanceForDifficulty.entries
               .reduce((a, b) => a.value > b.value ? a : b)
@@ -328,44 +346,48 @@ class PredictiveSchedulingService {
         }
       }
     }
-    
+
     // Find overall best time and day
     final bestTime = timePerformanceMap.entries
         .reduce((a, b) => a.value > b.value ? a : b)
         .key;
-    
+
     final bestDay = dayPerformanceMap.entries
         .reduce((a, b) => a.value > b.value ? a : b)
         .key;
-    
+
     // Calculate optimal session length
-    final completedSessions = _sessionHistory.where((s) => s.completedSession).toList();
+    final completedSessions =
+        _sessionHistory.where((s) => s.completedSession).toList();
     final optimalLength = completedSessions.isNotEmpty
         ? Duration(
             minutes: (completedSessions
-                    .map((s) => s.sessionLength.inMinutes)
-                    .reduce((a, b) => a + b) /
-                completedSessions.length).round(),
+                        .map((s) => s.sessionLength.inMinutes)
+                        .reduce((a, b) => a + b) /
+                    completedSessions.length)
+                .round(),
           )
         : const Duration(minutes: 25); // Default Pomodoro length
-    
+
     // Find optimal emotional states
     final emotionPerformanceMap = <EmotionalState, double>{};
     for (final emotion in EmotionalState.values) {
-      final sessionsWithEmotion = _sessionHistory.where((s) => s.dominantEmotion == emotion).toList();
+      final sessionsWithEmotion =
+          _sessionHistory.where((s) => s.dominantEmotion == emotion).toList();
       if (sessionsWithEmotion.isNotEmpty) {
         final avgPerformance = sessionsWithEmotion
-            .map((s) => s.efficiencyScore)
-            .reduce((a, b) => a + b) / sessionsWithEmotion.length;
+                .map((s) => s.efficiencyScore)
+                .reduce((a, b) => a + b) /
+            sessionsWithEmotion.length;
         emotionPerformanceMap[emotion] = avgPerformance;
       }
     }
-    
+
     final optimalEmotions = emotionPerformanceMap.entries
         .where((e) => e.value > 0.6) // Good performance threshold
         .map((e) => e.key)
         .toList();
-    
+
     return PerformancePattern(
       bestTimeOfDay: bestTime,
       bestDayOfWeek: bestDay,
@@ -382,60 +404,58 @@ class PredictiveSchedulingService {
     final hourlyAlertness = <int, double>{};
     final hourlyFocus = <int, double>{};
     final hourlyRetention = <int, double>{};
-    
+
     // Initialize all hours
     for (int hour = 0; hour < 24; hour++) {
       hourlyAlertness[hour] = 0.5;
       hourlyFocus[hour] = 0.5;
       hourlyRetention[hour] = 0.5;
     }
-    
+
     // Analyze historical data
     if (_sessionHistory.isNotEmpty) {
       final hourlySessionData = <int, List<StudySessionMetrics>>{};
-      
+
       // Group sessions by hour
       for (final session in _sessionHistory) {
         final hour = session.timestamp.hour;
         hourlySessionData.putIfAbsent(hour, () => []);
         hourlySessionData[hour]!.add(session);
       }
-      
+
       // Calculate metrics for each hour
       for (final entry in hourlySessionData.entries) {
         final hour = entry.key;
         final sessions = entry.value;
-        
+
         if (sessions.isNotEmpty) {
-          hourlyAlertness[hour] = sessions
-              .map((s) => s.accuracyRate)
-              .reduce((a, b) => a + b) / sessions.length;
-          
-          hourlyFocus[hour] = sessions
-              .map((s) => s.focusScore)
-              .reduce((a, b) => a + b) / sessions.length;
-          
-          hourlyRetention[hour] = sessions
-              .map((s) => s.retentionScore)
-              .reduce((a, b) => a + b) / sessions.length;
+          hourlyAlertness[hour] =
+              sessions.map((s) => s.accuracyRate).reduce((a, b) => a + b) /
+                  sessions.length;
+
+          hourlyFocus[hour] =
+              sessions.map((s) => s.focusScore).reduce((a, b) => a + b) /
+                  sessions.length;
+
+          hourlyRetention[hour] =
+              sessions.map((s) => s.retentionScore).reduce((a, b) => a + b) /
+                  sessions.length;
         }
       }
     }
-    
+
     // Find peak and low performance hours
-    final peakHour = hourlyAlertness.entries
-        .reduce((a, b) => a.value > b.value ? a : b)
-        .key;
-    
-    final lowHour = hourlyAlertness.entries
-        .reduce((a, b) => a.value < b.value ? a : b)
-        .key;
-    
+    final peakHour =
+        hourlyAlertness.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+
+    final lowHour =
+        hourlyAlertness.entries.reduce((a, b) => a.value < b.value ? a : b).key;
+
     // Find optimal study hours (top 6 hours)
     final sortedHours = hourlyAlertness.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final optimalHours = sortedHours.take(6).map((e) => e.key).toList();
-    
+
     return CircadianAnalysis(
       hourlyAlertness: hourlyAlertness,
       hourlyFocus: hourlyFocus,
@@ -453,10 +473,10 @@ class PredictiveSchedulingService {
     Duration? availableTime,
   }) {
     final dayOfWeek = _getDayOfWeek(targetDate.weekday);
-    
+
     // Find the best hour on this day
     int bestHour = circadian.peakPerformanceHour;
-    
+
     // Adjust for weekends vs weekdays
     if (dayOfWeek == DayOfWeek.saturday || dayOfWeek == DayOfWeek.sunday) {
       // Weekends - prefer later start times
@@ -466,7 +486,7 @@ class PredictiveSchedulingService {
       if (bestHour < 7) bestHour = 7;
       if (bestHour > 22) bestHour = 22;
     }
-    
+
     return DateTime(
       targetDate.year,
       targetDate.month,
@@ -483,13 +503,13 @@ class PredictiveSchedulingService {
   }) {
     // Check if we have specific difficulty preferences for this time
     final difficultyPreferences = patterns.difficultyTimePreferences;
-    
+
     for (final entry in difficultyPreferences.entries) {
       if (entry.value == timeOfDay) {
         return entry.key;
       }
     }
-    
+
     // Default logic based on time of day and persona
     switch (timeOfDay) {
       case TimeOfDay.earlyMorning:
@@ -517,11 +537,13 @@ class PredictiveSchedulingService {
     // Sort subjects by priority
     final sortedSubjects = availableSubjects.toList()
       ..sort((a, b) => (priorities[b] ?? 0).compareTo(priorities[a] ?? 0));
-    
+
     // Return top subjects based on difficulty
     switch (difficulty) {
       case StudyDifficulty.hard:
-        return sortedSubjects.take(1).toList(); // Focus on one challenging subject
+        return sortedSubjects
+            .take(1)
+            .toList(); // Focus on one challenging subject
       case StudyDifficulty.medium:
         return sortedSubjects.take(2).toList();
       case StudyDifficulty.easy:
@@ -537,60 +559,71 @@ class PredictiveSchedulingService {
     StudyPalPersona? persona,
   }) {
     Duration baseDuration = patterns.optimalSessionLength;
-    
+
     // Adjust based on difficulty
     switch (difficulty) {
       case StudyDifficulty.hard:
-        baseDuration = Duration(minutes: (baseDuration.inMinutes * 0.8).round()); // Shorter for intense focus
+        baseDuration = Duration(
+            minutes: (baseDuration.inMinutes * 0.8)
+                .round()); // Shorter for intense focus
         break;
       case StudyDifficulty.medium:
         // Keep base duration
         break;
       case StudyDifficulty.easy:
       case StudyDifficulty.review:
-        baseDuration = Duration(minutes: (baseDuration.inMinutes * 1.2).round()); // Longer for easier content
+        baseDuration = Duration(
+            minutes: (baseDuration.inMinutes * 1.2)
+                .round()); // Longer for easier content
         break;
     }
-    
+
     // Adjust based on time of day
     switch (timeOfDay) {
       case TimeOfDay.earlyMorning:
       case TimeOfDay.morning:
         // Peak hours - can handle longer sessions
-        baseDuration = Duration(minutes: (baseDuration.inMinutes * 1.1).round());
+        baseDuration =
+            Duration(minutes: (baseDuration.inMinutes * 1.1).round());
         break;
       case TimeOfDay.lateNight:
         // Reduce for late hours
-        baseDuration = Duration(minutes: (baseDuration.inMinutes * 0.7).round());
+        baseDuration =
+            Duration(minutes: (baseDuration.inMinutes * 0.7).round());
         break;
       default:
         // Keep adjusted duration
         break;
     }
-    
+
     // Persona adjustments
     if (persona != null) {
       switch (persona.type) {
         case PersonaType.scholar:
-          baseDuration = Duration(minutes: (baseDuration.inMinutes * 1.3).round()); // Longer sessions
+          baseDuration = Duration(
+              minutes:
+                  (baseDuration.inMinutes * 1.3).round()); // Longer sessions
           break;
         case PersonaType.buddy:
-          baseDuration = Duration(minutes: (baseDuration.inMinutes * 0.9).round()); // Shorter, more frequent
+          baseDuration = Duration(
+              minutes: (baseDuration.inMinutes * 0.9)
+                  .round()); // Shorter, more frequent
           break;
         default:
           // Keep duration
           break;
       }
     }
-    
+
     // Ensure reasonable bounds
     final minutes = baseDuration.inMinutes.clamp(15, 120);
     return Duration(minutes: minutes);
   }
 
-  double _calculateConfidenceScore(PerformancePattern patterns, CircadianAnalysis circadian) {
+  double _calculateConfidenceScore(
+      PerformancePattern patterns, CircadianAnalysis circadian) {
     double confidence = 0.5; // Base confidence
-    
+
     // Increase confidence based on data availability
     final dataPoints = _sessionHistory.length;
     if (dataPoints >= 20) {
@@ -600,13 +633,14 @@ class PredictiveSchedulingService {
     } else if (dataPoints >= 5) {
       confidence += 0.1;
     }
-    
+
     // Increase confidence based on pattern consistency
-    final timeVariance = _calculateVariance(patterns.timePerformanceMap.values.toList());
+    final timeVariance =
+        _calculateVariance(patterns.timePerformanceMap.values.toList());
     if (timeVariance < 0.1) {
       confidence += 0.2; // Consistent patterns
     }
-    
+
     return confidence.clamp(0.0, 1.0);
   }
 
@@ -619,49 +653,56 @@ class PredictiveSchedulingService {
   }) {
     final timeOfDay = _getTimeOfDay(optimalTime.hour);
     final dayOfWeek = _getDayOfWeek(optimalTime.weekday);
-    
+
     final reasons = <String>[];
-    
+
     // Time-based reasoning
     final timePerformance = patterns.timePerformanceMap[timeOfDay] ?? 0.5;
     if (timePerformance > 0.7) {
-      reasons.add('You typically perform ${(timePerformance * 100).round()}% better during ${_timeOfDayToString(timeOfDay)}');
+      reasons.add(
+          'You typically perform ${(timePerformance * 100).round()}% better during ${_timeOfDayToString(timeOfDay)}');
     }
-    
+
     // Day-based reasoning
     final dayPerformance = patterns.dayPerformanceMap[dayOfWeek] ?? 0.5;
     if (dayPerformance > 0.6) {
-      reasons.add('${_dayOfWeekToString(dayOfWeek)}s are historically good study days for you');
+      reasons.add(
+          '${_dayOfWeekToString(dayOfWeek)}s are historically good study days for you');
     }
-    
+
     // Difficulty reasoning
     switch (difficulty) {
       case StudyDifficulty.hard:
-        reasons.add('This time is optimal for challenging material when your cognitive resources are at their peak');
+        reasons.add(
+            'This time is optimal for challenging material when your cognitive resources are at their peak');
         break;
       case StudyDifficulty.review:
-        reasons.add('Perfect timing for review and consolidation of previously learned material');
+        reasons.add(
+            'Perfect timing for review and consolidation of previously learned material');
         break;
       default:
-        reasons.add('This timing balances cognitive load with your natural alertness patterns');
+        reasons.add(
+            'This timing balances cognitive load with your natural alertness patterns');
         break;
     }
-    
+
     // Persona-specific reasoning
     if (persona != null) {
       switch (persona.type) {
         case PersonaType.scholar:
-          reasons.add('Your scholarly approach benefits from extended, focused study periods');
+          reasons.add(
+              'Your scholarly approach benefits from extended, focused study periods');
           break;
         case PersonaType.coach:
-          reasons.add('This schedule maximizes your goal-oriented learning style');
+          reasons
+              .add('This schedule maximizes your goal-oriented learning style');
           break;
         default:
           break;
       }
     }
-    
-    return reasons.isNotEmpty 
+
+    return reasons.isNotEmpty
         ? '${reasons.join('. ')}.'
         : 'This schedule is optimized based on your personal learning patterns.';
   }
@@ -719,13 +760,13 @@ class PredictiveSchedulingService {
     StudyPalPersona? persona,
   }) {
     if (subjects.isEmpty) return null;
-    
+
     final optimalTime = _findOptimalTimeSlot(
       targetDate: date,
       patterns: patterns,
       circadian: circadian,
     );
-    
+
     return StudySchedulePrediction(
       recommendedTime: optimalTime,
       estimatedDuration: _estimateOptimalDuration(
@@ -742,19 +783,20 @@ class PredictiveSchedulingService {
     );
   }
 
-  List<String> _distributeSubjectsAcrossDays(Map<String, int> subjectHours, int dayIndex) {
+  List<String> _distributeSubjectsAcrossDays(
+      Map<String, int> subjectHours, int dayIndex) {
     // Simplified distribution - would be more sophisticated in real implementation
     final subjects = subjectHours.keys.toList();
     final subjectsPerDay = (subjects.length / 7).ceil();
     final startIndex = dayIndex * subjectsPerDay;
     final endIndex = min(startIndex + subjectsPerDay, subjects.length);
-    
+
     return subjects.sublist(startIndex, min(endIndex, subjects.length));
   }
 
   double _calculateVariance(List<double> values) {
     if (values.isEmpty) return 0.0;
-    
+
     final mean = values.reduce((a, b) => a + b) / values.length;
     final squaredDiffs = values.map((v) => pow(v - mean, 2));
     return squaredDiffs.reduce((a, b) => a + b) / values.length;
@@ -772,38 +814,60 @@ class PredictiveSchedulingService {
 
   DayOfWeek _getDayOfWeek(int weekday) {
     switch (weekday) {
-      case DateTime.monday: return DayOfWeek.monday;
-      case DateTime.tuesday: return DayOfWeek.tuesday;
-      case DateTime.wednesday: return DayOfWeek.wednesday;
-      case DateTime.thursday: return DayOfWeek.thursday;
-      case DateTime.friday: return DayOfWeek.friday;
-      case DateTime.saturday: return DayOfWeek.saturday;
-      case DateTime.sunday: return DayOfWeek.sunday;
-      default: return DayOfWeek.monday;
+      case DateTime.monday:
+        return DayOfWeek.monday;
+      case DateTime.tuesday:
+        return DayOfWeek.tuesday;
+      case DateTime.wednesday:
+        return DayOfWeek.wednesday;
+      case DateTime.thursday:
+        return DayOfWeek.thursday;
+      case DateTime.friday:
+        return DayOfWeek.friday;
+      case DateTime.saturday:
+        return DayOfWeek.saturday;
+      case DateTime.sunday:
+        return DayOfWeek.sunday;
+      default:
+        return DayOfWeek.monday;
     }
   }
 
   String _timeOfDayToString(TimeOfDay timeOfDay) {
     switch (timeOfDay) {
-      case TimeOfDay.earlyMorning: return 'early morning';
-      case TimeOfDay.morning: return 'morning';
-      case TimeOfDay.midday: return 'midday';
-      case TimeOfDay.afternoon: return 'afternoon';
-      case TimeOfDay.evening: return 'evening';
-      case TimeOfDay.night: return 'night';
-      case TimeOfDay.lateNight: return 'late night';
+      case TimeOfDay.earlyMorning:
+        return 'early morning';
+      case TimeOfDay.morning:
+        return 'morning';
+      case TimeOfDay.midday:
+        return 'midday';
+      case TimeOfDay.afternoon:
+        return 'afternoon';
+      case TimeOfDay.evening:
+        return 'evening';
+      case TimeOfDay.night:
+        return 'night';
+      case TimeOfDay.lateNight:
+        return 'late night';
     }
   }
 
   String _dayOfWeekToString(DayOfWeek dayOfWeek) {
     switch (dayOfWeek) {
-      case DayOfWeek.monday: return 'Monday';
-      case DayOfWeek.tuesday: return 'Tuesday';
-      case DayOfWeek.wednesday: return 'Wednesday';
-      case DayOfWeek.thursday: return 'Thursday';
-      case DayOfWeek.friday: return 'Friday';
-      case DayOfWeek.saturday: return 'Saturday';
-      case DayOfWeek.sunday: return 'Sunday';
+      case DayOfWeek.monday:
+        return 'Monday';
+      case DayOfWeek.tuesday:
+        return 'Tuesday';
+      case DayOfWeek.wednesday:
+        return 'Wednesday';
+      case DayOfWeek.thursday:
+        return 'Thursday';
+      case DayOfWeek.friday:
+        return 'Friday';
+      case DayOfWeek.saturday:
+        return 'Saturday';
+      case DayOfWeek.sunday:
+        return 'Sunday';
     }
   }
 }

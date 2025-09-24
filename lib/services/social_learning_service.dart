@@ -796,11 +796,12 @@ class SocialLearningService {
   Future<bool> joinCollaborativeSession({required String sessionId}) async {
     if (_currentUserProfile == null) return false;
 
-    final sessionIndex = _collaborativeSessions.indexWhere((s) => s.id == sessionId);
+    final sessionIndex =
+        _collaborativeSessions.indexWhere((s) => s.id == sessionId);
     if (sessionIndex == -1) return false;
 
     final session = _collaborativeSessions[sessionIndex];
-    
+
     // Check if user is already in the session
     if (session.participants.contains(_currentUserProfile!.id)) {
       return true; // User is already in the session
@@ -873,7 +874,7 @@ class SocialLearningService {
 
     // Remove the friendship request
     _friendships.removeAt(friendshipIndex);
-    
+
     await _saveUserData();
     return true;
   }

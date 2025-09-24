@@ -7,8 +7,6 @@ import 'package:studypals/providers/app_state.dart';
 // Import User model for demo login
 import 'package:studypals/models/user.dart';
 // Import Firebase services
-import 'package:studypals/services/firebase_auth_service.dart';
-import 'package:studypals/services/firestore_service.dart';
 import 'package:studypals/screens/auth/email_verification_screen.dart';
 import 'package:studypals/screens/auth/signup_screen.dart';
 import 'package:studypals/widgets/common/animated_particle_background.dart';
@@ -51,20 +49,20 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                
+
                 // App branding section
                 _buildBrandingSection(context),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Login form card
                 _buildLoginCard(context),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Bottom links
                 _buildBottomLinks(context),
-                
+
                 const SizedBox(height: 40),
               ],
             ),
@@ -93,7 +91,10 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -106,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        
+
         // App title
         Text(
           'StudyPals',
@@ -116,12 +117,15 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
         ),
         const SizedBox(height: 8),
-        
+
         // Subtitle
         Text(
           'Your AI-powered study companion',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
               ),
           textAlign: TextAlign.center,
         ),
@@ -150,12 +154,15 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Sign in to continue your learning journey',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7),
                     ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              
+
               // Email field
               TextFormField(
                 controller: _emailController,
@@ -195,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Password field
               TextFormField(
                 controller: _passwordController,
@@ -209,7 +216,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     onPressed: () {
@@ -246,14 +255,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 8),
-              
+
               // Forgot password link
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Forgot password feature coming soon!')),
+                      const SnackBar(
+                          content:
+                              Text('Forgot password feature coming soon!')),
                     );
                   },
                   child: Text(
@@ -266,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Login button
               SizedBox(
                 height: 56,
@@ -276,7 +287,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     elevation: 4,
-                    shadowColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+                    shadowColor: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.4),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -312,7 +326,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Demo login button
               SizedBox(
                 height: 48,
@@ -362,15 +376,19 @@ class _LoginScreenState extends State<LoginScreen> {
             Text(
               "Don't have an account? ",
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
                   ),
             ),
             TextButton(
               onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SignupScreenNew()),
-                  );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SignupScreenNew()),
+                );
               },
               child: Text(
                 'Sign Up',
@@ -386,7 +404,10 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'By continuing, you agree to our Terms of Service and Privacy Policy',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.5),
               ),
           textAlign: TextAlign.center,
         ),
@@ -402,60 +423,58 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final firebaseAuthService = FirebaseAuthService();
-      final firestoreService = FirestoreService();
-      
-      // Sign in with Firebase
-      final result = await firebaseAuthService.signInWithEmailAndPassword(
+      final appState = Provider.of<AppState>(context, listen: false);
+
+      // Sign in using AppState's built-in method for proper state management
+      final user = await appState.signInUser(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
-      if (result.success && result.user != null) {
-        // Check if email is verified
-        if (!result.user!.emailVerified) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Please verify your email before logging in.'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
-            
-            // Navigate to email verification screen
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => EmailVerificationScreen(
-                  email: _emailController.text.trim(),
-                  displayName: result.user!.displayName ?? 'User',
-                ),
-              ),
-            );
-          }
-          return;
-        }
-        
-        // Update last active timestamp in Firestore
-        await firestoreService.updateLastActive();
-
-        if (mounted) {
-          // Login successful - AuthWrapper will handle navigation
+      if (mounted) {
+        if (user != null) {
+          // Login successful - show success message
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Welcome back, ${result.user!.displayName ?? 'User'}!'),
+              content: Text('Welcome back, ${user.name}!'),
               backgroundColor: Theme.of(context).colorScheme.primary,
             ),
           );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          // AuthWrapper will automatically navigate to dashboard since user is now authenticated
+        } else {
+          // Check for specific error message
+          final error = appState.error;
+          if (error != null) {
+            if (error.contains('verify your email')) {
+              // Navigate to email verification screen
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EmailVerificationScreen(
+                    email: _emailController.text.trim(),
+                    displayName: 'User', // We don't have display name from failed login
+                  ),
+                ),
+              );
+            } else {
+              // Show other errors
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(error),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
+            }
+            appState.clearError();
+          } else {
+            // Generic error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Login failed. Please try again.'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
@@ -488,7 +507,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: 'demo@studypals.com',
         name: 'Demo User',
       );
-      
+
       appState.login(demoUser);
 
       if (mounted) {

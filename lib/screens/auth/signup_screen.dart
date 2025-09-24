@@ -61,20 +61,20 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-                
+
                 // App branding section
                 _buildBrandingSection(context),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Signup form card
                 _buildSignupCard(context),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Bottom links
                 _buildBottomLinks(context),
-                
+
                 const SizedBox(height: 40),
               ],
             ),
@@ -103,7 +103,10 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -116,7 +119,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
           ),
         ),
         const SizedBox(height: 24),
-        
+
         // Title
         Text(
           'Join StudyPals',
@@ -126,12 +129,15 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               ),
         ),
         const SizedBox(height: 8),
-        
+
         // Subtitle
         Text(
           'Start your AI-powered learning journey',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
               ),
           textAlign: TextAlign.center,
         ),
@@ -160,12 +166,15 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               Text(
                 'Fill in your details to get started',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.7),
                     ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              
+
               // Name field
               TextFormField(
                 controller: _nameController,
@@ -205,7 +214,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Email field
               TextFormField(
                 controller: _emailController,
@@ -245,7 +254,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Password field
               TextFormField(
                 controller: _passwordController,
@@ -259,7 +268,9 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     onPressed: () {
@@ -292,14 +303,15 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                   if (value.length < 8) {
                     return 'Password must be at least 8 characters';
                   }
-                  if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value)) {
+                  if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)')
+                      .hasMatch(value)) {
                     return 'Password must contain uppercase, lowercase, and number';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Confirm password field
               TextFormField(
                 controller: _confirmPasswordController,
@@ -313,7 +325,9 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                      _obscureConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     onPressed: () {
@@ -350,7 +364,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                 },
               ),
               const SizedBox(height: 24),
-              
+
               // Terms and conditions checkbox
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,9 +389,13 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                         padding: const EdgeInsets.only(top: 12),
                         child: RichText(
                           text: TextSpan(
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7),
+                                    ),
                             children: [
                               const TextSpan(text: 'I agree to the '),
                               TextSpan(
@@ -404,17 +422,21 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                 ],
               ),
               const SizedBox(height: 32),
-              
+
               // Signup button
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: (_isLoading || !_agreeToTerms) ? null : _handleSignup,
+                  onPressed:
+                      (_isLoading || !_agreeToTerms) ? null : _handleSignup,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     elevation: 4,
-                    shadowColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+                    shadowColor: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.4),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -463,7 +485,10 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
         Text(
           'Already have an account? ',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
               ),
         ),
         TextButton(
@@ -492,7 +517,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
     try {
       final firebaseAuthService = FirebaseAuthService();
       final firestoreService = FirestoreService();
-      
+
       // Sign up with Firebase
       final result = await firebaseAuthService.signUpWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -515,7 +540,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               backgroundColor: null,
             ),
           );
-          
+
           // Navigate to email verification screen
           Navigator.pushReplacement(
             context,

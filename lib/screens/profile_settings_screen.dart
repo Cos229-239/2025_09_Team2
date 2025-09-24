@@ -14,7 +14,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   final _displayNameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _bioController = TextEditingController();
-  
+
   List<String> _interests = [];
   PrivacyLevel _profilePrivacy = PrivacyLevel.public;
   PrivacyLevel _progressPrivacy = PrivacyLevel.friends;
@@ -38,7 +38,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   void _loadCurrentProfile() {
     final service = context.read<SocialLearningService>();
     final profile = service.currentUserProfile;
-    
+
     if (profile != null) {
       _displayNameController.text = profile.displayName;
       _usernameController.text = profile.username;
@@ -81,13 +81,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           children: [
             // Profile Picture Section
             _buildProfilePictureSection(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Basic Information
             _buildSectionTitle('Basic Information'),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _displayNameController,
               decoration: const InputDecoration(
@@ -105,9 +105,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _usernameController,
               decoration: const InputDecoration(
@@ -128,9 +128,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _bioController,
               decoration: const InputDecoration(
@@ -146,67 +146,67 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Interests Section
             _buildInterestsSection(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Privacy Settings
             _buildSectionTitle('Privacy Settings'),
             const SizedBox(height: 16),
-            
+
             _buildPrivacyOption(
               'Profile Visibility',
               'Who can see your profile information',
               _profilePrivacy,
               (value) => setState(() => _profilePrivacy = value),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             _buildPrivacyOption(
               'Progress Visibility',
               'Who can see your study progress and stats',
               _progressPrivacy,
               (value) => setState(() => _progressPrivacy = value),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             _buildPrivacyOption(
               'Friends List Visibility',
               'Who can see your friends list',
               _friendsPrivacy,
               (value) => setState(() => _friendsPrivacy = value),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Account Actions
             _buildSectionTitle('Account'),
             const SizedBox(height: 16),
-            
+
             _buildAccountAction(
               'Change Password',
               'Update your account password',
               Icons.lock,
               _changePassword,
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             _buildAccountAction(
               'Export Data',
               'Download your study data',
               Icons.download,
               _exportData,
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             _buildAccountAction(
               'Delete Account',
               'Permanently delete your account',
@@ -228,7 +228,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             children: [
               CircleAvatar(
                 radius: 50,
-                backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 child: Icon(
                   Icons.person,
                   size: 50,
@@ -244,9 +247,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                    icon: const Icon(Icons.camera_alt,
+                        color: Colors.white, size: 20),
                     onPressed: _changeProfilePicture,
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    constraints:
+                        const BoxConstraints(minWidth: 36, minHeight: 36),
                     padding: EdgeInsets.zero,
                   ),
                 ),
@@ -267,8 +272,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     return Text(
       title,
       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-        fontWeight: FontWeight.bold,
-      ),
+            fontWeight: FontWeight.bold,
+          ),
     );
   }
 
@@ -281,8 +286,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         Text(
           'Add topics you\'re interested in to help others find you',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
+              ),
         ),
         const SizedBox(height: 16),
         Wrap(
@@ -290,10 +298,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           runSpacing: 8,
           children: [
             ..._interests.map((interest) => Chip(
-              label: Text(interest),
-              onDeleted: () => _removeInterest(interest),
-              deleteIcon: const Icon(Icons.close, size: 18),
-            )),
+                  label: Text(interest),
+                  onDeleted: () => _removeInterest(interest),
+                  deleteIcon: const Icon(Icons.close, size: 18),
+                )),
             ActionChip(
               label: const Text('Add Interest'),
               onPressed: _addInterest,
@@ -320,15 +328,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 4),
             Text(
               description,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-              ),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
+                  ),
             ),
             const SizedBox(height: 12),
             SegmentedButton<PrivacyLevel>(
@@ -368,7 +379,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     bool isDestructive = false,
   }) {
     final color = isDestructive ? Theme.of(context).colorScheme.error : null;
-    
+
     return Card(
       child: ListTile(
         leading: Icon(icon, color: color),
@@ -471,13 +482,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     try {
       final service = context.read<SocialLearningService>();
       final currentProfile = service.currentUserProfile;
-      
+
       if (currentProfile != null) {
         // Update profile with new data
         await service.updateUserProfile(
           displayName: _displayNameController.text.trim(),
           username: _usernameController.text.trim(),
-          bio: _bioController.text.trim().isEmpty ? null : _bioController.text.trim(),
+          bio: _bioController.text.trim().isEmpty
+              ? null
+              : _bioController.text.trim(),
           interests: _interests,
           profilePrivacy: _profilePrivacy,
           progressPrivacy: _progressPrivacy,

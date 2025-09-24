@@ -16,7 +16,8 @@ class SessionsTab extends StatefulWidget {
   State<SessionsTab> createState() => _SessionsTabState();
 }
 
-class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin {
+class _SessionsTabState extends State<SessionsTab>
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -52,7 +53,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
             ],
           ),
         ),
-        
+
         // Tab bar view
         Expanded(
           child: TabBarView(
@@ -84,13 +85,13 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
             ),
           ),
         ),
-        
+
         // Sessions list
         Expanded(
           child: Consumer<SocialSessionProvider>(
             builder: (context, socialProvider, child) {
               final upcomingSessions = socialProvider.upcomingSessions;
-              
+
               if (upcomingSessions.isEmpty) {
                 return _buildEmptyState(
                   context,
@@ -119,7 +120,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
     return Consumer<SocialSessionProvider>(
       builder: (context, socialProvider, child) {
         final liveSessions = socialProvider.liveSessions;
-        
+
         if (liveSessions.isEmpty) {
           return _buildEmptyState(
             context,
@@ -145,7 +146,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
     return Consumer<SocialSessionProvider>(
       builder: (context, socialProvider, child) {
         final completedSessions = socialProvider.completedSessions;
-        
+
         if (completedSessions.isEmpty) {
           return _buildEmptyState(
             context,
@@ -169,10 +170,12 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
 
   Widget _buildSessionCard(BuildContext context, SocialSession session) {
     final colorScheme = Theme.of(context).colorScheme;
-    final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
+    final socialProvider =
+        Provider.of<SocialSessionProvider>(context, listen: false);
     final isHost = session.hostId == socialProvider.currentUserId;
-    final canJoin = !session.participantIds.contains(socialProvider.currentUserId) && 
-                   session.canJoin;
+    final canJoin =
+        !session.participantIds.contains(socialProvider.currentUserId) &&
+            session.canJoin;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
@@ -185,7 +188,8 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getSessionTypeColor(session.type),
                     borderRadius: BorderRadius.circular(12),
@@ -200,11 +204,12 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   ),
                 ),
                 const Spacer(),
-                if (isHost) 
+                if (isHost)
                   Icon(Icons.star, color: colorScheme.primary, size: 16),
                 if (session.isStartingSoon)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.orange,
                       borderRadius: BorderRadius.circular(8),
@@ -221,7 +226,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Title and description
             Text(
               session.title,
@@ -242,7 +247,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               ),
             ],
             const SizedBox(height: 12),
-            
+
             // Session info
             Row(
               children: [
@@ -292,7 +297,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -317,7 +322,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                   ),
                   const SizedBox(width: 8),
                 ],
-                if (isHost) 
+                if (isHost)
                   OutlinedButton.icon(
                     onPressed: () => _cancelSession(session),
                     icon: const Icon(Icons.cancel, size: 16),
@@ -338,8 +343,10 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
 
   Widget _buildLiveSessionCard(BuildContext context, SocialSession session) {
     final colorScheme = Theme.of(context).colorScheme;
-    final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
-    final isParticipant = session.participantIds.contains(socialProvider.currentUserId);
+    final socialProvider =
+        Provider.of<SocialSessionProvider>(context, listen: false);
+    final isParticipant =
+        session.participantIds.contains(socialProvider.currentUserId);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
@@ -357,7 +364,8 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(16),
@@ -389,7 +397,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                 ],
               ),
               const SizedBox(height: 12),
-              
+
               // Title
               Text(
                 session.title,
@@ -400,7 +408,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // Participants
               Text(
                 '${session.participantCount} participants active',
@@ -410,7 +418,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Action button
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -439,7 +447,8 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildCompletedSessionCard(BuildContext context, SocialSession session) {
+  Widget _buildCompletedSessionCard(
+      BuildContext context, SocialSession session) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -473,7 +482,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Title
             Text(
               session.title,
@@ -484,7 +493,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               ),
             ),
             const SizedBox(height: 8),
-            
+
             // Session info
             Row(
               children: [
@@ -510,7 +519,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Action button
             Align(
               alignment: Alignment.centerRight,
@@ -526,7 +535,8 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, IconData icon, String title, String subtitle) {
+  Widget _buildEmptyState(
+      BuildContext context, IconData icon, String title, String subtitle) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Center(
@@ -591,7 +601,7 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
         builder: (context) => const ScheduleSessionScreen(),
       ),
     );
-    
+
     if (result == true) {
       // Session was scheduled successfully, refresh the UI
       setState(() {});
@@ -599,8 +609,9 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
   }
 
   void _startSession(SocialSession session) async {
-    final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
-    
+    final socialProvider =
+        Provider.of<SocialSessionProvider>(context, listen: false);
+
     try {
       final startedSession = await socialProvider.startSession(session.id);
       if (startedSession != null && mounted) {
@@ -620,10 +631,12 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
   }
 
   void _joinSession(SocialSession session) async {
-    final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
-    
+    final socialProvider =
+        Provider.of<SocialSessionProvider>(context, listen: false);
+
     try {
-      final success = await socialProvider.joinSession(session.id, socialProvider.currentUserId);
+      final success = await socialProvider.joinSession(
+          session.id, socialProvider.currentUserId);
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -649,7 +662,8 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cancel Session'),
-        content: const Text('Are you sure you want to cancel this session? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to cancel this session? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -664,10 +678,12 @@ class _SessionsTabState extends State<SessionsTab> with TickerProviderStateMixin
     );
 
     if (confirmed == true && mounted) {
-      final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
-      
+      final socialProvider =
+          Provider.of<SocialSessionProvider>(context, listen: false);
+
       try {
-        final success = await socialProvider.cancelSession(session.id, 'Cancelled by host');
+        final success =
+            await socialProvider.cancelSession(session.id, 'Cancelled by host');
         if (success && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

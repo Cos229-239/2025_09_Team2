@@ -17,16 +17,16 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   DateTime _selectedDateTime = DateTime.now().add(const Duration(hours: 1));
   Duration _selectedDuration = const Duration(minutes: 30);
   SessionType _selectedType = SessionType.quiz;
   int _maxParticipants = 5;
   bool _isPublic = false;
-  
+
   final Set<String> _selectedDeckIds = {};
   final Set<String> _selectedFriendIds = {};
-  
+
   bool _isLoading = false;
 
   @override
@@ -40,7 +40,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
@@ -85,7 +85,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
   Widget _buildSessionBasicsCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -162,7 +162,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
   Widget _buildSchedulingCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -207,7 +207,8 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          DateFormat('MMM dd, yyyy - hh:mm a').format(_selectedDateTime),
+                          DateFormat('MMM dd, yyyy - hh:mm a')
+                              .format(_selectedDateTime),
                           style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 16,
@@ -255,7 +256,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
   Widget _buildDeckSelectionCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -280,7 +281,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
             Consumer<DeckProvider>(
               builder: (context, deckProvider, child) {
                 final decks = deckProvider.decks;
-                
+
                 if (decks.isEmpty) {
                   return Container(
                     padding: const EdgeInsets.all(16),
@@ -293,32 +294,35 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     ),
                   );
                 }
-                
+
                 return Column(
-                  children: decks.map((deck) => CheckboxListTile(
-                    title: Text(
-                      deck.title,
-                      style: TextStyle(color: colorScheme.onSurface),
-                    ),
-                    subtitle: Text(
-                      '${deck.cards.length} cards',
-                      style: TextStyle(
-                        color: colorScheme.onSurface.withValues(alpha: 0.6),
-                        fontSize: 12,
-                      ),
-                    ),
-                    value: _selectedDeckIds.contains(deck.id),
-                    activeColor: colorScheme.primary,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        if (value == true) {
-                          _selectedDeckIds.add(deck.id);
-                        } else {
-                          _selectedDeckIds.remove(deck.id);
-                        }
-                      });
-                    },
-                  )).toList(),
+                  children: decks
+                      .map((deck) => CheckboxListTile(
+                            title: Text(
+                              deck.title,
+                              style: TextStyle(color: colorScheme.onSurface),
+                            ),
+                            subtitle: Text(
+                              '${deck.cards.length} cards',
+                              style: TextStyle(
+                                color: colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
+                                fontSize: 12,
+                              ),
+                            ),
+                            value: _selectedDeckIds.contains(deck.id),
+                            activeColor: colorScheme.primary,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value == true) {
+                                  _selectedDeckIds.add(deck.id);
+                                } else {
+                                  _selectedDeckIds.remove(deck.id);
+                                }
+                              });
+                            },
+                          ))
+                      .toList(),
                 );
               },
             ),
@@ -330,7 +334,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
   Widget _buildInvitationCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -355,7 +359,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
             Consumer<SocialSessionProvider>(
               builder: (context, socialProvider, child) {
                 final friends = socialProvider.friends;
-                
+
                 if (friends.isEmpty) {
                   return Container(
                     padding: const EdgeInsets.all(16),
@@ -368,25 +372,27 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     ),
                   );
                 }
-                
+
                 return Column(
-                  children: friends.entries.map((friend) => CheckboxListTile(
-                    title: Text(
-                      friend.value,
-                      style: TextStyle(color: colorScheme.onSurface),
-                    ),
-                    value: _selectedFriendIds.contains(friend.key),
-                    activeColor: colorScheme.primary,
-                    onChanged: (bool? value) {
-                      setState(() {
-                        if (value == true) {
-                          _selectedFriendIds.add(friend.key);
-                        } else {
-                          _selectedFriendIds.remove(friend.key);
-                        }
-                      });
-                    },
-                  )).toList(),
+                  children: friends.entries
+                      .map((friend) => CheckboxListTile(
+                            title: Text(
+                              friend.value,
+                              style: TextStyle(color: colorScheme.onSurface),
+                            ),
+                            value: _selectedFriendIds.contains(friend.key),
+                            activeColor: colorScheme.primary,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value == true) {
+                                  _selectedFriendIds.add(friend.key);
+                                } else {
+                                  _selectedFriendIds.remove(friend.key);
+                                }
+                              });
+                            },
+                          ))
+                      .toList(),
                 );
               },
             ),
@@ -398,7 +404,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
   Widget _buildSettingsCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -436,7 +442,8 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
                     style: TextStyle(color: colorScheme.onSurface),
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     ),
                     onChanged: (value) {
                       final parsed = int.tryParse(value);
@@ -479,7 +486,7 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
   Widget _buildScheduleButton(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return SizedBox(
       width: double.infinity,
       height: 50,
@@ -513,8 +520,8 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
 
   bool _canSchedule() {
     return _titleController.text.trim().isNotEmpty &&
-           _selectedDeckIds.isNotEmpty &&
-           !_isLoading;
+        _selectedDeckIds.isNotEmpty &&
+        !_isLoading;
   }
 
   Future<void> _selectDateTime() async {
@@ -561,8 +568,9 @@ class _ScheduleSessionScreenState extends State<ScheduleSessionScreen> {
     });
 
     try {
-      final socialProvider = Provider.of<SocialSessionProvider>(context, listen: false);
-      
+      final socialProvider =
+          Provider.of<SocialSessionProvider>(context, listen: false);
+
       await socialProvider.scheduleSession(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),

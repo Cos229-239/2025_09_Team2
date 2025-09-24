@@ -45,7 +45,10 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
               'Session Results',
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -88,13 +91,17 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
           // Session summary header
           Container(
             padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.3),
             child: Column(
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.green,
                         borderRadius: BorderRadius.circular(20),
@@ -102,7 +109,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.check_circle, color: Colors.white, size: 16),
+                          Icon(Icons.check_circle,
+                              color: Colors.white, size: 16),
                           SizedBox(width: 4),
                           Text(
                             'COMPLETED',
@@ -117,7 +125,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.secondary,
                         borderRadius: BorderRadius.circular(12),
@@ -203,7 +212,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
     );
   }
 
-  Widget _buildSummaryStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildSummaryStatItem(
+      String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Container(
@@ -218,8 +228,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
         Text(
           value,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
         Text(
           label,
@@ -245,8 +255,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                   Text(
                     'Session Completion',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -255,11 +265,14 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildCompletionIndicator('Completed', 85, Colors.green),
+                            _buildCompletionIndicator(
+                                'Completed', 85, Colors.green),
                             const SizedBox(height: 8),
-                            _buildCompletionIndicator('Partially Completed', 12, Colors.orange),
+                            _buildCompletionIndicator(
+                                'Partially Completed', 12, Colors.orange),
                             const SizedBox(height: 8),
-                            _buildCompletionIndicator('Not Completed', 3, Colors.red),
+                            _buildCompletionIndicator(
+                                'Not Completed', 3, Colors.red),
                           ],
                         ),
                       ),
@@ -276,15 +289,20 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                               child: CircularProgressIndicator(
                                 value: 0.85,
                                 strokeWidth: 8,
-                                backgroundColor: Colors.grey.withValues(alpha: 0.3),
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
+                                backgroundColor:
+                                    Colors.grey.withValues(alpha: 0.3),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Colors.green),
                               ),
                             ),
                             Text(
                               '85%',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                           ],
                         ),
@@ -306,8 +324,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                   Text(
                     'Key Metrics',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -374,16 +392,22 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                   Text(
                     'Session Timeline',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
-                  _buildTimelineItem('Session Started', '14:00', Icons.play_arrow, Colors.green),
-                  _buildTimelineItem('First Quiz', '14:05', Icons.quiz, Colors.blue),
-                  _buildTimelineItem('Group Discussion', '14:15', Icons.chat, Colors.orange),
-                  _buildTimelineItem('Second Quiz', '14:25', Icons.quiz, Colors.blue),
-                  _buildTimelineItem('Final Review', '14:35', Icons.rate_review, Colors.purple),
-                  _buildTimelineItem('Session Ended', '14:45', Icons.stop, Colors.red),
+                  _buildTimelineItem('Session Started', '14:00',
+                      Icons.play_arrow, Colors.green),
+                  _buildTimelineItem(
+                      'First Quiz', '14:05', Icons.quiz, Colors.blue),
+                  _buildTimelineItem(
+                      'Group Discussion', '14:15', Icons.chat, Colors.orange),
+                  _buildTimelineItem(
+                      'Second Quiz', '14:25', Icons.quiz, Colors.blue),
+                  _buildTimelineItem('Final Review', '14:35', Icons.rate_review,
+                      Colors.purple),
+                  _buildTimelineItem(
+                      'Session Ended', '14:45', Icons.stop, Colors.red),
                 ],
               ),
             ),
@@ -415,7 +439,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
     );
   }
 
-  Widget _buildMetricItem(String label, String value, IconData icon, Color color, String change, bool isPositive) {
+  Widget _buildMetricItem(String label, String value, IconData icon,
+      Color color, String change, bool isPositive) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -439,8 +464,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 4),
           Row(
@@ -466,7 +491,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
     );
   }
 
-  Widget _buildTimelineItem(String title, String time, IconData icon, Color color) {
+  Widget _buildTimelineItem(
+      String title, String time, IconData icon, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -554,9 +580,12 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (participants.length > 1) _buildPodiumPosition(participants[1], 2, 60),
-              if (participants.isNotEmpty) _buildPodiumPosition(participants[0], 1, 80),
-              if (participants.length > 2) _buildPodiumPosition(participants[2], 3, 40),
+              if (participants.length > 1)
+                _buildPodiumPosition(participants[1], 2, 60),
+              if (participants.isNotEmpty)
+                _buildPodiumPosition(participants[0], 1, 80),
+              if (participants.length > 2)
+                _buildPodiumPosition(participants[2], 3, 40),
             ],
           ),
         ),
@@ -576,9 +605,15 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
     );
   }
 
-  Widget _buildPodiumPosition(ParticipantResult participant, int position, double height) {
+  Widget _buildPodiumPosition(
+      ParticipantResult participant, int position, double height) {
     const goldColor = Color(0xFFFFD700);
-    final colors = [null, goldColor, Colors.grey, const Color(0xFFCD7F32)]; // Gold, Silver, Bronze
+    final colors = [
+      null,
+      goldColor,
+      Colors.grey,
+      const Color(0xFFCD7F32)
+    ]; // Gold, Silver, Bronze
     final icons = [null, Icons.looks_one, Icons.looks_two, Icons.looks_3];
 
     return Column(
@@ -709,22 +744,28 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
             if (participant.achievements.isNotEmpty)
               Wrap(
                 spacing: 4,
-                children: participant.achievements.take(2).map((achievement) => 
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      achievement,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                children: participant.achievements
+                    .take(2)
+                    .map(
+                      (achievement) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          achievement,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ).toList(),
+                    )
+                    .toList(),
               ),
           ],
         ),
@@ -768,8 +809,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                   Text(
                     'Performance Trends',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Container(
@@ -820,13 +861,15 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                   Text(
                     'Question Analysis',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
-                  _buildQuestionBreakdown('Easy Questions', 12, 11, Colors.green),
+                  _buildQuestionBreakdown(
+                      'Easy Questions', 12, 11, Colors.green),
                   const SizedBox(height: 8),
-                  _buildQuestionBreakdown('Medium Questions', 8, 6, Colors.orange),
+                  _buildQuestionBreakdown(
+                      'Medium Questions', 8, 6, Colors.orange),
                   const SizedBox(height: 8),
                   _buildQuestionBreakdown('Hard Questions', 5, 3, Colors.red),
                 ],
@@ -844,8 +887,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                   Text(
                     'Topics Performance',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   _buildTopicPerformance('Mathematics', 0.92, Colors.blue),
@@ -864,9 +907,10 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
     );
   }
 
-  Widget _buildQuestionBreakdown(String difficulty, int total, int correct, Color color) {
+  Widget _buildQuestionBreakdown(
+      String difficulty, int total, int correct, Color color) {
     final accuracy = (correct / total * 100).toInt();
-    
+
     return Row(
       children: [
         Container(
@@ -953,9 +997,10 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                       const SizedBox(width: 8),
                       Text(
                         'Study Insights',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -998,9 +1043,10 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                       const SizedBox(width: 8),
                       Text(
                         'Recommendations',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -1043,9 +1089,10 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                       const SizedBox(width: 8),
                       Text(
                         'Session Feedback',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ],
                   ),
@@ -1053,10 +1100,12 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
                   Row(
                     children: [
                       Expanded(
-                        child: _buildFeedbackItem('Engagement', 4.2, Icons.favorite),
+                        child: _buildFeedbackItem(
+                            'Engagement', 4.2, Icons.favorite),
                       ),
                       Expanded(
-                        child: _buildFeedbackItem('Difficulty', 3.8, Icons.school),
+                        child:
+                            _buildFeedbackItem('Difficulty', 3.8, Icons.school),
                       ),
                     ],
                   ),
@@ -1080,7 +1129,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
     );
   }
 
-  Widget _buildInsightItem(IconData icon, String title, String description, Color color) {
+  Widget _buildInsightItem(
+      IconData icon, String title, String description, Color color) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1115,7 +1165,8 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
     );
   }
 
-  Widget _buildRecommendationItem(String title, String description, IconData icon, Color color) {
+  Widget _buildRecommendationItem(
+      String title, String description, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1170,15 +1221,19 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
           Text(
             rating.toStringAsFixed(1),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) => 
-              Icon(
-                index < rating.floor() ? Icons.star : 
-                index < rating ? Icons.star_half : Icons.star_outline,
+            children: List.generate(
+              5,
+              (index) => Icon(
+                index < rating.floor()
+                    ? Icons.star
+                    : index < rating
+                        ? Icons.star_half
+                        : Icons.star_outline,
                 size: 12,
                 color: Colors.orange,
               ),
@@ -1192,10 +1247,14 @@ class _SessionResultsScreenState extends State<SessionResultsScreen>
   Color _getRankColor(int rank) {
     const goldColor = Color(0xFFFFD700);
     switch (rank) {
-      case 1: return goldColor;
-      case 2: return Colors.grey;
-      case 3: return const Color(0xFFCD7F32); // Bronze
-      default: return Theme.of(context).colorScheme.primary;
+      case 1:
+        return goldColor;
+      case 2:
+        return Colors.grey;
+      case 3:
+        return const Color(0xFFCD7F32); // Bronze
+      default:
+        return Theme.of(context).colorScheme.primary;
     }
   }
 

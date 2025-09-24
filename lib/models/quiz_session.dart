@@ -19,14 +19,17 @@ class QuizSession {
 
   // Cooldown and retry logic
   DateTime? lastAttemptTime; // When this quiz was last attempted
-  bool canRetake; // Whether user can retake this quiz (based on cooldown/success)
+  bool
+      canRetake; // Whether user can retake this quiz (based on cooldown/success)
 
   // Multiplayer support
   final bool isMultiplayer; // Whether this is a multiplayer session
   final String? socialSessionId; // Reference to social session if multiplayer
   final List<String> participantIds; // IDs of participants in multiplayer
-  final Map<String, List<QuizAnswer>> participantAnswers; // Answers by participant
-  final Map<String, dynamic>? sessionData; // Additional session data (results, etc.)
+  final Map<String, List<QuizAnswer>>
+      participantAnswers; // Answers by participant
+  final Map<String, dynamic>?
+      sessionData; // Additional session data (results, etc.)
 
   QuizSession({
     required this.id,
@@ -47,9 +50,9 @@ class QuizSession {
     List<String>? participantIds,
     Map<String, List<QuizAnswer>>? participantAnswers,
     this.sessionData,
-  }) : answers = answers ?? [],
-       participantIds = participantIds ?? [],
-       participantAnswers = participantAnswers ?? {};
+  })  : answers = answers ?? [],
+        participantIds = participantIds ?? [],
+        participantAnswers = participantAnswers ?? {};
 
   /// Creates a copy of this quiz session with updated fields
   QuizSession copyWith({
@@ -145,7 +148,7 @@ class QuizSession {
   /// Get participant scores for multiplayer sessions
   Map<String, double> get participantScores {
     if (!isMultiplayer) return {};
-    
+
     final scores = <String, double>{};
     for (final participantId in participantIds) {
       final participantAnswers = this.participantAnswers[participantId] ?? [];
@@ -162,11 +165,13 @@ class QuizSession {
   /// Record an answer for a specific participant in multiplayer
   QuizSession recordParticipantAnswer(String participantId, QuizAnswer answer) {
     if (!isMultiplayer) return this;
-    
-    final updatedParticipantAnswers = Map<String, List<QuizAnswer>>.from(participantAnswers);
-    final currentAnswers = updatedParticipantAnswers[participantId] ?? <QuizAnswer>[];
+
+    final updatedParticipantAnswers =
+        Map<String, List<QuizAnswer>>.from(participantAnswers);
+    final currentAnswers =
+        updatedParticipantAnswers[participantId] ?? <QuizAnswer>[];
     updatedParticipantAnswers[participantId] = [...currentAnswers, answer];
-    
+
     return copyWith(participantAnswers: updatedParticipantAnswers);
   }
 
@@ -189,7 +194,7 @@ class QuizSession {
       'isMultiplayer': isMultiplayer,
       'socialSessionId': socialSessionId,
       'participantIds': participantIds,
-      'participantAnswers': participantAnswers.map((key, value) => 
+      'participantAnswers': participantAnswers.map((key, value) =>
           MapEntry(key, value.map((answer) => answer.toJson()).toList())),
       'sessionData': sessionData,
     };
@@ -198,13 +203,15 @@ class QuizSession {
   /// Create from JSON for loading from storage
   factory QuizSession.fromJson(Map<String, dynamic> json) {
     // Parse participant answers
-    final participantAnswersJson = json['participantAnswers'] as Map<String, dynamic>? ?? {};
+    final participantAnswersJson =
+        json['participantAnswers'] as Map<String, dynamic>? ?? {};
     final participantAnswers = <String, List<QuizAnswer>>{};
-    
+
     for (final entry in participantAnswersJson.entries) {
       final answersList = entry.value as List<dynamic>? ?? [];
       participantAnswers[entry.key] = answersList
-          .map((answerJson) => QuizAnswer.fromJson(answerJson as Map<String, dynamic>))
+          .map((answerJson) =>
+              QuizAnswer.fromJson(answerJson as Map<String, dynamic>))
           .toList();
     }
 

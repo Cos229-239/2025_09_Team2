@@ -67,10 +67,12 @@ class _FloatingMusicButtonWidget extends StatefulWidget {
   });
 
   @override
-  State<_FloatingMusicButtonWidget> createState() => _FloatingMusicButtonWidgetState();
+  State<_FloatingMusicButtonWidget> createState() =>
+      _FloatingMusicButtonWidgetState();
 }
 
-class _FloatingMusicButtonWidgetState extends State<_FloatingMusicButtonWidget> {
+class _FloatingMusicButtonWidgetState
+    extends State<_FloatingMusicButtonWidget> {
   late Offset _currentPosition;
   static const double _buttonSize = 56.0;
 
@@ -84,16 +86,16 @@ class _FloatingMusicButtonWidgetState extends State<_FloatingMusicButtonWidget> 
     setState(() {
       // Update position based on drag
       _currentPosition += details.delta;
-      
+
       // Get current screen size
       final screenSize = MediaQuery.of(context).size;
-      
+
       // Keep button within screen bounds
       _currentPosition = Offset(
         _currentPosition.dx.clamp(0, screenSize.width - _buttonSize),
         _currentPosition.dy.clamp(0, screenSize.height - _buttonSize - 80),
       );
-      
+
       // Update the global position
       widget.onPositionChanged(_currentPosition);
     });
@@ -131,7 +133,10 @@ class _FloatingMusicButtonWidgetState extends State<_FloatingMusicButtonWidget> 
             ),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.4),
                 blurRadius: 12,
                 spreadRadius: 2,
                 offset: const Offset(0, 4),

@@ -117,7 +117,7 @@ class SocialSession {
 
   /// Check if the session can be joined
   bool get canJoin =>
-      status == SessionStatus.scheduled && 
+      status == SessionStatus.scheduled &&
       participantIds.length < maxParticipants;
 
   /// Check if the session is currently live
@@ -140,7 +140,8 @@ class SocialSession {
   int get durationInMinutes => duration.inMinutes;
 
   /// Get estimated end time
-  DateTime get estimatedEndTime => (actualStartTime ?? scheduledTime).add(duration);
+  DateTime get estimatedEndTime =>
+      (actualStartTime ?? scheduledTime).add(duration);
 
   /// Convert to JSON
   Map<String, dynamic> toJson() {
@@ -182,12 +183,10 @@ class SocialSession {
       participantIds: List<String>.from(json['participantIds']),
       participantNames: Map<String, String>.from(json['participantNames']),
       maxParticipants: json['maxParticipants'],
-      actualStartTime: json['actualStartTime'] != null 
-          ? DateTime.parse(json['actualStartTime']) 
+      actualStartTime: json['actualStartTime'] != null
+          ? DateTime.parse(json['actualStartTime'])
           : null,
-      endTime: json['endTime'] != null 
-          ? DateTime.parse(json['endTime']) 
-          : null,
+      endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
       createdAt: DateTime.parse(json['createdAt']),
       isPublic: json['isPublic'] ?? false,
       sessionData: json['sessionData'],
@@ -297,16 +296,18 @@ class SessionInvitation {
       toUserId: json['toUserId'],
       toUserName: json['toUserName'],
       sentAt: DateTime.parse(json['sentAt']),
-      status: InvitationStatus.values.firstWhere((e) => e.name == json['status']),
-      respondedAt: json['respondedAt'] != null 
-          ? DateTime.parse(json['respondedAt']) 
+      status:
+          InvitationStatus.values.firstWhere((e) => e.name == json['status']),
+      respondedAt: json['respondedAt'] != null
+          ? DateTime.parse(json['respondedAt'])
           : null,
       message: json['message'],
     );
   }
 
   @override
-  String toString() => 'SessionInvitation(id: $id, from: $fromUserName, to: $toUserName)';
+  String toString() =>
+      'SessionInvitation(id: $id, from: $fromUserName, to: $toUserName)';
 
   @override
   bool operator ==(Object other) {
@@ -325,7 +326,8 @@ class SessionParticipant {
   final DateTime joinedAt;
   final bool isHost;
   final bool isOnline;
-  final Map<String, dynamic>? participantData; // For storing scores, progress, etc.
+  final Map<String, dynamic>?
+      participantData; // For storing scores, progress, etc.
 
   const SessionParticipant({
     required this.userId,

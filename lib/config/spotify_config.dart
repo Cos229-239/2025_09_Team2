@@ -1,38 +1,38 @@
 /// StudyPals Spotify Integration - Configuration
-/// 
+///
 /// This file contains all the configuration settings for the Spotify integration.
 /// It replaces the JavaScript spotify-config.js file with Dart equivalents.
-/// 
+///
 /// @author StudyPals Team
 /// @version 1.0.0
 library;
 
 /// Central configuration class for Spotify integration.
 /// Contains all the necessary settings and constants for the Spotify API.
-/// 
+///
 /// Configuration Categories:
 /// 1. OAuth Settings - Client credentials and redirect URIs
 /// 2. API Permissions - Scopes for user authorization
 /// 3. API Endpoints - Base URLs for various Spotify services
 /// 4. Application Settings - Default values and limits
 /// 5. UI Configuration - Theme colors and styling
-/// 
+///
 /// SECURITY NOTE: In a production environment, sensitive values like
 /// clientId and clientSecret should be stored securely and not
 /// committed to version control.
-/// 
+///
 /// Usage:
 /// ```dart
 /// // Access OAuth settings
 /// final clientId = SpotifyConfig.clientId;
-/// 
+///
 /// // Get API endpoints
 /// final apiUrl = SpotifyConfig.apiBaseUrl;
-/// 
+///
 /// // Access theme colors
 /// final primaryColor = SpotifyConfig.theme.primaryColor;
 /// ```
-/// 
+///
 /// Integration Setup:
 /// 1. Register app in Spotify Developer Dashboard
 /// 2. Configure redirect URI in Spotify app settings
@@ -91,20 +91,20 @@ class SpotifyConfig {
 /// Theme configuration class for Spotify integration UI.
 /// Defines the color scheme and visual styling used throughout
 /// the Spotify integration interface.
-/// 
+///
 /// Colors are stored as 32-bit integers (0xAARRGGBB format)
 /// where:
 /// - AA: Alpha channel (opacity)
 /// - RR: Red channel
 /// - GG: Green channel
 /// - BB: Blue channel
-/// 
+///
 /// Default Theme:
 /// - Primary: Spotify Green (#1DB954)
 /// - Secondary: Light Green (#1ED760)
 /// - Background: Light Gray (#F9FAFB)
 /// - Text: Dark Gray (#1F2937)
-/// 
+///
 /// Usage:
 /// ```dart
 /// final theme = SpotifyConfig.theme;

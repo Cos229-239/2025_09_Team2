@@ -1,6 +1,6 @@
 // This is a generated file; do not edit or check into version control.
-FLUTTER_ROOT=C:\Users\isolo\source\repos\flutter
-FLUTTER_APPLICATION_PATH=C:\Users\isolo\StudyPalsU\StudyPals
+FLUTTER_ROOT=C:\dev\flutter
+FLUTTER_APPLICATION_PATH=C:\Users\nolen\studypalsv2\StudyPals
 COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.0

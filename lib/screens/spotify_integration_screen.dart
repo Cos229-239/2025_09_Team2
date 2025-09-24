@@ -1,31 +1,31 @@
 /// StudyPals Spotify Integration - Main Screen
-/// 
+///
 /// This screen provides a complete Spotify integration interface allowing users to:
 /// - Connect their Spotify account
 /// - View and manage playlists
 /// - Search and play tracks
 /// - Create new playlists
 /// - Manage their Spotify connection
-/// 
+///
 /// Architecture:
 /// - Uses Provider pattern for state management
 /// - Implements responsive layout for different screen sizes
 /// - Handles authentication flow through SpotifyProvider
 /// - Manages user interface states (connecting, connected, error)
-/// 
+///
 /// Key Components:
 /// - Connection management UI
 /// - Playlist browser
 /// - Track listing
 /// - Search interface
 /// - User profile display
-/// 
+///
 /// State Management:
 /// - Tracks authentication state
 /// - Manages playlist selection
 /// - Handles search results
 /// - Maintains UI loading states
-/// 
+///
 /// @author StudyPals Team
 /// @version 1.0.0
 library;
@@ -60,7 +60,7 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
       TextEditingController();
 
   /// Initializes the screen state and Spotify connection.
-  /// 
+  ///
   /// Uses WidgetsBinding.instance.addPostFrameCallback to ensure the context
   /// is fully built before attempting to initialize the SpotifyProvider.
   /// This prevents potential null context errors during initialization.
@@ -73,7 +73,7 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Cleans up resources when the screen is disposed.
-  /// 
+  ///
   /// Properly disposes of all TextEditingControllers to prevent memory leaks
   /// and ensure proper cleanup of resources. This is especially important
   /// when dealing with text input fields and controllers.
@@ -86,17 +86,17 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the main screen UI structure.
-  /// 
+  ///
   /// The screen layout consists of:
   /// - AppBar with title and connection status
   /// - Main body that changes based on connection state
   /// - Conditional loading indicators
-  /// 
+  ///
   /// Uses Consumer(SpotifyProvider) to react to state changes in:
   /// - Connection status
   /// - Authentication state
   /// - Loading state
-  /// 
+  ///
   /// The UI updates automatically when the provider state changes,
   /// showing appropriate screens for each state.
   @override
@@ -163,17 +163,17 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the initial connection screen shown when not connected to Spotify.
-  /// 
+  ///
   /// This screen provides:
   /// - Visual explanation of Spotify integration benefits
   /// - Connect button to initiate OAuth flow
   /// - Error message display if connection failed
-  /// 
+  ///
   /// Layout:
   /// - Scrollable container for responsive design
   /// - Centered content with consistent padding
   /// - Conditional error message display
-  /// 
+  ///
   /// @param context The build context for theme and navigation
   /// @param provider The SpotifyProvider instance for state management
   /// @returns Widget containing the connection screen UI
@@ -198,12 +198,12 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the loading screen shown during Spotify connection process.
-  /// 
+  ///
   /// Features:
   /// - Centered loading indicator with Spotify brand color
   /// - Loading message for user feedback
   /// - Simple, clean layout focusing on the connection process
-  /// 
+  ///
   /// @param context Build context for theme access
   /// @param provider SpotifyProvider instance managing connection state
   /// @returns Widget displaying connection progress UI
@@ -223,13 +223,13 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the main dashboard screen shown when successfully connected to Spotify.
-  /// 
+  ///
   /// Layout Structure:
   /// - Scrollable container for responsive design
   /// - User information at the top
   /// - Search functionality section
   /// - Two-column layout for playlists and tracks
-  /// 
+  ///
   /// Components:
   /// 1. User Info Card:
   ///    - Profile information
@@ -240,11 +240,11 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   /// 3. Content Grid:
   ///    - Playlists column (1/3 width)
   ///    - Tracks column (2/3 width)
-  /// 
+  ///
   /// Spacing:
   /// - Consistent 16px padding
   /// - 16px gaps between major sections
-  /// 
+  ///
   /// @param context Build context for theming
   /// @param provider SpotifyProvider for data and actions
   /// @returns Widget containing the complete dashboard interface
@@ -286,21 +286,21 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the error screen shown when Spotify connection fails.
-  /// 
+  ///
   /// Features:
   /// - Clear error icon and message display
   /// - Error details from provider
   /// - Retry button to attempt reconnection
-  /// 
+  ///
   /// Visual Design:
   /// - Centered layout with proper spacing
   /// - Red error icon for clear status indication
   /// - Themed text styles for hierarchy
-  /// 
+  ///
   /// User Actions:
   /// - Retry button triggers provider.initialize()
   /// - Properly handles both known and unknown errors
-  /// 
+  ///
   /// @param context Build context for theme access
   /// @param provider SpotifyProvider instance containing error details
   /// @returns Widget displaying error state and retry option
@@ -398,21 +398,21 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds a card displaying the connected Spotify user's information.
-  /// 
+  ///
   /// Features:
   /// - User profile image (with fallback icon)
   /// - Display name and email
   /// - Quick action to create new playlist
-  /// 
+  ///
   /// Visual Elements:
   /// - Circular avatar (30px radius)
   /// - Themed text styles for name and email
   /// - Add playlist button with tooltip
-  /// 
+  ///
   /// Null Safety:
   /// - Handles null user case with empty widget
   /// - Safely handles missing images and email
-  /// 
+  ///
   /// @param context Build context for theming
   /// @param provider SpotifyProvider containing user data
   /// @returns Widget showing user info or empty widget if no user
@@ -470,22 +470,22 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the search section of the dashboard allowing users to find tracks.
-  /// 
+  ///
   /// Features:
   /// - Search input field with hint text
   /// - Search button with icon
   /// - Dynamic search results display
-  /// 
+  ///
   /// User Interactions:
   /// - Text input with onSubmitted support
   /// - Button click to trigger search
   /// - Results update automatically through provider
-  /// 
+  ///
   /// Layout:
   /// - Card container with padding
   /// - Row layout for input and button
   /// - Conditional results display
-  /// 
+  ///
   /// @param context Build context for theme and styling
   /// @param provider SpotifyProvider for search functionality
   /// @returns Widget containing search interface and results
@@ -534,27 +534,27 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the column displaying user's Spotify playlists.
-  /// 
+  ///
   /// Features:
   /// - Scrollable list of playlists
   /// - Empty state handling
   /// - Fixed height container
-  /// 
+  ///
   /// Visual Design:
   /// - Card container with padding
   /// - Themed title text
   /// - Grey icon for empty state
-  /// 
+  ///
   /// Component Structure:
   /// - Title section
   /// - 400px height scrollable area
   /// - Playlist items or empty state message
-  /// 
+  ///
   /// States:
   /// - Loading: Handled by parent
   /// - Empty: Shows centered message
   /// - Populated: Scrollable list of items
-  /// 
+  ///
   /// @param context Build context for theming
   /// @param provider SpotifyProvider with playlist data
   /// @returns Widget containing playlist list or empty state
@@ -599,23 +599,23 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the column displaying tracks from the selected playlist.
-  /// 
+  ///
   /// Features:
   /// - Dynamic title based on selected playlist
   /// - Scrollable track list
   /// - Empty state handling
-  /// 
+  ///
   /// Visual Design:
   /// - Card container with padding
   /// - Themed title text
   /// - Grey icon for empty state
   /// - 400px fixed height for content
-  /// 
+  ///
   /// States:
   /// - No playlist selected: Shows selection prompt
   /// - Empty playlist: Shows empty message
   /// - Populated: Shows scrollable track list
-  /// 
+  ///
   /// @param context Build context for theming
   /// @param provider SpotifyProvider with track data
   /// @returns Widget containing track list or appropriate message
@@ -665,33 +665,33 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds a selectable item representing a Spotify playlist.
-  /// 
+  ///
   /// Visual Features:
   /// - Playlist cover image (48x48px)
   /// - Playlist name and track count
   /// - Selection state indication
   /// - Hover feedback via InkWell
-  /// 
+  ///
   /// Styling:
   /// - Light green background when selected
   /// - Green border when selected
   /// - Rounded corners (8px)
   /// - Consistent padding (12px)
-  /// 
+  ///
   /// Image Handling:
   /// - Uses CachedNetworkImage for efficient loading
   /// - Placeholder and error states with music icon
   /// - Rounded corners on image (4px)
-  /// 
+  ///
   /// Text Layout:
   /// - Bold playlist name with ellipsis overflow
   /// - Grey secondary text for track count
   /// - Left-aligned text content
-  /// 
+  ///
   /// Interaction:
   /// - Tapping selects the playlist via provider
   /// - Visual feedback on hover
-  /// 
+  ///
   /// @param context Build context for theming
   /// @param provider SpotifyProvider for selection handling
   /// @param playlist The playlist to display
@@ -770,38 +770,38 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds a list item displaying a Spotify track with playback controls.
-  /// 
+  ///
   /// Visual Features:
   /// - Album artwork (48x48px)
   /// - Track title and artists
   /// - Duration display
   /// - Play button
-  /// 
+  ///
   /// Layout:
   /// - Horizontal row layout
   /// - Left-aligned album art
   /// - Expanded track info section
   /// - Right-aligned duration and controls
-  /// 
+  ///
   /// Styling:
   /// - Rounded corners (8px container, 4px image)
   /// - Consistent padding (12px)
   /// - Typography hierarchy for title and artists
   /// - Grey secondary text for duration
-  /// 
+  ///
   /// Image Handling:
   /// - Uses CachedNetworkImage for album art
   /// - Placeholder and error states with music icon
-  /// 
+  ///
   /// Interaction:
   /// - Click anywhere to play the track
   /// - Explicit play button with tooltip
   /// - Hover feedback via InkWell
-  /// 
+  ///
   /// Text Overflow:
   /// - Single line with ellipsis for title
   /// - Single line with ellipsis for artists
-  /// 
+  ///
   /// @param context Build context for theming
   /// @param provider SpotifyProvider for playback control
   /// @param track The track to display
@@ -890,18 +890,18 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds the search results section showing matching tracks.
-  /// 
+  ///
   /// Features:
   /// - Section title
   /// - List of track items
   /// - Consistent spacing
-  /// 
+  ///
   /// Layout:
   /// - Vertical column layout
   /// - Left-aligned content
   /// - Themed title text
   /// - Track items with consistent styling
-  /// 
+  ///
   /// @param context Build context for theming
   /// @param provider SpotifyProvider containing search results
   /// @returns Widget displaying search results
@@ -921,14 +921,14 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Builds a styled error message container.
-  /// 
+  ///
   /// Visual Design:
   /// - Light red background (50% shade)
   /// - Darker red border (200% shade)
   /// - Dark red text (800% shade)
   /// - Rounded corners (8px radius)
   /// - Consistent padding (12px)
-  /// 
+  ///
   /// @param message The error message to display
   /// @returns Widget containing styled error message
   Widget _buildErrorMessage(String message) {
@@ -947,17 +947,17 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Shows a confirmation dialog before disconnecting from Spotify.
-  /// 
+  ///
   /// Dialog Features:
   /// - Clear title indicating action
   /// - Confirmation message
   /// - Cancel button (neutral)
   /// - Disconnect button (red, destructive action)
-  /// 
+  ///
   /// User Flow:
   /// - Cancel: Dismisses dialog
   /// - Disconnect: Closes dialog and calls provider.disconnect()
-  /// 
+  ///
   /// @param context Build context for dialog display
   /// @param provider SpotifyProvider for disconnect action
   void _showDisconnectDialog(BuildContext context, SpotifyProvider provider) {
@@ -986,24 +986,24 @@ class _SpotifyIntegrationScreenState extends State<SpotifyIntegrationScreen> {
   }
 
   /// Shows a dialog for creating a new Spotify playlist.
-  /// 
+  ///
   /// Dialog Features:
   /// - Name input field (required)
   /// - Description input field (optional)
   /// - Cancel and Create actions
-  /// 
+  ///
   /// Form Handling:
   /// - Clears input fields on open
   /// - Validates name is not empty
   /// - Trims whitespace from inputs
   /// - Handles optional description
-  /// 
+  ///
   /// User Flow:
   /// 1. Clear previous input
   /// 2. Show dialog with form
   /// 3. Validate input on submit
   /// 4. Create playlist through provider
-  /// 
+  ///
   /// @param context Build context for dialog display
   /// @param provider SpotifyProvider for playlist creation
   void _showCreatePlaylistDialog(

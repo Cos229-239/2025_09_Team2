@@ -55,8 +55,12 @@ class CollaborativeSession {
       hostId: map['hostId'] as String,
       groupId: map['groupId'] as String?,
       scheduledTime: DateTime.parse(map['scheduledTime'] as String),
-      startTime: map['startTime'] != null ? DateTime.parse(map['startTime'] as String) : null,
-      endTime: map['endTime'] != null ? DateTime.parse(map['endTime'] as String) : null,
+      startTime: map['startTime'] != null
+          ? DateTime.parse(map['startTime'] as String)
+          : null,
+      endTime: map['endTime'] != null
+          ? DateTime.parse(map['endTime'] as String)
+          : null,
       participants: List<String>.from(map['participants'] as List? ?? []),
       subject: map['subject'] as String,
       description: map['description'] as String?,
