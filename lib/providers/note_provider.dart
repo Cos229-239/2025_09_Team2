@@ -231,7 +231,8 @@ class NoteProvider extends ChangeNotifier {
       _notes.removeWhere((note) => note.id == noteId);
       notifyListeners(); // Notify UI of the removal
     } catch (e) {
-      print('Error deleting note: $e');
+      // Use developer.log instead of print for better debugging
+      developer.log('Error deleting note: $e', name: 'NoteProvider');
       // Re-throw to let UI handle the error
       rethrow;
     }
