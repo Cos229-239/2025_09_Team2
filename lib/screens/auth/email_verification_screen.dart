@@ -11,7 +11,7 @@ import '../dashboard_screen.dart';
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
   final String displayName;
-  
+
   const EmailVerificationScreen({
     super.key,
     required this.email,
@@ -19,17 +19,18 @@ class EmailVerificationScreen extends StatefulWidget {
   });
 
   @override
-  State<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
+  State<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final FirebaseAuthService _authService = FirebaseAuthService();
   final FirestoreService _firestoreService = FirestoreService();
-  
+
   // Video controller for mascot
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
-  
+
   // Verification state
   bool _isCheckingVerification = false;
   bool _canResendEmail = true;
@@ -72,7 +73,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         }
       }
     } catch (e) {
-      developer.log('Error initializing video: $e', name: 'EmailVerificationScreen');
+      developer.log('Error initializing video: $e',
+          name: 'EmailVerificationScreen');
     }
   }
 
@@ -80,7 +82,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     // Check email verification status every 3 seconds
     _checkTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!mounted) return;
-      
+
       final isVerified = await _authService.checkEmailVerified();
       if (isVerified) {
         timer.cancel();
@@ -91,7 +93,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   Future<void> _onEmailVerified() async {
     if (!mounted) return;
-    
+
     // Update Firestore to mark email as verified
     final currentUser = _authService.currentUser;
     if (currentUser != null) {
@@ -116,7 +118,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     });
 
     final success = await _authService.sendEmailVerification();
-    
+
     if (mounted) {
       setState(() {
         _isCheckingVerification = false;
@@ -155,7 +157,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Failed to send verification email. Please try again.'),
+            content:
+                Text('Failed to send verification email. Please try again.'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -186,9 +189,18 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.8),
-              Theme.of(context).colorScheme.secondary.withOpacity(0.6),
-              Theme.of(context).colorScheme.tertiary.withOpacity(0.4),
+              Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withAlpha((0.8 * 255).round()),
+              Theme.of(context)
+                  .colorScheme
+                  .secondary
+                  .withAlpha((0.6 * 255).round()),
+              Theme.of(context)
+                  .colorScheme
+                  .tertiary
+                  .withAlpha((0.4 * 255).round()),
             ],
           ),
         ),
@@ -221,11 +233,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           width: MediaQuery.of(context).size.width > 600 ? 200 : 150,
           height: MediaQuery.of(context).size.width > 600 ? 200 : 150,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withAlpha((0.9 * 255).round()),
             borderRadius: BorderRadius.circular(100),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withAlpha((0.1 * 255).round()),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -251,18 +263,18 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         Text(
           'StudyPals',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 32,
-          ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 32,
+              ),
         ),
         const SizedBox(height: 8),
         Text(
           'Your AI-powered study companion',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Colors.white.withOpacity(0.9),
-            fontSize: 16,
-          ),
+                color: Colors.white.withAlpha((0.9 * 255).round()),
+                fontSize: 16,
+              ),
         ),
       ],
     );
@@ -272,11 +284,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: Colors.white.withAlpha((0.95 * 255).round()),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withAlpha((0.1 * 255).round()),
             blurRadius: 20,
             offset: const Offset(0, 5),
           ),
@@ -293,50 +305,59 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           Text(
             'Check Your Email!',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Text(
             'Hi ${widget.displayName}! 👋',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             'We\'ve sent a verification link to:',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            ),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withAlpha((0.7 * 255).round()),
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
             widget.email,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.secondary,
-            ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
           Text(
             'Click the verification link in your email to activate your account and start your study journey!',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
-            ),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withAlpha((0.8 * 255).round()),
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primary
+                  .withAlpha((0.1 * 255).round()),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -351,8 +372,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   child: Text(
                     'This page will automatically redirect you once your email is verified.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                   ),
                 ),
               ],
@@ -403,31 +424,34 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           width: double.infinity,
           height: 56,
           child: OutlinedButton.icon(
-            onPressed: _isCheckingVerification ? null : () async {
-              setState(() {
-                _isCheckingVerification = true;
-              });
-              
-              final isVerified = await _authService.checkEmailVerified();
-              
-              if (mounted) {
-                setState(() {
-                  _isCheckingVerification = false;
-                });
-                
-                if (isVerified) {
-                  await _onEmailVerified();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Email not verified yet. Please check your inbox and click the verification link.'),
-                      backgroundColor: Colors.orange,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              }
-            },
+            onPressed: _isCheckingVerification
+                ? null
+                : () async {
+                    setState(() {
+                      _isCheckingVerification = true;
+                    });
+
+                    final isVerified = await _authService.checkEmailVerified();
+
+                    if (mounted) {
+                      setState(() {
+                        _isCheckingVerification = false;
+                      });
+
+                      if (isVerified) {
+                        await _onEmailVerified();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                                'Email not verified yet. Please check your inbox and click the verification link.'),
+                            backgroundColor: Colors.orange,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  },
             icon: _isCheckingVerification
                 ? const SizedBox(
                     width: 20,
@@ -435,7 +459,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.check_circle_outline),
-            label: Text(_isCheckingVerification ? 'Checking...' : 'I\'ve Verified My Email'),
+            label: Text(_isCheckingVerification
+                ? 'Checking...'
+                : 'I\'ve Verified My Email'),
             style: OutlinedButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.primary,
               side: BorderSide(color: Theme.of(context).colorScheme.primary),
@@ -461,9 +487,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       child: Text(
         'Back to Login',
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Colors.white.withOpacity(0.9),
-          decoration: TextDecoration.underline,
-        ),
+              color: Colors.white.withAlpha((0.9 * 255).round()),
+              decoration: TextDecoration.underline,
+            ),
       ),
     );
   }

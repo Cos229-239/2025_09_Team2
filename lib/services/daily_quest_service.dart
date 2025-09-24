@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/daily_quest.dart';
+import 'firestore_service.dart';
 
 /// Service for managing daily quests and gamification features
 class DailyQuestService {
@@ -10,50 +12,96 @@ class DailyQuestService {
   static const String _lastQuestGenerationKey = 'last_quest_generation';
   static const String _questStatsKey = 'quest_stats';
 
+  // Firestore service instance for database operations
+  final FirestoreService _firestoreService = FirestoreService();
+
+  // Firebase Auth instance for user authentication
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   /// Get all active daily quests for today
   Future<List<DailyQuest>> getTodaysQuests() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return []; // Return empty list if no user logged in
+    }
+
     await _generateDailyQuestsIfNeeded();
 
-    final prefs = await SharedPreferences.getInstance();
-    final questsJson = prefs.getStringList(_questsKey) ?? [];
+    try {
+      // Get quests from Firestore
+      final questMaps = await _firestoreService.getUserDailyQuests(user.uid);
+      final quests = questMaps
+          .map((questMap) => _convertFirestoreToQuest(questMap))
+          .where((quest) => !quest.isExpired)
+          .toList();
 
-    final quests = questsJson
-        .map((json) => DailyQuest.fromJson(jsonDecode(json)))
-        .where((quest) => !quest.isExpired)
-        .toList();
+      // Sort by priority (high to low) then by completion status
+      quests.sort((a, b) {
+        if (a.isCompleted != b.isCompleted) {
+          return a.isCompleted ? 1 : -1; // Incomplete quests first
+        }
+        return b.priority.compareTo(a.priority); // Higher priority first
+      });
 
-    // Sort by priority (high to low) then by completion status
-    quests.sort((a, b) {
-      if (a.isCompleted != b.isCompleted) {
-        return a.isCompleted ? 1 : -1; // Incomplete quests first
-      }
-      return b.priority.compareTo(a.priority); // Higher priority first
-    });
+      return quests;
+    } catch (e) {
+      debugPrint('Error getting today\'s quests: $e');
+      return [];
+    }
+  }
 
-    return quests;
+  /// Helper method to convert Firestore document data to DailyQuest object
+  DailyQuest _convertFirestoreToQuest(Map<String, dynamic> data) {
+    return DailyQuest(
+      id: data['id'] as String,
+      title: data['title'] as String,
+      description: data['description'] as String,
+      type: QuestType.values.firstWhere(
+        (e) => e.toString() == data['type'],
+        orElse: () => QuestType.study,
+      ),
+      targetCount: data['targetCount'] as int,
+      currentProgress: data['currentProgress'] as int? ?? 0,
+      expReward: data['expReward'] as int,
+      createdAt: (data['createdAt'] as dynamic).toDate() as DateTime,
+      expiresAt: (data['expiresAt'] as dynamic).toDate() as DateTime,
+      isCompleted: data['isCompleted'] as bool? ?? false,
+      priority: data['priority'] as int? ?? 2,
+    );
   }
 
   /// Update quest progress
   Future<void> updateQuestProgress(String questId, int progress) async {
-    final quests = await getTodaysQuests();
-    final questIndex = quests.indexWhere((q) => q.id == questId);
+    try {
+      final quests = await getTodaysQuests();
+      final quest = quests.firstWhere((q) => q.id == questId, orElse: () => throw Exception('Quest not found'));
 
-    if (questIndex == -1) return;
+      final wasCompleted = quest.isCompleted;
+      final isNowCompleted = progress >= quest.targetCount;
 
-    final quest = quests[questIndex];
-    final updatedQuest = quest.copyWith(
-      currentProgress: progress,
-      isCompleted: progress >= quest.targetCount,
-    );
+      // Update quest in Firestore
+      final updateData = {
+        'currentProgress': progress,
+        'isCompleted': isNowCompleted,
+      };
 
-    quests[questIndex] = updatedQuest;
-    await _saveQuests(quests);
+      final success = await _firestoreService.updateDailyQuest(questId, updateData);
+      if (!success) {
+        throw Exception('Failed to update quest in Firestore');
+      }
 
-    // If quest was just completed, record stats
-    if (updatedQuest.isCompleted && !quest.isCompleted) {
-      await _recordQuestCompletion(updatedQuest);
-      debugPrint(
-          'Daily quest completed: ${updatedQuest.title} (+${updatedQuest.expReward} EXP)');
+      // If quest was just completed, record stats
+      if (isNowCompleted && !wasCompleted) {
+        final updatedQuest = quest.copyWith(
+          currentProgress: progress,
+          isCompleted: isNowCompleted,
+        );
+        await _recordQuestCompletion(updatedQuest);
+        debugPrint(
+            'Daily quest completed: ${updatedQuest.title} (+${updatedQuest.expReward} EXP)');
+      }
+    } catch (e) {
+      debugPrint('Error updating quest progress: $e');
     }
   }
 
@@ -70,25 +118,35 @@ class DailyQuestService {
 
   /// Mark a quest as completed (for achievement-style quests)
   Future<void> completeQuest(String questId) async {
-    final quests = await getTodaysQuests();
-    final questIndex = quests.indexWhere((q) => q.id == questId);
+    try {
+      final quests = await getTodaysQuests();
+      final quest = quests.firstWhere((q) => q.id == questId, orElse: () => throw Exception('Quest not found'));
 
-    if (questIndex == -1) return;
+      if (quest.isCompleted) return;
 
-    final quest = quests[questIndex];
-    if (quest.isCompleted) return;
+      // Update quest in Firestore
+      final updateData = {
+        'currentProgress': quest.targetCount,
+        'isCompleted': true,
+      };
 
-    final updatedQuest = quest.copyWith(
-      currentProgress: quest.targetCount,
-      isCompleted: true,
-    );
+      final success = await _firestoreService.updateDailyQuest(questId, updateData);
+      if (!success) {
+        throw Exception('Failed to complete quest in Firestore');
+      }
 
-    quests[questIndex] = updatedQuest;
-    await _saveQuests(quests);
-    await _recordQuestCompletion(updatedQuest);
+      final updatedQuest = quest.copyWith(
+        currentProgress: quest.targetCount,
+        isCompleted: true,
+      );
 
-    debugPrint(
-        'Daily quest completed: ${updatedQuest.title} (+${updatedQuest.expReward} EXP)');
+      await _recordQuestCompletion(updatedQuest);
+
+      debugPrint(
+          'Daily quest completed: ${updatedQuest.title} (+${updatedQuest.expReward} EXP)');
+    } catch (e) {
+      debugPrint('Error completing quest: $e');
+    }
   }
 
   /// Get total EXP earned from completed quests today
@@ -181,7 +239,15 @@ class DailyQuestService {
       newQuests.add(bonusQuest);
     }
 
-    await _saveQuests(newQuests);
+    // Save each quest to Firestore
+    final user = _auth.currentUser;
+    if (user != null) {
+      for (final quest in newQuests) {
+        final questData = quest.toJson();
+        questData.remove('id'); // Remove ID as Firestore will generate it
+        await _firestoreService.createDailyQuest(user.uid, questData);
+      }
+    }
   }
 
   /// Clear expired quests

@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/social_learning_service.dart' as service;
-import '../widgets/collaborative_session_room.dart';
 import '../widgets/social/social_widgets.dart';
-import '../models/collaborative_session.dart';
+import '../widgets/sessions_tab.dart';
+import '../providers/social_session_provider.dart';
+import 'profile_settings_screen.dart';
+import 'user_profile_screen.dart';
+import 'chat_screen.dart';
+import 'group_details_screen.dart';
 
 /// Main social learning screen with tabs for different social features
 class SocialScreen extends StatefulWidget {
@@ -28,6 +33,13 @@ class _SocialScreenState extends State<SocialScreen>
   Future<void> _initializeSocialService() async {
     _socialService = service.SocialLearningService();
     await _socialService!.initialize();
+
+    // Initialize social session provider if available
+    if (mounted) {
+      final socialSessionProvider =
+          Provider.of<SocialSessionProvider>(context, listen: false);
+      await socialSessionProvider.initialize();
+    }
 
     // Create default profile if none exists
     if (_socialService!.currentUserProfile == null) {
@@ -422,35 +434,127 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Widget _buildFindPeople() {
-    // Mock suggested users
-    final suggestedUsers = List.generate(
-        10,
-        (index) => service.UserProfile(
-              id: 'suggested_$index',
-              username: 'user_$index',
-              displayName: 'User ${index + 1}',
-              bio: 'Love studying and learning new things!',
-              joinDate: DateTime.now().subtract(Duration(days: index * 10)),
-              level: 10 + index,
-              totalXP: 1000 + (index * 200),
-              title: index > 5 ? 'Advanced' : 'Intermediate',
-              interests: ['Math', 'Science', 'History'][index % 3] == 'Math'
-                  ? ['Math', 'Physics']
-                  : ['Science', 'Biology'],
-            ));
+    return FutureBuilder<List<service.UserProfile>>(
+      future: _socialService?.getUsersForDiscovery(limit: 20) ?? Future.value([]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Finding StudyPal users...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: suggestedUsers.length,
-      itemBuilder: (context, index) {
-        final user = suggestedUsers[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: UserProfileCard(
-            profile: user,
-            onTap: () => _showUserProfile(user),
-            onAddFriendTap: () => _sendFriendRequest(user.id),
-          ),
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Failed to load users',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Please check your connection and try again',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Trigger a rebuild to retry
+                      setState(() {});
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final users = snapshot.data ?? [];
+
+        if (users.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.people_outline,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No users found',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Be the first to invite friends to StudyPals!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final user = users[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: UserProfileCard(
+                profile: user,
+                onTap: () => _showUserProfile(user),
+                onAddFriendTap: () => _sendFriendRequest(user.id),
+              ),
+            );
+          },
         );
       },
     );
@@ -545,41 +649,10 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Widget _buildSessionsTab() {
-    final sessions = _socialService!.myCollaborativeSessions;
-
-    if (sessions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.video_call, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text('No study sessions yet'),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _scheduleSession,
-              icon: const Icon(Icons.add),
-              label: const Text('Schedule Session'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: sessions.length,
-      itemBuilder: (context, index) {
-        final session = sessions[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: CollaborativeSessionCard(
-            session: session,
-            canJoin: true,
-            onTap: () => _showSessionDetails(session),
-            onJoin: () => _joinSession(session),
-          ),
-        );
+    // Use our new comprehensive sessions tab with social session functionality
+    return Consumer<SocialSessionProvider>(
+      builder: (context, provider, child) {
+        return const SessionsTab();
       },
     );
   }
@@ -596,11 +669,8 @@ class _SocialScreenState extends State<SocialScreen>
           onPressed: _createStudyGroup,
           child: const Icon(Icons.group_add),
         );
-      case 3: // Sessions tab
-        return FloatingActionButton(
-          onPressed: _scheduleSession,
-          child: const Icon(Icons.video_call),
-        );
+      case 3: // Sessions tab - handled by the SessionsTab widget itself
+        return null; // The SessionsTab widget manages its own floating action button
       default:
         return null;
     }
@@ -618,16 +688,18 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   void _showProfileSettings() {
-    // TODO: Implement profile settings screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile settings - Coming soon!')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProfileSettingsScreen(),
+      ),
     );
   }
 
   void _showSearchDialog() {
-    // TODO: Implement search functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Search - Coming soon!')),
+    showDialog(
+      context: context,
+      builder: (context) => _SearchUsersDialog(socialService: _socialService!),
     );
   }
 
@@ -645,16 +717,67 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   void _declineFriendRequest(String friendshipId) {
-    // TODO: Implement decline functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Friend request declined')),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Decline Friend Request'),
+        content: const Text(
+          'Are you sure you want to decline this friend request? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _performDeclineFriendRequest(friendshipId);
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Decline'),
+          ),
+        ],
+      ),
     );
   }
 
+  Future<void> _performDeclineFriendRequest(String friendshipId) async {
+    try {
+      final success = await _socialService!.declineFriendRequest(friendshipId);
+
+      if (mounted) {
+        setState(() {}); // Refresh the UI
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Friend request declined'
+                  : 'Failed to decline friend request',
+            ),
+            backgroundColor: success ? Colors.orange : Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error declining friend request: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _showAddFriendDialog() {
-    // TODO: Implement add friend dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add friend - Coming soon!')),
+    showDialog(
+      context: context,
+      builder: (context) => _AddFriendDialog(socialService: _socialService!),
     );
   }
 
@@ -678,31 +801,43 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   void _showUserProfile(service.UserProfile profile) {
-    // TODO: Implement user profile view
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Viewing ${profile.displayName}\'s profile')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserProfileScreen(
+          userProfile: profile,
+          socialService: _socialService!,
+        ),
+      ),
     );
   }
 
   void _startChat(service.UserProfile profile) {
-    // TODO: Implement chat functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Starting chat with ${profile.displayName}')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          otherUser: profile,
+          socialService: _socialService!,
+        ),
+      ),
     );
   }
 
   // Group Methods
   void _createStudyGroup() {
-    // TODO: Implement create study group dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Create study group - Coming soon!')),
+    showDialog(
+      context: context,
+      builder: (context) => CreateStudyGroupDialog(),
     );
   }
 
   void _showGroupDetails(service.StudyGroup group) {
-    // TODO: Implement group details view
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Viewing ${group.name} details')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => GroupDetailsScreen(group: group),
+      ),
     );
   }
 
@@ -725,111 +860,1000 @@ class _SocialScreenState extends State<SocialScreen>
     }
   }
 
-  // Session Methods
-  void _scheduleSession() {
-    // TODO: Implement schedule session dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Schedule session - Coming soon!')),
+  // Session Methods - Now handled by SessionsTab widget
+}
+
+class _SearchUsersDialog extends StatefulWidget {
+  final service.SocialLearningService socialService;
+
+  const _SearchUsersDialog({
+    required this.socialService,
+  });
+
+  @override
+  State<_SearchUsersDialog> createState() => _SearchUsersDialogState();
+}
+
+class _SearchUsersDialogState extends State<_SearchUsersDialog> {
+  final TextEditingController _searchController = TextEditingController();
+  final List<service.UserProfile> _searchResults = [];
+  bool _isSearching = false;
+  String _searchFilter = 'all'; // all, friends, groups, interests
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.7,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Header
+            Row(
+              children: [
+                const Text(
+                  'Search Users',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            // Search Bar
+            TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search by username, display name, or interests...',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+                suffixIcon: _isSearching
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
+              ),
+              onChanged: _onSearchChanged,
+            ),
+
+            const SizedBox(height: 16),
+
+            // Search Filters
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All', 'all'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Friends', 'friends'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Groups', 'groups'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Interests', 'interests'),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Search Results
+            Expanded(
+              child: _buildSearchResults(),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  void _showSessionDetails(service.CollaborativeSession serviceSession) {
-    final modelSession = CollaborativeSession(
-      id: serviceSession.id,
-      name: serviceSession.name,
-      hostId: serviceSession.hostId,
-      subject: serviceSession.subject,
-      scheduledTime: serviceSession.scheduledTime,
-      description: serviceSession.description,
-      participants: serviceSession.participants,
-      groupId: serviceSession.groupId,
-      startTime: serviceSession.startTime,
-      endTime: serviceSession.endTime,
-      sessionData: serviceSession.sessionData,
-      isActive: serviceSession.isActive,
-      isRecorded: serviceSession.isRecorded,
-    );
-
-    // TODO: Implement session details view
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Viewing ${modelSession.name} details')),
+  Widget _buildFilterChip(String label, String value) {
+    final isSelected = _searchFilter == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _searchFilter = value;
+        });
+        _performSearch();
+      },
     );
   }
 
-  Future<void> _joinSession(service.CollaborativeSession serviceSession) async {
-    try {
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
+  Widget _buildSearchResults() {
+    if (_searchController.text.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'Start typing to search for users',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
         ),
       );
+    }
 
-      // Attempt to join the session
-      final success = await _socialService!.joinCollaborativeSession(
-        sessionId: serviceSession.id,
+    if (_isSearching) {
+      return const Center(
+        child: CircularProgressIndicator(),
       );
+    }
 
-      // Close loading indicator
-      if (mounted) {
-        Navigator.pop(context);
-      }
+    if (_searchResults.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'No users found',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
 
-      if (!mounted) return;
-
-      if (success) {
-        // Convert service session to model session for the room
-        final modelSession = CollaborativeSession(
-          id: serviceSession.id,
-          name: serviceSession.name,
-          hostId: serviceSession.hostId,
-          subject: serviceSession.subject,
-          scheduledTime: serviceSession.scheduledTime,
-          description: serviceSession.description,
-          participants: serviceSession.participants,
-          groupId: serviceSession.groupId,
-          startTime: serviceSession.startTime,
-          endTime: serviceSession.endTime,
-          sessionData: serviceSession.sessionData,
-          isActive: serviceSession.isActive,
-          isRecorded: serviceSession.isRecorded,
-        );
-        
-        // Navigate to the session room
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CollaborativeSessionRoom(
-              session: modelSession,
-              onLeave: () => setState(() {}), // Refresh the list when leaving
+    return ListView.builder(
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final user = _searchResults[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              child: Text(
+                user.displayName.isNotEmpty
+                    ? user.displayName[0].toUpperCase()
+                    : user.username[0].toUpperCase(),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            title: Text(user.displayName),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('@${user.username}'),
+                if (user.bio != null && user.bio!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      user.bio!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ),
+                if (user.interests.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Wrap(
+                      spacing: 4,
+                      children: user.interests
+                          .take(3)
+                          .map((interest) => Chip(
+                                label: Text(
+                                  interest,
+                                  style: const TextStyle(fontSize: 10),
+                                ),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              ))
+                          .toList(),
+                    ),
+                  ),
+              ],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.person_add),
+                  onPressed: () => _sendFriendRequest(user),
+                  tooltip: 'Send Friend Request',
+                ),
+                IconButton(
+                  icon: const Icon(Icons.visibility),
+                  onPressed: () => _viewProfile(user),
+                  tooltip: 'View Profile',
+                ),
+              ],
             ),
           ),
         );
-      } else {
+      },
+    );
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _isSearching = true;
+    });
+
+    // Debounce the search
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (_searchController.text == query) {
+        _performSearch();
+      }
+    });
+  }
+
+  void _performSearch() {
+    if (_searchController.text.isEmpty) {
+      setState(() {
+        _searchResults.clear();
+        _isSearching = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+    });
+
+    // Mock search implementation
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        final query = _searchController.text.toLowerCase();
+        final mockUsers = _generateMockSearchResults(query);
+
+        setState(() {
+          _searchResults.clear();
+          _searchResults.addAll(mockUsers);
+          _isSearching = false;
+        });
+      }
+    });
+  }
+
+  List<service.UserProfile> _generateMockSearchResults(String query) {
+    // Generate mock search results based on query
+    final mockUsers = <service.UserProfile>[];
+
+    if (query.contains('math') ||
+        query.contains('science') ||
+        query.contains('study')) {
+      mockUsers.add(service.UserProfile(
+        id: 'search_1',
+        username: 'mathexpert2024',
+        displayName: 'Alex Chen',
+        bio:
+            'Mathematics enthusiast and tutor. Love helping others understand complex concepts!',
+        joinDate: DateTime.now().subtract(const Duration(days: 180)),
+        level: 15,
+        totalXP: 2500,
+        title: 'Math Wizard',
+        interests: ['Mathematics', 'Physics', 'Teaching'],
+        achievements: {},
+        profilePrivacy: service.PrivacyLevel.public,
+        progressPrivacy: service.PrivacyLevel.friends,
+        friendsPrivacy: service.PrivacyLevel.friends,
+        isOnline: true,
+        studyStats: {},
+      ));
+    }
+
+    if (query.contains('prog') ||
+        query.contains('code') ||
+        query.contains('tech')) {
+      mockUsers.add(service.UserProfile(
+        id: 'search_2',
+        username: 'codemaster',
+        displayName: 'Sarah Johnson',
+        bio:
+            'Full-stack developer and computer science student. Always learning new technologies.',
+        joinDate: DateTime.now().subtract(const Duration(days: 90)),
+        level: 12,
+        totalXP: 1800,
+        title: 'Code Ninja',
+        interests: ['Programming', 'Web Development', 'AI'],
+        achievements: {},
+        profilePrivacy: service.PrivacyLevel.public,
+        progressPrivacy: service.PrivacyLevel.public,
+        friendsPrivacy: service.PrivacyLevel.friends,
+        isOnline: false,
+        lastActive: DateTime.now().subtract(const Duration(hours: 2)),
+        studyStats: {},
+      ));
+    }
+
+    if (query.contains('history') ||
+        query.contains('art') ||
+        query.contains('literature')) {
+      mockUsers.add(service.UserProfile(
+        id: 'search_3',
+        username: 'historybuff',
+        displayName: 'Michael Rodriguez',
+        bio:
+            'History major with a passion for ancient civilizations and art history.',
+        joinDate: DateTime.now().subtract(const Duration(days: 45)),
+        level: 8,
+        totalXP: 950,
+        title: 'Time Traveler',
+        interests: ['History', 'Art', 'Literature'],
+        achievements: {},
+        profilePrivacy: service.PrivacyLevel.friends,
+        progressPrivacy: service.PrivacyLevel.friends,
+        friendsPrivacy: service.PrivacyLevel.private,
+        isOnline: true,
+        studyStats: {},
+      ));
+    }
+
+    // Always add a few general results
+    if (mockUsers.length < 3) {
+      mockUsers.add(service.UserProfile(
+        id: 'search_general_1',
+        username: 'studypal_${query.hashCode.abs()}',
+        displayName: 'Study Buddy',
+        bio: 'Looking for study partners and learning communities!',
+        joinDate: DateTime.now().subtract(const Duration(days: 30)),
+        level: 5,
+        totalXP: 500,
+        title: 'Beginner',
+        interests: ['Learning', 'Growth', 'Collaboration'],
+        achievements: {},
+        profilePrivacy: service.PrivacyLevel.public,
+        progressPrivacy: service.PrivacyLevel.friends,
+        friendsPrivacy: service.PrivacyLevel.friends,
+        isOnline: false,
+        lastActive: DateTime.now().subtract(const Duration(hours: 8)),
+        studyStats: {},
+      ));
+    }
+
+    return mockUsers;
+  }
+
+  Future<void> _sendFriendRequest(service.UserProfile user) async {
+    try {
+      final success = await widget.socialService.sendFriendRequest(
+        friendId: user.id,
+        message:
+            'Hi! I found your profile through search. Would you like to be study partners?',
+      );
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to join session. Please try again.'),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Friend request sent to ${user.displayName}!'
+                  : 'Failed to send friend request',
+            ),
+            backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
       }
     } catch (e) {
-      // Close loading indicator if still showing
       if (mounted) {
-        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending friend request: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _viewProfile(service.UserProfile user) {
+    Navigator.of(context).pop(); // Close search dialog
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserProfileScreen(
+          userProfile: user,
+          socialService: widget.socialService,
+        ),
+      ),
+    );
+  }
+}
+
+class _AddFriendDialog extends StatefulWidget {
+  final service.SocialLearningService socialService;
+
+  const _AddFriendDialog({
+    required this.socialService,
+  });
+
+  @override
+  State<_AddFriendDialog> createState() => _AddFriendDialogState();
+}
+
+class _AddFriendDialogState extends State<_AddFriendDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
+  final _messageController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _messageController.text = 'Hi! I\'d like to connect and study together. 📚';
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.person_add),
+          SizedBox(width: 8),
+          Text('Add Friend'),
+        ],
+      ),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Send a friend request to connect with other study partners.',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _usernameController,
+              decoration: const InputDecoration(
+                labelText: 'Username or Email',
+                hintText: '@username or email@example.com',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
+              textInputAction: TextInputAction.next,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a username or email';
+                }
+
+                final trimmed = value.trim();
+
+                // Check for email format
+                if (trimmed.contains('@')) {
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(trimmed)) {
+                    return 'Please enter a valid email address';
+                  }
+                } else {
+                  // Check username format
+                  if (trimmed.startsWith('@')) {
+                    final username = trimmed.substring(1);
+                    if (username.length < 3) {
+                      return 'Username must be at least 3 characters';
+                    }
+                    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(username)) {
+                      return 'Username can only contain letters, numbers, and underscores';
+                    }
+                  } else {
+                    if (trimmed.length < 3) {
+                      return 'Username must be at least 3 characters';
+                    }
+                    if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(trimmed)) {
+                      return 'Username can only contain letters, numbers, and underscores';
+                    }
+                  }
+                }
+
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _messageController,
+              decoration: const InputDecoration(
+                labelText: 'Message (Optional)',
+                hintText: 'Add a personal message...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              maxLength: 200,
+              validator: (value) {
+                if (value != null && value.length > 200) {
+                  return 'Message cannot exceed 200 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.info_outline, size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'The user will receive a notification about your friend request.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _isLoading ? null : _sendFriendRequest,
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Send Request'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _sendFriendRequest() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final input = _usernameController.text.trim();
+      String friendId;
+
+      // Convert username/email to user ID (in a real app, this would involve API calls)
+      if (input.contains('@')) {
+        // Email case - simulate finding user by email
+        friendId = 'user_${input.hashCode.abs()}';
+      } else {
+        // Username case
+        final username = input.startsWith('@') ? input.substring(1) : input;
+        friendId = 'user_${username.hashCode.abs()}';
       }
 
-      if (!mounted) return;
-
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error joining session: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+      final success = await widget.socialService.sendFriendRequest(
+        friendId: friendId,
+        message: _messageController.text.trim().isEmpty
+            ? 'Hi! I\'d like to connect and study together.'
+            : _messageController.text.trim(),
       );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success
+                  ? 'Friend request sent successfully!'
+                  : 'Failed to send friend request. User may not exist or request already sent.',
+            ),
+            backgroundColor: success ? Colors.green : Colors.orange,
+            action: success
+                ? null
+                : SnackBarAction(
+                    label: 'Search',
+                    onPressed: () {
+                      // Open search dialog to help find the user
+                      showDialog(
+                        context: context,
+                        builder: (context) => _SearchUsersDialog(
+                          socialService: widget.socialService,
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending friend request: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
+  }
+}
+
+class CreateStudyGroupDialog extends StatefulWidget {
+  const CreateStudyGroupDialog({super.key});
+
+  @override
+  State<CreateStudyGroupDialog> createState() => _CreateStudyGroupDialogState();
+}
+
+class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _groupNameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String _selectedSubject = 'Mathematics';
+  String _privacy = 'Public';
+  int _maxMembers = 20;
+  bool _allowInvites = true;
+  bool _requireApproval = false;
+  final List<String> _selectedTopics = [];
+
+  final List<String> _subjects = [
+    'Mathematics',
+    'Science',
+    'History',
+    'Literature',
+    'Computer Science',
+    'Languages',
+    'Arts',
+    'Business',
+    'Medicine',
+    'Engineering',
+    'Psychology',
+    'Philosophy',
+    'Other'
+  ];
+
+  final List<String> _availableTopics = [
+    'Exam Prep',
+    'Homework Help',
+    'Research Projects',
+    'Discussion Groups',
+    'Study Sessions',
+    'Note Sharing',
+    'Quiz Practice',
+    'Peer Review',
+    'Group Projects',
+    'Tutoring'
+  ];
+
+  @override
+  void dispose() {
+    _groupNameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.8,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Create Study Group',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Group Name
+                      Text(
+                        'Group Name *',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _groupNameController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter group name...',
+                          prefixIcon: Icon(Icons.group),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Group name is required';
+                          }
+                          if (value.trim().length < 3) {
+                            return 'Group name must be at least 3 characters';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Description
+                      Text(
+                        'Description',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _descriptionController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Describe your study group...',
+                          prefixIcon: Icon(Icons.description),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Subject
+                      Text(
+                        'Subject *',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedSubject,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.school),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        items: _subjects.map((subject) {
+                          return DropdownMenuItem(
+                            value: subject,
+                            child: Text(subject),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedSubject = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Topics
+                      Text(
+                        'Study Topics',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _availableTopics.map((topic) {
+                          final isSelected = _selectedTopics.contains(topic);
+                          return FilterChip(
+                            label: Text(topic),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedTopics.add(topic);
+                                } else {
+                                  _selectedTopics.remove(topic);
+                                }
+                              });
+                            },
+                            backgroundColor: isSelected
+                                ? Theme.of(context).colorScheme.primaryContainer
+                                : null,
+                            selectedColor:
+                                Theme.of(context).colorScheme.primaryContainer,
+                            checkmarkColor: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Privacy Settings
+                      Text(
+                        'Privacy',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      SegmentedButton<String>(
+                        segments: const [
+                          ButtonSegment(value: 'Public', label: Text('Public')),
+                          ButtonSegment(
+                              value: 'Private', label: Text('Private')),
+                        ],
+                        selected: {_privacy},
+                        onSelectionChanged: (selection) {
+                          setState(() {
+                            _privacy = selection.first;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Max Members
+                      Text(
+                        'Maximum Members: $_maxMembers',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      const SizedBox(height: 8),
+                      Slider(
+                        value: _maxMembers.toDouble(),
+                        min: 2,
+                        max: 100,
+                        divisions: 98,
+                        onChanged: (value) {
+                          setState(() {
+                            _maxMembers = value.round();
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Group Settings
+                      SwitchListTile(
+                        title: Text('Allow members to invite others'),
+                        subtitle: Text(
+                            'Members can send invitations to join the group'),
+                        value: _allowInvites,
+                        onChanged: (value) {
+                          setState(() {
+                            _allowInvites = value;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      SwitchListTile(
+                        title: Text('Require approval to join'),
+                        subtitle: Text('Admin approval needed for new members'),
+                        value: _requireApproval,
+                        onChanged: (value) {
+                          setState(() {
+                            _requireApproval = value;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _createGroup,
+                  icon: Icon(Icons.add),
+                  label: Text('Create Group'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _createGroup() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Show success and close dialog
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                  'Study group "${_groupNameController.text}" created successfully!'),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
 }

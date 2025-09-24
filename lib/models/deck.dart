@@ -48,7 +48,7 @@ class Deck {
             DateTime.now(); // Set update time to now if not provided
 
   /// Converts the Deck object to a JSON map for database storage or API transmission
-  /// @return Map<String, dynamic> containing all deck data in JSON format
+  /// @return Map containing all deck data in JSON format
   Map<String, dynamic> toJson() => {
         'id': id, // Store unique identifier
         'title': title, // Store display title

@@ -12,7 +12,8 @@ class CollaborativeSessionRoom extends StatefulWidget {
   });
 
   @override
-  State<CollaborativeSessionRoom> createState() => _CollaborativeSessionRoomState();
+  State<CollaborativeSessionRoom> createState() =>
+      _CollaborativeSessionRoomState();
 }
 
 class _CollaborativeSessionRoomState extends State<CollaborativeSessionRoom> {
@@ -210,7 +211,8 @@ class _CollaborativeSessionRoomState extends State<CollaborativeSessionRoom> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Leave Session?'),
-        content: const Text('Are you sure you want to leave this study session?'),
+        content:
+            const Text('Are you sure you want to leave this study session?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

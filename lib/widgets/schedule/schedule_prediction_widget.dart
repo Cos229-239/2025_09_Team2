@@ -57,14 +57,14 @@ class SchedulePredictionWidget extends StatelessWidget {
               Text(
                 'Optimal Study Time',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
               Text(
                 'AI-Predicted Schedule',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+                      color: Colors.grey.shade600,
+                    ),
               ),
             ],
           ),
@@ -77,7 +77,7 @@ class SchedulePredictionWidget extends StatelessWidget {
   Widget _buildDifficultyChip() {
     final color = _getDifficultyColor();
     final label = _getDifficultyLabel();
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -237,10 +237,10 @@ class SchedulePredictionWidget extends StatelessWidget {
 
   Widget _buildConfidenceIndicator() {
     final confidence = prediction.confidenceScore;
-    final color = confidence > 0.7 
-        ? Colors.green 
-        : confidence > 0.4 
-            ? Colors.orange 
+    final color = confidence > 0.7
+        ? Colors.green
+        : confidence > 0.4
+            ? Colors.orange
             : Colors.red;
 
     return Column(
@@ -347,21 +347,37 @@ class SchedulePredictionWidget extends StatelessWidget {
 
   String _formatDateTime(DateTime dateTime) {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+
     final dayName = days[dateTime.weekday - 1];
     final monthName = months[dateTime.month - 1];
-    final hour = dateTime.hour == 0 ? 12 : dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    final hour = dateTime.hour == 0
+        ? 12
+        : dateTime.hour > 12
+            ? dateTime.hour - 12
+            : dateTime.hour;
     final amPm = dateTime.hour < 12 ? 'AM' : 'PM';
-    
+
     return '$dayName, $monthName ${dateTime.day} at $hour:${dateTime.minute.toString().padLeft(2, '0')} $amPm';
   }
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
-    
+
     if (hours > 0) {
       return '${hours}h ${minutes}m';
     } else {
@@ -409,8 +425,8 @@ class _WeeklyScheduleWidgetState extends State<WeeklyScheduleWidget> {
           children: [
             _buildHeader(context),
             const SizedBox(height: 16),
-            ...widget.weeklyPredictions.map((prediction) => 
-              _buildDaySchedule(prediction),
+            ...widget.weeklyPredictions.map(
+              (prediction) => _buildDaySchedule(prediction),
             ),
           ],
         ),
@@ -430,8 +446,8 @@ class _WeeklyScheduleWidgetState extends State<WeeklyScheduleWidget> {
         Text(
           'Weekly Study Schedule',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );
@@ -484,7 +500,7 @@ class _WeeklyScheduleWidgetState extends State<WeeklyScheduleWidget> {
   Widget _buildDayInfo(DateTime dateTime) {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final dayName = days[dateTime.weekday - 1];
-    
+
     return SizedBox(
       width: 60,
       child: Column(
@@ -510,7 +526,11 @@ class _WeeklyScheduleWidgetState extends State<WeeklyScheduleWidget> {
   }
 
   String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour == 0 ? 12 : dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
+    final hour = dateTime.hour == 0
+        ? 12
+        : dateTime.hour > 12
+            ? dateTime.hour - 12
+            : dateTime.hour;
     final amPm = dateTime.hour < 12 ? 'AM' : 'PM';
     return '$hour:${dateTime.minute.toString().padLeft(2, '0')} $amPm';
   }
@@ -518,7 +538,7 @@ class _WeeklyScheduleWidgetState extends State<WeeklyScheduleWidget> {
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
-    
+
     if (hours > 0) {
       return '${hours}h ${minutes}m';
     } else {
@@ -548,12 +568,12 @@ class OptimizationFactorsWidget extends StatelessWidget {
             Text(
               'Optimization Factors',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
-            ...optimizationFactors.entries.map((entry) =>
-              _buildFactorRow(entry.key, entry.value),
+            ...optimizationFactors.entries.map(
+              (entry) => _buildFactorRow(entry.key, entry.value),
             ),
           ],
         ),
@@ -563,10 +583,10 @@ class OptimizationFactorsWidget extends StatelessWidget {
 
   Widget _buildFactorRow(String factor, dynamic value) {
     final percentage = value is double ? (value * 100).round() : 0;
-    final color = percentage > 70 
-        ? Colors.green 
-        : percentage > 40 
-            ? Colors.orange 
+    final color = percentage > 70
+        ? Colors.green
+        : percentage > 40
+            ? Colors.orange
             : Colors.red;
 
     return Padding(
@@ -623,9 +643,10 @@ class OptimizationFactorsWidget extends StatelessWidget {
       case 'subjectRelevance':
         return 'Subject Priority';
       default:
-        return factor.split('_').map((word) => 
-          word[0].toUpperCase() + word.substring(1)
-        ).join(' ');
+        return factor
+            .split('_')
+            .map((word) => word[0].toUpperCase() + word.substring(1))
+            .join(' ');
     }
   }
 }

@@ -1,8 +1,8 @@
 /// StudyPals Spotify Integration - Data Models
-/// 
+///
 /// This file contains all the data models for Spotify API responses.
 /// These models replace the JavaScript objects used in the HTML file.
-/// 
+///
 /// Key Components:
 /// - SpotifyUser: Represents a Spotify user profile with their details
 /// - SpotifyPlaylist: Represents a playlist with its metadata and tracks
@@ -10,23 +10,23 @@
 /// - SpotifyArtist: Represents an artist with basic information
 /// - SpotifyAlbum: Represents an album with its metadata
 /// - SpotifyTokens: Manages authentication tokens and their expiration
-/// 
+///
 /// Each model class includes:
 /// - Constructor for object creation
 /// - fromJson factory for deserialization from API responses
 /// - toJson method for serialization when needed
 /// - Getter methods for computed properties
-/// 
+///
 /// Usage:
 /// These models are used throughout the application to maintain type safety
 /// and provide a consistent interface for Spotify data.
-/// 
+///
 /// @author StudyPals Team
 /// @version 1.0.0
 library;
 
 /// Represents a Spotify user profile containing their basic information and preferences.
-/// 
+///
 /// Properties:
 /// - id: Unique identifier for the user
 /// - displayName: User's display name (can be null)

@@ -7,7 +7,7 @@ import '../../models/study_pal_persona.dart';
 ///// AI Study Assistant Chat Widget
 class AITutorChat extends StatefulWidget {
   final StudyPalPersona? selectedPersona;
-  
+
   const AITutorChat({super.key, this.selectedPersona});
 
   @override
@@ -29,7 +29,7 @@ class _AITutorChatState extends State<AITutorChat> {
             ? persona.getResponseTemplate(EmotionalState.neutral)
             : "Hello! I'm ${persona.name}, your ${persona.type.displayName.toLowerCase()}. ${persona.description}"
         : "Hi! I'm your AI study assistant. Ask me for study tips, motivation, or help with your learning!";
-    
+
     _messages.add(ChatMessage(
       text: welcomeMessage,
       isFromUser: false,
@@ -129,10 +129,11 @@ class _AITutorChatState extends State<AITutorChat> {
         final aiService = aiProvider.aiService;
         if (aiService.isConfigured) {
           final persona = widget.selectedPersona;
-          final systemPrompt = persona?.generateSystemPrompt() ?? '''
+          final systemPrompt = persona?.generateSystemPrompt() ??
+              '''
 You are a helpful AI study assistant for StudyPals. Provide helpful, encouraging responses about studying, learning, or academic success. Keep responses under 150 words and friendly.
           ''';
-          
+
           final prompt = '''
 $systemPrompt
 

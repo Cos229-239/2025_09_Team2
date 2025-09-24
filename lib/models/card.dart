@@ -141,7 +141,7 @@ class FlashCard {
   }
 
   /// Converts the FlashCard object to a JSON map for database storage or API transmission
-  /// @return Map<String, dynamic> containing all card data in JSON format
+  /// @return Map containing all card data in JSON format
   Map<String, dynamic> toJson() => {
         'id': id, // Store unique identifier
         'deckId': deckId, // Store parent deck reference

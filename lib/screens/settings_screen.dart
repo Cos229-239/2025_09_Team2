@@ -9,7 +9,7 @@ import 'spotify_integration_screen.dart';
 /// Provides access to all app configuration options including AI settings
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
-  
+
   /// Get preview color for theme dropdown
   Color _getThemePreviewColor(String themeName) {
     switch (themeName) {
@@ -183,7 +183,8 @@ class SettingsScreen extends StatelessWidget {
                             ),
                             DropdownButton<String>(
                               value: themeProvider.currentThemeName,
-                              items: themeProvider.availableThemes.map((themeName) {
+                              items: themeProvider.availableThemes
+                                  .map((themeName) {
                                 return DropdownMenuItem(
                                   value: themeName,
                                   child: Row(
@@ -194,7 +195,8 @@ class SettingsScreen extends StatelessWidget {
                                         height: 16,
                                         margin: const EdgeInsets.only(right: 8),
                                         decoration: BoxDecoration(
-                                          color: _getThemePreviewColor(themeName),
+                                          color:
+                                              _getThemePreviewColor(themeName),
                                           shape: BoxShape.circle,
                                         ),
                                       ),

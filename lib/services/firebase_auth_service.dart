@@ -9,12 +9,12 @@ class FirebaseAuthService extends ChangeNotifier {
   FirebaseAuthService._internal();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+
   // Current user state
   User? get currentUser => _auth.currentUser;
   bool get isUserLoggedIn => _auth.currentUser != null;
   bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
-  
+
   // Stream to listen to auth state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
@@ -27,7 +27,8 @@ class FirebaseAuthService extends ChangeNotifier {
   }) async {
     try {
       // Create user account
-      final UserCredential credential = await _auth.createUserWithEmailAndPassword(
+      final UserCredential credential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -36,15 +37,16 @@ class FirebaseAuthService extends ChangeNotifier {
       if (user != null) {
         // Update display name
         await user.updateDisplayName(displayName);
-        
+
         // Send email verification
         await sendEmailVerification();
-        
+
         notifyListeners();
         return AuthResult(
           success: true,
           user: user,
-          message: 'Account created successfully! Please check your email for verification.',
+          message:
+              'Account created successfully! Please check your email for verification.',
         );
       } else {
         return AuthResult(
@@ -82,17 +84,18 @@ class FirebaseAuthService extends ChangeNotifier {
         // Check if email is verified
         await user.reload(); // Refresh user data
         final updatedUser = _auth.currentUser;
-        
+
         if (updatedUser?.emailVerified == false) {
           // User exists but email not verified
           await signOut(); // Sign out immediately
           return AuthResult(
             success: false,
-            message: 'Please verify your email before logging in. Check your inbox for the verification link.',
+            message:
+                'Please verify your email before logging in. Check your inbox for the verification link.',
             needsEmailVerification: true,
           );
         }
-        
+
         notifyListeners();
         return AuthResult(
           success: true,

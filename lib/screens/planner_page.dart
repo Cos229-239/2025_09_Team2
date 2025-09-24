@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/task.dart';
-import '../../widgets/planner/calendar_widget.dart';
+import '../../widgets/planner/enhanced_calendar_widget.dart';
 import '../../widgets/planner/planner_item_widget.dart';
 import '../../providers/planner_provider.dart';
 
@@ -22,9 +22,10 @@ class PlannerPage extends StatelessWidget {
 
           return Column(
             children: [
-              CalendarWidget(
-                events: provider.events,
-                onDaySelected: (date) => provider.setSelectedDay(date),
+              EnhancedCalendarWidget(
+                onDaySelected: (date, events) => provider.setSelectedDay(date),
+                showFilters: false,
+                showEventList: false,
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),

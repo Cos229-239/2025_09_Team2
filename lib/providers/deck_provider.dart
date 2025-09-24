@@ -2,10 +2,14 @@
 import 'package:flutter/foundation.dart';
 // Import developer tools for logging and debugging
 import 'dart:developer' as developer;
+// Import Firebase Auth for user authentication
+import 'package:firebase_auth/firebase_auth.dart';
 // Import Deck model to manage flashcard deck collections
 import 'package:studypals/models/deck.dart';
 // Import FlashCard model for individual card operations within decks
 import 'package:studypals/models/card.dart';
+// Import Firestore service for persistence
+import 'package:studypals/services/firestore_service.dart';
 
 /// Provider for managing flashcard deck collections and card operations
 /// Handles deck CRUD operations, card management within decks, and loading states
@@ -16,6 +20,10 @@ class DeckProvider extends ChangeNotifier {
 
   // Loading state flag to show/hide loading indicators in UI
   bool _isLoading = false;
+
+  // Firebase services for persistence
+  final FirestoreService _firestoreService = FirestoreService();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   /// Getter for accessing the list of all decks (read-only)
   /// @return List of Deck objects containing all flashcard collections
@@ -32,12 +40,23 @@ class DeckProvider extends ChangeNotifier {
     notifyListeners(); // Notify UI to show loading indicators
 
     try {
-      // Database loading will be implemented when repository layer is added
-      // For now, create sample data for development and testing purposes
-      // _decks = await DeckRepository.getAllDecks();
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('No user logged in, cannot load decks');
+        _decks = [];
+        return;
+      }
 
-      // For now, add sample data for development and testing
-      _decks = [
+      // Load decks from Firestore
+      final deckData = await _firestoreService.getUserDecks(currentUser.uid);
+      _decks = deckData.map((data) => _convertFirestoreToDeck(data)).toList();
+      
+      debugPrint('✅ Loaded ${_decks.length} decks from Firestore');
+
+      // If no decks found, add sample data for development
+      if (_decks.isEmpty) {
+        debugPrint('No decks found, adding sample deck');
+        _decks = [
         Deck(
           id: '1', // Sample deck ID
           title: 'Sample Deck', // Sample deck title
@@ -101,21 +120,111 @@ class DeckProvider extends ChangeNotifier {
             ),
           ], // Sample cards for testing
         ),
-      ];
+        ];
+      }
     } catch (e) {
       // Log any errors that occur during deck loading for debugging
       developer.log('Error loading decks: $e', name: 'DeckProvider');
+      _decks = []; // Set empty list on error
     } finally {
       _isLoading = false; // Always clear loading state
       notifyListeners(); // Notify UI that loading is complete
     }
   }
 
+  /// Convert Firestore document data to Deck object
+  Deck _convertFirestoreToDeck(Map<String, dynamic> data) {
+    final cardsData = data['cards'] as List<dynamic>? ?? [];
+    final cards = cardsData.map((cardData) => _convertFirestoreToCard(cardData)).toList();
+    
+    return Deck(
+      id: data['id'] ?? '',
+      title: data['title'] ?? 'Untitled Deck',
+      tags: List<String>.from(data['tags'] ?? []),
+      cards: cards,
+      createdAt: data['createdAt']?.toDate() ?? DateTime.now(),
+      updatedAt: data['updatedAt']?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  /// Convert Firestore card data to FlashCard object
+  FlashCard _convertFirestoreToCard(Map<String, dynamic> cardData) {
+    return FlashCard(
+      id: cardData['id'] ?? '',
+      deckId: cardData['deckId'] ?? '',
+      type: _parseCardType(cardData['type']),
+      front: cardData['front'] ?? '',
+      back: cardData['back'] ?? '',
+      multipleChoiceOptions: List<String>.from(cardData['multipleChoiceOptions'] ?? []),
+      correctAnswerIndex: cardData['correctAnswerIndex'] ?? 0,
+      difficulty: cardData['difficulty'] ?? 1,
+    );
+  }
+
+  /// Parse card type from string
+  CardType _parseCardType(String? typeString) {
+    switch (typeString) {
+      case 'basic':
+        return CardType.basic;
+      case 'cloze':
+        return CardType.cloze;
+      case 'reverse':
+        return CardType.reverse;
+      default:
+        return CardType.basic;
+    }
+  }
+
   /// Adds a new deck to the collection and notifies listeners
   /// @param deck - The Deck object to add to the collection
-  void addDeck(Deck deck) {
-    _decks.add(deck); // Add deck to the list
-    notifyListeners(); // Notify UI of the addition
+  Future<void> addDeck(Deck deck) async {
+    _decks.add(deck); // Add deck to the list locally first
+    notifyListeners(); // Notify UI of the addition immediately
+    
+    // Save to Firestore in the background
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      try {
+        final cardsData = deck.cards.map((card) => _convertCardToFirestore(card)).toList();
+        final deckId = await _firestoreService.createDeckWithCards(
+          uid: currentUser.uid,
+          title: deck.title,
+          description: '', // Deck model doesn't have description
+          cards: cardsData,
+          category: deck.tags.isEmpty ? 'General' : deck.tags.first,
+          tags: deck.tags,
+        );
+        
+        if (deckId != null) {
+          debugPrint('✅ Saved deck to Firestore with ID: $deckId');
+          
+          // Update the local deck with the Firestore ID
+          final deckIndex = _decks.indexWhere((d) => d.id == deck.id);
+          if (deckIndex != -1) {
+            _decks[deckIndex] = deck.copyWith(id: deckId);
+            notifyListeners();
+          }
+        } else {
+          debugPrint('❌ Failed to save deck to Firestore');
+        }
+      } catch (e) {
+        debugPrint('❌ Error saving deck to Firestore: $e');
+      }
+    }
+  }
+
+  /// Convert FlashCard to Firestore format
+  Map<String, dynamic> _convertCardToFirestore(FlashCard card) {
+    return {
+      'id': card.id,
+      'deckId': card.deckId,
+      'type': card.type.name,
+      'front': card.front,
+      'back': card.back,
+      'multipleChoiceOptions': card.multipleChoiceOptions,
+      'correctAnswerIndex': card.correctAnswerIndex,
+      'difficulty': card.difficulty,
+    };
   }
 
   /// Updates an existing deck in the collection by ID

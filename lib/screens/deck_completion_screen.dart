@@ -54,9 +54,9 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                 color: Colors.green.shade600,
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Completion message
             Text(
               'Congratulations!',
@@ -67,9 +67,9 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Text(
               'You\'ve successfully studied all ${widget.deck.cards.length} flashcards in "${widget.deck.title}"',
               style: const TextStyle(
@@ -78,9 +78,9 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 48),
-            
+
             // Stats card
             Container(
               width: double.infinity,
@@ -112,9 +112,9 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 48),
-            
+
             // Action buttons
             if (_canTakeQuiz) ...[
               // Quiz button
@@ -123,7 +123,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                 height: 56,
                 child: ElevatedButton.icon(
                   onPressed: _isStartingQuiz ? null : _startQuiz,
-                  icon: _isStartingQuiz 
+                  icon: _isStartingQuiz
                       ? const SizedBox(
                           width: 20,
                           height: 20,
@@ -133,7 +133,8 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                           ),
                         )
                       : const Icon(Icons.quiz),
-                  label: Text(_isStartingQuiz ? 'Starting Quiz...' : 'Take Deck Quiz'),
+                  label: Text(
+                      _isStartingQuiz ? 'Starting Quiz...' : 'Take Deck Quiz'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade600,
                     foregroundColor: Colors.white,
@@ -147,9 +148,9 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               Text(
                 'Test your knowledge with $_quizEligibleCards multiple choice questions',
                 style: TextStyle(
@@ -158,7 +159,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 32),
             ] else ...[
               // No quiz available message
@@ -197,10 +198,10 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
             ],
-            
+
             // Secondary actions
             Row(
               children: [
@@ -215,9 +216,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                     ),
                   ),
                 ),
-                
                 const SizedBox(width: 16),
-                
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.of(context).pop(),
@@ -237,7 +236,8 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Container(
@@ -282,13 +282,14 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
     try {
       // Initialize quiz service
       await _quizService.initialize();
-      
+
       // Create quiz session
       final session = await _quizService.createQuizSession(widget.deck);
-      
+
       if (session == null) {
         // Show error message
-        final statusMessage = await _quizService.getDeckQuizStatusDescription(widget.deck.id);
+        final statusMessage =
+            await _quizService.getDeckQuizStatusDescription(widget.deck.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
