@@ -1,16 +1,15 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import 'dart:math';
 import '../models/card.dart';
 import '../models/deck.dart';
 import '../models/quiz_session.dart';
 import '../providers/pet_provider.dart';
+import 'firestore_service.dart';
 
 /// Service for managing deck-based quiz sessions and scoring
+/// Integrates with Firestore for persistent storage and cross-device sync
 class QuizService {
-  static const String _quizSessionsKey = 'quiz_sessions';
-  static const String _deckCooldownsKey = 'deck_cooldowns';
+  final FirestoreService _firestoreService = FirestoreService();
   static const Duration _deckCooldownPeriod =
       Duration(hours: 12); // Longer cooldown for deck quizzes
 
@@ -23,6 +22,7 @@ class QuizService {
   /// Initialize the service by loading cached data
   Future<void> initialize() async {
     await _loadDeckCooldowns();
+    await loadQuizSessions();
   }
 
   /// Creates a new quiz session for a deck
@@ -500,9 +500,7 @@ class QuizService {
     _activeSessions.clear();
     _deckCooldowns.clear();
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_quizSessionsKey);
-    await prefs.remove(_deckCooldownsKey);
+    await _firestoreService.clearAllQuizData();
 
     debugPrint('All quiz data cleared');
   }
@@ -516,35 +514,68 @@ class QuizService {
   }
 
   Future<void> _setDeckCooldown(String deckId) async {
+    final cooldownEnd = DateTime.now().add(_deckCooldownPeriod);
     _deckCooldowns[deckId] = DateTime.now();
-    await _saveDeckCooldowns();
-  }
-
-  Future<void> _saveDeckCooldowns() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cooldownsJson = _deckCooldowns.map(
-      (deckId, timestamp) => MapEntry(deckId, timestamp.toIso8601String()),
-    );
-    await prefs.setString(_deckCooldownsKey, jsonEncode(cooldownsJson));
+    await _firestoreService.saveDeckCooldown(deckId, cooldownEnd);
   }
 
   Future<void> _loadDeckCooldowns() async {
-    final prefs = await SharedPreferences.getInstance();
-    final cooldownsString = prefs.getString(_deckCooldownsKey);
-
-    if (cooldownsString != null) {
-      final cooldownsJson = jsonDecode(cooldownsString) as Map<String, dynamic>;
+    try {
+      final cooldowns = await _firestoreService.getAllDeckCooldowns();
       _deckCooldowns.clear();
-      cooldownsJson.forEach((deckId, timestampString) {
-        _deckCooldowns[deckId] = DateTime.parse(timestampString);
+      cooldowns.forEach((deckId, cooldownEnd) {
+        // Store the start time (now - cooldown period) for compatibility
+        final startTime = cooldownEnd.subtract(_deckCooldownPeriod);
+        _deckCooldowns[deckId] = startTime;
       });
+    } catch (e) {
+      debugPrint('Error loading deck cooldowns: $e');
     }
   }
 
   Future<void> _saveQuizSession(QuizSession session) async {
-    // In a real app, this would save to a database
-    // For now, we just keep it in memory
-    debugPrint('Quiz session ${session.id} saved (in-memory only)');
+    try {
+      await _firestoreService.saveQuizSession(session);
+      debugPrint('Quiz session ${session.id} saved to Firestore');
+    } catch (e) {
+      debugPrint('Error saving quiz session: $e');
+    }
+  }
+
+  /// Load quiz sessions from Firestore for initialization
+  Future<void> loadQuizSessions() async {
+    try {
+      final sessions = await _firestoreService.getQuizSessions();
+      _activeSessions.clear();
+      for (final session in sessions) {
+        if (!session.isCompleted) {
+          _activeSessions[session.id] = session;
+        }
+      }
+      debugPrint('Loaded ${_activeSessions.length} active quiz sessions from Firestore');
+    } catch (e) {
+      debugPrint('Error loading quiz sessions: $e');
+    }
+  }
+
+  /// Get quiz sessions for a specific deck from Firestore
+  Future<List<QuizSession>> getQuizSessionsForDeck(String deckId) async {
+    try {
+      return await _firestoreService.getQuizSessionsForDeck(deckId);
+    } catch (e) {
+      debugPrint('Error getting quiz sessions for deck: $e');
+      return [];
+    }
+  }
+
+  /// Get all quiz sessions (completed and active) from Firestore
+  Future<List<QuizSession>> getAllQuizSessions() async {
+    try {
+      return await _firestoreService.getQuizSessions();
+    } catch (e) {
+      debugPrint('Error getting all quiz sessions: $e');
+      return [];
+    }
   }
 
   // Legacy methods for backward compatibility with individual card quizzes

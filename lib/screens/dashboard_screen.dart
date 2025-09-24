@@ -362,8 +362,12 @@ class _DashboardHomeState extends State<DashboardHome>
               // XP Progress bar at the top
               Consumer<PetProvider>(
                 builder: (context, petProvider, child) {
-                  final currentXP = petProvider.currentPet.xp;
-                  final maxXP = petProvider.currentPet.xpForNextLevel;
+                  final pet = petProvider.currentPet;
+                  if (pet == null) {
+                    return const Text('Loading pet...');
+                  }
+                  final currentXP = pet.xp;
+                  final maxXP = pet.xpForNextLevel;
                   final progress = currentXP / maxXP;
 
                   return Column(
@@ -1154,6 +1158,20 @@ class _DashboardHomeState extends State<DashboardHome>
       child: Consumer<PetProvider>(
         builder: (context, petProvider, child) {
           final pet = petProvider.currentPet;
+          
+          if (pet == null) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Loading your Study Pal...'),
+                ],
+              ),
+            );
+          }
+          
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(

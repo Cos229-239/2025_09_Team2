@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import '../models/pet.dart';
+import '../models/review.dart';
+import '../models/quiz_session.dart';
 
 /// Service for handling Firestore database operations
 /// Manages user profiles, study data, and app data storage
@@ -1178,6 +1181,771 @@ class FirestoreService {
       if (kDebugMode) {
         print('Error batch updating user profile: $e');
       }
+      return false;
+    }
+  }
+
+  // ==================== Pet CRUD Operations ====================
+  
+  /// Get user's pet data from Firestore
+  /// @param userId - User ID to get pet for (optional, uses current user if null)
+  /// @return Pet object or null if no pet exists
+  Future<Pet?> getUserPet([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for pet retrieval');
+        return null;
+      }
+
+      final doc = await usersCollection.doc(uid).collection('pets').doc('currentPet').get();
+      
+      if (!doc.exists) {
+        if (kDebugMode) print('ℹ️ No pet found for user: $uid');
+        return null;
+      }
+
+      final data = doc.data() as Map<String, dynamic>;
+      return Pet.fromJson(data);
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving pet: $e');
+      return null;
+    }
+  }
+
+  /// Save or update user's pet data in Firestore
+  /// @param pet - Pet object to save
+  /// @param userId - User ID to save pet for (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> savePet(Pet pet, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for pet save');
+        return false;
+      }
+
+      await usersCollection.doc(uid).collection('pets').doc('currentPet').set(
+        pet.toJson(),
+        SetOptions(merge: true)
+      );
+
+      if (kDebugMode) print('✅ Pet saved successfully for user: $uid');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error saving pet: $e');
+      return false;
+    }
+  }
+
+  /// Create a new pet for user (typically when they first start)
+  /// @param species - Type of pet to create
+  /// @param userId - User ID to create pet for (optional, uses current user if null)
+  /// @return Created Pet object or null if failed
+  Future<Pet?> createPet(PetSpecies species, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for pet creation');
+        return null;
+      }
+
+      final newPet = Pet(
+        userId: uid,
+        species: species,
+        level: 1,
+        xp: 0,
+        gear: [],
+        mood: PetMood.happy,
+      );
+
+      final success = await savePet(newPet, uid);
+      if (success) {
+        if (kDebugMode) print('✅ New pet created for user: $uid');
+        return newPet;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error creating pet: $e');
+      return null;
+    }
+  }
+
+  /// Add XP to user's pet and handle level-ups
+  /// @param xpAmount - Amount of XP to add
+  /// @param userId - User ID to add XP for (optional, uses current user if null)
+  /// @return Updated Pet object or null if failed
+  Future<Pet?> addPetXP(int xpAmount, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for pet XP update');
+        return null;
+      }
+
+      final currentPet = await getUserPet(uid);
+      if (currentPet == null) {
+        if (kDebugMode) print('ℹ️ No pet found, creating default cat pet');
+        final newPet = await createPet(PetSpecies.cat, uid);
+        if (newPet != null) {
+          return addPetXP(xpAmount, uid); // Recursively add XP to new pet
+        }
+        return null;
+      }
+
+      final updatedPet = currentPet.addXP(xpAmount);
+      final success = await savePet(updatedPet, uid);
+      
+      if (success) {
+        if (kDebugMode) {
+          print('✅ Added $xpAmount XP to pet. Level: ${updatedPet.level}, XP: ${updatedPet.xp}');
+        }
+        return updatedPet;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error adding pet XP: $e');
+      return null;
+    }
+  }
+
+  /// Get real-time stream of user's pet data
+  /// @param userId - User ID to stream pet for (optional, uses current user if null)
+  /// @return Stream of Pet objects
+  Stream<Pet?> getPetStream([String? userId]) {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for pet stream');
+        return Stream.value(null);
+      }
+
+      return usersCollection
+          .doc(uid)
+          .collection('pets')
+          .doc('currentPet')
+          .snapshots()
+          .map((doc) {
+            if (!doc.exists) return null;
+            final data = doc.data() as Map<String, dynamic>;
+            return Pet.fromJson(data);
+          });
+    } catch (e) {
+      if (kDebugMode) print('❌ Error creating pet stream: $e');
+      return Stream.value(null);
+    }
+  }
+
+  /// Delete user's pet data (use with caution)
+  /// @param userId - User ID to delete pet for (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> deletePet([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for pet deletion');
+        return false;
+      }
+
+      await usersCollection.doc(uid).collection('pets').doc('currentPet').delete();
+      
+      if (kDebugMode) print('✅ Pet deleted for user: $uid');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error deleting pet: $e');
+      return false;
+    }
+  }
+
+  // ==================== Review CRUD Operations (SRS System) ====================
+  
+  /// Get all reviews for a specific user
+  /// @param userId - User ID to get reviews for (optional, uses current user if null)
+  /// @return List of Review objects
+  Future<List<Review>> getUserReviews([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for reviews retrieval');
+        return [];
+      }
+
+      final querySnapshot = await usersCollection
+          .doc(uid)
+          .collection('reviews')
+          .get();
+
+      final reviews = querySnapshot.docs
+          .map((doc) => Review.fromJson(doc.data()))
+          .toList();
+
+      if (kDebugMode) print('✅ Retrieved ${reviews.length} reviews for user: $uid');
+      return reviews;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving reviews: $e');
+      return [];
+    }
+  }
+
+  /// Get review for a specific card
+  /// @param cardId - Card ID to get review for
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Review object or null if not found
+  Future<Review?> getCardReview(String cardId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for card review retrieval');
+        return null;
+      }
+
+      final doc = await usersCollection
+          .doc(uid)
+          .collection('reviews')
+          .doc(cardId)
+          .get();
+
+      if (!doc.exists) {
+        return null;
+      }
+
+      return Review.fromJson(doc.data()!);
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving card review: $e');
+      return null;
+    }
+  }
+
+  /// Get reviews that are due for study
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return List of Review objects that are due now or overdue
+  Future<List<Review>> getDueReviews([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for due reviews retrieval');
+        return [];
+      }
+
+      final now = DateTime.now();
+      final querySnapshot = await usersCollection
+          .doc(uid)
+          .collection('reviews')
+          .where('dueAt', isLessThanOrEqualTo: now.toIso8601String())
+          .get();
+
+      final dueReviews = querySnapshot.docs
+          .map((doc) => Review.fromJson(doc.data()))
+          .toList();
+
+      if (kDebugMode) print('✅ Retrieved ${dueReviews.length} due reviews for user: $uid');
+      return dueReviews;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving due reviews: $e');
+      return [];
+    }
+  }
+
+  /// Save or update a review
+  /// @param review - Review object to save
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> saveReview(Review review, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for review save');
+        return false;
+      }
+
+      await usersCollection
+          .doc(uid)
+          .collection('reviews')
+          .doc(review.cardId)
+          .set(review.toJson(), SetOptions(merge: true));
+
+      if (kDebugMode) print('✅ Review saved for card: ${review.cardId}');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error saving review: $e');
+      return false;
+    }
+  }
+
+  /// Create a new review for a card (first time studying)
+  /// @param cardId - ID of the card to create review for
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Created Review object or null if failed
+  Future<Review?> createReview(String cardId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for review creation');
+        return null;
+      }
+
+      final newReview = Review(
+        cardId: cardId,
+        userId: uid,
+        dueAt: DateTime.now(), // Due immediately for first review
+        ease: 2.5, // Default ease factor
+        interval: 1, // Start with 1-day interval
+        reps: 0, // No repetitions yet
+      );
+
+      final success = await saveReview(newReview, uid);
+      if (success) {
+        if (kDebugMode) print('✅ New review created for card: $cardId');
+        return newReview;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error creating review: $e');
+      return null;
+    }
+  }
+
+  /// Update review after user completes a study session
+  /// @param cardId - ID of the card that was studied
+  /// @param grade - User's performance grade
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Updated Review object or null if failed
+  Future<Review?> updateReviewWithGrade(String cardId, ReviewGrade grade, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for review update');
+        return null;
+      }
+
+      // Get current review or create if doesn't exist
+      Review? currentReview = await getCardReview(cardId, uid);
+      currentReview ??= await createReview(cardId, uid);
+      
+      if (currentReview == null) {
+        if (kDebugMode) print('❌ Failed to get or create review for card: $cardId');
+        return null;
+      }
+
+      // Update review with the grade using SM-2 algorithm
+      final updatedReview = currentReview.updateWithGrade(grade);
+      
+      final success = await saveReview(updatedReview, uid);
+      if (success) {
+        if (kDebugMode) {
+          print('✅ Review updated for card: $cardId, Grade: $grade, Next due: ${updatedReview.dueAt}');
+        }
+        return updatedReview;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error updating review with grade: $e');
+      return null;
+    }
+  }
+
+  /// Get real-time stream of due reviews
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Stream of due Review objects
+  Stream<List<Review>> getDueReviewsStream([String? userId]) {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for due reviews stream');
+        return Stream.value([]);
+      }
+
+      final now = DateTime.now();
+      return usersCollection
+          .doc(uid)
+          .collection('reviews')
+          .where('dueAt', isLessThanOrEqualTo: now.toIso8601String())
+          .snapshots()
+          .map((snapshot) {
+            return snapshot.docs
+                .map((doc) => Review.fromJson(doc.data()))
+                .toList();
+          });
+    } catch (e) {
+      if (kDebugMode) print('❌ Error creating due reviews stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  /// Delete a review (use with caution)
+  /// @param cardId - ID of the card review to delete
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> deleteReview(String cardId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for review deletion');
+        return false;
+      }
+
+      await usersCollection
+          .doc(uid)
+          .collection('reviews')
+          .doc(cardId)
+          .delete();
+
+      if (kDebugMode) print('✅ Review deleted for card: $cardId');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error deleting review: $e');
+      return false;
+    }
+  }
+
+  /// Get review statistics for analytics
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Map with review statistics
+  Future<Map<String, dynamic>> getReviewStats([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for review stats');
+        return {};
+      }
+
+      final reviews = await getUserReviews(uid);
+      final now = DateTime.now();
+      
+      final dueCount = reviews.where((r) => r.dueAt.isBefore(now) || r.dueAt.isAtSameMomentAs(now)).length;
+      final totalCards = reviews.length;
+      final averageEase = reviews.isEmpty ? 0.0 : reviews.map((r) => r.ease).reduce((a, b) => a + b) / reviews.length;
+      final totalReps = reviews.map((r) => r.reps).fold(0, (a, b) => a + b);
+
+      final stats = {
+        'totalCards': totalCards,
+        'dueCards': dueCount,
+        'averageEase': averageEase,
+        'totalRepetitions': totalReps,
+        'timestamp': FieldValue.serverTimestamp(),
+      };
+
+      if (kDebugMode) print('✅ Review stats calculated: $stats');
+      return stats;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error calculating review stats: $e');
+      return {};
+    }
+  }
+
+  // ==================== Quiz Session CRUD Operations ====================
+  
+  /// Save a quiz session to Firestore
+  /// @param session - QuizSession object to save
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> saveQuizSession(QuizSession session, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for quiz session save');
+        return false;
+      }
+
+      await usersCollection
+          .doc(uid)
+          .collection('quizSessions')
+          .doc(session.id)
+          .set(session.toJson(), SetOptions(merge: true));
+
+      if (kDebugMode) print('✅ Quiz session saved: ${session.id}');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error saving quiz session: $e');
+      return false;
+    }
+  }
+
+  /// Get a specific quiz session by ID
+  /// @param sessionId - ID of the quiz session
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return QuizSession object or null if not found
+  Future<QuizSession?> getQuizSession(String sessionId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for quiz session retrieval');
+        return null;
+      }
+
+      final doc = await usersCollection
+          .doc(uid)
+          .collection('quizSessions')
+          .doc(sessionId)
+          .get();
+
+      if (!doc.exists) {
+        return null;
+      }
+
+      return QuizSession.fromJson(doc.data()!);
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving quiz session: $e');
+      return null;
+    }
+  }
+
+  /// Get all quiz sessions for a user
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return List of QuizSession objects
+  Future<List<QuizSession>> getQuizSessions([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for quiz sessions retrieval');
+        return [];
+      }
+
+      final querySnapshot = await usersCollection
+          .doc(uid)
+          .collection('quizSessions')
+          .orderBy('startTime', descending: true)
+          .get();
+
+      final sessions = querySnapshot.docs
+          .map((doc) => QuizSession.fromJson(doc.data()))
+          .toList();
+
+      if (kDebugMode) print('✅ Retrieved ${sessions.length} quiz sessions for user: $uid');
+      return sessions;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving quiz sessions: $e');
+      return [];
+    }
+  }
+
+  /// Get quiz sessions for a specific deck
+  /// @param deckId - ID of the deck
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return List of QuizSession objects for the deck
+  Future<List<QuizSession>> getQuizSessionsForDeck(String deckId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for deck quiz sessions retrieval');
+        return [];
+      }
+
+      final querySnapshot = await usersCollection
+          .doc(uid)
+          .collection('quizSessions')
+          .where('deckId', isEqualTo: deckId)
+          .orderBy('startTime', descending: true)
+          .get();
+
+      final sessions = querySnapshot.docs
+          .map((doc) => QuizSession.fromJson(doc.data()))
+          .toList();
+
+      if (kDebugMode) print('✅ Retrieved ${sessions.length} quiz sessions for deck: $deckId');
+      return sessions;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving deck quiz sessions: $e');
+      return [];
+    }
+  }
+
+  /// Delete a quiz session
+  /// @param sessionId - ID of the session to delete
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> deleteQuizSession(String sessionId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for quiz session deletion');
+        return false;
+      }
+
+      await usersCollection
+          .doc(uid)
+          .collection('quizSessions')
+          .doc(sessionId)
+          .delete();
+
+      if (kDebugMode) print('✅ Quiz session deleted: $sessionId');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error deleting quiz session: $e');
+      return false;
+    }
+  }
+
+  // ==================== Deck Cooldown CRUD Operations ====================
+  
+  /// Save deck cooldown data to Firestore
+  /// @param deckId - ID of the deck
+  /// @param cooldownEnd - When the cooldown ends
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> saveDeckCooldown(String deckId, DateTime cooldownEnd, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for deck cooldown save');
+        return false;
+      }
+
+      await usersCollection
+          .doc(uid)
+          .collection('deckCooldowns')
+          .doc(deckId)
+          .set({
+            'deckId': deckId,
+            'cooldownEnd': cooldownEnd.toIso8601String(),
+            'createdAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+      if (kDebugMode) print('✅ Deck cooldown saved: $deckId until $cooldownEnd');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error saving deck cooldown: $e');
+      return false;
+    }
+  }
+
+  /// Get deck cooldown data
+  /// @param deckId - ID of the deck
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Cooldown end time or null if no cooldown
+  Future<DateTime?> getDeckCooldown(String deckId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for deck cooldown retrieval');
+        return null;
+      }
+
+      final doc = await usersCollection
+          .doc(uid)
+          .collection('deckCooldowns')
+          .doc(deckId)
+          .get();
+
+      if (!doc.exists) {
+        return null;
+      }
+
+      final data = doc.data()!;
+      final cooldownEndString = data['cooldownEnd'] as String;
+      final cooldownEnd = DateTime.parse(cooldownEndString);
+      
+      // Check if cooldown has expired
+      if (cooldownEnd.isBefore(DateTime.now())) {
+        // Cooldown expired, delete the document
+        await doc.reference.delete();
+        return null;
+      }
+
+      return cooldownEnd;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving deck cooldown: $e');
+      return null;
+    }
+  }
+
+  /// Get all active deck cooldowns
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Map of deckId to cooldown end time
+  Future<Map<String, DateTime>> getAllDeckCooldowns([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for deck cooldowns retrieval');
+        return {};
+      }
+
+      final now = DateTime.now();
+      final querySnapshot = await usersCollection
+          .doc(uid)
+          .collection('deckCooldowns')
+          .where('cooldownEnd', isGreaterThan: now.toIso8601String())
+          .get();
+
+      final cooldowns = <String, DateTime>{};
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final deckId = data['deckId'] as String;
+        final cooldownEnd = DateTime.parse(data['cooldownEnd'] as String);
+        cooldowns[deckId] = cooldownEnd;
+      }
+
+      if (kDebugMode) print('✅ Retrieved ${cooldowns.length} active deck cooldowns');
+      return cooldowns;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error retrieving deck cooldowns: $e');
+      return {};
+    }
+  }
+
+  /// Remove deck cooldown (e.g., when cooldown expires)
+  /// @param deckId - ID of the deck
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> removeDeckCooldown(String deckId, [String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for deck cooldown removal');
+        return false;
+      }
+
+      await usersCollection
+          .doc(uid)
+          .collection('deckCooldowns')
+          .doc(deckId)
+          .delete();
+
+      if (kDebugMode) print('✅ Deck cooldown removed: $deckId');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error removing deck cooldown: $e');
+      return false;
+    }
+  }
+
+  /// Clear all quiz data (sessions and cooldowns) for testing/reset
+  /// @param userId - User ID (optional, uses current user if null)
+  /// @return Success status
+  Future<bool> clearAllQuizData([String? userId]) async {
+    try {
+      final String uid = userId ?? _auth.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        if (kDebugMode) print('❌ No user ID provided for quiz data clearing');
+        return false;
+      }
+
+      final batch = _firestore.batch();
+      
+      // Delete all quiz sessions
+      final sessionsSnapshot = await usersCollection
+          .doc(uid)
+          .collection('quizSessions')
+          .get();
+      for (final doc in sessionsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      // Delete all deck cooldowns
+      final cooldownsSnapshot = await usersCollection
+          .doc(uid)
+          .collection('deckCooldowns')
+          .get();
+      for (final doc in cooldownsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+      
+      if (kDebugMode) print('✅ All quiz data cleared for user: $uid');
+      return true;
+    } catch (e) {
+      if (kDebugMode) print('❌ Error clearing quiz data: $e');
       return false;
     }
   }

@@ -513,9 +513,11 @@ class CalendarProvider with ChangeNotifier {
     _removeEventsByType(CalendarEventType.petCare);
 
     // Create pet care reminders for different care types
-    for (final careType in PetCareType.values) {
-      final event = CalendarEvent.fromPetCare(pet, careType);
-      _addEventToMap(event);
+    if (pet != null) {
+      for (final careType in PetCareType.values) {
+        final event = CalendarEvent.fromPetCare(pet, careType);
+        _addEventToMap(event);
+      }
     }
   }
 

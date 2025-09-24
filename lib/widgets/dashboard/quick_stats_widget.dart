@@ -33,14 +33,14 @@ class QuickStatsWidget extends StatelessWidget {
             .length;
         final totalTasks = taskProvider.tasks.length;
 
-        // Get review statistics from SRS provider
-        final reviewStats = srsProvider.getReviewStats();
-
         // Get deck count from deck provider
         final totalDecks = deckProvider.decks.length;
 
         // Get current pet data for level display
         final pet = petProvider.currentPet;
+        
+        // Get review statistics (using local stats for immediate display)
+        final dueReviews = srsProvider.dueCount;
 
         // Card container providing elevation and material design appearance
         return Card(
@@ -96,7 +96,7 @@ class QuickStatsWidget extends StatelessWidget {
                         icon: Icons.quiz, // Quiz icon for reviews
                         label: 'Reviews Today', // Label for daily review count
                         value:
-                            '${reviewStats['reviewedToday']}', // Reviews completed today
+                            '$dueReviews', // Reviews due today
                         color:
                             Colors.orange, // Orange color for review progress
                       ),
@@ -108,7 +108,7 @@ class QuickStatsWidget extends StatelessWidget {
                         context,
                         icon: Icons.pets, // Pet paw icon for gamification
                         label: 'Pet Level', // Label for pet progression
-                        value: '${pet.level}', // Current pet level
+                        value: '${pet?.level ?? 0}', // Current pet level
                         color: Colors.purple, // Purple color for pet stats
                       ),
                     ),
