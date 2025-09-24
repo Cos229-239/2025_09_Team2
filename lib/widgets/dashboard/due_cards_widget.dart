@@ -7,6 +7,20 @@ import 'package:studypals/providers/srs_provider.dart';
 // Import DeckProvider for accessing flashcard deck data
 import 'package:studypals/providers/deck_provider.dart';
 
+// TODO: Due Cards Widget - Missing Review Screen Integration
+// - Start Review button shows "coming soon" message instead of actual review
+// - No navigation to dedicated spaced repetition review screen
+// - Missing review progress tracking during session
+// - No difficulty adjustment based on user performance
+// - Missing review statistics and analytics
+// - No customizable review batch sizes
+// - Missing streak tracking and motivation features
+// - No integration with study session timing
+// - Missing review reminders and notifications
+// - No adaptive scheduling based on performance patterns
+// - Missing review quality metrics (response time, accuracy)
+// - No gamification elements for review sessions
+
 /// Widget displaying flashcard review status and due cards count
 /// Shows review progress, due card count, and provides quick access to review session
 /// Part of the dashboard providing immediate visibility into spaced repetition progress

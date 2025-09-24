@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../services/social_learning_service.dart';
 
+// TODO: Social Widgets - Missing Real Social Features
+// - All social functionality depends on placeholder service implementations
+// - No real user authentication or profile management
+// - Missing real-time messaging and video call integration
+// - No push notifications for social activities
+// - Missing content moderation and safety features
+// - No privacy controls and data protection
+// - Missing friend suggestions and discovery algorithms
+// - No integration with external social platforms
+// - Missing reporting and blocking functionality
+// - No social analytics and engagement tracking
+// - Missing social gamification features
+// - No advanced group management and permissions
+
 /// Widget for displaying user profile card
 class UserProfileCard extends StatelessWidget {
   final UserProfile profile;

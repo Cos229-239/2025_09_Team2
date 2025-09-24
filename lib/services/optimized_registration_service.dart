@@ -7,6 +7,22 @@ import 'firestore_service.dart';
 import 'firebase_auth_service.dart';
 
 /// Optimized registration service with performance improvements
+/// 
+/// TODO: OPTIMIZED REGISTRATION SERVICE IMPLEMENTATION GAPS
+/// - Current implementation has good performance optimization but missing key features
+/// - Debug mode email verification bypass is security risk for production
+/// - Need to implement proper production-ready email verification workflow
+/// - Missing integration with user onboarding and tutorial system
+/// - Need to implement proper error analytics and registration funnel tracking
+/// - Missing batch operations for user profile initialization
+/// - Need to implement proper rollback mechanisms for failed registrations
+/// - Missing integration with user preference initialization
+/// - Need to implement proper duplicate account detection and merging
+/// - Missing integration with referral and invitation system
+/// - Need to implement proper user segmentation and cohort tracking
+/// - Missing integration with push notification setup during registration
+/// - Need to implement proper GDPR compliance and data retention setup
+/// - Missing integration with user analytics and behavior tracking initialization
 class OptimizedRegistrationService {
   final FirebaseAuthService _authService = FirebaseAuthService();
   final FirestoreService _firestoreService = FirestoreService();

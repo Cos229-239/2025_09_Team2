@@ -1,3 +1,17 @@
+// TODO: Dashboard Screen - Major Integration and Feature Gaps
+// - All providers load data but many have placeholder implementations
+// - No real-time data synchronization with Firebase
+// - Missing pull-to-refresh functionality
+// - No offline mode support with sync when reconnected
+// - Missing personalized dashboard customization
+// - No dashboard analytics or usage tracking
+// - Missing quick actions and shortcuts
+// - No widget reordering or customization
+// - Missing search functionality across all data
+// - No batch operations or bulk actions
+// - Missing dashboard performance optimization
+// - No accessibility features for screen readers
+
 // Import Flutter's material design components for UI elements
 import 'package:flutter/material.dart';
 // Import Provider package for accessing state management across widgets

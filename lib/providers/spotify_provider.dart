@@ -9,6 +9,25 @@ enum SpotifyConnectionState {
   error,
 }
 
+/// TODO: CRITICAL SPOTIFY PROVIDER IMPLEMENTATION GAPS
+/// - Current implementation is 100% PLACEHOLDER - NO REAL SPOTIFY FUNCTIONALITY
+/// - Need to implement actual Spotify Web API integration and state management
+/// - Missing real-time music playback state synchronization
+/// - Need to implement proper error handling and retry mechanisms for API failures
+/// - Missing integration with Flutter audio/media player for actual music playback
+/// - Need to implement proper authentication token refresh and management
+/// - Missing deep linking integration for OAuth callback handling
+/// - Need to implement proper playlist and track caching for offline access
+/// - Missing integration with study session music controls and focus modes
+/// - Need to implement proper music recommendation based on study context
+/// - Missing integration with background audio and media session controls
+/// - Need to implement proper Spotify Connect device management
+/// - Missing music analytics and listening habit tracking for study optimization
+/// - Need to implement proper subscription status checking and premium features
+/// - Missing integration with do-not-disturb and study mode settings
+/// - Need to implement proper cross-platform state synchronization
+/// - Missing integration with study effectiveness tracking based on music choice
+/// - Need to implement proper cleanup and logout functionality
 class SpotifyProvider with ChangeNotifier {
   final SpotifyService _spotifyService = SpotifyService();
 
@@ -33,6 +52,16 @@ class SpotifyProvider with ChangeNotifier {
   bool get isAuthenticated => _spotifyService.isAuthenticated;
 
   /// Initialize the provider
+  /// 
+  /// TODO: INITIALIZATION CRITICAL IMPROVEMENTS NEEDED
+  /// - Current initialization only checks mock authentication status
+  /// - Need to implement proper Spotify API connectivity verification
+  /// - Missing proper error handling for network failures and API timeouts
+  /// - Need to implement background token refresh scheduling
+  /// - Missing integration with device audio permissions and capabilities
+  /// - Need to implement proper user preference loading for music settings
+  /// - Missing integration with study session context and music recommendations
+  /// - Need to implement proper offline mode handling and cached data loading
   Future<void> initialize() async {
     _setLoading(true);
     try {

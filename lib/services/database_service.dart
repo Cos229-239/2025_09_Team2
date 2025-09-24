@@ -11,6 +11,16 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 /// Database service managing SQLite database operations for StudyPals app
 /// Handles database initialization, table creation, and provides database instance
 /// Supports both mobile (native SQLite) and web (SQLite via WebAssembly) platforms
+/// 
+/// TODO: CRITICAL DATABASE SERVICE LEGACY CODE - SHOULD BE REMOVED
+/// - This entire service is LEGACY and should be deleted - replaced by FirestoreService
+/// - Current implementation uses deprecated SQLite approach instead of cloud Firestore
+/// - All data operations should go through FirestoreService for cloud sync and scalability
+/// - Migration to Firestore is complete for most features, this file remains unused
+/// - Need to verify no remaining references to this service exist in codebase
+/// - Delete this file and remove all imports/dependencies once verification complete
+/// - Any remaining SQLite database files should be cleaned up during app initialization
+/// - Add migration helper to move any local SQLite data to Firestore if needed
 class DatabaseService {
   // Static database instance - singleton pattern ensures one database connection
   static Database? _database;

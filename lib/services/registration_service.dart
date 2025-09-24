@@ -7,6 +7,22 @@ import 'firestore_service.dart';
 
 /// Comprehensive registration service that handles user registration with Firebase
 /// Includes validation, security measures, and error handling
+/// 
+/// TODO: REGISTRATION SERVICE IMPLEMENTATION IMPROVEMENTS NEEDED
+/// - Current implementation has good structure but missing several security features
+/// - Need to implement proper email verification workflow with customized templates
+/// - Missing integration with user profile picture upload during registration
+/// - Need to implement proper username availability checking with real-time feedback
+/// - Missing integration with social media registration (Google, Apple, Facebook)
+/// - Need to implement proper phone number verification with SMS codes
+/// - Missing captcha/bot protection for registration forms
+/// - Need to implement proper audit logging for registration attempts and failures
+/// - Missing integration with user analytics and registration funnel tracking
+/// - Need to implement proper onboarding flow after successful registration
+/// - Missing integration with referrer tracking and user acquisition analytics
+/// - Need to implement proper cleanup of failed/incomplete registrations
+/// - Missing integration with user preferences initialization during registration
+/// - Need to implement proper error reporting and monitoring for registration failures
 class RegistrationService {
   static final RegistrationService _instance = RegistrationService._internal();
   factory RegistrationService() => _instance;

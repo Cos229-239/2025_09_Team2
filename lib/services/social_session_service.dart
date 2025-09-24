@@ -5,6 +5,26 @@ import 'dart:math';
 
 import '../models/social_session.dart';
 
+/// TODO: CRITICAL SOCIAL SESSION SERVICE IMPLEMENTATION GAPS
+/// - Current implementation uses ONLY SharedPreferences - NO REAL SOCIAL FUNCTIONALITY
+/// - All social features are MOCK DATA with fake friends and sessions
+/// - Need to implement complete Firebase/Firestore integration for real social sessions
+/// - Missing real-time session synchronization across all participants
+/// - Need to implement actual user invitation and acceptance system
+/// - Missing integration with real-time messaging and collaboration features
+/// - Need to implement proper session recording and playback functionality
+/// - Missing integration with video calling and screen sharing capabilities
+/// - Need to implement proper session moderation and host controls
+/// - Missing integration with calendar for session scheduling and reminders
+/// - Need to implement proper session analytics and participation tracking
+/// - Missing integration with study materials sharing and collaboration
+/// - Need to implement proper session security and privacy controls
+/// - Missing integration with push notifications for session updates
+/// - Need to implement proper bandwidth and performance optimization
+/// - Missing integration with user presence and availability status
+/// - Need to implement proper session backup and recovery mechanisms
+/// - Missing integration with social learning effectiveness tracking
+
 // TODO: FIRESTORE INTEGRATION NEEDED - Social sessions using SharedPreferences instead of Firestore
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'firestore_service.dart';

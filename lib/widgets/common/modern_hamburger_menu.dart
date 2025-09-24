@@ -3,6 +3,20 @@ import '../../screens/achievement_screen.dart';
 import '../../screens/social_screen.dart';
 import '../../screens/competitive_screen.dart';
 
+// TODO: Modern Hamburger Menu - Missing Features and Integrations
+// - Settings, Help, and Feedback buttons show "Coming soon" message
+// - No user profile section with avatar and basic info
+// - Missing app version and update notifications
+// - No dark/light theme toggle option
+// - Missing notification settings access
+// - No logout functionality or account management
+// - Missing quick stats or progress overview
+// - No search functionality within menu
+// - Missing recent activities or shortcuts
+// - No accessibility options (font size, contrast)
+// - Missing backup/sync status indicator
+// - No language selection option
+
 /// Modern hamburger menu widget with navigation options
 class ModernHamburgerMenu extends StatelessWidget {
   const ModernHamburgerMenu({super.key});

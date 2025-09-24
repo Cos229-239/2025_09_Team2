@@ -7,12 +7,36 @@ import 'package:studypals/models/card.dart';
 enum AIProvider { openai, google, anthropic, localModel, ollama }
 
 /// AI Service for intelligent study features
+/// 
+/// TODO: CRITICAL AI SERVICE IMPLEMENTATION GAPS
+/// - Need to implement proper API key management and secure storage
+/// - Add comprehensive error handling and retry logic for all AI providers
+/// - Implement token counting and rate limiting to prevent API quota exhaustion
+/// - Add response validation and content filtering for inappropriate AI outputs
+/// - Need to implement proper caching system for AI responses to reduce costs
+/// - Add support for streaming responses for better user experience
+/// - Implement fallback mechanisms when primary AI provider is unavailable
+/// - Need proper prompt engineering validation and injection attack prevention
+/// - Add comprehensive logging and monitoring for AI service usage
+/// - Implement cost tracking and budget management for AI API calls
+/// - Need to add user consent and privacy handling for AI-generated content
+/// - Add support for custom fine-tuned models and domain-specific prompts
 class AIService {
   AIProvider _provider = AIProvider.google;
   String _apiKey = '';
   String _baseUrl = '';
 
   /// Configure the AI service with provider and API key
+  /// 
+  /// TODO: SECURITY AND CONFIGURATION IMPROVEMENTS NEEDED
+  /// - Implement secure API key storage using Flutter Secure Storage
+  /// - Add API key validation and format checking for each provider
+  /// - Need environment-specific configuration management (dev/prod)
+  /// - Add connection testing and health checks during configuration
+  /// - Implement proper error handling for invalid configurations
+  /// - Add support for dynamic provider switching based on availability
+  /// - Need rate limiting configuration per provider
+  /// - Add audit logging for configuration changes
   void configure({
     required AIProvider provider,
     required String apiKey,
@@ -44,6 +68,18 @@ class AIService {
   bool get isConfigured => _apiKey.isNotEmpty && _baseUrl.isNotEmpty;
 
   /// Generate flashcards from study text
+  /// 
+  /// TODO: AI FLASHCARD GENERATION CRITICAL IMPROVEMENTS NEEDED
+  /// - Current implementation uses basic pattern matching, not true AI generation
+  /// - Need to implement proper content analysis and difficulty assessment
+  /// - Add support for different question types (multiple choice, fill-in-blank, etc.)
+  /// - Implement context-aware question generation based on subject matter
+  /// - Need to add duplicate detection and question quality scoring
+  /// - Add support for image-based flashcards and multimedia content
+  /// - Implement spaced repetition algorithm integration for optimal timing
+  /// - Need better error recovery and partial success handling
+  /// - Add content moderation and appropriateness checking
+  /// - Implement user feedback loop to improve question quality over time
   Future<List<FlashCard>> generateFlashcardsFromText(
       String content, String subject,
       {int count = 5}) async {
@@ -359,6 +395,16 @@ Options: ["CO₂", "H₂O", "O₂", "NaCl"] - correctAnswerIndex: 1
   }
 
   /// Generate motivational pet message
+  /// 
+  /// TODO: PET MESSAGE GENERATION IMPROVEMENTS NEEDED
+  /// - Current implementation has basic fallback only
+  /// - Need to implement personality-based message generation per pet type
+  /// - Add mood tracking and appropriate response generation
+  /// - Implement dynamic message templates based on user progress patterns
+  /// - Need localization support for different languages
+  /// - Add message history to avoid repetition
+  /// - Implement emotional intelligence in response generation
+  /// - Need A/B testing framework for message effectiveness
   Future<String> getPetMessage(
       String petName, Map<String, dynamic> userStats) async {
     try {

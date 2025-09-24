@@ -5,6 +5,22 @@ import 'firebase_auth_service.dart';
 import 'firestore_service.dart';
 
 /// Optimized login service with performance improvements
+/// 
+/// TODO: OPTIMIZED LOGIN SERVICE IMPLEMENTATION IMPROVEMENTS NEEDED
+/// - Current implementation has good performance but missing advanced security features
+/// - Need to implement proper multi-factor authentication (MFA) support
+/// - Missing device fingerprinting and suspicious login detection
+/// - Need to implement proper login attempt rate limiting and brute force protection
+/// - Missing integration with biometric authentication (fingerprint, face ID)
+/// - Need to implement proper session management and concurrent login handling
+/// - Missing integration with login analytics and fraud detection
+/// - Need to implement proper password reset and account recovery workflow
+/// - Missing integration with social login providers (Google, Apple, Facebook)
+/// - Need to implement proper remember me functionality with secure token storage
+/// - Missing integration with user presence tracking and online status
+/// - Need to implement proper logout from all devices functionality
+/// - Missing integration with login audit logging and security monitoring
+/// - Need to implement proper geographic login restrictions and VPN detection
 class OptimizedLoginService {
   final FirebaseAuthService _authService = FirebaseAuthService();
   final FirestoreService _firestoreService = FirestoreService();

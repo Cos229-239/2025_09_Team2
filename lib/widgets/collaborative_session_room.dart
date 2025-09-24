@@ -1,6 +1,25 @@
 import 'package:flutter/material.dart';
 import '../models/collaborative_session.dart';
 
+/// TODO: CRITICAL COLLABORATIVE SESSION ROOM IMPLEMENTATION GAPS
+/// - Current implementation is STATIC UI ONLY - NO REAL COLLABORATION FEATURES
+/// - Need to implement real WebRTC integration for actual video/audio streaming
+/// - Missing real-time collaborative whiteboard and drawing functionality
+/// - Need to implement proper screen sharing capabilities
+/// - Missing real-time chat synchronization with all participants
+/// - Need to implement proper participant management and permissions
+/// - Missing integration with file sharing and document collaboration
+/// - Need to implement proper session recording and playback functionality
+/// - Missing real-time cursor sharing and pointer collaboration
+/// - Need to implement proper bandwidth management and quality adaptation
+/// - Missing integration with study materials and flashcard sharing
+/// - Need to implement proper session moderator controls and features
+/// - Missing accessibility features for collaborative tools
+/// - Need to implement proper error handling for connection failures
+/// - Missing integration with session analytics and participation tracking
+/// - Need to implement proper security and privacy controls for sessions
+/// - Missing integration with calendar and session scheduling
+/// - Need to implement proper cross-platform synchronization and compatibility
 class CollaborativeSessionRoom extends StatefulWidget {
   final CollaborativeSession session;
   final VoidCallback onLeave;

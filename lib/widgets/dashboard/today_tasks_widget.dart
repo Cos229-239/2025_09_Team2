@@ -16,6 +16,20 @@ import 'package:studypals/widgets/common/add_task_sheet.dart';
 import 'package:studypals/screens/quest_list_screen.dart';
 import 'package:studypals/screens/task_list_screen.dart';
 
+// TODO: Today Tasks Widget - Missing Advanced Task Management Features
+// - No task drag-and-drop reordering functionality
+// - Missing task time tracking integration
+// - No bulk actions (complete multiple tasks at once)
+// - Missing task dependency visualization
+// - No smart task suggestions based on user patterns
+// - Missing task progress animations and celebrations
+// - No integration with calendar for time blocking
+// - Missing task reminder notifications
+// - No collaborative task sharing with study partners
+// - Missing task templates for recurring activities
+// - No task analytics and productivity insights
+// - Missing integration with focus/Pomodoro timer
+
 /// Widget displaying today's tasks with quick completion actions
 /// Shows up to 3 tasks due today with add task functionality
 /// Part of the dashboard providing immediate task visibility and management

@@ -12,6 +12,16 @@ import 'dart:convert';
 /// Repository class handling all database operations for Task entities
 /// Provides an abstraction layer between the data layer (SQLite) and business logic
 /// All methods are static since this is a stateless data access object
+/// 
+/// TODO: CRITICAL TASK REPOSITORY LEGACY CODE - SHOULD BE REMOVED  
+/// - This entire repository is LEGACY and should be deleted - replaced by TaskProvider with Firestore
+/// - Current implementation uses deprecated SQLite/SharedPreferences approach
+/// - TaskProvider now handles all task operations through FirestoreService with cloud sync
+/// - This file is no longer used anywhere in the application
+/// - Need to verify no remaining references to TaskRepository exist in codebase
+/// - Delete this file and remove all imports/dependencies once verification complete
+/// - Any remaining SQLite task data should be migrated to Firestore if needed
+/// - SharedPreferences fallback is also deprecated in favor of Firestore integration
 class TaskRepository {
   /// Retrieves all tasks from the database ordered by due date
   /// Tasks without due dates will appear last in the list

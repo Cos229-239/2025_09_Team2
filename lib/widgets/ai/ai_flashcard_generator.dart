@@ -6,6 +6,19 @@ import '../../models/deck.dart';
 import '../../mixins/loading_state_mixin.dart';
 import 'ai_settings_widget.dart';
 
+// TODO: AI Flashcard Generator - Major Implementation Gaps
+// - AI Provider currently uses pattern matching, not real AI
+// - No integration with actual AI services (OpenAI, Gemini, Claude)
+// - Need proper AI configuration management
+// - Missing error handling for AI service failures
+// - No rate limiting or usage tracking
+// - Quality validation of generated flashcards needed
+// - Batch processing for large text inputs missing
+// - No customization of flashcard difficulty levels
+// - Missing support for different flashcard types (image, audio)
+// - No user feedback collection on generated content quality
+// - Template system for different subjects not implemented
+
 /// AI-Powered Flashcard Generator
 class AIFlashcardGenerator extends StatefulWidget {
   const AIFlashcardGenerator({super.key});

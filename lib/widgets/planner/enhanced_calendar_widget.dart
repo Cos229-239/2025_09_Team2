@@ -5,6 +5,20 @@ import 'package:intl/intl.dart';
 import '../../models/calendar_event.dart';
 import '../../providers/calendar_provider.dart';
 
+// TODO: Enhanced Calendar Widget - Missing Advanced Calendar Features
+// - Quick create functionality for events not fully implemented
+// - No drag-and-drop event rescheduling
+// - Missing calendar sync with external services (Google Calendar, Outlook)
+// - No recurring event patterns (daily, weekly, monthly)
+// - Missing time zone support for global users
+// - No calendar sharing and collaboration features
+// - Missing smart conflict detection and resolution
+// - No calendar export functionality (iCal, CSV)
+// - Missing calendar views (agenda, week, day)
+// - No calendar search and filtering by content
+// - Missing calendar printing and offline access
+// - No integration with calendar widgets on mobile platforms
+
 /// Enhanced calendar widget that displays unified events from all StudyPals activities
 /// Supports multiple view modes, filtering, event interaction, and smart scheduling
 class EnhancedCalendarWidget extends StatefulWidget {

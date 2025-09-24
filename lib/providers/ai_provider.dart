@@ -4,6 +4,26 @@ import 'package:studypals/models/card.dart';
 import 'package:studypals/models/user.dart';
 
 /// StudyPals AI Provider for managing intelligent study features
+/// 
+/// TODO: CRITICAL AI PROVIDER IMPLEMENTATION GAPS
+/// - Current implementation has basic structure but limited real AI functionality
+/// - Need to implement proper AI model management and fallback mechanisms
+/// - Missing advanced study analytics and personalized learning recommendations
+/// - Need to implement proper context-aware AI assistance during study sessions
+/// - Missing integration with user learning patterns and performance analytics
+/// - Need to implement proper AI cost tracking and budget management
+/// - Missing integration with multiple AI providers for redundancy and optimization
+/// - Need to implement proper AI response caching and optimization
+/// - Missing integration with study effectiveness tracking and AI recommendation validation
+/// - Need to implement proper AI safety and content filtering mechanisms
+/// - Missing integration with user feedback loops for AI improvement
+/// - Need to implement proper AI model versioning and A/B testing
+/// - Missing integration with real-time study assistance and tutoring features
+/// - Need to implement proper AI personalization based on learning style and preferences
+/// - Missing integration with collaborative AI features for group study
+/// - Need to implement proper AI privacy and data handling compliance
+/// - Missing integration with accessibility features for AI-generated content
+/// - Need to implement proper AI performance monitoring and quality assurance
 class StudyPalsAIProvider with ChangeNotifier {
   final AIService _aiService = AIService();
 
@@ -74,6 +94,16 @@ class StudyPalsAIProvider with ChangeNotifier {
   }
 
   /// Initialize AI features
+  /// 
+  /// TODO: AI INITIALIZATION CRITICAL IMPROVEMENTS NEEDED
+  /// - Current initialization only tests basic connection
+  /// - Need to implement proper AI model downloading and caching
+  /// - Missing user preference loading for AI settings and behavior
+  /// - Need to implement proper AI provider selection based on availability and cost
+  /// - Missing integration with user learning history for personalized AI setup
+  /// - Need to implement proper fallback mechanisms when primary AI provider fails
+  /// - Missing integration with study session context for AI preparation
+  /// - Need to implement proper AI feature discovery and onboarding
   Future<void> initializeAI() async {
     _isAIEnabled = await _aiService.testConnection();
     notifyListeners();

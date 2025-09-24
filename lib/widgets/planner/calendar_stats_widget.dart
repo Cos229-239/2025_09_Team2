@@ -3,6 +3,20 @@ import 'package:provider/provider.dart';
 import '../../providers/calendar_provider.dart';
 import '../../models/calendar_event.dart';
 
+// TODO: Calendar Stats Widget - Missing Analytics and Integration Features
+// - No actual calendar navigation from "View Calendar" button
+// - Missing detailed analytics and performance trends
+// - No integration with external calendars (Google, Outlook)
+// - Missing goal setting and progress tracking
+// - No export functionality for calendar data
+// - Missing calendar sharing and collaboration features
+// - No smart scheduling suggestions based on patterns
+// - Missing calendar sync across devices
+// - No reminder and notification integration
+// - Missing calendar backup and restore functionality
+// - No calendar template system for recurring patterns
+// - Missing time zone support for global users
+
 /// Widget displaying calendar statistics and insights
 class CalendarStatsWidget extends StatelessWidget {
   const CalendarStatsWidget({super.key});

@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 import 'global_floating_music_button.dart';
 
+// TODO: App Wrapper - Missing Global Features
+// - No global error boundary or crash reporting
+// - Missing global notification overlay system
+// - No global connectivity status monitoring
+// - Missing global theme change animations
+// - No global loading overlay management
+// - Missing global keyboard shortcut handling
+// - No global state persistence on app lifecycle changes
+// - Missing global accessibility features management
+// - No global performance monitoring integration
+// - Missing global analytics event tracking
+// - No global deep link handling
+// - Missing global security checks (jailbreak detection)
+
 /// Wrapper widget that provides global app functionality like floating music button
 class AppWrapper extends StatefulWidget {
   final Widget child;

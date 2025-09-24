@@ -4,7 +4,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firestore_service.dart';
 
-// TODO: FIRESTORE INTEGRATION NEEDED - Social data using SharedPreferences instead of Firestore   
+/// TODO: CRITICAL SOCIAL LEARNING SERVICE IMPLEMENTATION GAPS
+/// - Current implementation uses ONLY SharedPreferences - NO REAL SOCIAL FEATURES
+/// - Need to implement complete Firebase/Firestore integration for real social data
+/// - Missing real-time friend discovery and connection system
+/// - Need to implement actual user matching and compatibility algorithms
+/// - Missing real-time messaging and communication features
+/// - Need to implement proper study group creation and management functionality
+/// - Missing integration with video calling and live collaboration features
+/// - Need to implement proper social notifications and activity feeds
+/// - Missing user reporting and moderation system for safety
+/// - Need to implement proper privacy controls and user blocking features
+/// - Missing integration with study session sharing and collaboration
+/// - Need to implement social gamification and leaderboards
+/// - Missing proper user verification and trust scoring system
+/// - Need to implement social learning analytics and effectiveness tracking
+/// - Missing integration with educational institution and class management
+/// - Need to implement proper social search and discovery features
+/// - Missing integration with external social platforms for friend import
+/// - Need to implement proper social onboarding and tutorial system
 
 /// Represents a user's privacy settings
 enum PrivacyLevel {

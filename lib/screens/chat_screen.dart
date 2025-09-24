@@ -1,6 +1,26 @@
 import 'package:flutter/material.dart';
 import '../services/social_learning_service.dart';
 
+// TODO: Chat Screen - Critical Real-Time Messaging Gaps
+// - Current implementation is LOCAL UI ONLY - NO REAL MESSAGING FUNCTIONALITY
+// - Need to implement real-time messaging with Firebase/Firestore or WebSocket
+// - Missing proper message encryption and security for private conversations
+// - Need to implement message delivery and read receipts
+// - Missing typing indicators and real-time user presence
+// - Need to implement proper message persistence and chat history
+// - Missing file sharing, image sharing, and voice message capabilities
+// - Need to implement message reactions, replies, and threading
+// - Missing push notifications for new messages when app is closed
+// - Need to implement proper user blocking and reporting functionality
+// - Missing message search and filtering capabilities
+// - Need to implement proper chat backup and restoration
+// - Missing integration with study session scheduling from chat
+// - Need to implement group chat functionality beyond 1-on-1
+// - Missing accessibility features for screen readers and voice commands
+// - Need to implement proper message moderation and content filtering
+// - Missing integration with translation services for international users
+// - Need to implement proper offline message queuing and sync
+
 class ChatScreen extends StatefulWidget {
   final UserProfile otherUser;
   final SocialLearningService socialService;
@@ -34,6 +54,15 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  /// TODO: CHAT HISTORY LOADING - REPLACE WITH REAL IMPLEMENTATION
+  /// - Current method loads only hardcoded mock messages
+  /// - Need to implement real chat history loading from Firebase/Firestore
+  /// - Missing pagination for large chat histories
+  /// - Need to implement proper message ordering and chronological display
+  /// - Missing integration with user authentication and message ownership
+  /// - Need to implement real-time message listeners for new incoming messages
+  /// - Missing proper error handling for network failures and data corruption
+  /// - Need to implement message caching for offline viewing
   void _loadChatHistory() {
     // Mock chat history - in a real app, this would load from a database
     setState(() {
