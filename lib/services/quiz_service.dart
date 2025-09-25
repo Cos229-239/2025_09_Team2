@@ -21,8 +21,16 @@ class QuizService {
 
   /// Initialize the service by loading cached data
   Future<void> initialize() async {
-    await _loadDeckCooldowns();
-    await loadQuizSessions();
+    try {
+      // Add timeout to prevent hanging during initialization
+      await Future.wait([
+        _loadDeckCooldowns(),
+        loadQuizSessions(),
+      ]).timeout(const Duration(seconds: 15));
+    } catch (e) {
+      debugPrint('Quiz service initialization completed with warnings: $e');
+      // Continue with service available even if some data loading fails
+    }
   }
 
   /// Creates a new quiz session for a deck
@@ -67,16 +75,23 @@ class QuizService {
 
   /// Checks if a deck can be quizzed (not on cooldown and has quiz cards)
   Future<bool> canTakeDeckQuiz(String deckId) async {
-    await _loadDeckCooldowns();
+    try {
+      // Add timeout to prevent hanging
+      await _loadDeckCooldowns().timeout(const Duration(seconds: 10));
 
-    // Check if deck is on cooldown
-    if (_deckCooldowns.containsKey(deckId)) {
-      final lastAttempt = _deckCooldowns[deckId]!;
-      final timeSinceLastAttempt = DateTime.now().difference(lastAttempt);
-      return timeSinceLastAttempt >= _deckCooldownPeriod;
+      // Check if deck is on cooldown
+      if (_deckCooldowns.containsKey(deckId)) {
+        final lastAttempt = _deckCooldowns[deckId]!;
+        final timeSinceLastAttempt = DateTime.now().difference(lastAttempt);
+        return timeSinceLastAttempt >= _deckCooldownPeriod;
+      }
+
+      return true; // No previous attempt, can take quiz
+    } catch (e) {
+      debugPrint('Error checking deck quiz availability: $e');
+      // If there's an error loading cooldowns, allow the quiz (fail-safe)
+      return true;
     }
-
-    return true; // No previous attempt, can take quiz
   }
 
   /// Gets the remaining cooldown time for a deck quiz
@@ -521,7 +536,9 @@ class QuizService {
 
   Future<void> _loadDeckCooldowns() async {
     try {
-      final cooldowns = await _firestoreService.getAllDeckCooldowns();
+      // Add timeout to prevent hanging on Firestore calls
+      final cooldowns = await _firestoreService.getAllDeckCooldowns()
+          .timeout(const Duration(seconds: 8));
       _deckCooldowns.clear();
       cooldowns.forEach((deckId, cooldownEnd) {
         // Store the start time (now - cooldown period) for compatibility
@@ -530,6 +547,7 @@ class QuizService {
       });
     } catch (e) {
       debugPrint('Error loading deck cooldowns: $e');
+      // Continue with empty cooldowns if loading fails
     }
   }
 
