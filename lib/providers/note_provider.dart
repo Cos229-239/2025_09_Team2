@@ -231,7 +231,7 @@ class NoteProvider extends ChangeNotifier {
       _notes.removeWhere((note) => note.id == noteId);
       notifyListeners(); // Notify UI of the removal
     } catch (e) {
-      if (kDebugMode) debugPrint('NoteProvider: Error deleting note: $e');
+      debugPrint('Error deleting note: $e');
       // Re-throw to let UI handle the error
       rethrow;
     }

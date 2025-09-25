@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../providers/theme_provider.dart';
 import '../../widgets/ai/ai_settings_widget.dart';
+import '../../widgets/notifications/notification_panel.dart'; // Import for custom bell icon
 import 'spotify_integration_screen.dart';
 
 /// Application settings screen
@@ -232,9 +233,10 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.notifications,
-                          color: Theme.of(context).primaryColor,
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: NotificationBellIcon(),
                         ),
                         const SizedBox(width: 8),
                         Text(
