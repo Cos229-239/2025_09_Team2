@@ -111,7 +111,7 @@ class StudyPalsAIProvider with ChangeNotifier {
 
   /// Generate flashcards from text input
   Future<List<FlashCard>> generateFlashcards(
-      String content, String subject) async {
+      String content, String subject, User user) async {
     if (!isAIEnabled) return [];
 
     _isGeneratingContent = true;
@@ -119,7 +119,7 @@ class StudyPalsAIProvider with ChangeNotifier {
 
     try {
       final cards =
-          await _aiService.generateFlashcardsFromText(content, subject);
+          await _aiService.generateFlashcardsFromText(content, subject, user);
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -130,7 +130,8 @@ class StudyPalsAIProvider with ChangeNotifier {
 
   /// Generate flashcards from text with additional options
   Future<List<FlashCard>> generateFlashcardsFromText(
-    String content, {
+    String content,
+    User user, {
     int count = 5,
     String subject = 'General',
   }) async {
@@ -141,7 +142,7 @@ class StudyPalsAIProvider with ChangeNotifier {
 
     try {
       final cards = await _aiService
-          .generateFlashcardsFromText(content, subject, count: count);
+          .generateFlashcardsFromText(content, subject, user, count: count);
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -158,7 +159,7 @@ class StudyPalsAIProvider with ChangeNotifier {
     }
 
     try {
-      _lastRecommendation = await _aiService.getStudyRecommendation(stats);
+      _lastRecommendation = await _aiService.getStudyRecommendation(stats, user);
       notifyListeners();
       return _lastRecommendation;
     } catch (e) {
@@ -168,13 +169,13 @@ class StudyPalsAIProvider with ChangeNotifier {
 
   /// Get AI-powered pet message
   Future<String> getPetMessage(
-      String petName, Map<String, dynamic> stats) async {
+      String petName, Map<String, dynamic> stats, User user) async {
     if (!isAIEnabled) {
       return "Great job studying today! Keep it up! 🐾";
     }
 
     try {
-      _lastPetMessage = await _aiService.getPetMessage(petName, stats);
+      _lastPetMessage = await _aiService.getPetMessage(petName, stats, user);
       notifyListeners();
       return _lastPetMessage;
     } catch (e) {
@@ -183,11 +184,11 @@ class StudyPalsAIProvider with ChangeNotifier {
   }
 
   /// Enhance an existing flashcard with AI
-  Future<FlashCard?> enhanceFlashcard(FlashCard card) async {
+  Future<FlashCard?> enhanceFlashcard(FlashCard card, User user) async {
     if (!isAIEnabled) return null;
 
     try {
-      return await _aiService.enhanceFlashcard(card);
+      return await _aiService.enhanceFlashcard(card, user);
     } catch (e) {
       debugPrint('Failed to enhance flashcard: $e');
       return null;

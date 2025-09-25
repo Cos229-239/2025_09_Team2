@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../providers/deck_provider.dart';
 import '../../models/deck.dart';
+import '../../models/user.dart';
 import '../../mixins/loading_state_mixin.dart';
 import 'ai_settings_widget.dart';
 
@@ -81,10 +82,22 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       debugPrint('Subject: $_selectedSubject');
       debugPrint('Card Count: $_cardCount');
 
+      // Create a sample user for AI generation (in production, get from user provider)
+      final sampleUser = User(
+        id: 'generator_user',
+        email: 'user@studypals.com',
+        name: 'User',
+        preferences: UserPreferences(
+          learningStyle: 'adaptive',
+          difficultyPreference: 'moderate',
+        ),
+      );
+
       final flashcards = await aiProvider.generateFlashcardsFromText(
         _textController.text.isNotEmpty
             ? _textController.text
             : _topicController.text,
+        sampleUser,
         count: _cardCount,
         subject: _selectedSubject,
       );
@@ -121,9 +134,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
         _generationError = 'Failed to generate flashcards: $e';
       });
     } finally {
-      setState(() {
-        setLoading(false);
-      });
+      // Don't wrap setLoading in setState - it already handles state updates
+      setLoading(false);
     }
   }
 
@@ -143,9 +155,22 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     try {
       final aiProvider =
           Provider.of<StudyPalsAIProvider>(context, listen: false);
+      
+      // Create a sample user for debugging (in production, get from user provider)
+      final sampleUser = User(
+        id: 'debug_user',
+        email: 'debug@studypals.com',
+        name: 'Debug User',
+        preferences: UserPreferences(
+          learningStyle: 'visual',
+          difficultyPreference: 'moderate',
+        ),
+      );
+      
       final response = await aiProvider.aiService.debugFlashcardGeneration(
         _topicController.text.trim(),
         _selectedSubject,
+        sampleUser,
       );
 
       // Show the raw response in a dialog
