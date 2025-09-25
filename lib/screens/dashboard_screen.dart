@@ -981,44 +981,59 @@ class _DashboardHomeState extends State<DashboardHome>
           children: [
             // Home tab - responsive dashboard content
             SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Fixed header section
-                    SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.1,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header with padding
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.1,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
                       child: _buildHeader(context),
                     ),
+                  ),
 
-                    const SizedBox(height: 8),
+                  // Horizontal divider line - full width
+                  Container(
+                    width: double.infinity,
+                    height: 3.0, // Thicker line
+                    color: const Color(0xFFF8B67F),
+                  ),
 
-                    // Flexible calendar section
-                    Expanded(
-                      flex: 4,
-                      child: _buildCalendarSection(context),
+                  // Content section with padding
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          // Flexible calendar section
+                          Expanded(
+                            flex: 4,
+                            child: _buildCalendarSection(context),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Flexible cards row
+                          Expanded(
+                            flex: 2,
+                            child: _buildCardsAndNotesRow(context),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Flexible AI assistant section
+                          const Expanded(
+                            flex: 2,
+                            child: AIAssistantWidget(),
+                          ),
+
+                          const SizedBox(height: 8),
+                        ],
+                      ),
                     ),
-
-                    const SizedBox(height: 8),
-
-                    // Flexible cards row
-                    Expanded(
-                      flex: 2,
-                      child: _buildCardsAndNotesRow(context),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Flexible AI assistant section
-                    const Expanded(
-                      flex: 2,
-                      child: AIAssistantWidget(),
-                    ),
-
-                    const SizedBox(height: 8),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             // Tasks tab
@@ -1030,114 +1045,48 @@ class _DashboardHomeState extends State<DashboardHome>
           ],
         ),
       ),
-
-      // Bottom navigation bar with Home, Tasks, Stats, and Pet buttons
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(
-            left: 16, right: 16, top: 16), // Remove bottom margin
-        decoration: BoxDecoration(
-          color: const Color(0xFF2A3050), // Same color as Flash Cards container
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-            // No bottom radius to make it look like it runs off screen
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Horizontal divider line
+          Container(
+            height: 1,
+            color: const Color(0xFFF8B67F),
           ),
-          border: const Border(
-            top: BorderSide(color: Color(0xFFF8B67F), width: 2),
-            left: BorderSide(color: Color(0xFFF8B67F), width: 2),
-            right: BorderSide(color: Color(0xFFF8B67F), width: 2),
-            // No bottom border to enhance the "runs off screen" effect
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
-              blurRadius: 10,
-              spreadRadius: 0,
-              offset: const Offset(0, -4), // Shadow going upward
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 5,
-              spreadRadius: 0,
-              offset: const Offset(0, -2), // Shadow going upward
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // XP Progress bar at the top
-              Consumer<PetProvider>(
-                builder: (context, petProvider, child) {
-                  final pet = petProvider.currentPet;
-                  if (pet == null) {
-                    return const Text('Loading pet...');
-                  }
-                  final currentXP = pet.xp;
-                  final maxXP = pet.xpForNextLevel;
-                  final progress = currentXP / maxXP;
-
-                  return Column(
-                    children: [
-                      // XP text and progress bar
-                      Row(
-                        children: [
-                          Text(
-                            'XP $currentXP/$maxXP',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          const Spacer(),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      // Progress bar
-                      Container(
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: progress,
-                            backgroundColor: Colors.transparent,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                },
+          // Navigation bar container
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF2A3050),
+              border: Border(
+                top: BorderSide(color: const Color(0xFFF8B67F), width: 1),
               ),
-
-              // Navigation buttons
-              Row(
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 10,
+                  spreadRadius: 0,
+                  offset: const Offset(0, -4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.12),
+                  blurRadius: 5,
+                  spreadRadius: 0,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _buildNavButton(
                     context,
                     index: 0,
-                    icon: Icons.home, // This parameter won't be used for Home due to custom painter
+                    icon: Icons.home,
                     label: 'Home',
                     isSelected: _selectedTabIndex == 0,
-                    onTap: () {
-                      _tabController.animateTo(0);
-                    },
+                    onTap: () => _tabController.animateTo(0),
                   ),
                   _buildNavButton(
                     context,
@@ -1145,9 +1094,7 @@ class _DashboardHomeState extends State<DashboardHome>
                     icon: _selectedTabIndex == 1 ? Icons.assignment : Icons.assignment_outlined,
                     label: 'Tasks',
                     isSelected: _selectedTabIndex == 1,
-                    onTap: () {
-                      _tabController.animateTo(1);
-                    },
+                    onTap: () => _tabController.animateTo(1),
                   ),
                   _buildNavButton(
                     context,
@@ -1155,9 +1102,7 @@ class _DashboardHomeState extends State<DashboardHome>
                     icon: Icons.bar_chart,
                     label: 'Stats',
                     isSelected: _selectedTabIndex == 2,
-                    onTap: () {
-                      _tabController.animateTo(2);
-                    },
+                    onTap: () => _tabController.animateTo(2),
                   ),
                   _buildNavButton(
                     context,
@@ -1165,15 +1110,13 @@ class _DashboardHomeState extends State<DashboardHome>
                     icon: Icons.pets,
                     label: 'Pet',
                     isSelected: _selectedTabIndex == 3,
-                    onTap: () {
-                      _tabController.animateTo(3);
-                    },
+                    onTap: () => _tabController.animateTo(3),
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
