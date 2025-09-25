@@ -110,6 +110,7 @@ class StudyPalsAIProvider with ChangeNotifier {
   }
 
   /// Generate flashcards from text input
+  /// Automatically detects if user is visual learner and generates appropriate content
   Future<List<FlashCard>> generateFlashcards(
       String content, String subject, User user) async {
     if (!isAIEnabled) return [];
@@ -118,8 +119,15 @@ class StudyPalsAIProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final cards =
-          await _aiService.generateFlashcardsFromText(content, subject, user);
+      List<FlashCard> cards;
+      
+      // Check if user is a visual learner
+      if (user.preferences.learningStyle.toLowerCase() == 'visual') {
+        cards = await _aiService.generateVisualFlashcardsFromText(content, subject, user);
+      } else {
+        cards = await _aiService.generateFlashcardsFromText(content, subject, user);
+      }
+      
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -129,6 +137,7 @@ class StudyPalsAIProvider with ChangeNotifier {
   }
 
   /// Generate flashcards from text with additional options
+  /// Automatically detects if user is visual learner and generates appropriate content
   Future<List<FlashCard>> generateFlashcardsFromText(
     String content,
     User user, {
@@ -141,8 +150,37 @@ class StudyPalsAIProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final cards = await _aiService
-          .generateFlashcardsFromText(content, subject, user, count: count);
+      List<FlashCard> cards;
+      
+      // Check if user is a visual learner
+      if (user.preferences.learningStyle.toLowerCase() == 'visual') {
+        cards = await _aiService.generateVisualFlashcardsFromText(content, subject, user, count: count);
+      } else {
+        cards = await _aiService.generateFlashcardsFromText(content, subject, user, count: count);
+      }
+      
+      _aiGeneratedCards.addAll(cards);
+      return cards;
+    } finally {
+      _isGeneratingContent = false;
+      notifyListeners();
+    }
+  }
+
+  /// Generate visual flashcards specifically for visual learners
+  Future<List<FlashCard>> generateVisualFlashcards(
+    String content,
+    String subject,
+    User user, {
+    int count = 5,
+  }) async {
+    if (!isAIEnabled) return [];
+
+    _isGeneratingContent = true;
+    notifyListeners();
+
+    try {
+      final cards = await _aiService.generateVisualFlashcardsFromText(content, subject, user, count: count);
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {

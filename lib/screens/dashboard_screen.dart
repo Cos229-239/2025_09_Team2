@@ -18,6 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Import screen for flashcard study interface
 import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
+// Import AI system test screen for validation
+import 'package:studypals/screens/ai_system_test_screen.dart'; // AI system validation
 // Import settings screen for app configuration
 import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
 // Import planner screen
@@ -223,6 +225,20 @@ class _DashboardHomeState extends State<DashboardHome>
     return [
       // LinkedIn-style notification bell with unread count badge
       const NotificationBellIcon(),
+
+      // AI System Test button - validates AI features
+      IconButton(
+        icon: const Icon(Icons.psychology, color: Colors.orange), 
+        tooltip: 'AI System Validation',
+        onPressed: () {
+          // Navigate to AI system test screen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AISystemTestScreen(),
+            ),
+          );
+        },
+      ),
 
       // Settings button - opens app configuration panel
       IconButton(

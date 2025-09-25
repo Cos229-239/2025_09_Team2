@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:studypals/models/card.dart';
 import 'package:studypals/models/user.dart';
 import 'package:studypals/models/study_analytics.dart';
+import 'package:studypals/services/multimodal_error_handler.dart';
 
 /// AI Provider types
 enum AIProvider { openai, google, anthropic, localModel, ollama }
@@ -164,27 +165,43 @@ class AIService {
 
       debugPrint('Parsed ${cardsData.length} cards from AI response');
 
-      List<FlashCard> generatedCards = cardsData
-          .map((cardJson) => FlashCard(
-                id: DateTime.now().millisecondsSinceEpoch.toString() +
-                    cardsData.indexOf(cardJson).toString(),
-                deckId: 'ai_generated',
-                type: CardType.basic,
-                front: cardJson['question'] ?? 'Question',
-                back: _buildPersonalizedAnswer(cardJson, user),
-                multipleChoiceOptions: List<String>.from(
-                  cardJson['multipleChoiceOptions'] ??
-                      [
-                        cardJson['answer'] ?? 'Answer',
-                        'Option B',
-                        'Option C',
-                        'Option D'
-                      ],
-                ),
-                correctAnswerIndex: cardJson['correctAnswerIndex'] ?? 0,
-                difficulty: cardJson['difficulty'] ?? 3,
-              ))
-          .toList();
+      // Generate multi-modal content for each card
+      List<FlashCard> generatedCards = [];
+      
+      for (int i = 0; i < cardsData.length; i++) {
+        final cardJson = cardsData[i];
+        
+        // Create base flashcard
+        final baseCard = FlashCard(
+          id: DateTime.now().millisecondsSinceEpoch.toString() + i.toString(),
+          deckId: 'ai_generated',
+          type: _parseCardType(cardJson['cardType']),
+          front: cardJson['question'] ?? 'Question',
+          back: _buildPersonalizedAnswer(cardJson, user),
+          clozeMask: cardJson['clozeMask'],
+          multipleChoiceOptions: List<String>.from(
+            cardJson['multipleChoiceOptions'] ??
+                [
+                  cardJson['answer'] ?? 'Answer',
+                  'Option B',
+                  'Option C',
+                  'Option D'
+                ],
+          ),
+          correctAnswerIndex: cardJson['correctAnswerIndex'] ?? 0,
+          difficulty: cardJson['difficulty'] ?? 3,
+        );
+
+        // Generate multi-modal content based on user preferences
+        FlashCard enhancedCard = await _generateMultiModalContent(
+          baseCard,
+          subject,
+          user,
+          content,
+        );
+
+        generatedCards.add(enhancedCard);
+      }
 
       // If we didn't get enough cards, supplement with fallback cards
       if (generatedCards.length < count) {
@@ -215,12 +232,16 @@ class AIService {
     final difficultyPref = prefs.difficultyPreference;
     final showHints = prefs.showHints;
     
-    // Build personalization context
+    // Build comprehensive personalization context (14+ layers)
     String personalContext = _buildPersonalizationContext(user, analytics);
     String learningStyleInstructions = _getLearningStyleInstructions(learningStyle);
     String difficultyInstructions = _getDifficultyInstructions(difficultyPref, subject, analytics);
     String questionTypeInstructions = _getQuestionTypeInstructions(user);
     String performanceContext = _buildPerformanceContext(subject, analytics);
+    String multiModalInstructions = _getMultiModalInstructions(user);
+    String contextualInstructions = _getContextualInstructions(user);
+    String timeBasedInstructions = _getTimeBasedInstructions(user);
+    String analyticsInstructions = _getAnalyticsBasedInstructions(user, analytics, subject);
     
     return '''
 PERSONALIZED FLASHCARD GENERATION FOR ${user.name.toUpperCase()}
@@ -234,6 +255,15 @@ $learningStyleInstructions
 Difficulty Preference:
 $difficultyInstructions
 $performanceContext
+
+$multiModalInstructions
+
+$contextualInstructions
+
+$timeBasedInstructions
+
+$analyticsInstructions
+
 Create exactly $count flashcards about $subject. Topic: $content
 
 $questionTypeInstructions
@@ -245,13 +275,35 @@ You MUST respond with ONLY a valid JSON array containing exactly $count objects.
 Format:
 [
   {
+    "cardType": "basic",
     "question": "What is...", 
     "answer": "The answer is...",
     "multipleChoiceOptions": ["Option A", "Option B", "Option C", "Option D"],
     "correctAnswerIndex": 2,
-    "difficulty": 3${showHints ? ',\n    "explanation": "Additional explanation or context"' : ''}
+    "difficulty": 3,
+    "clozeMask": null${showHints ? ',\n    "explanation": "Additional explanation or context"' : ''}
+  },
+  {
+    "cardType": "cloze",
+    "question": "The process of {{c1::photosynthesis}} converts light into energy",
+    "answer": "photosynthesis",
+    "multipleChoiceOptions": ["respiration", "photosynthesis", "transpiration", "digestion"],
+    "correctAnswerIndex": 1,
+    "difficulty": 2,
+    "clozeMask": "{{c1::photosynthesis}}"${showHints ? ',\n    "explanation": "Additional explanation or context"' : ''}
+  },
+  {
+    "cardType": "reverse", 
+    "question": "Define: Democracy",
+    "answer": "A system of government by the whole population",
+    "multipleChoiceOptions": ["Monarchy", "A system of government by the whole population", "Dictatorship", "Oligarchy"],
+    "correctAnswerIndex": 1,
+    "difficulty": 2,
+    "clozeMask": null${showHints ? ',\n    "explanation": "Additional explanation or context"' : ''}
   }
 ]
+
+AVAILABLE CARD TYPES: basic, cloze, reverse, multipleChoice, trueFalse, comparison, scenario, causeEffect, sequence, definitionExample, caseStudy, problemSolving, hypothesisTesting, decisionAnalysis, systemAnalysis, prediction, evaluation, synthesis
 
 CRITICAL Requirements:
 - Create EXACTLY $count flashcards - count them carefully!
@@ -279,45 +331,366 @@ PERSONALIZATION REQUIREMENTS:
     ''';
   }
 
-  /// Build comprehensive personalization context from user data
+  /// Build comprehensive personalization context from user data (14+ layers)
   String _buildPersonalizationContext(User user, [StudyAnalytics? analytics]) {
     final prefs = user.preferences;
     final profile = <String>[];
     
-    // Educational background
-    if (user.school != null) profile.add('Student at ${user.school}');
-    if (user.major != null) profile.add('Studying ${user.major}');
-    if (user.age != null) profile.add('Age ${user.age}');
-    if (user.graduationYear != null) profile.add('Expected graduation: ${user.graduationYear}');
+    // Layer 1: Educational Identity & Background
+    if (user.school != null) profile.add('Institution: ${user.school}');
+    if (user.major != null) profile.add('Field of study: ${user.major}');
+    if (user.age != null) profile.add('Age: ${user.age}');
+    if (user.graduationYear != null) {
+      final yearsToGrad = user.graduationYear! - DateTime.now().year;
+      profile.add('Academic level: ${yearsToGrad > 0 ? "$yearsToGrad-year student" : "Graduate"}');
+    }
     
-    // Learning preferences
-    profile.add('Learning style: ${prefs.learningStyle}');
+    // Layer 2: Core Learning Preferences
+    profile.add('Primary learning style: ${prefs.learningStyle}');
     profile.add('Difficulty preference: ${prefs.difficultyPreference}');
     
-    // Study habits
-    profile.add('Study schedule: ${prefs.studyStartHour}:00 - ${prefs.studyEndHour}:00');
-    profile.add('Max cards per day: ${prefs.maxCardsPerDay}');
-    profile.add('Study days: ${prefs.studyDaysNames.join(', ')}');
-    profile.add('Break interval: ${prefs.breakInterval} minutes');
+    // Layer 3: Study Schedule & Time Management
+    profile.add('Optimal study hours: ${prefs.studyStartHour}:00 - ${prefs.studyEndHour}:00');
+    profile.add('Daily study capacity: ${prefs.maxCardsPerDay} cards, ${prefs.maxMinutesPerDay} minutes');
+    profile.add('Study frequency: ${prefs.studyDaysNames.join(', ')}');
     
-    // Preferences that affect content
-    if (prefs.showHints) profile.add('Prefers detailed explanations');
-    if (prefs.autoPlayAudio) profile.add('Audio learner');
+    // Layer 4: Break Patterns & Attention Span
+    profile.add('Focus intervals: ${prefs.breakInterval}-minute sessions');
+    profile.add('Break duration preference: ${prefs.breakDuration} minutes');
+    profile.add('Card review pace: ${prefs.cardReviewDelay / 1000} seconds per card');
     
-    // Language and accessibility
+    // Layer 5: Cognitive & Memory Preferences
+    profile.add('Memory aids: ${prefs.showHints ? "Prefers explanations and hints" : "Independent learning"}');
+    profile.add('Sensory preference: ${prefs.autoPlayAudio ? "Audio-enhanced learning" : "Visual-focused learning"}');
+    
+    // Layer 6: Personality & Motivation Factors
+    final currentHour = DateTime.now().hour;
+    String energyLevel = currentHour < 12 ? "Morning person" : 
+                        currentHour < 18 ? "Afternoon productive" : "Evening learner";
+    profile.add('Energy pattern: $energyLevel');
+    profile.add('Social learning: ${prefs.socialNotifications ? "Collaborative learner" : "Independent learner"}');
+    
+    // Layer 7: Accessibility & UI Preferences
+    profile.add('Reading preference: ${prefs.fontSize}x font scaling');
+    profile.add('Interface style: ${prefs.theme} theme with ${prefs.animations ? "animated" : "static"} interface');
+    
+    // Layer 8: Cultural & Language Context
     profile.add('Language: ${prefs.language}');
-    if (prefs.fontSize != 1.0) profile.add('Font size preference: ${(prefs.fontSize * 100).round()}%');
+    if (user.location != null) profile.add('Geographic context: ${user.location}');
     
-    // Performance context if available
+    // Layer 9: Technology Integration
+    profile.add('Connectivity: ${prefs.offline ? "Offline-capable" : "Online-dependent"}');
+    profile.add('Data management: ${prefs.autoSync ? "Auto-sync enabled" : "Manual sync"}');
+    
+    // Layer 10: Achievement & Progress Tracking
+    profile.add('Motivation style: ${prefs.achievementNotifications ? "Achievement-driven" : "Process-focused"}');
+    profile.add('Study reminders: ${prefs.studyReminders ? "Prefers reminders" : "Self-directed"}');
+    
+    // Layer 11: Privacy & Sharing Preferences
+    profile.add('Social sharing: ${user.privacySettings.shareStudyStats ? "Public progress" : "Private progress"}');
+    profile.add('Communication style: ${user.privacySettings.allowDirectMessages ? "Open to collaboration" : "Individual focus"}');
+    
+    // Layer 12: Experience Level & History
+    profile.add('Account experience: ${user.loginCount} sessions, active since ${_formatDate(user.createdAt)}');
+    if (user.lastActiveAt != null) {
+      final daysSinceActive = DateTime.now().difference(user.lastActiveAt!).inDays;
+      profile.add('Recent activity: ${daysSinceActive == 0 ? "Active today" : "$daysSinceActive days ago"}');
+    }
+    
+    // Layer 13: Performance Analytics Integration
     if (analytics != null) {
-      profile.add('Overall performance level: ${analytics.performanceLevel}');
-      profile.add('Study streak: ${analytics.currentStreak} days');
-      if (analytics.totalStudyTime > 0) {
-        profile.add('Total study time: ${analytics.totalStudyTime} minutes');  
+      profile.add('Performance level: ${analytics.performanceLevel}');
+      profile.add('Overall accuracy: ${(analytics.overallAccuracy * 100).round()}%');
+      profile.add('Study consistency: ${analytics.currentStreak} day streak (longest: ${analytics.longestStreak})');
+      profile.add('Study experience: ${analytics.totalCardsStudied} cards, ${analytics.totalStudyTime} minutes total');
+      
+      // Layer 14: Advanced Learning Patterns
+      final patterns = analytics.learningPatterns;
+      if (patterns.mostEffectiveLearningStyle != 'adaptive') {
+        profile.add('Most effective style: ${patterns.mostEffectiveLearningStyle}');
       }
+      if (patterns.preferredStudyTime != 'flexible') {
+        profile.add('Peak performance: ${patterns.preferredStudyTime}');
+      }
+      profile.add('Avg session: ${patterns.averageSessionLength.toStringAsFixed(1)} min, ${patterns.preferredCardsPerSession} cards');
+      
+      // Layer 15: Subject Performance Analysis
+      if (analytics.strugglingSubjects.isNotEmpty) {
+        profile.add('Areas needing focus: ${analytics.strugglingSubjects.take(3).join(", ")}');
+      }
+      if (analytics.strongSubjects.isNotEmpty) {
+        profile.add('Mastered areas: ${analytics.strongSubjects.take(3).join(", ")}');
+      }
+      
+      // Layer 16: Performance Trend Analysis
+      profile.add('Performance trend: ${analytics.recentTrend.description}');
     }
     
     return profile.join(', ');
+  }
+
+  /// Format date for user-friendly display
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+    
+    if (difference.inDays < 1) {
+      return 'today';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+    } else if (difference.inDays < 30) {
+      final weeks = (difference.inDays / 7).floor();
+      return '$weeks week${weeks > 1 ? 's' : ''} ago';
+    } else if (difference.inDays < 365) {
+      final months = (difference.inDays / 30).floor();
+      return '$months month${months > 1 ? 's' : ''} ago';
+    } else {
+      final years = (difference.inDays / 365).floor();
+      return '$years year${years > 1 ? 's' : ''} ago';
+    }
+  }
+  
+  /// Analytics-driven question optimization based on user performance feedback
+  String _getAnalyticsBasedInstructions(User user, StudyAnalytics? analytics, String subject) {
+    if (analytics == null) return '';
+    
+    final patterns = analytics.learningPatterns;
+    final instructions = <String>[];
+    
+    // Analyze learning style effectiveness
+    if (patterns.learningStyleEffectiveness.isNotEmpty) {
+      final mostEffective = patterns.learningStyleEffectiveness.entries
+          .reduce((a, b) => a.value > b.value ? a : b);
+      final leastEffective = patterns.learningStyleEffectiveness.entries
+          .reduce((a, b) => a.value < b.value ? a : b);
+      
+      instructions.add('LEARNING STYLE OPTIMIZATION:');
+      instructions.add('- Most effective style: ${mostEffective.key} (${(mostEffective.value * 100).round()}% success rate)');
+      instructions.add('- Avoid emphasis on: ${leastEffective.key} style questions');
+      instructions.add('- Prioritize ${mostEffective.key} learning approaches in question design');
+    }
+    
+    // Analyze topic interest correlation with performance
+    if (patterns.topicInterest.isNotEmpty) {
+      final highInterest = patterns.topicInterest.entries
+          .where((entry) => entry.value > 0.7)
+          .map((entry) => entry.key)
+          .toList();
+      final lowInterest = patterns.topicInterest.entries
+          .where((entry) => entry.value < 0.4)
+          .map((entry) => entry.key)
+          .toList();
+      
+      if (highInterest.isNotEmpty) {
+        instructions.add('HIGH ENGAGEMENT TOPICS: ${highInterest.join(', ')}');
+        instructions.add('- Use these topics for examples and scenarios when possible');
+        instructions.add('- Connect current subject to these areas of interest');
+      }
+      
+      if (lowInterest.isNotEmpty) {
+        instructions.add('LOW ENGAGEMENT AREAS: ${lowInterest.join(', ')}');
+        instructions.add('- Make these topics more engaging with practical applications');
+        instructions.add('- Use storytelling or real-world connections for these areas');
+      }
+    }
+    
+    // Common mistake pattern analysis
+    if (patterns.commonMistakePatterns.isNotEmpty) {
+      instructions.add('MISTAKE PREVENTION STRATEGY:');
+      instructions.add('- Common user mistakes: ${patterns.commonMistakePatterns.take(3).join(', ')}');
+      instructions.add('- Design distractors that specifically address these misconceptions');
+      instructions.add('- Include explanations that clarify these common errors');
+    }
+    
+    // Session optimization based on patterns
+    instructions.add('SESSION OPTIMIZATION:');
+    instructions.add('- Optimal session length: ${patterns.averageSessionLength.toStringAsFixed(1)} minutes');
+    instructions.add('- Preferred cards per session: ${patterns.preferredCardsPerSession}');
+    if (patterns.preferredStudyTime != 'flexible') {
+      instructions.add('- Best performance time: ${patterns.preferredStudyTime}');
+    }
+    
+    // Cross-subject performance insights
+    final subjectPerformance = analytics.subjectPerformance[subject];
+    if (subjectPerformance != null) {
+      instructions.add('SUBJECT-SPECIFIC OPTIMIZATION:');
+      instructions.add('- Current subject accuracy: ${(subjectPerformance.accuracy * 100).round()}%');
+      instructions.add('- Performance trend: ${subjectPerformance.trendDescription}');
+      
+      // Question timing optimization
+      if (subjectPerformance.averageResponseTime > 30) {
+        instructions.add('- User needs thinking time: Create complex, analytical questions');
+        instructions.add('- Avoid time-pressure tactics, allow for deep processing');
+      } else if (subjectPerformance.averageResponseTime < 15) {
+        instructions.add('- User responds quickly: Can handle rapid-fire recall questions');
+        instructions.add('- Include more factual and definition-based questions');
+      }
+      
+      // Recent performance adaptation
+      if (subjectPerformance.recentScores.isNotEmpty) {
+        final recentTrend = subjectPerformance.isImproving ? 'improving' : 'stable/declining';
+        instructions.add('- Recent trend: $recentTrend');
+        if (subjectPerformance.isImproving) {
+          instructions.add('- Gradually increase question complexity');
+          instructions.add('- Introduce more advanced concepts and applications');
+        } else {
+          instructions.add('- Focus on reinforcement and review');
+          instructions.add('- Include more foundational questions for confidence building');
+        }
+      }
+    }
+    
+    // Global performance insights
+    instructions.add('ADAPTIVE DIFFICULTY CALIBRATION:');
+    instructions.add('- Overall performance level: ${analytics.performanceLevel}');
+    instructions.add('- Success rate: ${(analytics.overallAccuracy * 100).round()}%');
+    instructions.add('- Study consistency: ${analytics.currentStreak} day streak');
+    
+    // Performance-based question type recommendations
+    if (analytics.overallAccuracy > 0.85) {
+      instructions.add('- User handles complexity well: Use advanced question formats');
+      instructions.add('- Include scenario-based, analysis, and synthesis questions');
+    } else if (analytics.overallAccuracy < 0.6) {
+      instructions.add('- User needs support: Focus on basic recall and comprehension');
+      instructions.add('- Use clear, straightforward question formats with obvious distractors');
+    } else {
+      instructions.add('- User at moderate level: Balance basic and intermediate questions');
+      instructions.add('- Mix factual recall with application-based questions');
+    }
+    
+    return instructions.isNotEmpty ? 
+        '\nREAL-TIME ANALYTICS FEEDBACK ADAPTATION:\n${instructions.join('\n')}\n' : '';
+  }
+  
+  /// Track question effectiveness for continuous learning
+  /// This method would be called after each user response to update analytics
+  Future<void> trackQuestionEffectiveness({
+    required String userId,
+    required String questionId,
+    required CardType questionType,
+    required String subject,
+    required bool wasCorrect,
+    required int responseTimeMs,
+    required int difficulty,
+    required String learningStyle,
+  }) async {
+    try {
+      // This would integrate with the analytics service to track:
+      // 1. Which question types work best for this user
+      // 2. Optimal difficulty levels by subject
+      // 3. Learning style effectiveness correlation
+      // 4. Response time patterns
+      // 5. Common mistake patterns by question type
+      
+      debugPrint('Tracking question effectiveness: $questionType, correct: $wasCorrect, time: ${responseTimeMs}ms');
+      
+      // Example analytics tracking (would be implemented with actual analytics service)
+      final questionData = {
+        'userId': userId,
+        'questionId': questionId,
+        'questionType': questionType.toString(),
+        'subject': subject,
+        'wasCorrect': wasCorrect,
+        'responseTimeMs': responseTimeMs,
+        'difficulty': difficulty,
+        'learningStyle': learningStyle,
+        'timestamp': DateTime.now().toIso8601String(),
+      };
+      
+      // In a real implementation, this would:
+      // 1. Update user's learning pattern data
+      // 2. Adjust question type preferences
+      // 3. Update difficulty calibration
+      // 4. Track mistake patterns
+      // 5. Optimize future question generation
+      
+      debugPrint('Question effectiveness data recorded: $questionData');
+      
+    } catch (e) {
+      debugPrint('Error tracking question effectiveness: $e');
+    }
+  }
+  
+  /// Generate adaptive recommendations based on performance data
+  /// This provides real-time feedback to improve question generation
+  Map<String, dynamic> getAdaptiveRecommendations(User user, StudyAnalytics? analytics, String subject) {
+    if (analytics == null) {
+      return {
+        'difficulty': 'moderate',
+        'questionTypes': ['basic', 'multipleChoice'],
+        'focusAreas': ['foundational concepts'],
+        'avoidAreas': [],
+        'confidence': 0.5,
+      };
+    }
+    
+    final subjectPerf = analytics.subjectPerformance[subject];
+    final patterns = analytics.learningPatterns;
+    
+    // Determine optimal difficulty
+    String recommendedDifficulty = 'moderate';
+    if (subjectPerf != null) {
+      if (subjectPerf.accuracy >= 0.9) {
+        recommendedDifficulty = 'challenging';
+      } else if (subjectPerf.accuracy >= 0.8) {
+        recommendedDifficulty = 'moderate';
+      } else {
+        recommendedDifficulty = 'easy';
+      }
+    }
+    
+    // Recommend question types based on effectiveness
+    List<String> recommendedTypes = ['basic', 'multipleChoice'];
+    if (patterns.learningStyleEffectiveness.isNotEmpty) {
+      final mostEffective = patterns.learningStyleEffectiveness.entries
+          .reduce((a, b) => a.value > b.value ? a : b);
+      
+      switch (mostEffective.key.toLowerCase()) {
+        case 'visual':
+          recommendedTypes = ['comparison', 'scenario', 'multipleChoice'];
+          break;
+        case 'auditory':
+          recommendedTypes = ['basic', 'trueFalse', 'causeEffect'];
+          break;
+        case 'kinesthetic':
+          recommendedTypes = ['scenario', 'sequence', 'causeEffect'];
+          break;
+        case 'reading/writing':
+          recommendedTypes = ['cloze', 'definitionExample', 'comparison'];
+          break;
+      }
+    }
+    
+    // Focus areas based on performance
+    List<String> focusAreas = [];
+    List<String> avoidAreas = [];
+    
+    if (analytics.strugglingSubjects.contains(subject)) {
+      focusAreas.addAll(['foundational concepts', 'basic terminology', 'simple applications']);
+      avoidAreas.addAll(['advanced theory', 'complex scenarios']);
+    } else if (analytics.strongSubjects.contains(subject)) {
+      focusAreas.addAll(['advanced concepts', 'complex applications', 'analysis and synthesis']);
+    } else {
+      focusAreas.addAll(['balanced approach', 'progressive difficulty', 'practical applications']);
+    }
+    
+    // Confidence level based on data availability and consistency
+    double confidence = 0.5;
+    if (subjectPerf != null && subjectPerf.totalCards > 20) {
+      confidence = 0.8;
+      if (patterns.learningStyleEffectiveness.isNotEmpty) {
+        confidence = 0.9;
+      }
+    }
+    
+    return {
+      'difficulty': recommendedDifficulty,
+      'questionTypes': recommendedTypes,
+      'focusAreas': focusAreas,
+      'avoidAreas': avoidAreas,
+      'confidence': confidence,
+      'reasoning': 'Based on ${subjectPerf?.totalCards ?? 0} previous cards and ${analytics.totalStudyTime} minutes of study data',
+    };
   }
 
   /// Get comprehensive learning style specific instructions
@@ -462,21 +835,49 @@ ${performanceNote.isNotEmpty ? '\n$performanceNote' : ''}''';
   String _getQuestionTypeInstructions(User user) {
     String subjectSpecific = _getSubjectSpecificInstructions(user);
     
-    return '''QUESTION TYPE VARIETY AND OPTIMIZATION:
-- Use primarily multiple choice format with high-quality distractors
-- Ensure questions test understanding, not just memorization
-- Include application-based scenarios when appropriate
-- Vary question stems (What, How, Why, When, Which, etc.)
-- Make questions relevant to the user's educational context
+    return '''COMPREHENSIVE QUESTION TYPE VARIETY:
+
+PRIMARY FORMATS (must include variety):
+1. BASIC FLASHCARDS: Traditional Q&A format for definitions and concepts
+2. CLOZE DELETION: Fill-in-the-blank with {{c1::hidden}} text format
+3. REVERSE CARDS: Test both directions (concept→definition AND definition→concept)
+
+ADVANCED FORMATS (include 3-4 per set):
+4. TRUE/FALSE: Statement verification with detailed reasoning
+5. MULTIPLE CHOICE: 4 options with sophisticated distractors
+6. COMPARISON: "Compare X and Y" or "What's the difference between..."
+7. SCENARIO-BASED: Real-world application questions
+8. CAUSE-AND-EFFECT: "Why does X happen?" or "What results from Y?"
+9. SEQUENCE/ORDERING: "What happens first/next/last in this process?"
+10. DEFINITION-TO-EXAMPLE: "Which example best demonstrates X concept?"
+
+SOPHISTICATED FORMATS (include 1-2 per set for advanced users):
+11. CASE STUDY: Multi-paragraph scenario with analysis questions
+12. PROBLEM-SOLVING CHAIN: Multi-step problems requiring logical progression
+13. HYPOTHESIS TESTING: "Given this evidence, what can you conclude?"
+14. DECISION ANALYSIS: "What would be the best approach and why?"
+15. SYSTEM ANALYSIS: "How do these components interact?"
+16. PREDICTION: "Based on these patterns, what would happen if..."
+17. EVALUATION: "Assess the effectiveness of X approach"
+18. SYNTHESIS: "Combine concepts A and B to solve problem C"
+
+COGNITIVE LEVELS (distribute across cards):
+- RECALL (30%): Basic facts, definitions, terminology
+- COMPREHENSION (40%): Understanding concepts, explaining processes
+- APPLICATION (20%): Using knowledge in new situations
+- ANALYSIS (10%): Breaking down complex ideas, identifying patterns
 
 $subjectSpecific
 
-QUALITY STANDARDS:
-- Questions should be clear, unambiguous, and grammatically correct
-- Distractors should be plausible but clearly incorrect upon careful analysis
-- Avoid trick questions that rely on ambiguous wording
-- Ensure cultural sensitivity and inclusive examples
-- Use current, relevant examples that connect to the user's experience''';
+ADVANCED QUALITY STANDARDS:
+- Vary question stems: What, How, Why, When, Which, Compare, Analyze, Apply
+- Test understanding at multiple cognitive levels, not just memorization
+- Include application-based scenarios relevant to user's field
+- Create sophisticated distractors that reflect common misconceptions
+- Use current, relevant examples that connect to the user's experience
+- Ensure questions are culturally sensitive and inclusive
+- Make questions challenging but fair for the user's academic level
+- Include reasoning and explanation in complex questions''';
   }
 
   /// Get subject-specific instructions based on user's educational background
@@ -546,44 +947,130 @@ QUALITY STANDARDS:
     final performance = analytics.subjectPerformance[subject];
     final context = <String>[];
     
-    // Overall performance level
-    context.add('User Performance Level: ${analytics.performanceLevel}');
+    // Overall performance level and trend
+    context.add('User Performance Level: ${analytics.performanceLevel} (${(analytics.overallAccuracy * 100).round()}% overall accuracy)');
+    context.add('Study Experience: ${analytics.totalCardsStudied} cards, ${analytics.totalStudyTime} min total, ${analytics.currentStreak} day streak');
     
-    // Subject-specific performance if available
+    // Performance trend analysis
+    context.add('Performance Trend: ${analytics.recentTrend.description}');
+    
+    // Subject-specific performance with detailed analysis
     if (performance != null) {
-      context.add('Subject Performance: ${(performance.accuracy * 100).round()}% accuracy');
-      context.add('Performance Trend: ${performance.trendDescription}');
+      context.add('Subject Performance: ${(performance.accuracy * 100).round()}% accuracy over ${performance.totalCards} cards');
+      context.add('Subject Trend: ${performance.trendDescription}');
       
-      // Specific guidance based on performance
-      if (performance.accuracy < 0.6) {
-        context.add('Focus: Foundational concepts - user needs more basic support');
-      } else if (performance.accuracy > 0.85) {
-        context.add('Focus: Advanced concepts - user ready for challenges');
+      // Advanced difficulty adaptation based on performance metrics
+      if (performance.accuracy < 0.5) {
+        context.add('CRITICAL: User severely struggling - focus on basic definitions and simple recall');
+        context.add('Strategy: Use easy vocabulary, provide multiple hints, avoid complex scenarios');
+      } else if (performance.accuracy < 0.6) {
+        context.add('Focus: Foundational concepts - user needs basic support with clear explanations');
+        context.add('Strategy: Emphasize understanding over memorization, provide step-by-step reasoning');
+      } else if (performance.accuracy < 0.7) {
+        context.add('Focus: Bridging concepts - user ready for moderate challenges with support');
+        context.add('Strategy: Mix basic and intermediate concepts, include practical applications');
+      } else if (performance.accuracy < 0.85) {
+        context.add('Focus: Intermediate concepts - user ready for standard challenges');
+        context.add('Strategy: Balance theory and application, introduce more complex scenarios');
+      } else if (performance.accuracy >= 0.85) {
+        context.add('Focus: Advanced concepts - user excels and needs intellectual challenges');
+        context.add('Strategy: Use complex scenarios, advanced terminology, multi-step reasoning');
       }
       
-      if (performance.averageResponseTime > 30) {
-        context.add('Note: User takes time to think - allow for complex reasoning');
+      // Response time adaptation
+      if (performance.averageResponseTime > 45) {
+        context.add('Note: User takes time to process - create questions requiring deep thought and analysis');
+      } else if (performance.averageResponseTime < 15) {
+        context.add('Note: User responds quickly - can handle rapid-fire factual questions');
+      } else {
+        context.add('Note: User has balanced response time - mix quick recall with thoughtful questions');
+      }
+      
+      // Difficulty breakdown analysis
+      if (performance.difficultyBreakdown.isNotEmpty) {
+        final easyCount = performance.difficultyBreakdown['easy'] ?? 0;
+        final moderateCount = performance.difficultyBreakdown['moderate'] ?? 0;
+        final hardCount = performance.difficultyBreakdown['hard'] ?? 0;
+        final total = easyCount + moderateCount + hardCount;
+        
+        if (total > 0) {
+          context.add('Experience Distribution: ${((easyCount/total)*100).round()}% easy, ${((moderateCount/total)*100).round()}% moderate, ${((hardCount/total)*100).round()}% hard');
+          
+          // Adaptive recommendations based on distribution
+          if (easyCount > moderateCount + hardCount) {
+            context.add('Recommendation: User ready to progress beyond easy questions - increase moderate difficulty');
+          } else if (hardCount > easyCount && performance.accuracy > 0.75) {
+            context.add('Recommendation: User handles hard questions well - maintain challenging content');
+          }
+        }
+      }
+      
+      // Recent performance insights
+      if (performance.recentScores.isNotEmpty) {
+        final recentAvg = performance.recentScores.take(3).fold(0.0, (sum, score) => sum + score) / 
+                         performance.recentScores.take(3).length.toDouble();
+        context.add('Recent Performance: ${(recentAvg * 100).round()}% in last ${performance.recentScores.take(3).length} sessions');
+        
+        if (performance.isImproving) {
+          context.add('Momentum: User showing improvement - gradually increase challenge level');
+        } else if (recentAvg < performance.accuracy - 0.1) {
+          context.add('Momentum: Recent decline - provide more support and review');
+        }
+      }
+    } else {
+      // No subject-specific data - use overall metrics
+      context.add('Subject Status: New subject for user - start with diagnostic questions to gauge level');
+      if (analytics.performanceLevel == 'Expert' || analytics.performanceLevel == 'Advanced') {
+        context.add('Strategy: User is advanced overall - can start with moderate to challenging questions');
+      } else {
+        context.add('Strategy: Start with foundational questions to establish baseline understanding');
       }
     }
     
-    // Struggling and strong subjects for context
+    // Cross-subject performance insights
     if (analytics.strugglingSubjects.isNotEmpty) {
-      context.add('User struggles with: ${analytics.strugglingSubjects.join(', ')}');
+      context.add('Areas needing support: ${analytics.strugglingSubjects.take(3).join(', ')}');
+      if (analytics.strugglingSubjects.contains(subject)) {
+        context.add('IMPORTANT: Current subject is in user\'s struggle areas - provide extra support');
+      }
     }
     if (analytics.strongSubjects.isNotEmpty) {
-      context.add('User excels at: ${analytics.strongSubjects.join(', ')}');
+      context.add('User\'s strengths: ${analytics.strongSubjects.take(3).join(', ')}');
+      if (analytics.strongSubjects.contains(subject)) {
+        context.add('ADVANTAGE: Current subject is user\'s strength - can use advanced concepts');
+      }
     }
     
-    // Learning patterns
+    // Learning pattern insights for question adaptation
     final patterns = analytics.learningPatterns;
     if (patterns.mostEffectiveLearningStyle != 'adaptive') {
-      context.add('Most effective learning style: ${patterns.mostEffectiveLearningStyle}');
+      context.add('Most effective learning style: ${patterns.mostEffectiveLearningStyle} (optimize questions for this style)');
     }
     if (patterns.preferredStudyTime != 'flexible') {
-      context.add('Optimal study time: ${patterns.preferredStudyTime}');
+      context.add('Optimal study time: ${patterns.preferredStudyTime} (current session timing should match)');
     }
     
-    return context.isNotEmpty ? '\nPERFORMANCE CONTEXT:\n${context.join('\n')}\n' : '';
+    // Session length and card preferences
+    context.add('Session Preferences: ${patterns.averageSessionLength.toStringAsFixed(1)} min sessions, ${patterns.preferredCardsPerSession} cards per session');
+    
+    // Topic interest analysis
+    if (patterns.topicInterest.isNotEmpty) {
+      final interestedTopics = patterns.topicInterest.entries
+          .where((entry) => entry.value > 0.7)
+          .map((entry) => entry.key)
+          .take(3)
+          .join(', ');
+      if (interestedTopics.isNotEmpty) {
+        context.add('High Interest Topics: $interestedTopics (use these for engaging examples)');
+      }
+    }
+    
+    // Common mistake patterns
+    if (patterns.commonMistakePatterns.isNotEmpty) {
+      context.add('Common Mistakes: ${patterns.commonMistakePatterns.take(3).join(', ')} (address these proactively)');
+    }
+    
+    return context.isNotEmpty ? '\nADVANCED PERFORMANCE-BASED ADAPTATION:\n${context.join('\n')}\n' : '';
   }
 
   /// Build personalized answer with additional context if user prefers hints
@@ -595,6 +1082,171 @@ QUALITY STANDARDS:
     }
     
     return baseAnswer;
+  }
+
+  /// Generate multi-modal content instructions based on user preferences
+  String _getMultiModalInstructions(User user) {
+    final prefs = user.preferences;
+    final style = prefs.learningStyle;
+    
+    String instructions = '\nMULTI-MODAL CONTENT GENERATION:\n';
+    
+    // Card type variety based on learning style
+    if (style == 'visual' || style == 'adaptive') {
+      instructions += '- Include visual learning cues: "Imagine...", "Picture...", "Visualize..."\n';
+      instructions += '- Create cloze deletion cards for key terms: {{c1::important_term}}\n';
+      instructions += '- Use spatial relationships and diagrams descriptions\n';
+    }
+    
+    if (style == 'auditory' || style == 'adaptive') {
+      instructions += '- Include mnemonics and rhymes where appropriate\n';
+      instructions += '- Add phonetic pronunciations for complex terms\n';
+      instructions += '- Create reverse cards for bidirectional learning\n';
+    }
+    
+    if (style == 'kinesthetic' || style == 'adaptive') {
+      instructions += '- Include hands-on examples and action steps\n';
+      instructions += '- Create sequential process cards\n';
+      instructions += '- Add physical analogies and movement associations\n';
+    }
+    
+    if (style == 'reading' || style == 'adaptive') {
+      instructions += '- Provide detailed textual explanations\n';
+      instructions += '- Include etymology and word origins\n';
+      instructions += '- Create definition-based reverse cards\n';
+    }
+    
+    // Question type variety
+    instructions += '\nVARIED QUESTION TYPES:\n';
+    instructions += '- Mix card types: 60% basic, 25% cloze, 15% reverse\n';
+    instructions += '- Include fill-in-the-blank: "Complete: The process of _____ involves..."\n';
+    instructions += '- Add true/false concepts: "True or False: [statement]"\n';
+    instructions += '- Create matching pairs: "Match the term with its definition"\n';
+    instructions += '- Use ordering questions: "Arrange the following steps in order"\n';
+    instructions += '- Include comparison questions: "Compare and contrast X vs Y"\n';
+    
+    return instructions;
+  }
+
+  /// Generate contextual instructions based on user profile and environment
+  String _getContextualInstructions(User user) {
+    String instructions = '\nCONTEXTUAL PERSONALIZATION:\n';
+    
+    // Educational context
+    if (user.school != null) {
+      instructions += '- Adapt content for ${user.school} academic level\n';
+    }
+    if (user.major != null) {
+      instructions += '- Include ${user.major} field-specific examples and terminology\n';
+    }
+    if (user.graduationYear != null) {
+      final currentYear = DateTime.now().year;
+      final yearsToGrad = user.graduationYear! - currentYear;
+      if (yearsToGrad > 0) {
+        instructions += '- Target $yearsToGrad-year student comprehension level\n';
+      }
+    }
+    
+    // Age-appropriate content
+    if (user.age != null) {
+      if (user.age! < 18) {
+        instructions += '- Use age-appropriate examples and references\n';
+      } else if (user.age! > 30) {
+        instructions += '- Include professional and life experience connections\n';
+      }
+    }
+    
+    // Cultural and language context
+    instructions += '- Use ${user.preferences.language} language patterns and cultural references\n';
+    if (user.location != null) {
+      instructions += '- Include regional examples relevant to ${user.location}\n';
+    }
+    
+    return instructions;
+  }
+
+  /// Generate time-based and schedule-aware instructions
+  String _getTimeBasedInstructions(User user) {
+    final prefs = user.preferences;
+    final now = DateTime.now();
+    final currentHour = now.hour;
+    
+    String instructions = '\nTIME-BASED ADAPTATION:\n';
+    
+    // Time of day optimization
+    if (currentHour >= prefs.studyStartHour && currentHour <= prefs.studyEndHour) {
+      instructions += '- User is in optimal study time - create moderately challenging content\n';
+    } else if (currentHour < prefs.studyStartHour) {
+      instructions += '- Early morning study - create energizing, clear content\n';
+    } else {
+      instructions += '- Evening/night study - create focused, digestible content\n';
+    }
+    
+    // Study schedule context
+    if (prefs.isStudyDay) {
+      instructions += '- Today is a planned study day - include comprehensive content\n';
+    } else {
+      instructions += '- Casual study day - create lighter, review-focused content\n';
+    }
+    
+    // Break interval consideration
+    instructions += '- Design content for ${prefs.breakInterval}-minute study intervals\n';
+    instructions += '- Target ${prefs.cardReviewDelay}ms review pace\n';
+    
+    return instructions;
+  }
+
+  /// Parse card type from string to CardType enum
+  CardType _parseCardType(String? cardTypeString) {
+    switch (cardTypeString?.toLowerCase()) {
+      case 'cloze':
+        return CardType.cloze;
+      case 'reverse':
+        return CardType.reverse;
+      case 'multiplechoice':
+      case 'multiple_choice':
+        return CardType.multipleChoice;
+      case 'truefalse':
+      case 'true_false':
+        return CardType.trueFalse;
+      case 'comparison':
+        return CardType.comparison;
+      case 'scenario':
+        return CardType.scenario;
+      case 'causeeffect':
+      case 'cause_effect':
+        return CardType.causeEffect;
+      case 'sequence':
+      case 'ordering':
+        return CardType.sequence;
+      case 'definitionexample':
+      case 'definition_example':
+        return CardType.definitionExample;
+      case 'casestudy':
+      case 'case_study':
+        return CardType.caseStudy;
+      case 'problemsolving':
+      case 'problem_solving':
+        return CardType.problemSolving;
+      case 'hypothesistesting':
+      case 'hypothesis_testing':
+        return CardType.hypothesisTesting;
+      case 'decisionanalysis':
+      case 'decision_analysis':
+        return CardType.decisionAnalysis;
+      case 'systemanalysis':
+      case 'system_analysis':
+        return CardType.systemAnalysis;
+      case 'prediction':
+        return CardType.prediction;
+      case 'evaluation':
+        return CardType.evaluation;
+      case 'synthesis':
+        return CardType.synthesis;
+      case 'basic':
+      default:
+        return CardType.basic;
+    }
   }
 
   /// Build enhanced answer for improved flashcards
@@ -746,18 +1398,214 @@ QUALITY STANDARDS:
       },
     ];
 
+    // Add variety to fallback cards with different types
+    final cardTypes = [
+      CardType.basic, 
+      CardType.multipleChoice, 
+      CardType.cloze, 
+      CardType.reverse, 
+      CardType.trueFalse,
+      CardType.comparison,
+      CardType.scenario,
+      CardType.causeEffect
+    ];
+    
+    // Enhanced templates for different question types
+    final enhancedTemplates = [
+      ...templates, // Include existing templates
+      // True/False questions
+      {
+        'front': 'True or False: $subject is primarily theoretical with no practical applications.',
+        'back': 'False - $subject has both theoretical foundations and extensive practical applications in real-world scenarios.',
+        'options': ['True', 'False'],
+        'correctIndex': 1,
+        'difficulty': 2,
+        'type': 'trueFalse',
+      },
+      // Comparison questions
+      {
+        'front': 'Compare theoretical knowledge and practical application in $subject.',
+        'back': 'Theoretical knowledge provides the foundation and principles, while practical application involves implementing these concepts to solve real-world problems. Both are essential for mastery.',
+        'options': [
+          'Theoretical is more important than practical',
+          'Practical is more important than theoretical', 
+          'Both are equally important and complementary',
+          'Neither is necessary for learning'
+        ],
+        'correctIndex': 2,
+        'difficulty': 4,
+        'type': 'comparison',
+      },
+      // Scenario-based questions
+      {
+        'front': 'Scenario: A student is struggling to understand $subject concepts. What would be the most effective first step?',
+        'back': 'Identify specific areas of confusion, review fundamental concepts, and connect new material to prior knowledge before moving to advanced topics.',
+        'options': [
+          'Skip to advanced topics immediately',
+          'Identify specific areas of confusion, review fundamental concepts, and connect new material to prior knowledge',
+          'Memorize everything without understanding',
+          'Avoid studying altogether'
+        ],
+        'correctIndex': 1,
+        'difficulty': 3,
+        'type': 'scenario',
+      },
+      // Cause and effect questions
+      {
+        'front': 'What happens when students focus only on memorization in $subject without understanding?',
+        'back': 'This leads to poor retention, inability to apply knowledge, difficulty with complex problems, and reduced academic performance.',
+        'options': [
+          'Improved long-term learning',
+          'Better problem-solving skills',
+          'Poor retention and inability to apply knowledge',
+          'Enhanced creativity'
+        ],
+        'correctIndex': 2,
+        'difficulty': 3,
+        'type': 'causeEffect',
+      },
+      // Case study questions
+      {
+        'front': 'Case Study: A student has been studying $subject for 3 weeks but still struggles with basic concepts. They spend 2 hours daily reading but avoid practice problems. Analysis: What is the primary issue with their study approach?',
+        'back': 'The primary issue is passive learning without active practice. Reading alone doesn\'t develop problem-solving skills or test understanding. The student needs to incorporate active recall, practice problems, and self-testing.',
+        'options': [
+          'Not enough time spent studying',
+          'Passive learning without active practice and application',
+          'The subject is too difficult for them',
+          'They need to memorize more facts'
+        ],
+        'correctIndex': 1,
+        'difficulty': 4,
+        'type': 'caseStudy',
+      },
+      // Problem-solving chain questions
+      {
+        'front': 'Problem-Solving Chain: Step 1: Identify the key concepts in $subject. Step 2: Understand their relationships. Step 3: Apply them to solve problems. What should be your first action when you encounter a difficult problem?',
+        'back': 'Break down the problem to identify which key concepts are involved, then recall the relationships between these concepts before attempting to apply them to find a solution.',
+        'options': [
+          'Immediately try different solution methods',
+          'Break down the problem to identify relevant key concepts',
+          'Look up the answer in a textbook',
+          'Skip the problem and come back later'
+        ],
+        'correctIndex': 1,
+        'difficulty': 4,
+        'type': 'problemSolving',
+      },
+      // Evaluation questions
+      {
+        'front': 'Evaluation: Assess the effectiveness of using only flashcards versus combining flashcards with practice problems for learning $subject.',
+        'back': 'Combining flashcards with practice problems is more effective. Flashcards help with memorization and quick recall, while practice problems develop application skills and deep understanding. The combination addresses multiple learning needs.',
+        'options': [
+          'Flashcards alone are always sufficient',
+          'Practice problems are unnecessary',
+          'Combining both methods is most effective for comprehensive learning',
+          'The methods are equally effective when used separately'
+        ],
+        'correctIndex': 2,
+        'difficulty': 4,
+        'type': 'evaluation',
+      },
+      // Synthesis questions
+      {
+        'front': 'Synthesis: Combine the concepts of active recall, spaced repetition, and practical application to design an optimal study strategy for $subject.',
+        'back': 'An optimal strategy would involve: 1) Using active recall techniques (flashcards, self-quizzing) for key facts, 2) Spacing review sessions over time to improve retention, and 3) Regularly practicing real problems to develop application skills. This multi-modal approach addresses memory, timing, and understanding.',
+        'options': [
+          'Focus only on one technique at a time',
+          'Use active recall with spaced repetition and regular practice application',
+          'Memorize everything first, then practice later',
+          'Only practical application is needed'
+        ],
+        'correctIndex': 1,
+        'difficulty': 5,
+        'type': 'synthesis',
+      },
+    ];
+    
     // Generate the requested number of cards, cycling through templates if needed
     final cards = <FlashCard>[];
     for (int i = 0; i < count; i++) {
-      final template = templates[i % templates.length];
+      final template = enhancedTemplates[i % enhancedTemplates.length];
+      final cardType = template.containsKey('type') ? 
+          _parseCardType(template['type'] as String?) : 
+          cardTypes[i % cardTypes.length];
+      
+      String front = template['front'] as String;
+      String back = template['back'] as String;
+      String? clozeMask;
+      List<String> options = List<String>.from(template['options'] as List);
+      int correctIndex = template['correctIndex'] as int;
+      
+      // Modify content based on card type
+      if (cardType == CardType.cloze) {
+        // Convert to cloze format
+        final words = back.split(' ');
+        if (words.length > 3) {
+          final keyWordIndex = words.length ~/ 2;
+          final keyWord = words[keyWordIndex];
+          clozeMask = '{{c1::$keyWord}}';
+          front = back.replaceFirst(keyWord, clozeMask);
+          back = keyWord;
+        }
+      } else if (cardType == CardType.reverse) {
+        // Create reverse card (definition to term)
+        if (front.contains('What is') || front.contains('What are')) {
+          final temp = front;
+          front = 'Define: ${back.split('.')[0]}';
+          back = temp.replaceAll('What is the ', '').replaceAll('What are the ', '').replaceAll('?', '');
+        }
+      } else if (cardType == CardType.trueFalse) {
+        // Ensure True/False format
+        if (!options.contains('True') || !options.contains('False')) {
+          options = ['True', 'False'];
+          correctIndex = back.toLowerCase().contains('false') ? 1 : 0;
+        }
+      } else if (cardType == CardType.comparison) {
+        // Ensure comparison format
+        if (!front.toLowerCase().contains('compare')) {
+          front = 'Compare and contrast: $front';
+        }
+      } else if (cardType == CardType.scenario) {
+        // Ensure scenario format
+        if (!front.toLowerCase().contains('scenario')) {
+          front = 'Scenario: $front';
+        }
+      } else if (cardType == CardType.causeEffect) {
+        // Ensure cause-effect format
+        if (!front.toLowerCase().contains('what happens') && !front.toLowerCase().contains('why')) {
+          front = 'What happens when: $front';
+        }
+      } else if (cardType == CardType.caseStudy) {
+        // Ensure case study format
+        if (!front.toLowerCase().contains('case study')) {
+          front = 'Case Study: $front';
+        }
+      } else if (cardType == CardType.problemSolving) {
+        // Ensure problem-solving format
+        if (!front.toLowerCase().contains('problem-solving') && !front.toLowerCase().contains('step')) {
+          front = 'Problem-Solving: $front';
+        }
+      } else if (cardType == CardType.evaluation) {
+        // Ensure evaluation format
+        if (!front.toLowerCase().contains('evaluation') && !front.toLowerCase().contains('assess')) {
+          front = 'Evaluation: Assess $front';
+        }
+      } else if (cardType == CardType.synthesis) {
+        // Ensure synthesis format
+        if (!front.toLowerCase().contains('synthesis') && !front.toLowerCase().contains('combine')) {
+          front = 'Synthesis: Combine concepts related to $front';
+        }
+      }
+      
       cards.add(FlashCard(
         id: (i + 1).toString(),
         deckId: 'ai_generated',
-        type: CardType.basic,
-        front: template['front'] as String,
-        back: template['back'] as String,
-        multipleChoiceOptions: List<String>.from(template['options'] as List),
-        correctAnswerIndex: template['correctIndex'] as int,
+        type: cardType,
+        front: front,
+        back: back,
+        clozeMask: clozeMask,
+        multipleChoiceOptions: options,
+        correctAnswerIndex: correctIndex,
         difficulty: template['difficulty'] as int,
       ));
     }
@@ -1153,5 +2001,1032 @@ QUALITY STANDARDS:
       debugPrint('Debug generation error: $e');
       return 'Error: $e';
     }
+  }
+
+  /// Generate visual representation for a concept using DALL-E API
+  /// @param concept - The concept to visualize
+  /// @param user - User object for personalization
+  /// @param subject - Subject context for appropriate imagery
+  /// @return URL to generated image or null if generation fails
+  Future<String?> generateVisualRepresentation({
+    required String concept,
+    required User user,
+    required String subject,
+  }) async {
+    if (!isConfigured || user.preferences.learningStyle != 'visual') {
+      return null;
+    }
+
+    try {
+      // Create educational prompt optimized for learning
+      final visualPrompt = _buildVisualPrompt(concept, subject, user);
+      
+      // Call image generation API
+      final imageUrl = await _generateImageWithDALLE(visualPrompt);
+      
+      if (imageUrl != null) {
+        debugPrint('Generated visual representation for: $concept');
+        return imageUrl;
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('Visual generation error: $e');
+      return null;
+    }
+  }
+
+  /// Generate audio content for auditory learners using TTS
+  /// @param text - Text content to convert to audio
+  /// @param user - User object for personalization
+  /// @param subject - Subject context for appropriate voice settings
+  /// @return URL to generated audio or null if generation fails
+  Future<String?> generateAudioContent({
+    required String text,
+    required User user,
+    required String subject,
+  }) async {
+    if (!isConfigured || user.preferences.learningStyle != 'auditory') {
+      return null;
+    }
+
+    try {
+      // Create optimized audio content
+      final audioText = _buildAudioScript(text, subject, user);
+      
+      // Generate audio using TTS service
+      final audioUrl = await _generateAudioWithTTS(audioText, user);
+      
+      if (audioUrl != null) {
+        debugPrint('Generated audio content for auditory learning');
+        return audioUrl;
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('Audio generation error: $e');
+      return null;
+    }
+  }
+
+  /// Generate interactive diagram data for complex concepts
+  /// @param concept - The concept to diagram
+  /// @param subject - Subject context for appropriate diagram type
+  /// @param user - User object for personalization
+  /// @return JSON diagram data or null if generation fails
+  Future<String?> generateDiagramData({
+    required String concept,
+    required User user,
+    required String subject,
+  }) async {
+    if (!isConfigured) return null;
+
+    try {
+      // Determine if concept benefits from diagramming
+      if (_shouldGenerateDiagram(concept, subject)) {
+        final diagramType = _determineDiagramType(concept, subject);
+        final diagramData = await _generateDiagramJSON(concept, diagramType, user);
+        
+        if (diagramData != null) {
+          debugPrint('Generated diagram data for: $concept');
+          return diagramData;
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('Diagram generation error: $e');
+      return null;
+    }
+  }
+
+  /// Build optimized visual prompt for DALL-E
+  String _buildVisualPrompt(String concept, String subject, User user) {
+    final prompt = StringBuffer();
+    
+    // Base educational style
+    prompt.write('Create a clean, educational diagram illustrating: $concept. ');
+    
+    // Subject-specific styling
+    switch (subject.toLowerCase()) {
+      case 'biology':
+      case 'anatomy':
+        prompt.write('Scientific illustration style, labeled anatomical features. ');
+        break;
+      case 'chemistry':
+        prompt.write('Molecular structure diagram with clear atomic bonds. ');
+        break;
+      case 'physics':
+        prompt.write('Technical diagram with forces, vectors, and measurements. ');
+        break;
+      case 'mathematics':
+        prompt.write('Geometric diagram with clear mathematical relationships. ');
+        break;
+      case 'history':
+        prompt.write('Historical illustration with period-appropriate imagery. ');
+        break;
+      default:
+        prompt.write('Simple, clear educational diagram. ');
+    }
+    
+    // Educational level adaptation
+    if (user.age != null && user.age! < 18) {
+      prompt.write('Age-appropriate, colorful, engaging visual. ');
+    } else if (user.school?.toLowerCase().contains('university') == true) {
+      prompt.write('Advanced academic level, detailed technical illustration. ');
+    }
+    
+    // Final formatting
+    prompt.write('Style: minimalist, high contrast, clear labels, white background.');
+    
+    return prompt.toString();
+  }
+
+  /// Build optimized audio script for TTS
+  String _buildAudioScript(String text, String subject, User user) {
+    final script = StringBuffer();
+    
+    // Add pronunciation guides for subject-specific terms
+    String processedText = text;
+    
+    // Subject-specific pronunciations
+    if (subject.toLowerCase() == 'chemistry') {
+      processedText = processedText
+          .replaceAll('H2O', 'H-two-O')
+          .replaceAll('CO2', 'C-O-two')
+          .replaceAll('NaCl', 'sodium chloride');
+    } else if (subject.toLowerCase() == 'biology') {
+      processedText = processedText
+          .replaceAll('DNA', 'D-N-A')
+          .replaceAll('RNA', 'R-N-A')
+          .replaceAll('ATP', 'A-T-P');
+    }
+    
+    // Add pauses for better comprehension
+    processedText = processedText
+        .replaceAll('.', '. <break time="0.5s"/>')
+        .replaceAll(',', ', <break time="0.3s"/>');
+    
+    script.write(processedText);
+    
+    return script.toString();
+  }
+
+  /// Generate image using DALL-E API
+  Future<String?> _generateImageWithDALLE(String prompt) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/images/generations'),
+        headers: {
+          'Authorization': 'Bearer $_apiKey',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'prompt': prompt,
+          'n': 1,
+          'size': '512x512',
+          'response_format': 'url',
+          'quality': 'standard',
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['data'][0]['url'] as String;
+      } else {
+        debugPrint('DALL-E API error: ${response.statusCode} ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Image generation error: $e');
+      return null;
+    }
+  }
+
+  /// Generate audio using TTS service
+  Future<String?> _generateAudioWithTTS(String text, User user) async {
+    try {
+      // For now, return a placeholder URL - would integrate with real TTS service
+      // In production: integrate with Google Cloud TTS, Amazon Polly, or similar
+      final audioUrl = await _mockTTSGeneration(text, user);
+      return audioUrl;
+    } catch (e) {
+      debugPrint('TTS generation error: $e');
+      return null;
+    }
+  }
+
+  /// Mock TTS generation for development (replace with real TTS service)
+  Future<String?> _mockTTSGeneration(String text, User user) async {
+    // Simulate TTS processing time
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Return mock audio URL - in production, this would be real TTS service
+    return 'https://studypals-audio.com/generated/${DateTime.now().millisecondsSinceEpoch}.mp3';
+  }
+
+  /// Determine if concept should have a diagram
+  bool _shouldGenerateDiagram(String concept, String subject) {
+    final processKeywords = ['process', 'cycle', 'flow', 'system', 'structure', 'relationship'];
+    final scienceSubjects = ['biology', 'chemistry', 'physics', 'anatomy'];
+    
+    final conceptLower = concept.toLowerCase();
+    final subjectLower = subject.toLowerCase();
+    
+    return processKeywords.any((keyword) => conceptLower.contains(keyword)) ||
+           scienceSubjects.contains(subjectLower);
+  }
+
+  /// Determine appropriate diagram type
+  String _determineDiagramType(String concept, String subject) {
+    final conceptLower = concept.toLowerCase();
+    
+    if (conceptLower.contains('cycle') || conceptLower.contains('process')) {
+      return 'flowchart';
+    } else if (conceptLower.contains('structure') || conceptLower.contains('anatomy')) {
+      return 'structure';
+    } else if (conceptLower.contains('relationship') || conceptLower.contains('connection')) {
+      return 'network';
+    } else {
+      return 'concept-map';
+    }
+  }
+
+  /// Generate diagram JSON data
+  Future<String?> _generateDiagramJSON(String concept, String diagramType, User user) async {
+    try {
+      // Create basic diagram structure
+      final diagram = {
+        'type': diagramType,
+        'concept': concept,
+        'elements': _generateDiagramElements(concept, diagramType),
+        'style': _getDiagramStyle(user),
+        'metadata': {
+          'generated_at': DateTime.now().toIso8601String(),
+          'learning_style': user.preferences.learningStyle,
+        }
+      };
+      
+      return jsonEncode(diagram);
+    } catch (e) {
+      debugPrint('Diagram JSON generation error: $e');
+      return null;
+    }
+  }
+
+  /// Generate diagram elements based on concept
+  List<Map<String, dynamic>> _generateDiagramElements(String concept, String diagramType) {
+    // Basic element generation - in production, this would be more sophisticated
+    switch (diagramType) {
+      case 'flowchart':
+        return [
+          {'id': '1', 'type': 'start', 'label': 'Start', 'x': 100, 'y': 50},
+          {'id': '2', 'type': 'process', 'label': concept, 'x': 200, 'y': 150},
+          {'id': '3', 'type': 'end', 'label': 'End', 'x': 300, 'y': 250},
+        ];
+      case 'structure':
+        return [
+          {'id': '1', 'type': 'node', 'label': 'Main', 'x': 200, 'y': 100},
+          {'id': '2', 'type': 'node', 'label': 'Component 1', 'x': 100, 'y': 200},
+          {'id': '3', 'type': 'node', 'label': 'Component 2', 'x': 300, 'y': 200},
+        ];
+      default:
+        return [
+          {'id': '1', 'type': 'concept', 'label': concept, 'x': 200, 'y': 150},
+        ];
+    }
+  }
+
+  /// Get diagram styling based on user preferences
+  Map<String, dynamic> _getDiagramStyle(User user) {
+    return {
+      'theme': user.preferences.theme,
+      'fontSize': user.preferences.fontSize * 12,
+      'colors': {
+        'primary': user.preferences.primaryColor,
+        'background': user.preferences.theme == 'dark' ? '#2c3e50' : '#ffffff',
+        'text': user.preferences.theme == 'dark' ? '#ecf0f1' : '#2c3e50',
+      }
+    };
+  }
+
+  /// Generate flashcards optimized for visual learners using existing Gemini API
+  Future<List<FlashCard>> generateVisualFlashcardsFromText(
+    String content,
+    String subject,
+    User user, {
+    int count = 5,
+  }) async {
+    debugPrint('=== Visual Flashcard Generation Debug ===');
+    debugPrint('Content: $content');
+    debugPrint('Subject: $subject');
+    debugPrint('Learning Style: ${user.preferences.learningStyle}');
+    
+    try {
+      // Generate visual-optimized prompt
+      final visualPrompt = _buildVisualLearnerPrompt(content, subject, user, count);
+      debugPrint('Visual prompt created');
+      
+      // Call existing AI system with visual prompt
+      final response = await _callAI(visualPrompt);
+      debugPrint('Received AI response for visual content');
+      
+      // Parse response into flashcards
+      final baseCards = await _parseVisualFlashcardsResponse(response, subject);
+      debugPrint('Parsed ${baseCards.length} base cards');
+      
+      // Enhance with visual elements for visual learners
+      if (user.preferences.learningStyle == 'visual' || user.preferences.learningStyle == 'adaptive') {
+        final enhancedCards = await _enhanceWithVisualContent(baseCards, subject, user);
+        debugPrint('Enhanced ${enhancedCards.length} cards with visual content');
+        return enhancedCards;
+      }
+      
+      return baseCards;
+    } catch (e) {
+      debugPrint('Error in visual flashcard generation: $e');
+      return _createFallbackFlashcards(subject, content, count: count);
+    }
+  }
+
+  /// Build specialized prompt for visual learners
+  String _buildVisualLearnerPrompt(String content, String subject, User user, int count) {
+    return '''
+You are creating flashcards specifically optimized for VISUAL LEARNERS studying $subject.
+
+CRITICAL VISUAL LEARNING REQUIREMENTS:
+- Include detailed visual descriptions in ALL answers
+- Describe step-by-step visual processes
+- Use spatial relationships and visual metaphors
+- Mention colors, shapes, patterns, and diagrams when relevant
+- Create content that can be easily visualized or diagrammed
+
+Content to learn: $content
+
+Create exactly $count flashcards in this EXACT JSON format:
+[
+  {
+    "question": "Clear question that sets up visual thinking",
+    "answer": "Detailed answer with rich visual descriptions. Include phrases like 'visualize this as...', 'imagine a diagram showing...', 'picture the process as...'",
+    "cardType": "basic",
+    "difficulty": 3,
+    "visualHints": "Specific visual elements that would help: diagrams, charts, colors, spatial arrangements",
+    "diagramType": "flowchart|concept_map|comparison|process|structure"
+  }
+]
+
+Focus on creating content that naturally lends itself to visual representation. Each answer should paint a clear mental picture.
+''';
+  }
+
+  /// Parse visual flashcards response with enhanced error handling
+  Future<List<FlashCard>> _parseVisualFlashcardsResponse(String response, String subject) async {
+    try {
+      // Clean the response
+      String cleanResponse = response.trim();
+      int startIndex = cleanResponse.indexOf('[');
+      int endIndex = cleanResponse.lastIndexOf(']');
+      
+      if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+        cleanResponse = cleanResponse.substring(startIndex, endIndex + 1);
+      }
+      
+      final cardsData = json.decode(cleanResponse) as List;
+      
+      return cardsData.map((cardJson) {
+        return FlashCard(
+          id: DateTime.now().millisecondsSinceEpoch.toString() + 
+              cardsData.indexOf(cardJson).toString(),
+          deckId: 'visual_generated',
+          type: _parseCardType(cardJson['cardType']),
+          front: cardJson['question'] ?? cardJson['front'] ?? 'Visual Question',
+          back: cardJson['answer'] ?? cardJson['back'] ?? 'Visual Answer',
+          difficulty: cardJson['difficulty'] ?? 3,
+          multipleChoiceOptions: cardJson['multipleChoiceOptions'] != null 
+              ? List<String>.from(cardJson['multipleChoiceOptions'])
+              : ['Option A', 'Option B', 'Option C', 'Option D'],
+          correctAnswerIndex: cardJson['correctAnswerIndex'] ?? 0,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Error parsing visual flashcards: $e');
+      return [];
+    }
+  }
+
+  /// Enhance flashcards with visual content and metadata
+  Future<List<FlashCard>> _enhanceWithVisualContent(
+    List<FlashCard> baseCards, 
+    String subject,
+    User user,
+  ) async {
+    final enhancedCards = <FlashCard>[];
+    
+    for (final card in baseCards) {
+      try {
+        // Generate visual metadata
+        final visualMetadata = _extractVisualMetadata(card, subject);
+        
+        // Generate visual placeholder URL
+        final imageUrl = _generateVisualPlaceholder(card.front, subject, visualMetadata);
+        
+        // Generate diagram data
+        final diagramData = _generateDiagramData(card, visualMetadata);
+        
+        // Create enhanced flashcard
+        final enhancedCard = FlashCard(
+          id: card.id,
+          deckId: card.deckId,
+          type: card.type,
+          front: card.front,
+          back: card.back,
+          difficulty: card.difficulty,
+          multipleChoiceOptions: card.multipleChoiceOptions,
+          correctAnswerIndex: card.correctAnswerIndex,
+          lastQuizAttempt: card.lastQuizAttempt,
+          lastQuizCorrect: card.lastQuizCorrect,
+          imageUrl: imageUrl,
+          diagramData: diagramData,
+          visualMetadata: visualMetadata,
+        );
+        
+        enhancedCards.add(enhancedCard);
+      } catch (e) {
+        debugPrint('Error enhancing card ${card.id}: $e');
+        // Add original card if enhancement fails
+        enhancedCards.add(card);
+      }
+    }
+    
+    return enhancedCards;
+  }
+
+  /// Extract visual metadata from flashcard content
+  Map<String, String> _extractVisualMetadata(FlashCard card, String subject) {
+    final metadata = <String, String>{
+      'subject': subject,
+      'visualType': 'enhanced_text',
+      'hasVisualElements': 'true',
+      'generatedAt': DateTime.now().toIso8601String(),
+    };
+    
+    final content = '${card.front} ${card.back}'.toLowerCase();
+    
+    // Determine visual type based on content analysis
+    if (content.contains(RegExp(r'\b(process|steps|cycle|sequence|stages?)\b'))) {
+      metadata['visualType'] = 'flowchart';
+      metadata['layoutType'] = 'sequential';
+    } else if (content.contains(RegExp(r'\b(structure|parts|components?|anatomy)\b'))) {
+      metadata['visualType'] = 'diagram';
+      metadata['layoutType'] = 'hierarchical';
+    } else if (content.contains(RegExp(r'\b(compare|versus|vs|difference|similarities?)\b'))) {
+      metadata['visualType'] = 'comparison_chart';
+      metadata['layoutType'] = 'side_by_side';
+    } else if (content.contains(RegExp(r'\b(relationship|connects?|links?|network)\b'))) {
+      metadata['visualType'] = 'concept_map';
+      metadata['layoutType'] = 'radial';
+    } else {
+      metadata['visualType'] = 'concept_map';
+      metadata['layoutType'] = 'radial';
+    }
+    
+    // Add subject-specific enhancements
+    if (subject.toLowerCase().contains('biology')) {
+      metadata['subjectStyle'] = 'biological_diagram';
+    } else if (subject.toLowerCase().contains('chemistry')) {
+      metadata['subjectStyle'] = 'molecular_diagram';
+    } else if (subject.toLowerCase().contains('physics')) {
+      metadata['subjectStyle'] = 'scientific_diagram';
+    } else if (subject.toLowerCase().contains('math')) {
+      metadata['subjectStyle'] = 'mathematical_diagram';
+    } else {
+      metadata['subjectStyle'] = 'educational_diagram';
+    }
+    
+    return metadata;
+  }
+
+  /// Generate visual placeholder URL for educational content
+  String _generateVisualPlaceholder(String concept, String subject, Map<String, String> metadata) {
+    final encodedConcept = Uri.encodeComponent(concept.replaceAll(RegExp(r'[^\w\s]'), ''));
+    final visualType = metadata['visualType'] ?? 'diagram';
+    
+    // Create educational placeholder with visual indicators
+    final placeholderText = '${encodedConcept.replaceAll('%20', '+')}_${visualType.toUpperCase()}';
+    final color = _getSubjectColor(subject);
+    
+    return 'https://via.placeholder.com/500x400/$color/FFFFFF?text=$placeholderText';
+  }
+
+  /// Get subject-appropriate colors for visual placeholders
+  String _getSubjectColor(String subject) {
+    final subjectLower = subject.toLowerCase();
+    if (subjectLower.contains('biology')) return '4CAF50'; // Green
+    if (subjectLower.contains('chemistry')) return '2196F3'; // Blue
+    if (subjectLower.contains('physics')) return 'FF9800'; // Orange
+    if (subjectLower.contains('math')) return '9C27B0'; // Purple
+    if (subjectLower.contains('history')) return '795548'; // Brown
+    if (subjectLower.contains('literature')) return 'E91E63'; // Pink
+    return '607D8B'; // Blue Grey default
+  }
+
+  /// Generate structured diagram data based on content
+  String _generateDiagramData(FlashCard card, Map<String, String> metadata) {
+    final visualType = metadata['visualType'] ?? 'concept_map';
+    
+    try {
+      switch (visualType) {
+        case 'flowchart':
+          return json.encode(_generateFlowchartData(card));
+        case 'concept_map':
+          return json.encode(_generateConceptMapData(card));
+        case 'comparison_chart':
+          return json.encode(_generateComparisonData(card));
+        case 'diagram':
+          return json.encode(_generateStructuralDiagramData(card));
+        default:
+          return json.encode(_generateGenericDiagramData(card));
+      }
+    } catch (e) {
+      debugPrint('Error generating diagram data: $e');
+      return json.encode(_generateGenericDiagramData(card));
+    }
+  }
+
+  /// Generate flowchart diagram data
+  Map<String, dynamic> _generateFlowchartData(FlashCard card) {
+    final steps = _extractStepsFromContent(card.back);
+    final elements = <Map<String, dynamic>>[];
+    
+    for (int i = 0; i < steps.length; i++) {
+      elements.add({
+        'id': i + 1,
+        'type': i == 0 ? 'start' : (i == steps.length - 1 ? 'end' : 'process'),
+        'label': _truncateText(steps[i], 25),
+        'x': 250,
+        'y': 80 + (i * 100),
+        'width': 200,
+        'height': 60,
+      });
+    }
+    
+    return {
+      'type': 'flowchart',
+      'title': _truncateText(card.front, 30),
+      'elements': elements,
+      'connections': _generateFlowchartConnections(elements.length),
+      'layout': 'vertical',
+    };
+  }
+
+  /// Generate concept map diagram data
+  Map<String, dynamic> _generateConceptMapData(FlashCard card) {
+    final centralConcept = _extractMainConcept(card.front);
+    final relatedConcepts = _extractRelatedConcepts(card.back);
+    final elements = <Map<String, dynamic>>[];
+    
+    // Central concept
+    elements.add({
+      'id': 1,
+      'type': 'central',
+      'label': _truncateText(centralConcept, 20),
+      'x': 250,
+      'y': 200,
+      'width': 120,
+      'height': 60,
+    });
+    
+    // Related concepts in circle around center
+    for (int i = 0; i < relatedConcepts.length && i < 6; i++) {
+      final angle = (i * 60) * (3.14159 / 180); // Convert to radians
+      final radius = 120;
+      elements.add({
+        'id': i + 2,
+        'type': 'concept',
+        'label': _truncateText(relatedConcepts[i], 15),
+        'x': 250 + (radius * cos(angle)),
+        'y': 200 + (radius * sin(angle)),
+        'width': 100,
+        'height': 50,
+      });
+    }
+    
+    return {
+      'type': 'concept_map',
+      'title': _truncateText(card.front, 30),
+      'elements': elements,
+      'connections': _generateConceptMapConnections(elements.length),
+      'layout': 'radial',
+    };
+  }
+
+  /// Generate comparison chart data
+  Map<String, dynamic> _generateComparisonData(FlashCard card) {
+    final comparisonItems = _extractComparisonItems(card.back);
+    final elements = <Map<String, dynamic>>[];
+    
+    for (int i = 0; i < comparisonItems.length && i < 2; i++) {
+      elements.add({
+        'id': i + 1,
+        'type': 'comparison_item',
+        'label': _truncateText(comparisonItems[i]['title'] ?? 'Item ${i + 1}', 20),
+        'description': _truncateText(comparisonItems[i]['description'] ?? '', 50),
+        'x': 100 + (i * 250),
+        'y': 150,
+        'width': 200,
+        'height': 100,
+      });
+    }
+    
+    return {
+      'type': 'comparison',
+      'title': _truncateText(card.front, 30),
+      'elements': elements,
+      'layout': 'side_by_side',
+    };
+  }
+
+  /// Generate structural diagram data
+  Map<String, dynamic> _generateStructuralDiagramData(FlashCard card) {
+    final components = _extractComponentsFromContent(card.back);
+    final elements = <Map<String, dynamic>>[];
+    
+    for (int i = 0; i < components.length && i < 5; i++) {
+      elements.add({
+        'id': i + 1,
+        'type': 'component',
+        'label': _truncateText(components[i], 20),
+        'x': 150 + (i % 3) * 150,
+        'y': 150 + (i ~/ 3) * 100,
+        'width': 120,
+        'height': 60,
+      });
+    }
+    
+    return {
+      'type': 'structure',
+      'title': _truncateText(card.front, 30),
+      'elements': elements,
+      'layout': 'hierarchical',
+    };
+  }
+
+  /// Generate generic diagram data as fallback
+  Map<String, dynamic> _generateGenericDiagramData(FlashCard card) {
+    return {
+      'type': 'generic',
+      'title': _truncateText(card.front, 30),
+      'elements': [
+        {
+          'id': 1,
+          'type': 'main_concept',
+          'label': _truncateText(_extractMainConcept(card.front), 20),
+          'x': 250,
+          'y': 200,
+          'width': 150,
+          'height': 80,
+        }
+      ],
+      'layout': 'centered',
+    };
+  }
+
+  /// Extract sequential steps from content
+  List<String> _extractStepsFromContent(String content) {
+    final steps = <String>[];
+    final sentences = content.split(RegExp(r'[.!?]+'));
+    
+    for (final sentence in sentences) {
+      final trimmed = sentence.trim();
+      if (trimmed.isNotEmpty && (
+          trimmed.toLowerCase().contains(RegExp(r'\b(first|then|next|finally|step|stage)\b')) ||
+          trimmed.contains(RegExp(r'^\d+\.')) ||
+          steps.isEmpty
+      )) {
+        steps.add(trimmed);
+      }
+    }
+    
+    return steps.isEmpty ? [content] : steps.take(5).toList();
+  }
+
+  /// Extract main concept from question
+  String _extractMainConcept(String front) {
+    return front
+        .replaceAll(RegExp(r'^(what|how|when|where|why|which)\s+', caseSensitive: false), '')
+        .replaceAll(RegExp(r'[?!.]+$'), '')
+        .trim();
+  }
+
+  /// Extract related concepts from answer
+  List<String> _extractRelatedConcepts(String back) {
+    final concepts = <String>[];
+    final words = back.split(RegExp(r'[,\s]+'));
+    
+    for (final word in words) {
+      final cleaned = word.replaceAll(RegExp(r'[^\w]'), '');
+      if (cleaned.length > 4 && !_isCommonWord(cleaned.toLowerCase())) {
+        concepts.add(cleaned);
+      }
+    }
+    
+    return concepts.take(6).toList();
+  }
+
+  /// Extract comparison items from content
+  List<Map<String, String>> _extractComparisonItems(String back) {
+    final sentences = back.split(RegExp(r'[.!?]+'));
+    final items = <Map<String, String>>[];
+    
+    if (sentences.length >= 2) {
+      items.add({
+        'title': 'First Aspect',
+        'description': sentences[0].trim(),
+      });
+      items.add({
+        'title': 'Second Aspect', 
+        'description': sentences[1].trim(),
+      });
+    } else {
+      final halfLength = back.length ~/ 2;
+      items.add({
+        'title': 'Aspect A',
+        'description': back.substring(0, halfLength).trim(),
+      });
+      items.add({
+        'title': 'Aspect B',
+        'description': back.substring(halfLength).trim(),
+      });
+    }
+    
+    return items;
+  }
+
+  /// Extract components from content
+  List<String> _extractComponentsFromContent(String content) {
+    final components = <String>[];
+    
+    // Look for lists or enumerated items
+    final listItems = content.split(RegExp(r'[,;]'));
+    for (final item in listItems) {
+      final trimmed = item.trim();
+      if (trimmed.isNotEmpty && trimmed.length > 3) {
+        components.add(trimmed);
+      }
+    }
+    
+    // If no clear list, extract key nouns
+    if (components.isEmpty) {
+      final words = content.split(RegExp(r'\s+'));
+      for (final word in words) {
+        final cleaned = word.replaceAll(RegExp(r'[^\w]'), '');
+        if (cleaned.length > 5 && !_isCommonWord(cleaned.toLowerCase())) {
+          components.add(cleaned);
+        }
+      }
+    }
+    
+    return components.take(5).toList();
+  }
+
+  /// Generate flowchart connections
+  List<Map<String, dynamic>> _generateFlowchartConnections(int elementCount) {
+    final connections = <Map<String, dynamic>>[];
+    
+    for (int i = 1; i < elementCount; i++) {
+      connections.add({
+        'from': i,
+        'to': i + 1,
+        'type': 'arrow',
+      });
+    }
+    
+    return connections;
+  }
+
+  /// Generate concept map connections
+  List<Map<String, dynamic>> _generateConceptMapConnections(int elementCount) {
+    final connections = <Map<String, dynamic>>[];
+    
+    // Connect all outer concepts to central concept (id: 1)
+    for (int i = 2; i <= elementCount; i++) {
+      connections.add({
+        'from': 1,
+        'to': i,
+        'type': 'line',
+      });
+    }
+    
+    return connections;
+  }
+
+  /// Check if word is common and should be filtered out
+  bool _isCommonWord(String word) {
+    const commonWords = {
+      'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+      'is', 'are', 'was', 'were', 'have', 'has', 'had', 'will', 'would', 'could',
+      'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those', 'it',
+      'they', 'them', 'their', 'there', 'here', 'when', 'where', 'why', 'how',
+      'what', 'which', 'who', 'whose', 'whom', 'a', 'an', 'some', 'any', 'all',
+      'each', 'every', 'no', 'not', 'very', 'more', 'most', 'much', 'many'
+    };
+    return commonWords.contains(word);
+  }
+
+  /// Truncate text to specified length with ellipsis
+  String _truncateText(String text, int maxLength) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength)}...';
+  }
+
+  /// Cosine function for positioning elements in circle
+  double cos(double radians) {
+    // Simple cosine approximation
+    final x = radians % (2 * 3.14159);
+    return 1 - (x * x) / 2 + (x * x * x * x) / 24;
+  }
+
+  /// Sine function for positioning elements in circle
+  double sin(double radians) {
+    // Simple sine approximation
+    final x = radians % (2 * 3.14159);
+    return x - (x * x * x) / 6 + (x * x * x * x * x) / 120;
+  }
+
+  /// Generate multi-modal content for a flashcard based on user preferences
+  /// This orchestrates visual, audio, and diagram generation
+  Future<FlashCard> _generateMultiModalContent(
+    FlashCard baseCard,
+    String subject,
+    User user,
+    String sourceContent,
+  ) async {
+    try {
+      String? imageUrl;
+      String? audioUrl;
+      String? diagramData;
+      Map<String, dynamic>? visualMetadata;
+
+      final learningStyle = user.preferences.learningStyle;
+      
+      // Generate content based on learning style preferences
+      final tasks = <Future<void>>[];
+
+      // Visual content for visual learners or adaptive learners
+      if (learningStyle == 'visual' || learningStyle == 'adaptive') {
+        tasks.add(_generateVisualContentTask(baseCard, subject, user).then((result) {
+          imageUrl = result['imageUrl'] as String?;
+          visualMetadata = result['visualMetadata'] as Map<String, dynamic>?;
+        }));
+      }
+
+      // Audio content for auditory learners or adaptive learners
+      if (learningStyle == 'auditory' || learningStyle == 'adaptive') {
+        tasks.add(_generateAudioContentTask(baseCard, subject, user).then((url) {
+          audioUrl = url;
+        }));
+      }
+
+      // Diagram content for kinesthetic/visual learners or adaptive learners
+      if (learningStyle == 'kinesthetic' || 
+          learningStyle == 'visual' || 
+          learningStyle == 'adaptive') {
+        tasks.add(_generateDiagramContentTask(baseCard, subject, user).then((data) {
+          diagramData = data;
+        }));
+      }
+
+      // Execute all generation tasks concurrently with timeout
+      await Future.wait(tasks).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('Multi-modal content generation timed out for card: ${baseCard.id}');
+          return <void>[];
+        },
+      );
+
+      // Create enhanced flashcard with multi-modal content
+      return FlashCard(
+        id: baseCard.id,
+        deckId: baseCard.deckId,
+        type: baseCard.type,
+        front: baseCard.front,
+        back: baseCard.back,
+        clozeMask: baseCard.clozeMask,
+        multipleChoiceOptions: baseCard.multipleChoiceOptions,
+        correctAnswerIndex: baseCard.correctAnswerIndex,
+        difficulty: baseCard.difficulty,
+        lastQuizAttempt: baseCard.lastQuizAttempt,
+        lastQuizCorrect: baseCard.lastQuizCorrect,
+        imageUrl: imageUrl,
+        audioUrl: audioUrl,
+        diagramData: diagramData,
+        visualMetadata: visualMetadata?.map((key, value) => MapEntry(key, value.toString())),
+      );
+
+    } catch (e) {
+      debugPrint('Error generating multi-modal content for card ${baseCard.id}: $e');
+      // Return original card if multi-modal generation fails
+      return baseCard;
+    }
+  }
+
+  /// Generate visual content task with comprehensive error handling
+  Future<Map<String, dynamic>> _generateVisualContentTask(
+    FlashCard card,
+    String subject,
+    User user,
+  ) async {
+    return await MultiModalErrorHandler.executeWithFallback<Map<String, dynamic>>(
+      operationName: 'visual_generation',
+      operation: () async {
+        final imageUrl = await generateVisualRepresentation(
+          concept: card.front,
+          subject: subject,
+          user: user,
+        );
+        
+        final result = {
+          'imageUrl': imageUrl,
+          'visualMetadata': {
+            'concept': card.front,
+            'subject': subject,
+            'generatedAt': DateTime.now().toIso8601String(),
+          }
+        };
+        
+        // Validate the generated content
+        if (!MultiModalErrorHandler.validateVisualContent(result)) {
+          throw ValidationException('Generated visual content failed validation');
+        }
+        
+        return result;
+      },
+      fallback: () => MultiModalErrorHandler.generateFallbackVisualContent(
+        concept: card.front,
+        subject: subject,
+        user: user,
+      ),
+    ) ?? {};
+  }
+
+  /// Generate audio content task with comprehensive error handling
+  Future<String?> _generateAudioContentTask(
+    FlashCard card,
+    String subject,
+    User user,
+  ) async {
+    return await MultiModalErrorHandler.executeWithFallback<String?>(
+      operationName: 'audio_generation',
+      operation: () async {
+        final audioUrl = await generateAudioContent(
+          text: '${card.front}. ${card.back}',
+          subject: subject,
+          user: user,
+        );
+        
+        // Validate the generated content
+        if (!MultiModalErrorHandler.validateAudioContent(audioUrl)) {
+          throw ValidationException('Generated audio content failed validation');
+        }
+        
+        return audioUrl;
+      },
+      fallback: () => MultiModalErrorHandler.generateFallbackAudioContent(
+        text: '${card.front}. ${card.back}',
+        subject: subject,
+        user: user,
+      ),
+    );
+  }
+
+  /// Generate diagram content task with comprehensive error handling
+  Future<String?> _generateDiagramContentTask(
+    FlashCard card,
+    String subject,
+    User user,
+  ) async {
+    return await MultiModalErrorHandler.executeWithFallback<String?>(
+      operationName: 'diagram_generation',
+      operation: () async {
+        final diagramData = await generateDiagramData(
+          concept: card.front,
+          subject: subject,
+          user: user,
+        );
+        
+        // Validate the generated content
+        if (!MultiModalErrorHandler.validateDiagramContent(diagramData)) {
+          throw ValidationException('Generated diagram content failed validation');
+        }
+        
+        return diagramData;
+      },
+      fallback: () => MultiModalErrorHandler.generateFallbackDiagramContent(
+        concept: card.front,
+        subject: subject,
+        user: user,
+      ),
+    );
   }
 }

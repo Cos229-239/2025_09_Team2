@@ -8,6 +8,8 @@ import '../models/quiz_session.dart';
 import '../models/study_pal_persona.dart';
 import '../providers/pet_provider.dart';
 import '../providers/daily_quest_provider.dart';
+import '../providers/app_state.dart';
+import '../widgets/visual_flashcard_widget.dart';
 import '../services/quiz_service.dart';
 import '../services/predictive_scheduling_service.dart' as scheduling;
 import '../widgets/schedule/schedule_prediction_widget.dart';
@@ -645,18 +647,40 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         Expanded(
           child: Center(
             child: SingleChildScrollView(
-              child: Text(
-                _showAnswer ? _currentCard.back : _currentCard.front,
-                style: const TextStyle(
-                  fontSize: 20,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              child: _buildCardContent(),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// Build card content - uses visual widget for visual learners or cards with visual metadata
+  Widget _buildCardContent() {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final user = appState.currentUser;
+    
+    // Check if user is visual learner or card has visual metadata
+    final bool isVisualLearner = user?.preferences.learningStyle.toLowerCase() == 'visual';
+    final bool hasVisualMetadata = _currentCard.visualMetadata != null && 
+                                   _currentCard.visualMetadata!.isNotEmpty;
+    
+    // Use visual widget for visual learners or cards with visual content
+    if (isVisualLearner || hasVisualMetadata) {
+      return VisualFlashcardWidget(
+        flashcard: _currentCard,
+        showBack: _showAnswer,
+      );
+    }
+    
+    // Default text display for non-visual content
+    return Text(
+      _showAnswer ? _currentCard.back : _currentCard.front,
+      style: const TextStyle(
+        fontSize: 20,
+        height: 1.4,
+      ),
+      textAlign: TextAlign.center,
     );
   }
 

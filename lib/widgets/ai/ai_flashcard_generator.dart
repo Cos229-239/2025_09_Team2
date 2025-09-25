@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ai_provider.dart';
 import '../../providers/deck_provider.dart';
+import '../../providers/app_state.dart';
 import '../../models/deck.dart';
 import '../../models/user.dart';
 import '../../mixins/loading_state_mixin.dart';
+import '../../widgets/visual_flashcard_widget.dart';
 import 'ai_settings_widget.dart';
 
 // TODO: AI Flashcard Generator - Major Implementation Gaps
@@ -33,6 +35,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
   String _selectedSubject = 'General';
+  String _selectedLearningStyle = 'adaptive';
   int _cardCount = 5;
   String? _generationError;
 
@@ -49,6 +52,14 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     'Geography',
     'Literature',
     'Philosophy',
+  ];
+
+  final List<String> _learningStyles = [
+    'adaptive',
+    'visual',
+    'auditory',
+    'kinesthetic',
+    'reading',
   ];
 
   @override
@@ -74,6 +85,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       final aiProvider =
           Provider.of<StudyPalsAIProvider>(context, listen: false);
       final deckProvider = Provider.of<DeckProvider>(context, listen: false);
+      final appState = Provider.of<AppState>(context, listen: false);
 
       // Generate flashcards using AI
       debugPrint('=== AI Flashcard Generator Widget Debug ===');
@@ -82,22 +94,24 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       debugPrint('Subject: $_selectedSubject');
       debugPrint('Card Count: $_cardCount');
 
-      // Create a sample user for AI generation (in production, get from user provider)
-      final sampleUser = User(
+      // Get current user or create default user with selected learning style
+      final user = appState.currentUser ?? User(
         id: 'generator_user',
         email: 'user@studypals.com',
         name: 'User',
         preferences: UserPreferences(
-          learningStyle: 'adaptive',
+          learningStyle: _selectedLearningStyle,
           difficultyPreference: 'moderate',
         ),
       );
+
+      debugPrint('User learning style: ${user.preferences.learningStyle}');
 
       final flashcards = await aiProvider.generateFlashcardsFromText(
         _textController.text.isNotEmpty
             ? _textController.text
             : _topicController.text,
-        sampleUser,
+        user,
         count: _cardCount,
         subject: _selectedSubject,
       );
@@ -238,6 +252,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
               _textController.clear();
               setState(() {
                 _selectedSubject = 'General';
+                _selectedLearningStyle = 'adaptive';
                 _cardCount = 5;
               });
             },
@@ -388,28 +403,51 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     ),
                     const SizedBox(width: 16),
 
-                    // Card count slider
+                    // Learning style dropdown
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Cards to Generate: $_cardCount',
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                          Slider(
-                            value: _cardCount.toDouble(),
-                            min: 3,
-                            max: 15,
-                            divisions: 12,
-                            onChanged: (value) {
-                              setState(() {
-                                _cardCount = value.round();
-                              });
-                            },
-                          ),
-                        ],
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _selectedLearningStyle,
+                        decoration: const InputDecoration(
+                          labelText: 'Learning Style',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _learningStyles.map((style) {
+                          return DropdownMenuItem(
+                            value: style,
+                            child: Text(style.substring(0, 1).toUpperCase() + style.substring(1)),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedLearningStyle = value;
+                            });
+                          }
+                        },
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Card count slider
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Cards to Generate: $_cardCount',
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                    Slider(
+                      value: _cardCount.toDouble(),
+                      min: 3,
+                      max: 15,
+                      divisions: 12,
+                      onChanged: (value) {
+                        setState(() {
+                          _cardCount = value.round();
+                        });
+                      },
                     ),
                   ],
                 ),
