@@ -178,15 +178,17 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       return;
     }
 
-    // Start quiz session
-    setState(() {
-      _isDeckQuizMode = true;
-      _currentQuizSession = session;
-      _quizSessionId = session.id;
-      _currentCardIndex = 0;
-    });
+    // Start quiz session - check if widget is still mounted
+    if (mounted) {
+      setState(() {
+        _isDeckQuizMode = true;
+        _currentQuizSession = session;
+        _quizSessionId = session.id;
+        _currentCardIndex = 0;
+      });
 
-    debugPrint('Started deck quiz with ${session.totalQuestions} questions');
+      debugPrint('Started deck quiz with ${session.totalQuestions} questions');
+    }
   }
 
   /// Handles answering a question in deck quiz mode
@@ -218,9 +220,11 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     final isCorrect = !isSkipped && selectedIndex == correctIndex;
     final expEarned = isCorrect ? currentCard.calculateExpReward() : 0;
 
-    setState(() {
-      _currentQuizSession = updatedSession;
-    });
+    if (mounted) {
+      setState(() {
+        _currentQuizSession = updatedSession;
+      });
+    }
 
     // Note: Quest progress is updated when the entire quiz session completes,
     // not for each individual question
@@ -1099,17 +1103,6 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Show answer button for quiz cards
-                  if (!_isDeckQuizMode)
-                    TextButton.icon(
-                      onPressed: _toggleAnswer,
-                      icon: Icon(_showAnswer
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      label: Text(_showAnswer ? 'Hide Answer' : 'Show Answer'),
-                    ),
-
-                  const SizedBox(width: 16),
 
                   // Quiz cooldown/status info
                   if (!_quizService.canTakeQuiz(_currentCard))

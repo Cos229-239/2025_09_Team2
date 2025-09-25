@@ -123,7 +123,7 @@ class _AITutorChatState extends State<AITutorChat> {
         return await aiProvider.getStudyRecommendation(mockUser, mockStats);
       } else if (message.toLowerCase().contains('motivation') ||
           message.toLowerCase().contains('encourage')) {
-        return await aiProvider.getPetMessage('Buddy', mockStats);
+        return await aiProvider.getPetMessage('Buddy', mockStats, mockUser);
       } else {
         // For general questions, use the AI service directly for a chat response
         final aiService = aiProvider.aiService;
