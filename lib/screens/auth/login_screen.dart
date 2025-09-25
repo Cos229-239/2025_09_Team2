@@ -10,6 +10,8 @@ import 'package:studypals/models/user.dart';
 import 'package:studypals/screens/auth/email_verification_screen.dart';
 import 'package:studypals/screens/auth/signup_screen.dart';
 import 'package:studypals/widgets/common/animated_particle_background.dart';
+// Import Lottie for animated icons
+import 'package:lottie/lottie.dart';
 
 /// Modern login screen that matches the app's Material 3 design system
 class LoginScreen extends StatefulWidget {
@@ -19,17 +21,29 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> 
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+  }
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -215,16 +229,39 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Theme.of(context).colorScheme.primary,
                   ),
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Theme.of(context).colorScheme.primary,
+                    icon: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Lottie.asset(
+                        'assets/animations/visibility-V3.json',
+                        width: 24,
+                        height: 24,
+                        alignment: Alignment.center,
+                        addRepaintBoundary: false,
+                        filterQuality: FilterQuality.low,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to standard icon if Lottie fails
+                          return Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary,
+                          );
+                        },
+                      ),
                     ),
                     onPressed: () {
                       setState(() {
                         _obscurePassword = !_obscurePassword;
                       });
+                      
+                      // Control animation based on password visibility
+                      if (_obscurePassword) {
+                        // Password is hidden, show closed eye (animate to 0)
+                        _animationController.animateTo(0.0);
+                      } else {
+                        // Password is visible, show open eye (animate to 1)
+                        _animationController.animateTo(1.0);
+                      }
                     },
                   ),
                   border: OutlineInputBorder(
