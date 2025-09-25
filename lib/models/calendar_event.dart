@@ -422,7 +422,7 @@ class CalendarEvent {
       status: CalendarEventStatus.values
           .firstWhere((e) => e.name == json['status']),
       color: Color(json['color']),
-      icon: IconData(json['icon'], fontFamily: 'MaterialIcons'),
+      icon: json['icon'] != null ? IconData(json['icon'], fontFamily: 'MaterialIcons') : Icons.event,
       tags: List<String>.from(json['tags'] ?? []),
       isEditable: json['isEditable'] ?? true,
       isCompletable: json['isCompletable'] ?? false,

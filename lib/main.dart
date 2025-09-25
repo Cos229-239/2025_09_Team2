@@ -65,6 +65,7 @@
 /// - Cross-platform data synchronization
 /// - Offline-first architecture with smart sync
 /// - Advanced analytics and reporting dashboards
+library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';

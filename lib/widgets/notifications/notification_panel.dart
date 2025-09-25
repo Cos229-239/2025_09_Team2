@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/notification.dart';
 import '../../providers/notification_provider.dart';
+import '../../screens/dashboard_screen.dart'; // Import for SettingsGearPainter
 
 // TODO: Notification Panel - Missing Core Notification Features
 // - No actual push notifications integration (Firebase Cloud Messaging)
@@ -130,10 +131,8 @@ class NotificationPanel extends StatelessWidget {
                 ),
 
               // Settings button
-              IconButton(
-                icon: const Icon(Icons.settings),
+              AnimatedSettingsButton(
                 onPressed: () => _showNotificationSettings(context),
-                tooltip: 'Notification settings',
               ),
 
               // Close button (for bottom sheet)
@@ -534,56 +533,183 @@ class _NotificationSettingsDialogState
   }
 }
 
-/// Notification bell icon with unread count badge
-class NotificationBellIcon extends StatelessWidget {
+/// Notification bell icon with unread count badge and custom SVG states
+class NotificationBellIcon extends StatefulWidget {
   final VoidCallback? onTap;
+  final bool isSelected;
 
   const NotificationBellIcon({
     super.key,
     this.onTap,
+    this.isSelected = false,
   });
+
+  @override
+  State<NotificationBellIcon> createState() => _NotificationBellIconState();
+}
+
+class _NotificationBellIconState extends State<NotificationBellIcon> 
+    with TickerProviderStateMixin {
+  late AnimationController _ringAnimationController;
+  late Animation<double> _ringAnimation;
+  late AnimationController _dotAnimationController;
+  late Animation<double> _dotScaleAnimation;
+  late Animation<double> _dotOpacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Bell ringing animation controller
+    _ringAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 1700), // Total animation duration
+      vsync: this,
+    );
+    
+    // Bell ringing animation with keyframes matching the Lottie animation
+    _ringAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0, end: 18).chain(CurveTween(curve: const Cubic(0.455, 1, 0.7, 0))),
+        weight: 23, // 0 to 7 frames (7/30 * 100 ≈ 23%)
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 18, end: -18).chain(CurveTween(curve: const Cubic(0.279, 1, 0.7, 0))),
+        weight: 23, // 7 to 14 frames
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -18, end: 18).chain(CurveTween(curve: const Cubic(0.334, 0.997, 0.7, 0))),
+        weight: 30, // 14 to 23 frames
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 18, end: -9).chain(CurveTween(curve: const Cubic(0.335, 1, 0.7, 0))),
+        weight: 27, // 23 to 31 frames
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -9, end: 5).chain(CurveTween(curve: const Cubic(0.7, 1, 0.3, 0))),
+        weight: 23, // 31 to 38 frames
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 5, end: 0).chain(CurveTween(curve: const Cubic(0.194, 1.949, 0.3, 0))),
+        weight: 40, // 38 to 50 frames
+      ),
+    ]).animate(_ringAnimationController);
+
+    // Red dot animation controller (appears during ringing)
+    _dotAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300), // Quick appear animation
+      vsync: this,
+    );
+
+    // Scale animation for the red dot (starts at 0, grows to 1.0)
+    _dotScaleAnimation = Tween<double>(
+      begin: 0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _dotAnimationController,
+      curve: const Cubic(0.7, 1, 0.7, 0), // Matching Lottie easing
+    ));
+
+    // Opacity animation for the red dot (0 to 1)
+    _dotOpacityAnimation = Tween<double>(
+      begin: 0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _dotAnimationController,
+      curve: const Cubic(0.833, 0.833, 0.167, 0.167), // Matching Lottie easing
+    ));
+  }
+
+  @override
+  void dispose() {
+    _ringAnimationController.dispose();
+    _dotAnimationController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Consumer<NotificationProvider>(
       builder: (context, provider, child) {
-        return Stack(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications),
-              onPressed: onTap ?? () => _showNotificationPanel(context),
-            ),
-            if (provider.unreadCount > 0)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    provider.unreadCount > 99
-                        ? '99+'
-                        : '${provider.unreadCount}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+        // Determine notification state
+        bool hasUnread = provider.unreadCount > 0;
+        bool isSelected = widget.isSelected;
+        
+        // Start/stop animations based on unread status
+        if (hasUnread && !_ringAnimationController.isAnimating) {
+          _ringAnimationController.repeat(reverse: false);
+          _dotAnimationController.forward();
+        } else if (!hasUnread) {
+          _ringAnimationController.stop();
+          _ringAnimationController.reset();
+          _dotAnimationController.reverse();
+        }
+
+        return AnimatedBuilder(
+          animation: Listenable.merge([_ringAnimation, _dotScaleAnimation, _dotOpacityAnimation]),
+          builder: (context, child) {
+            return Stack(
+              children: [
+                Transform.rotate(
+                  angle: hasUnread ? _ringAnimation.value * (3.14159 / 180) : 0, // Only animate rotation when there are unread notifications
+                  child: IconButton(
+                    icon: CustomPaint(
+                      size: const Size(24, 24),
+                      painter: _getNotificationPainter(
+                        hasUnread: hasUnread,
+                        isSelected: isSelected,
+                        waveProgress: 0, // Always 0 to keep consistent visual style
+                      ),
                     ),
-                    textAlign: TextAlign.center,
+                    onPressed: widget.onTap ?? () => _showNotificationPanel(context),
                   ),
                 ),
-              ),
-          ],
+                // Red notification dot (matching Lottie animation)
+                if (hasUnread)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Transform.scale(
+                      scale: _dotScaleAnimation.value,
+                      child: Opacity(
+                        opacity: _dotOpacityAnimation.value,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF3737), // Red color matching Lottie: [0.937254961799,0.215686289469,0.215686289469,1]
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 1.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       },
     );
+  }
+
+  CustomPainter _getNotificationPainter({
+    required bool hasUnread,
+    required bool isSelected,
+    required double waveProgress,
+  }) {
+    final primaryColor = Theme.of(context).primaryColor;
+    final iconColor = Theme.of(context).iconTheme.color;
+    
+    // Always use the same visual style regardless of unread status
+    // Only the ringing animation changes, not the icon appearance
+    if (isSelected) {
+      return NotificationBellFilledPainter(fillColor: primaryColor);
+    } else {
+      return NotificationBellOutlinedPainter(iconColor: iconColor);
+    }
   }
 
   void _showNotificationPanel(BuildContext context) {
@@ -595,6 +721,419 @@ class NotificationBellIcon extends StatelessWidget {
         isBottomSheet: true,
         onClose: () => Navigator.of(context).pop(),
       ),
+    );
+  }
+}
+
+/// Custom painter for outlined notification bell (normal state)
+class NotificationBellOutlinedPainter extends CustomPainter {
+  final Color? iconColor;
+
+  NotificationBellOutlinedPainter({this.iconColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = iconColor ?? Colors.grey.shade600
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    
+    // Convert SVG path to Flutter coordinates
+    // SVG viewBox is 0 0 24 24, so we scale to our size
+    final scaleX = size.width / 24;
+    final scaleY = size.height / 24;
+    
+    // Main bell shape: M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31
+    path.moveTo(14.857 * scaleX, 17.082 * scaleY);
+    
+    // Curve for right side of bell
+    path.cubicTo(
+      17.571 * scaleX, 16.562 * scaleY,
+      19.595 * scaleX, 15.982 * scaleY,
+      20.311 * scaleX, 15.772 * scaleY,
+    );
+    
+    // Right bell curve to top
+    path.cubicTo(
+      19.033 * scaleX, 12.75 * scaleY,
+      18 * scaleX, 11.358 * scaleY,
+      18 * scaleX, 9.75 * scaleY,
+    );
+    
+    // Top of bell
+    path.lineTo(18 * scaleX, 9 * scaleY);
+    path.cubicTo(
+      18 * scaleX, 5.686 * scaleY,
+      15.314 * scaleX, 3 * scaleY,
+      12 * scaleX, 3 * scaleY,
+    );
+    path.cubicTo(
+      8.686 * scaleX, 3 * scaleY,
+      6 * scaleX, 5.686 * scaleY,
+      6 * scaleX, 9 * scaleY,
+    );
+    
+    // Left side of bell
+    path.lineTo(6 * scaleX, 9.75 * scaleY);
+    path.cubicTo(
+      6 * scaleX, 11.358 * scaleY,
+      4.967 * scaleX, 12.75 * scaleY,
+      3.688 * scaleX, 15.772 * scaleY,
+    );
+    
+    // Left bell curve
+    path.cubicTo(
+      5.421 * scaleX, 16.412 * scaleY,
+      7.248 * scaleX, 16.857 * scaleY,
+      9.143 * scaleX, 17.082 * scaleY,
+    );
+
+    canvas.drawPath(path, paint);
+    
+    // Draw the bell clapper/bottom part: m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0
+    final clapperPath = Path();
+    
+    // Bottom line of bell
+    clapperPath.moveTo(9.143 * scaleX, 17.082 * scaleY);
+    clapperPath.lineTo(14.857 * scaleX, 17.082 * scaleY);
+    
+    // Clapper semicircle
+    clapperPath.moveTo(14.857 * scaleX, 17.082 * scaleY);
+    clapperPath.cubicTo(
+      14.857 * scaleX, 18.74 * scaleY,
+      13.657 * scaleX, 20.082 * scaleY,
+      12 * scaleX, 20.082 * scaleY,
+    );
+    clapperPath.cubicTo(
+      10.343 * scaleX, 20.082 * scaleY,
+      9.143 * scaleX, 18.74 * scaleY,
+      9.143 * scaleX, 17.082 * scaleY,
+    );
+
+    canvas.drawPath(clapperPath, paint);
+    
+    // Draw the top sound lines: M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5
+    final soundPath = Path();
+    
+    // Left sound line
+    soundPath.moveTo(3.124 * scaleX, 7.5 * scaleY);
+    soundPath.cubicTo(
+      3.847 * scaleX, 5.813 * scaleY,
+      4.569 * scaleX, 4.407 * scaleY,
+      5.292 * scaleX, 3 * scaleY,
+    );
+    
+    // Right sound line  
+    soundPath.moveTo(18.708 * scaleX, 3 * scaleY);
+    soundPath.cubicTo(
+      19.431 * scaleX, 4.407 * scaleY,
+      20.153 * scaleX, 5.813 * scaleY,
+      20.876 * scaleX, 7.5 * scaleY,
+    );
+
+    canvas.drawPath(soundPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+/// Custom painter for filled notification bell (selected state)
+class NotificationBellFilledPainter extends CustomPainter {
+  final Color? fillColor;
+
+  NotificationBellFilledPainter({this.fillColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = fillColor ?? Colors.blue
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    
+    // Bell body - filled
+    path.moveTo(size.width * 0.2, size.height * 0.75);
+    path.quadraticBezierTo(
+      size.width * 0.2, size.height * 0.4,
+      size.width * 0.5, size.height * 0.15,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.8, size.height * 0.4,
+      size.width * 0.8, size.height * 0.75,
+    );
+    
+    // Bell bottom
+    path.lineTo(size.width * 0.2, size.height * 0.75);
+    
+    // Bell clapper
+    final clapperRect = Rect.fromCenter(
+      center: Offset(size.width * 0.5, size.height * 0.85),
+      width: size.width * 0.15,
+      height: size.height * 0.1,
+    );
+    path.addRRect(RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+/// Custom painter for outlined notification bell with animated wave lines (unread state)
+class NotificationBellOutlinedWithWavesPainter extends CustomPainter {
+  final double waveProgress;
+
+  NotificationBellOutlinedWithWavesPainter({required this.waveProgress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw the outlined bell
+    final bellPaint = Paint()
+      ..color = Colors.grey.shade600
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final bellPath = Path();
+    
+    // Bell body - outlined
+    bellPath.moveTo(size.width * 0.2, size.height * 0.75);
+    bellPath.quadraticBezierTo(
+      size.width * 0.2, size.height * 0.4,
+      size.width * 0.5, size.height * 0.15,
+    );
+    bellPath.quadraticBezierTo(
+      size.width * 0.8, size.height * 0.4,
+      size.width * 0.8, size.height * 0.75,
+    );
+    
+    // Bell bottom
+    bellPath.lineTo(size.width * 0.2, size.height * 0.75);
+    
+    // Bell clapper
+    final clapperRect = Rect.fromCenter(
+      center: Offset(size.width * 0.5, size.height * 0.85),
+      width: size.width * 0.15,
+      height: size.height * 0.1,
+    );
+    bellPath.addRRect(RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
+
+    canvas.drawPath(bellPath, bellPaint);
+
+    // Draw animated wave lines
+    final wavePaint = Paint()
+      ..color = Colors.orange.withValues(alpha: 0.6 + (0.4 * waveProgress))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // Left wave
+    final leftWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    canvas.drawCircle(
+      Offset(size.width * 0.3, size.height * 0.5),
+      leftWaveRadius,
+      wavePaint..color = wavePaint.color.withValues(alpha: 0.8 - (0.6 * waveProgress)),
+    );
+
+    // Right wave  
+    final rightWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    canvas.drawCircle(
+      Offset(size.width * 0.7, size.height * 0.5),
+      rightWaveRadius,
+      wavePaint..color = wavePaint.color.withValues(alpha: 0.8 - (0.6 * waveProgress)),
+    );
+
+    // Center wave (smaller)
+    final centerWaveRadius = (size.width * 0.2) + (size.width * 0.15 * waveProgress);
+    canvas.drawCircle(
+      Offset(size.width * 0.5, size.height * 0.4),
+      centerWaveRadius,
+      wavePaint..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return oldDelegate is NotificationBellOutlinedWithWavesPainter &&
+        oldDelegate.waveProgress != waveProgress;
+  }
+}
+
+/// Custom painter for filled notification bell with animated wave lines (unread + selected state)  
+class NotificationBellFilledWithWavesPainter extends CustomPainter {
+  final double waveProgress;
+  final Color? fillColor;
+
+  NotificationBellFilledWithWavesPainter({
+    required this.waveProgress,
+    this.fillColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Draw the filled bell
+    final bellPaint = Paint()
+      ..color = fillColor ?? Colors.blue
+      ..style = PaintingStyle.fill;
+
+    final bellPath = Path();
+    
+    // Bell body - filled
+    bellPath.moveTo(size.width * 0.2, size.height * 0.75);
+    bellPath.quadraticBezierTo(
+      size.width * 0.2, size.height * 0.4,
+      size.width * 0.5, size.height * 0.15,
+    );
+    bellPath.quadraticBezierTo(
+      size.width * 0.8, size.height * 0.4,
+      size.width * 0.8, size.height * 0.75,
+    );
+    
+    // Bell bottom
+    bellPath.lineTo(size.width * 0.2, size.height * 0.75);
+    
+    // Bell clapper
+    final clapperRect = Rect.fromCenter(
+      center: Offset(size.width * 0.5, size.height * 0.85),
+      width: size.width * 0.15,
+      height: size.height * 0.1,
+    );
+    bellPath.addRRect(RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
+
+    canvas.drawPath(bellPath, bellPaint);
+
+    // Draw animated wave lines
+    final wavePaint = Paint()
+      ..color = Colors.orange.withValues(alpha: 0.7 + (0.3 * waveProgress))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
+    // Left wave
+    final leftWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    canvas.drawCircle(
+      Offset(size.width * 0.3, size.height * 0.5),
+      leftWaveRadius,
+      wavePaint..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
+    );
+
+    // Right wave  
+    final rightWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    canvas.drawCircle(
+      Offset(size.width * 0.7, size.height * 0.5),
+      rightWaveRadius,
+      wavePaint..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
+    );
+
+    // Center wave (smaller)
+    final centerWaveRadius = (size.width * 0.2) + (size.width * 0.15 * waveProgress);
+    canvas.drawCircle(
+      Offset(size.width * 0.5, size.height * 0.4),
+      centerWaveRadius,
+      wavePaint..color = wavePaint.color.withValues(alpha: 1.0 - (0.8 * waveProgress)),
+    );
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return oldDelegate is NotificationBellFilledWithWavesPainter &&
+        oldDelegate.waveProgress != waveProgress;
+  }
+}
+
+/// Animated settings button widget with gear rotation matching Lottie animation
+class AnimatedSettingsButton extends StatefulWidget {
+  final VoidCallback onPressed;
+  
+  const AnimatedSettingsButton({
+    super.key,
+    required this.onPressed,
+  });
+
+  @override
+  State<AnimatedSettingsButton> createState() => _AnimatedSettingsButtonState();
+}
+
+class _AnimatedSettingsButtonState extends State<AnimatedSettingsButton> with TickerProviderStateMixin {
+  late AnimationController _settingsController;
+  late Animation<double> _settingsRotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Initialize Settings icon animation controller matching dashboard
+    _settingsController = AnimationController(
+      duration: const Duration(milliseconds: 1000), // 1 second (60 frames at 60fps)
+      vsync: this,
+    );
+    // Create complex rotation animation matching Lottie keyframes
+    _settingsRotationAnimation = TweenSequence<double>([
+      // 0-16 frames: 0° to 64°
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 64/360).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 27, // 16/60 * 100 ≈ 27%
+      ),
+      // 16-25 frames: 64° to 60° (slight back)
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 64/360, end: 60/360).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 15, // 9/60 * 100 = 15%
+      ),
+      // 25-32 frames: hold at 60°
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 60/360, end: 60/360),
+        weight: 12, // 7/60 * 100 ≈ 12%
+      ),
+      // 32-48 frames: 60° to 124°
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 60/360, end: 124/360).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 27, // 16/60 * 100 ≈ 27%
+      ),
+      // 48-57 frames: 124° to 120° (settle)
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 124/360, end: 120/360).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 19, // 9/60 * 100 ≈ 15%, remaining 4% for balance
+      ),
+    ]).animate(_settingsController);
+  }
+
+  @override
+  void dispose() {
+    _settingsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _settingsRotationAnimation,
+      builder: (context, child) {
+        return IconButton(
+          icon: Transform.rotate(
+            angle: _settingsRotationAnimation.value * 2 * 3.14159, // Convert to radians
+            child: CustomPaint(
+              size: const Size(24, 24),
+              painter: SettingsGearPainter(
+                color: Theme.of(context).iconTheme.color,
+              ),
+            ),
+          ),
+          onPressed: () {
+            // Trigger gear rotation animation
+            _settingsController.forward().then((_) {
+              // Reset animation after completion
+              _settingsController.reset();
+            });
+            
+            // Call the provided callback
+            widget.onPressed();
+          },
+          tooltip: 'Notification settings',
+        );
+      },
     );
   }
 }
