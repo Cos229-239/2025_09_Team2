@@ -1008,7 +1008,7 @@ class _DashboardHomeState extends State<DashboardHome>
                         children: [
                           // Flexible calendar section
                           Expanded(
-                            flex: 4,
+                            flex: 2,
                             child: _buildCalendarSection(context),
                           ),
 
@@ -1016,16 +1016,19 @@ class _DashboardHomeState extends State<DashboardHome>
 
                           // Flexible cards row
                           Expanded(
-                            flex: 2,
+                            flex: 1,
                             child: _buildCardsAndNotesRow(context),
                           ),
 
                           const SizedBox(height: 8),
 
                           // Flexible AI assistant section
-                          const Expanded(
+                          Expanded(
                             flex: 2,
-                            child: AIAssistantWidget(),
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
+                              child: const AIAssistantWidget(),
+                            ),
                           ),
 
                           const SizedBox(height: 8),
@@ -1131,34 +1134,13 @@ class _DashboardHomeState extends State<DashboardHome>
 
         // Main content
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Study Pals',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              const SizedBox(height: 4),
-              Consumer<AppState>(
-                builder: (context, appState, child) {
-                  return Text(
-                    'Hi ${appState.currentUser?.name ?? 'User'}, Ready to study?',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.7),
-                        ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  );
-                },
-              ),
-            ],
+          child: Text(
+            'Study Pals',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
 
@@ -1185,7 +1167,7 @@ class _DashboardHomeState extends State<DashboardHome>
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 0),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
           color: const Color(0xFF2A3050),
           borderRadius: Theme.of(context).cardTheme.shape
@@ -1214,166 +1196,55 @@ class _DashboardHomeState extends State<DashboardHome>
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Left side - Today's Progress with circular indicator
-              Column(
+              // Month navigation header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Date display
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2A3050),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFFF8B67F),
-                        width: 2,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'SEP',
-                          style:
-                              Theme.of(context).textTheme.labelMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFFF8B67F),
-                                    letterSpacing: 1.0,
-                                  ),
-                        ),
-                        Text(
-                          '${DateTime.now().day}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFF8B67F),
-                              ),
-                        ),
-                      ],
-                    ),
+                  Icon(
+                    Icons.chevron_left,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
+                    size: 20,
                   ),
-                  const SizedBox(height: 8),
-
-                  // Today's Progress label and circular progress
                   Text(
-                    'Todays\nProgress',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    'SEPTEMBER',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(
                           color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.0,
                         ),
                   ),
-                  const SizedBox(height: 6),
-
-                  // Circular progress indicator
-                  Consumer<TaskProvider>(
-                    builder: (context, taskProvider, child) {
-                      final completedTasks = taskProvider.tasks
-                          .where((task) => task.status == TaskStatus.completed)
-                          .length;
-                      final totalTasks = taskProvider.tasks.length;
-                      final progress =
-                          totalTasks > 0 ? completedTasks / totalTasks : 0.0;
-
-                      return SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Stack(
-                          alignment: Alignment
-                              .center, // This centers the stack contents
-                          children: [
-                            // Position the circular progress indicator
-                            Positioned.fill(
-                              child: CircularProgressIndicator(
-                                value: progress,
-                                strokeWidth: 4,
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHigh,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFFF8B67F),
-                                ),
-                              ),
-                            ),
-                            // Center the text exactly in the middle
-                            Text(
-                              '${(progress * 100).round()}%',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFFF8B67F),
-                                  ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                  Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.7),
+                    size: 20,
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
 
-              const SizedBox(width: 16),
-
-              // Right side - Calendar grid
+              // Calendar grid
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Month navigation header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(
-                          Icons.chevron_left,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.7),
-                          size: 20,
-                        ),
-                        Text(
-                          'SEPTEMBER',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 1.0,
-                              ),
-                        ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.7),
-                          size: 20,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Calendar grid
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: _buildCalendarGrid(context),
-                      ),
-                    ),
-                  ],
+                child: SingleChildScrollView(
+                  child: _buildCalendarGrid(context),
                 ),
               ),
             ],
-          ), // Close Row
-        ), // Close Padding
-      ), // Close Container
-    ); // Close InkWell
+          ),
+        ),
+      ),
+    );
   }
 
   /// Build the calendar grid matching the image
@@ -1503,11 +1374,15 @@ class _DashboardHomeState extends State<DashboardHome>
 
   /// Build flash cards and notes row with login screen styling
   Widget _buildCardsAndNotesRow(BuildContext context) {
-    return Row(
-      children: [
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      child: Row(
+        children: [
         // Flash Cards section
         Expanded(
           child: Container(
+            height: 120,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
               color: const Color(0xFF2A3050),
               borderRadius:
@@ -1544,7 +1419,7 @@ class _DashboardHomeState extends State<DashboardHome>
                 },
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1561,7 +1436,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8B67F),
                           borderRadius: BorderRadius.circular(12),
@@ -1576,7 +1451,7 @@ class _DashboardHomeState extends State<DashboardHome>
                         ),
                         child: const Icon(
                           Icons.style,
-                          size: 24,
+                          size: 20,
                           color: Colors.white,
                         ),
                       ),
@@ -1593,6 +1468,8 @@ class _DashboardHomeState extends State<DashboardHome>
         // Notes section
         Expanded(
           child: Container(
+            height: 120,
+            margin: const EdgeInsets.symmetric(horizontal: 20),
             decoration: BoxDecoration(
               color: const Color(0xFF2A3050),
               borderRadius:
@@ -1629,7 +1506,7 @@ class _DashboardHomeState extends State<DashboardHome>
                 },
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1646,7 +1523,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF8B67F),
                           borderRadius: BorderRadius.circular(12),
@@ -1661,7 +1538,7 @@ class _DashboardHomeState extends State<DashboardHome>
                         ),
                         child: const Icon(
                           Icons.note_alt,
-                          size: 24,
+                          size: 20,
                           color: Colors.white,
                         ),
                       ),
@@ -1672,7 +1549,7 @@ class _DashboardHomeState extends State<DashboardHome>
             ),
           ),
         ),
-      ],
+      ]),
     );
   }
 
