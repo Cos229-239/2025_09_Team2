@@ -70,7 +70,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                 end: Alignment.bottomRight,
                 colors: [
                   Colors.white,
-                  _getSubjectColor().withOpacity(0.05),
+                  _getSubjectColor().withValues(alpha: 0.05),
                 ],
               ),
             ),
@@ -123,10 +123,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: _getSubjectColor().withOpacity(0.1),
+        color: _getSubjectColor().withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _getSubjectColor().withOpacity(0.3),
+          color: _getSubjectColor().withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -176,7 +176,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _getSubjectColor().withOpacity(0.2),
+          color: _getSubjectColor().withValues(alpha: 0.2),
           width: 2,
         ),
       ),
@@ -214,7 +214,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha: 0.7),
                       Colors.transparent,
                     ],
                   ),
@@ -246,8 +246,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            _getSubjectColor().withOpacity(0.1),
-            _getSubjectColor().withOpacity(0.3),
+            _getSubjectColor().withValues(alpha: 0.1),
+            _getSubjectColor().withValues(alpha: 0.3),
           ],
         ),
       ),
@@ -272,7 +272,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -301,10 +301,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Colors.blue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.blue.withOpacity(0.2),
+          color: Colors.blue.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -340,7 +340,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -420,7 +420,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                 decoration: BoxDecoration(
                   color: _getElementColor(element['type'] as String? ?? 'process'),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   element['label'] as String? ?? 'Step ${index + 1}',
@@ -461,7 +461,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getSubjectColor().withOpacity(0.2)),
+        border: Border.all(color: _getSubjectColor().withValues(alpha: 0.2)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -504,14 +504,14 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(type == 'central' ? 0.3 : 0.15),
+                          color: Colors.black.withValues(alpha: type == 'central' ? 0.3 : 0.15),
                           blurRadius: type == 'central' ? 12 : 8, // More pronounced shadows
                           offset: Offset(0, type == 'central' ? 4 : 3),
                           spreadRadius: type == 'central' ? 2 : 1,
                         ),
                         // Add inner shadow for depth
                         if (type == 'central') BoxShadow(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           blurRadius: 4,
                           offset: const Offset(-1, -1),
                           spreadRadius: 0,
@@ -521,9 +521,9 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          _getSubjectColor().withOpacity(0.9),
+                          _getSubjectColor().withValues(alpha: 0.9),
                           _getSubjectColor(),
-                          _getSubjectColor().withOpacity(0.8),
+                          _getSubjectColor().withValues(alpha: 0.8),
                         ],
                         stops: const [0.0, 0.5, 1.0],
                       ) : LinearGradient(
@@ -531,7 +531,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.white,
-                          _getSubjectColor().withOpacity(0.05),
+                          _getSubjectColor().withValues(alpha: 0.05),
                         ],
                       ),
                     ),
@@ -539,7 +539,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                       decoration: type == 'central' ? BoxDecoration(
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ) : null,
@@ -553,7 +553,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                             letterSpacing: type == 'central' ? 0.5 : 0.3,
                             shadows: type == 'central' ? [
                               Shadow(
-                                color: Colors.black.withOpacity(0.3),
+                                color: Colors.black.withValues(alpha: 0.3),
                                 offset: const Offset(1, 1),
                                 blurRadius: 2,
                               ),
@@ -583,7 +583,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     final containerWidth = constraints.maxWidth;
     final containerHeight = constraints.maxHeight;
     
-    debugPrint('🔄 Normalizing ${elements.length} elements in ${containerWidth}x${containerHeight} container');
+    debugPrint('🔄 Normalizing ${elements.length} elements in ${containerWidth}x$containerHeight container');
     
     // Find central element first
     var centralIndex = elements.indexWhere((e) => (e as Map<String, dynamic>)['type'] == 'central');
@@ -645,7 +645,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           element['x'] = x;
           element['y'] = y;
           
-          debugPrint('📍 Element ${i}: ${element['label']} at (${x.toInt()}, ${y.toInt()})');
+          debugPrint('📍 Element $i: ${element['label']} at (${x.toInt()}, ${y.toInt()})');
         }
         
         normalizedElements.add(element);
@@ -678,7 +678,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _getSubjectColor().withOpacity(0.3)),
+              border: Border.all(color: _getSubjectColor().withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -718,9 +718,9 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: _getSubjectColor().withOpacity(0.1),
+            color: _getSubjectColor().withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _getSubjectColor().withOpacity(0.3)),
+            border: Border.all(color: _getSubjectColor().withValues(alpha: 0.3)),
           ),
           child: Text(
             elementMap['label'] as String? ?? 'Component',
@@ -743,7 +743,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _getSubjectColor().withOpacity(0.3)),
+        border: Border.all(color: _getSubjectColor().withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -802,10 +802,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _getSubjectColor().withOpacity(0.08),
+        color: _getSubjectColor().withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _getSubjectColor().withOpacity(0.2),
+          color: _getSubjectColor().withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -850,10 +850,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.08),
+        color: Colors.green.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.green.withOpacity(0.2),
+          color: Colors.green.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -896,10 +896,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.purple.withOpacity(0.05),
+        color: Colors.purple.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.purple.withOpacity(0.2),
+          color: Colors.purple.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -924,7 +924,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
+              color: Colors.purple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -1049,12 +1049,12 @@ class ConceptMapPainter extends CustomPainter {
     if (elements.isEmpty) return;
     
     final paint = Paint()
-      ..color = subjectColor.withOpacity(0.7)
+      ..color = subjectColor.withValues(alpha: 0.7)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 
     final linePaint = Paint()
-      ..color = subjectColor.withOpacity(0.5)
+      ..color = subjectColor.withValues(alpha: 0.5)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
@@ -1115,8 +1115,8 @@ class ConceptMapPainter extends CustomPainter {
     final gradientPaint = Paint()
       ..shader = LinearGradient(
         colors: [
-          subjectColor.withOpacity(0.8),
-          subjectColor.withOpacity(0.6),
+          subjectColor.withValues(alpha: 0.8),
+          subjectColor.withValues(alpha: 0.6),
         ],
       ).createShader(Rect.fromPoints(Offset(startX, startY), Offset(endX, endY)))
       ..strokeWidth = 3.5 // Thicker lines for better visibility
@@ -1125,7 +1125,7 @@ class ConceptMapPainter extends CustomPainter {
     
     // Add shadow for depth
     final shadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.2)
+      ..color = Colors.black.withValues(alpha: 0.2)
       ..strokeWidth = 4.0
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -1168,7 +1168,7 @@ class ConceptMapPainter extends CustomPainter {
     arrowPath.close();
     
     final arrowFillPaint = Paint()
-      ..color = subjectColor.withOpacity(0.9) // More opaque for visibility
+      ..color = subjectColor.withValues(alpha: 0.9) // More opaque for visibility
       ..style = PaintingStyle.fill;
     
     // Add arrow shadow
@@ -1179,7 +1179,7 @@ class ConceptMapPainter extends CustomPainter {
     arrowShadowPath.close();
     
     canvas.drawPath(arrowShadowPath, Paint()
-      ..color = Colors.black.withOpacity(0.2)
+      ..color = Colors.black.withValues(alpha: 0.2)
       ..style = PaintingStyle.fill);
     
     canvas.drawPath(arrowPath, arrowFillPaint);
@@ -1195,7 +1195,7 @@ class ConceptMapPainter extends CustomPainter {
           color: subjectColor,
           fontSize: 9,
           fontWeight: FontWeight.w500,
-          backgroundColor: Colors.white.withOpacity(0.9),
+          backgroundColor: Colors.white.withValues(alpha: 0.9),
         ),
       );
       
@@ -1215,7 +1215,7 @@ class ConceptMapPainter extends CustomPainter {
       
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(2)),
-        Paint()..color = Colors.white.withOpacity(0.9),
+        Paint()..color = Colors.white.withValues(alpha: 0.9),
       );
       
       textPainter.paint(canvas, Offset(midX - textPainter.width / 2, midY - textPainter.height / 2));

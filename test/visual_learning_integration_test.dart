@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studypals/services/ai_service.dart';
 import 'package:studypals/providers/ai_provider.dart';
-import 'package:studypals/models/card.dart';
 import 'package:studypals/models/user.dart';
 
 void main() {

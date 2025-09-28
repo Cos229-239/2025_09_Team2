@@ -2685,15 +2685,31 @@ Focus on creating content that naturally lends itself to visual representation. 
         bool usedGeminiImage = false;
         
         if (user.preferences.learningStyle == 'visual' || user.preferences.learningStyle == 'adaptive') {
-          // PRIMARY: Try to generate actual image using Gemini 2.5 Flash Image Preview
-          final visualType = visualMetadata['visualType'] ?? 'concept_map';
+          // QUOTA CHECK: Verify Gemini 2.5 availability before attempting generation
+          debugPrint('🔍 Checking Gemini 2.5 Flash Image Preview quota status...');
+          final quotaStatus = await checkImageModelStatus();
           
-          debugPrint('Attempting Gemini 2.5 image generation for card: ${card.id}');
-          imageUrl = await generateFlashcardImageWithGemini(
-            content: '${card.front}\n${card.back}',
-            subject: subject,
-            visualType: visualType,
-          );
+          if (quotaStatus['available'] == true) {
+            // PRIMARY: Try to generate actual image using Gemini 2.5 Flash Image Preview
+            final visualType = visualMetadata['visualType'] ?? 'concept_map';
+            
+            debugPrint('✅ Quota available - attempting Gemini 2.5 image generation for card: ${card.id}');
+            imageUrl = await generateFlashcardImageWithGemini(
+              content: '${card.front}\n${card.back}',
+              subject: subject,
+              visualType: visualType,
+            );
+          } else {
+            // PROACTIVE FALLBACK: Skip image generation due to quota/availability issues
+            debugPrint('⏭️ Skipping Gemini 2.5 image generation: ${quotaStatus['reason']}');
+            if (quotaStatus['errorCode'] == 429) {
+              debugPrint('🚫 Quota exhausted - going directly to interactive diagrams');
+              if (quotaStatus['retryAfter'] != null) {
+                debugPrint('⏰ Retry after: ${quotaStatus['retryAfter']}');
+              }
+            }
+            imageUrl = null; // Will trigger fallback below
+          }
           
           if (imageUrl != null) {
             // SUCCESS: Gemini 2.5 generated an image
@@ -3433,9 +3449,23 @@ Focus on creating content that naturally lends itself to visual representation. 
       debugPrint('📊 Text generation: Always available with $_textModel');
       debugPrint('🎨 Image generation: Available when quota allows');
       debugPrint('🔄 Fallback: Interactive JSON diagrams always available');
+      debugPrint('💡 Quota checking: Enabled - will check before image generation');
     } else {
       debugPrint('❌ System not configured - check API keys');
     }
     debugPrint('=====================================');
   }
+
+  /// Example usage for quota monitoring:
+  /// 
+  /// ```dart
+  /// // Check quota before generating many flashcards
+  /// final quotaStatus = await aiService.checkImageModelStatus();
+  /// if (quotaStatus['available'] == true) {
+  ///   debugPrint('✅ Quota available - proceeding with image generation');
+  /// } else {
+  ///   debugPrint('⚠️ Quota unavailable: ${quotaStatus['reason']}');
+  ///   debugPrint('📊 Using interactive diagrams as fallback');
+  /// }
+  /// ```
 }

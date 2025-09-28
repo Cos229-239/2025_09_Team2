@@ -6,7 +6,6 @@ import '../../providers/app_state.dart';
 import '../../models/deck.dart';
 import '../../models/user.dart';
 import '../../mixins/loading_state_mixin.dart';
-import '../../widgets/visual_flashcard_widget.dart';
 import 'ai_settings_widget.dart';
 
 // TODO: AI Flashcard Generator - Major Implementation Gaps
