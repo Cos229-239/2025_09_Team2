@@ -109,7 +109,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       await aiProvider.configureAI(
         provider: AIProvider.google,
-        apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+          apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
+          //apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
       );
       debugPrint('Google AI automatically configured on dashboard load');
     } catch (e) {

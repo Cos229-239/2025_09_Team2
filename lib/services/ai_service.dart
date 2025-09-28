@@ -25,6 +25,10 @@ enum AIProvider { openai, google, anthropic, localModel, ollama }
 /// - Need to add user consent and privacy handling for AI-generated content
 /// - Add support for custom fine-tuned models and domain-specific prompts
 class AIService {
+  // Model constants for different AI capabilities
+  static const String _textModel = 'gemini-2.0-flash';  // Your current text model
+  static const String _imageModel = 'gemini-2.5-flash-image-preview';  // New image model
+  
   AIProvider _provider = AIProvider.google;
   String _apiKey = '';
   String _baseUrl = '';
@@ -94,7 +98,77 @@ class AIService {
           .timeout(const Duration(seconds: 60));
     } catch (e) {
       debugPrint('Flashcard generation timeout or error: $e');
-      return _createFallbackFlashcards(subject, content, count: count);
+      return _createFallbackFlashcards(subject, content, count: count, user: user);
+    }
+  }
+
+  /// Generate flashcards with dual model approach:
+  /// - Uses gemini-2.0-flash for text generation
+  /// - PRIMARY: Uses gemini-2.5-flash-image-preview for image generation
+  /// - FALLBACK: Uses existing JSON-based interactive diagram system if image generation fails
+  /// This is the recommended method for visual learners
+  Future<List<FlashCard>> generateFlashcardsWithDualModels(
+    String content,
+    String subject,
+    User user, {
+    int count = 5,
+    StudyAnalytics? analytics,
+  }) async {
+    debugPrint('=== Dual Model Flashcard Generation ===');
+    debugPrint('Text Model: $_textModel');
+    debugPrint('Image Model: $_imageModel');
+    debugPrint('Learning Style: ${user.preferences.learningStyle}');
+    
+    try {
+      // Step 1: Generate text content using gemini-2.0-flash
+      final textCards = await generateFlashcardsFromText(
+        content,
+        subject,
+        user,
+        count: count,
+        analytics: analytics,
+      );
+      
+      debugPrint('Generated ${textCards.length} text cards');
+      
+      // Step 2: Enhance with visual content for visual/adaptive learners
+      if (user.preferences.learningStyle == 'visual' || 
+          user.preferences.learningStyle == 'adaptive') {
+        final visualCards = await _enhanceWithVisualContent(textCards, subject, user);
+        debugPrint('Enhanced cards with visual content using $_imageModel');
+        return visualCards;
+      }
+      
+      // Step 3: For non-visual learners, just add proper metadata
+      final cardsWithMetadata = textCards.map((card) {
+        final metadata = <String, String>{
+          'textModel': _textModel,
+          'hasAIGeneratedImage': 'false',
+          'subject': subject,
+          'learningStyle': user.preferences.learningStyle,
+        };
+        
+        return FlashCard(
+          id: card.id,
+          deckId: card.deckId,
+          type: card.type,
+          front: card.front,
+          back: card.back,
+          difficulty: card.difficulty,
+          multipleChoiceOptions: card.multipleChoiceOptions,
+          correctAnswerIndex: card.correctAnswerIndex,
+          lastQuizAttempt: card.lastQuizAttempt,
+          lastQuizCorrect: card.lastQuizCorrect,
+          imageUrl: card.imageUrl,
+          diagramData: card.diagramData,
+          visualMetadata: metadata,
+        );
+      }).toList();
+      
+      return cardsWithMetadata;
+    } catch (e) {
+      debugPrint('Dual model generation error: $e');
+      return _createFallbackFlashcards(subject, content, count: count, user: user);
     }
   }
 
@@ -112,7 +186,7 @@ class AIService {
 
     if (!isConfigured) {
       debugPrint('ERROR: AI service not configured!');
-      return _createFallbackFlashcards(subject, content, count: count);
+      return _createFallbackFlashcards(subject, content, count: count, user: user);
     }
 
     try {
@@ -211,7 +285,7 @@ class AIService {
         debugPrint('Creating $shortfall additional fallback cards');
 
         final fallbackCards =
-            _createFallbackFlashcards(subject, content, count: shortfall);
+            _createFallbackFlashcards(subject, content, count: shortfall, user: user);
         generatedCards.addAll(fallbackCards);
 
         debugPrint('Final card count: ${generatedCards.length}');
@@ -221,7 +295,7 @@ class AIService {
     } catch (e) {
       debugPrint('AI flashcard generation error: $e');
       debugPrint('Raw response might not be valid JSON');
-      return _createFallbackFlashcards(subject, content, count: count);
+      return _createFallbackFlashcards(subject, content, count: count, user: user);
     }
   }
 
@@ -1262,7 +1336,7 @@ ADVANCED QUALITY STANDARDS:
 
   /// Create fallback flashcards when AI is unavailable
   List<FlashCard> _createFallbackFlashcards(String subject, String content,
-      {int count = 5}) {
+      {int count = 5, User? user}) {
     debugPrint('Creating $count fallback flashcards for $subject');
 
     final templates = [
@@ -1597,6 +1671,22 @@ ADVANCED QUALITY STANDARDS:
         }
       }
       
+      // Generate diagram data for visual learners
+      String? diagramData;
+      if (user != null && (user.preferences.learningStyle == 'visual' || 
+                          user.preferences.learningStyle == 'adaptive')) {
+        final fallbackCard = FlashCard(
+          id: (i + 1).toString(),
+          deckId: 'ai_generated',
+          type: cardType,
+          front: front,
+          back: back,
+          difficulty: template['difficulty'] as int,
+        );
+        final visualMetadata = _extractVisualMetadata(fallbackCard, subject);
+        diagramData = _generateDiagramData(fallbackCard, visualMetadata);
+      }
+      
       cards.add(FlashCard(
         id: (i + 1).toString(),
         deckId: 'ai_generated',
@@ -1607,6 +1697,7 @@ ADVANCED QUALITY STANDARDS:
         multipleChoiceOptions: options,
         correctAnswerIndex: correctIndex,
         difficulty: template['difficulty'] as int,
+        diagramData: diagramData,
       ));
     }
 
@@ -1784,14 +1875,17 @@ ADVANCED QUALITY STANDARDS:
     const baseDelay = Duration(seconds: 2);
 
     debugPrint('=== Google AI API Call (Attempt ${retryCount + 1}) ===');
+    debugPrint('Base URL: $_baseUrl');
+    debugPrint('API Key format: ${_apiKey.substring(0, 12)}... (length: ${_apiKey.length})');
+    
     debugPrint(
-        'URL: $_baseUrl/models/gemini-1.5-flash:generateContent?key=${_apiKey.substring(0, 8)}...');
+        'URL: $_baseUrl/models/$_textModel:generateContent?key=${_apiKey.substring(0, 8)}...');
     debugPrint('Prompt length: ${prompt.length}');
 
     try {
       final response = await http.post(
         Uri.parse(
-            '$_baseUrl/models/gemini-1.5-flash:generateContent?key=$_apiKey'),
+            '$_baseUrl/models/$_textModel:generateContent?key=$_apiKey'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -2036,6 +2130,94 @@ ADVANCED QUALITY STANDARDS:
     }
   }
 
+  /// Generate flashcard image using Gemini 2.5 Flash Image Preview
+  /// @param content - The flashcard content to visualize
+  /// @param subject - Subject context for appropriate imagery
+  /// @param visualType - Type of visual (flowchart, concept_map, comparison, etc.)
+  /// @return Generated image data or null if generation fails
+  Future<String?> generateFlashcardImageWithGemini({
+    required String content,
+    required String subject,
+    required String visualType,
+  }) async {
+    if (!isConfigured) {
+      debugPrint('❌ Gemini 2.5 Image: AI service not configured');
+      return null;
+    }
+
+    debugPrint('🔄 Attempting Gemini 2.5 image generation...');
+    debugPrint('📝 Content: $content');
+    debugPrint('📚 Subject: $subject');
+    debugPrint('🎨 Visual Type: $visualType');
+    debugPrint('🤖 Using model: $_imageModel');
+    
+    final prompt = _buildImagePrompt(content, subject, visualType);
+    debugPrint('🎯 Generated prompt length: ${prompt.length} characters');
+    
+    try {
+      final url = '$_baseUrl/models/$_imageModel:generateContent?key=${_apiKey.substring(0, 8)}...';
+      debugPrint('🌐 Request URL: $url');
+      
+      final response = await http.post(
+        Uri.parse('$_baseUrl/models/$_imageModel:generateContent?key=$_apiKey'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'contents': [
+            {
+              'parts': [
+                {'text': prompt}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.7,
+            'maxOutputTokens': 1500,
+          }
+        }),
+      ).timeout(const Duration(seconds: 30));
+
+      debugPrint('📊 Gemini 2.5 Image response status: ${response.statusCode}');
+      debugPrint('📄 Gemini 2.5 Image response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['candidates'] != null && data['candidates'].isNotEmpty) {
+          final result = data['candidates'][0]['content']['parts'][0]['text'].trim();
+          debugPrint('✅ Gemini 2.5 image generation SUCCESS!');
+          debugPrint('🖼️ Generated content preview: ${result.substring(0, result.length > 100 ? 100 : result.length)}...');
+          return result;
+        } else {
+          debugPrint('⚠️ Gemini 2.5 response has no candidates');
+        }
+      } else {
+        debugPrint('❌ Gemini 2.5 API error: ${response.statusCode}');
+        debugPrint('📋 Error details: ${response.body}');
+        
+        // Provide helpful context for common errors
+        if (response.statusCode == 429) {
+          debugPrint('🚫 QUOTA EXHAUSTED: gemini-2.5-flash-image-preview has very limited free tier quotas');
+          debugPrint('💡 Free tier limits: ~15 requests/day, ~1000 tokens/minute');
+          debugPrint('📈 Consider upgrading to paid tier for more image generation capacity');
+          debugPrint('🔄 Falling back to interactive diagrams (this is expected behavior)');
+        } else if (response.statusCode == 404) {
+          debugPrint('🔍 MODEL NOT FOUND: gemini-2.5-flash-image-preview may not be available in your region');
+        } else if (response.statusCode == 403) {
+          debugPrint('🔐 ACCESS DENIED: Model may require paid tier or special access permissions');
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('💥 Gemini 2.5 image generation FAILED: $e');
+      // Additional context for common exception patterns
+      if (e.toString().contains('429')) {
+        debugPrint('🚫 This is a quota limit error - totally normal for free tier usage');
+      }
+      return null;
+    }
+  }
+
   /// Generate audio content for auditory learners using TTS
   /// @param text - Text content to convert to audio
   /// @param user - User object for personalization
@@ -2140,6 +2322,77 @@ ADVANCED QUALITY STANDARDS:
     prompt.write('Style: minimalist, high contrast, clear labels, white background.');
     
     return prompt.toString();
+  }
+
+  /// Build optimized image prompt for Gemini 2.5 Flash Image Preview
+  String _buildImagePrompt(String content, String subject, String visualType) {
+    return '''
+Create an educational diagram showing the content: $content
+
+The image should be a clean, academic-style $visualType with the following elements:
+
+Subject: $subject
+Visual Type: $visualType (flowchart/concept_map/comparison/structure)
+
+Requirements:
+- Professional, educational infographic style
+- Clean lines and clear visual hierarchy
+- High contrast for readability on mobile devices
+- Use appropriate colors for $subject (blue for science, green for biology, etc.)
+- Include clear labels and text that's readable when scaled down
+- Minimalist design suitable for flashcard display
+- White or light background with good contrast
+- No photorealistic elements, focus on diagram clarity
+- Style: educational diagram, clean typography, professional presentation
+- Aspect ratio: 16:9 for flashcard display
+
+The diagram should help visual learners understand the concept through clear visual elements, logical flow, and structured information presentation.
+
+For $visualType specifically:
+${_getVisualTypeInstructions(visualType)}
+
+Subject-specific styling for $subject:
+${_getSubjectSpecificStyling(subject)}
+''';
+  }
+
+  /// Get specific instructions for visual type
+  String _getVisualTypeInstructions(String visualType) {
+    switch (visualType.toLowerCase()) {
+      case 'flowchart':
+        return '- Use rectangular boxes for processes, diamonds for decisions\n- Connect with clear arrows showing flow direction\n- Include start/end points\n- Use consistent spacing and alignment';
+      case 'concept_map':
+        return '- Central concept in the middle with related concepts around it\n- Use connecting lines with relationship labels\n- Hierarchical structure showing main and sub-concepts\n- Different colors for different concept levels';
+      case 'comparison':
+        return '- Side-by-side layout comparing two or more items\n- Use tables, columns, or split sections\n- Highlight similarities and differences\n- Clear categorization of compared elements';
+      case 'structure':
+        return '- Show organizational or physical structure\n- Use nested boxes or tree-like layout\n- Clear parent-child relationships\n- Consistent styling for same-level elements';
+      case 'timeline':
+        return '- Chronological layout with clear time markers\n- Events positioned along timeline\n- Use consistent spacing for time periods\n- Include key dates and descriptions';
+      default:
+        return '- Clear visual hierarchy with logical information flow\n- Balanced composition with appropriate spacing\n- Consistent styling throughout the diagram';
+    }
+  }
+
+  /// Get subject-specific styling instructions
+  String _getSubjectSpecificStyling(String subject) {
+    switch (subject.toLowerCase()) {
+      case 'biology':
+      case 'anatomy':
+        return '- Use organic shapes and natural colors (greens, blues)\n- Include anatomical accuracy where applicable\n- Use scientific terminology and proper labels';
+      case 'chemistry':
+        return '- Use molecular structure representations\n- Include chemical formulas and equations\n- Use standard chemistry colors and symbols';
+      case 'physics':
+        return '- Include mathematical formulas and equations\n- Use arrows for forces and vectors\n- Include units and measurements';
+      case 'mathematics':
+        return '- Use geometric shapes and mathematical notation\n- Include formulas and equations\n- Use precise geometric relationships';
+      case 'history':
+        return '- Use timeline elements and historical imagery\n- Include dates and historical context\n- Use period-appropriate visual elements';
+      case 'computer science':
+        return '- Use flowchart elements and algorithmic structures\n- Include code snippets or pseudocode\n- Use technical diagrams and system representations';
+      default:
+        return '- Use professional, academic styling\n- Include relevant terminology and concepts\n- Maintain educational focus and clarity';
+    }
   }
 
   /// Build optimized audio script for TTS
@@ -2345,7 +2598,7 @@ ADVANCED QUALITY STANDARDS:
       return baseCards;
     } catch (e) {
       debugPrint('Error in visual flashcard generation: $e');
-      return _createFallbackFlashcards(subject, content, count: count);
+      return _createFallbackFlashcards(subject, content, count: count, user: user);
     }
   }
 
@@ -2427,11 +2680,59 @@ Focus on creating content that naturally lends itself to visual representation. 
         // Generate visual metadata
         final visualMetadata = _extractVisualMetadata(card, subject);
         
-        // Generate visual placeholder URL
-        final imageUrl = _generateVisualPlaceholder(card.front, subject, visualMetadata);
+        String? imageUrl;
+        String? diagramData;
+        bool usedGeminiImage = false;
         
-        // Generate diagram data
-        final diagramData = _generateDiagramData(card, visualMetadata);
+        if (user.preferences.learningStyle == 'visual' || user.preferences.learningStyle == 'adaptive') {
+          // PRIMARY: Try to generate actual image using Gemini 2.5 Flash Image Preview
+          final visualType = visualMetadata['visualType'] ?? 'concept_map';
+          
+          debugPrint('Attempting Gemini 2.5 image generation for card: ${card.id}');
+          imageUrl = await generateFlashcardImageWithGemini(
+            content: '${card.front}\n${card.back}',
+            subject: subject,
+            visualType: visualType,
+          );
+          
+          if (imageUrl != null) {
+            // SUCCESS: Gemini 2.5 generated an image
+            usedGeminiImage = true;
+            visualMetadata['hasAIGeneratedImage'] = 'true';
+            visualMetadata['imageModel'] = _imageModel;
+            visualMetadata['textModel'] = _textModel;
+            visualMetadata['imageSource'] = 'gemini-2.5-flash-image-preview';
+            debugPrint('✅ Gemini 2.5 image generation successful for card: ${card.id}');
+          } else {
+            // FALLBACK: Generate interactive diagram using existing JSON system
+            debugPrint('⚠️ Gemini 2.5 failed (likely quota limit), using interactive diagrams for card: ${card.id}');
+            debugPrint('📊 This is expected behavior - interactive diagrams work great as fallback!');
+            debugPrint('💡 Interactive diagrams provide: concept maps, flowcharts, and clickable elements');
+            diagramData = _generateDiagramData(card, visualMetadata);
+            
+            // Use existing visual placeholder with diagram
+            imageUrl = _generateVisualPlaceholder(card.front, subject, visualMetadata);
+            visualMetadata['hasAIGeneratedImage'] = 'false';
+            visualMetadata['hasInteractiveDiagram'] = 'true';
+            visualMetadata['imageSource'] = 'interactive-json-diagram';
+            visualMetadata['textModel'] = _textModel;
+            debugPrint('✅ Interactive diagram fallback successful for card: ${card.id}');
+          }
+        } else {
+          // Non-visual learners: Use existing system
+          imageUrl = _generateVisualPlaceholder(card.front, subject, visualMetadata);
+          diagramData = _generateDiagramData(card, visualMetadata);
+          visualMetadata['hasAIGeneratedImage'] = 'false';
+          visualMetadata['hasInteractiveDiagram'] = 'true';
+          visualMetadata['imageSource'] = 'non-visual-learner';
+          visualMetadata['textModel'] = _textModel;
+        }
+        
+        // If we used Gemini image, we don't need diagram data (image replaces diagram)
+        if (usedGeminiImage) {
+          diagramData = null;
+          visualMetadata['hasInteractiveDiagram'] = 'false';
+        }
         
         // Create enhanced flashcard
         final enhancedCard = FlashCard(
@@ -3009,11 +3310,9 @@ Focus on creating content that naturally lends itself to visual representation. 
     return await MultiModalErrorHandler.executeWithFallback<String?>(
       operationName: 'diagram_generation',
       operation: () async {
-        final diagramData = await generateDiagramData(
-          concept: card.front,
-          subject: subject,
-          user: user,
-        );
+        // Use sophisticated diagram generation instead of basic one
+        final visualMetadata = _extractVisualMetadata(card, subject);
+        final diagramData = _generateDiagramData(card, visualMetadata);
         
         // Validate the generated content
         if (!MultiModalErrorHandler.validateDiagramContent(diagramData)) {
@@ -3028,5 +3327,115 @@ Focus on creating content that naturally lends itself to visual representation. 
         user: user,
       ),
     );
+  }
+
+  /// Check Gemini 2.5 Flash Image Preview availability and quota status
+  /// This is useful for proactive quota management
+  Future<Map<String, dynamic>> checkImageModelStatus() async {
+    if (!isConfigured) {
+      return {
+        'available': false,
+        'reason': 'AI service not configured',
+        'fallbackRecommended': true,
+      };
+    }
+
+    try {
+      // Make a minimal test request to check quota/availability
+      final response = await http.post(
+        Uri.parse('$_baseUrl/models/$_imageModel:generateContent?key=$_apiKey'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'contents': [
+            {
+              'parts': [
+                {'text': 'Test request to check availability. Please respond with "OK".'}
+              ]
+            }
+          ],
+          'generationConfig': {
+            'temperature': 0.1,
+            'maxOutputTokens': 10,
+          }
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        return {
+          'available': true,
+          'reason': 'Model is available and quota allows requests',
+          'fallbackRecommended': false,
+          'model': _imageModel,
+        };
+      } else if (response.statusCode == 429) {
+        final errorData = json.decode(response.body);
+        return {
+          'available': false,
+          'reason': 'Quota exceeded - free tier limits reached',
+          'fallbackRecommended': true,
+          'errorCode': 429,
+          'details': 'Free tier has very limited quotas (~15 requests/day)',
+          'suggestion': 'Interactive diagrams work great as alternative!',
+          'retryAfter': _extractRetryDelay(errorData),
+        };
+      } else if (response.statusCode == 404) {
+        return {
+          'available': false,
+          'reason': 'Model not found - may not be available in your region',
+          'fallbackRecommended': true,
+          'errorCode': 404,
+        };
+      } else {
+        return {
+          'available': false,
+          'reason': 'API error: ${response.statusCode}',
+          'fallbackRecommended': true,
+          'errorCode': response.statusCode,
+        };
+      }
+    } catch (e) {
+      return {
+        'available': false,
+        'reason': 'Network or API error: $e',
+        'fallbackRecommended': true,
+        'exception': e.toString(),
+      };
+    }
+  }
+
+  /// Extract retry delay from error response
+  String? _extractRetryDelay(Map<String, dynamic> errorData) {
+    try {
+      final details = errorData['error']?['details'] as List?;
+      if (details != null) {
+        for (final detail in details) {
+          if (detail['@type'] == 'type.googleapis.com/google.rpc.RetryInfo') {
+            return detail['retryDelay'];
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore parsing errors
+    }
+    return null;
+  }
+
+  /// Log helpful information about the current setup
+  void logSystemStatus() {
+    debugPrint('=== StudyPals AI System Status ===');
+    debugPrint('🤖 Text Model: $_textModel (${_provider.name})');
+    debugPrint('🖼️ Image Model: $_imageModel');
+    debugPrint('⚙️ Configured: $isConfigured');
+    debugPrint('🔧 Base URL: $_baseUrl');
+    
+    if (isConfigured) {
+      debugPrint('✅ Dual model system active');
+      debugPrint('📊 Text generation: Always available with $_textModel');
+      debugPrint('🎨 Image generation: Available when quota allows');
+      debugPrint('🔄 Fallback: Interactive JSON diagrams always available');
+    } else {
+      debugPrint('❌ System not configured - check API keys');
+    }
+    debugPrint('=====================================');
   }
 }

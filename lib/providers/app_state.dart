@@ -197,7 +197,8 @@ class AppState extends ChangeNotifier {
       try {
         await _aiProvider!.configureAI(
           provider: AIProvider.google,
-          apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+          apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
+          //apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
         );
         debugPrint('Google AI automatically configured upon login');
       } catch (e) {

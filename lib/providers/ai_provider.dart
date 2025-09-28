@@ -121,12 +121,12 @@ class StudyPalsAIProvider with ChangeNotifier {
     try {
       List<FlashCard> cards;
       
-      // Check if user is a visual learner
-      if (user.preferences.learningStyle.toLowerCase() == 'visual') {
-        cards = await _aiService.generateVisualFlashcardsFromText(content, subject, user);
-      } else {
-        cards = await _aiService.generateFlashcardsFromText(content, subject, user);
-      }
+      // Use new dual model approach (Gemini 2.0 + 2.5 with fallback to interactive diagrams)
+      cards = await _aiService.generateFlashcardsWithDualModels(
+        content,
+        subject,
+        user,
+      );
       
       _aiGeneratedCards.addAll(cards);
       return cards;
@@ -152,12 +152,13 @@ class StudyPalsAIProvider with ChangeNotifier {
     try {
       List<FlashCard> cards;
       
-      // Check if user is a visual learner
-      if (user.preferences.learningStyle.toLowerCase() == 'visual') {
-        cards = await _aiService.generateVisualFlashcardsFromText(content, subject, user, count: count);
-      } else {
-        cards = await _aiService.generateFlashcardsFromText(content, subject, user, count: count);
-      }
+      // Use new dual model approach (Gemini 2.0 + 2.5 with fallback to interactive diagrams)
+      cards = await _aiService.generateFlashcardsWithDualModels(
+        content,
+        subject,
+        user,
+        count: count,
+      );
       
       _aiGeneratedCards.addAll(cards);
       return cards;
@@ -180,7 +181,13 @@ class StudyPalsAIProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final cards = await _aiService.generateVisualFlashcardsFromText(content, subject, user, count: count);
+      // Use new dual model approach for visual flashcards
+      final cards = await _aiService.generateFlashcardsWithDualModels(
+        content,
+        subject,
+        user,
+        count: count,
+      );
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {

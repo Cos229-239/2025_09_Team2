@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/card.dart';
 
@@ -291,6 +292,12 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
 
   /// Build interactive diagram section
   Widget _buildInteractiveDiagramSection(BuildContext context) {
+    debugPrint('Building interactive diagram section for card: ${widget.flashcard.id}');
+    debugPrint('Diagram data exists: ${widget.flashcard.diagramData != null}');
+    if (widget.flashcard.diagramData != null) {
+      debugPrint('Diagram data preview: ${widget.flashcard.diagramData!.substring(0, math.min(100, widget.flashcard.diagramData!.length))}...');
+    }
+    
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -444,55 +451,217 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
   /// Build concept map diagram
   Widget _buildConceptMapDiagram(Map<String, dynamic> data) {
     final elements = (data['elements'] as List<dynamic>?) ?? [];
+    final connections = (data['connections'] as List<dynamic>?) ?? [];
+    
+    debugPrint('🗺️ Building concept map with ${elements.length} elements and ${connections.length} connections');
     
     return Container(
-      height: 200,
-      child: Stack(
-        children: elements.map<Widget>((element) {
-          final elementMap = element as Map<String, dynamic>;
-          final x = (elementMap['x'] as num?)?.toDouble() ?? 100.0;
-          final y = (elementMap['y'] as num?)?.toDouble() ?? 100.0;
-          final type = elementMap['type'] as String? ?? 'concept';
-          final label = elementMap['label'] as String? ?? 'Concept';
+      height: 250, // Increased height for better visibility
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _getSubjectColor().withOpacity(0.2)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Normalize positions to fit within the available space
+          final normalizedElements = _normalizeElementPositions(elements, constraints);
+          final normalizedConnections = _normalizeConnections(connections, normalizedElements);
           
-          return Positioned(
-            left: x - 50,
-            top: y - 25,
-            child: Container(
-              width: 100,
-              height: 50,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: type == 'central' ? _getSubjectColor() : Colors.white,
-                borderRadius: BorderRadius.circular(type == 'central' ? 25 : 8),
-                border: Border.all(
-                  color: _getSubjectColor(),
-                  width: type == 'central' ? 3 : 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
+          return CustomPaint(
+            painter: ConceptMapPainter(
+              elements: normalizedElements,
+              connections: normalizedConnections,
+              subjectColor: _getSubjectColor(),
+            ),
+            child: Stack(
+              children: normalizedElements.map<Widget>((element) {
+                final elementMap = element;
+                final x = (elementMap['x'] as num?)?.toDouble() ?? 0.0;
+                final y = (elementMap['y'] as num?)?.toDouble() ?? 0.0;
+                final type = elementMap['type'] as String? ?? 'concept';
+                final label = elementMap['label'] as String? ?? 'Concept';
+                
+                final nodeWidth = type == 'central' ? 140.0 : 110.0;
+                final nodeHeight = type == 'central' ? 70.0 : 55.0;
+                
+                return Positioned(
+                  left: math.max(0, math.min(x - nodeWidth/2, constraints.maxWidth - nodeWidth)),
+                  top: math.max(0, math.min(y - nodeHeight/2, constraints.maxHeight - nodeHeight)),
+                  child: Container(
+                    width: type == 'central' ? 140 : 110, // Increased sizes for better visibility
+                    height: type == 'central' ? 70 : 55,
+                    padding: EdgeInsets.all(type == 'central' ? 14 : 10),
+                    decoration: BoxDecoration(
+                      color: type == 'central' 
+                        ? _getSubjectColor() 
+                        : Colors.white,
+                      borderRadius: BorderRadius.circular(type == 'central' ? 35 : 16),
+                      border: Border.all(
+                        color: _getSubjectColor(),
+                        width: type == 'central' ? 4 : 3, // Thicker borders for prominence
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(type == 'central' ? 0.3 : 0.15),
+                          blurRadius: type == 'central' ? 12 : 8, // More pronounced shadows
+                          offset: Offset(0, type == 'central' ? 4 : 3),
+                          spreadRadius: type == 'central' ? 2 : 1,
+                        ),
+                        // Add inner shadow for depth
+                        if (type == 'central') BoxShadow(
+                          color: Colors.white.withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: const Offset(-1, -1),
+                          spreadRadius: 0,
+                        ),
+                      ],
+                      gradient: type == 'central' ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          _getSubjectColor().withOpacity(0.9),
+                          _getSubjectColor(),
+                          _getSubjectColor().withOpacity(0.8),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ) : LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white,
+                          _getSubjectColor().withOpacity(0.05),
+                        ],
+                      ),
+                    ),
+                    child: Container(
+                      decoration: type == 'central' ? BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ) : null,
+                      child: Center(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: type == 'central' ? 13 : 11, // Larger text
+                            fontWeight: type == 'central' ? FontWeight.w900 : FontWeight.w700,
+                            color: type == 'central' ? Colors.white : _getSubjectColor(),
+                            letterSpacing: type == 'central' ? 0.5 : 0.3,
+                            shadows: type == 'central' ? [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.3),
+                                offset: const Offset(1, 1),
+                                blurRadius: 2,
+                              ),
+                            ] : null,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: type == 'central' ? FontWeight.bold : FontWeight.w500,
-                    color: type == 'central' ? Colors.white : _getSubjectColor(),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
+                );
+              }).toList(),
             ),
           );
-        }).toList(),
+        },
       ),
     );
+  }
+  
+  /// Normalize element positions to fit within container bounds
+  List<Map<String, dynamic>> _normalizeElementPositions(List<dynamic> elements, BoxConstraints constraints) {
+    if (elements.isEmpty) return [];
+    
+    final normalizedElements = <Map<String, dynamic>>[];
+    final containerWidth = constraints.maxWidth;
+    final containerHeight = constraints.maxHeight;
+    
+    debugPrint('🔄 Normalizing ${elements.length} elements in ${containerWidth}x${containerHeight} container');
+    
+    // Find central element first
+    var centralIndex = elements.indexWhere((e) => (e as Map<String, dynamic>)['type'] == 'central');
+    if (centralIndex == -1) centralIndex = 0;
+    
+    if (elements.length == 1) {
+      // Single element - place in center
+      final element = Map<String, dynamic>.from(elements[0] as Map<String, dynamic>);
+      element['x'] = containerWidth / 2;
+      element['y'] = containerHeight / 2;
+      normalizedElements.add(element);
+    } else if (elements.length == 2) {
+      // Two elements - side by side
+      for (int i = 0; i < elements.length; i++) {
+        final element = Map<String, dynamic>.from(elements[i] as Map<String, dynamic>);
+        element['x'] = (containerWidth / 3) * (i + 1); // 1/3 and 2/3 positions
+        element['y'] = containerHeight / 2;
+        normalizedElements.add(element);
+      }
+    } else {
+      // Multiple elements - improved circular arrangement
+      for (int i = 0; i < elements.length; i++) {
+        final element = Map<String, dynamic>.from(elements[i] as Map<String, dynamic>);
+        
+        if (i == centralIndex) {
+          // Central element in the middle
+          element['x'] = containerWidth / 2;
+          element['y'] = containerHeight / 2;
+          element['type'] = 'central'; // Ensure it's marked as central
+        } else {
+          // Calculate position for non-central elements
+          final nonCentralIndex = i - (i > centralIndex ? 1 : 0);
+          final totalNonCentral = elements.length - 1;
+          
+          // Improved angle calculation for better distribution
+          final baseAngle = (2 * math.pi * nonCentralIndex) / totalNonCentral;
+          final angle = baseAngle - (math.pi / 2); // Start from top
+          
+          // Calculate radius ensuring no overlap with enhanced spacing
+          final minRadius = 140.0; // Increased minimum distance from center
+          final maxRadius = math.min(containerWidth, containerHeight) * 0.4;
+          final radius = math.max(minRadius, maxRadius);
+          
+          // Calculate position
+          final centerX = containerWidth / 2;
+          final centerY = containerHeight / 2;
+          
+          var x = centerX + radius * math.cos(angle);
+          var y = centerY + radius * math.sin(angle);
+          
+          // Ensure elements stay within bounds with generous margins for new larger sizes
+          final nodeWidth = 110.0; // Updated to match new size
+          final nodeHeight = 55.0; // Updated to match new size
+          final margin = 30.0; // Increased margin
+          
+          x = math.max(margin + nodeWidth/2, math.min(x, containerWidth - margin - nodeWidth/2));
+          y = math.max(margin + nodeHeight/2, math.min(y, containerHeight - margin - nodeHeight/2));
+          
+          element['x'] = x;
+          element['y'] = y;
+          
+          debugPrint('📍 Element ${i}: ${element['label']} at (${x.toInt()}, ${y.toInt()})');
+        }
+        
+        normalizedElements.add(element);
+      }
+    }
+    
+    return normalizedElements;
+  }
+  
+  /// Normalize connections based on new element positions
+  List<Map<String, dynamic>> _normalizeConnections(List<dynamic> connections, List<Map<String, dynamic>> elements) {
+    return connections.map((conn) {
+      final connection = Map<String, dynamic>.from(conn as Map<String, dynamic>);
+      // Connections reference element indices, which remain the same
+      return connection;
+    }).toList();
   }
 
   /// Build comparison diagram
@@ -861,4 +1030,198 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
         return _getSubjectColor();
     }
   }
+}
+
+/// Custom painter for drawing concept map connections
+class ConceptMapPainter extends CustomPainter {
+  final List<Map<String, dynamic>> elements;
+  final List<Map<String, dynamic>> connections;
+  final Color subjectColor;
+
+  ConceptMapPainter({
+    required this.elements,
+    required this.connections,
+    required this.subjectColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (elements.isEmpty) return;
+    
+    final paint = Paint()
+      ..color = subjectColor.withOpacity(0.7)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    final linePaint = Paint()
+      ..color = subjectColor.withOpacity(0.5)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    // If no explicit connections, connect all elements to the central one
+    if (connections.isEmpty) {
+      final centralIndex = elements.indexWhere((e) => e['type'] == 'central');
+      if (centralIndex >= 0) {
+        for (int i = 0; i < elements.length; i++) {
+          if (i != centralIndex) {
+            _drawConnection(canvas, elements[centralIndex], elements[i], linePaint, paint, '');
+          }
+        }
+      }
+    } else {
+      // Draw explicit connections
+      for (final connection in connections) {
+        final from = connection['from'] as int?;
+        final to = connection['to'] as int?;
+        final label = connection['label'] as String? ?? '';
+
+        if (from != null && to != null && from < elements.length && to < elements.length) {
+          _drawConnection(canvas, elements[from], elements[to], linePaint, paint, label);
+        }
+      }
+    }
+  }
+
+  void _drawConnection(Canvas canvas, Map<String, dynamic> fromElement, Map<String, dynamic> toElement, 
+                      Paint linePaint, Paint arrowPaint, String label) {
+    final fromX = (fromElement['x'] as num?)?.toDouble() ?? 0.0;
+    final fromY = (fromElement['y'] as num?)?.toDouble() ?? 0.0;
+    final toX = (toElement['x'] as num?)?.toDouble() ?? 0.0;
+    final toY = (toElement['y'] as num?)?.toDouble() ?? 0.0;
+    
+    final fromType = fromElement['type'] as String? ?? 'concept';
+    final toType = toElement['type'] as String? ?? 'concept';
+
+    // Calculate connection points at edge of nodes instead of centers
+    final dx = toX - fromX;
+    final dy = toY - fromY;
+    final length = math.sqrt(dx * dx + dy * dy);
+    
+    if (length < 40) return; // Skip if nodes are too close
+    
+    final unitX = dx / length;
+    final unitY = dy / length;
+    
+    // Calculate edge points based on updated node sizes
+    final fromRadius = fromType == 'central' ? 70.0 : 55.0; // Updated radii
+    final toRadius = toType == 'central' ? 70.0 : 55.0;
+    
+    final startX = fromX + unitX * fromRadius;
+    final startY = fromY + unitY * fromRadius;
+    final endX = toX - unitX * toRadius;
+    final endY = toY - unitY * toRadius;
+
+    // Enhanced line paint with gradient effect and better visibility
+    final gradientPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          subjectColor.withOpacity(0.8),
+          subjectColor.withOpacity(0.6),
+        ],
+      ).createShader(Rect.fromPoints(Offset(startX, startY), Offset(endX, endY)))
+      ..strokeWidth = 3.5 // Thicker lines for better visibility
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    
+    // Add shadow for depth
+    final shadowPaint = Paint()
+      ..color = Colors.black.withOpacity(0.2)
+      ..strokeWidth = 4.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    // Draw connection line with smooth curve
+    final path = Path();
+    path.moveTo(startX, startY);
+    
+    // Add slight curve for visual appeal
+    final midX = (startX + endX) / 2;
+    final midY = (startY + endY) / 2;
+    final controlOffset = math.min(20.0, length * 0.1);
+    final controlX = midX + (endY - startY) * controlOffset / length;
+    final controlY = midY - (endX - startX) * controlOffset / length;
+    
+    path.quadraticBezierTo(controlX, controlY, endX, endY);
+    
+    // Draw shadow first for depth
+    final shadowPath = Path();
+    shadowPath.moveTo(startX + 1, startY + 1);
+    shadowPath.quadraticBezierTo(controlX + 1, controlY + 1, endX + 1, endY + 1);
+    canvas.drawPath(shadowPath, shadowPaint);
+    
+    // Draw main connection line
+    canvas.drawPath(path, gradientPaint);
+
+    // Draw enhanced arrowhead with better visibility
+    final arrowLength = 14.0; // Larger arrows
+    final arrowAngle = math.pi / 4; // Wider angle for better visibility
+    
+    final arrowX1 = endX - arrowLength * (unitX * math.cos(arrowAngle) - unitY * math.sin(arrowAngle));
+    final arrowY1 = endY - arrowLength * (unitY * math.cos(arrowAngle) + unitX * math.sin(arrowAngle));
+    final arrowX2 = endX - arrowLength * (unitX * math.cos(-arrowAngle) - unitY * math.sin(-arrowAngle));
+    final arrowY2 = endY - arrowLength * (unitY * math.cos(-arrowAngle) + unitX * math.sin(-arrowAngle));
+
+    final arrowPath = Path();
+    arrowPath.moveTo(endX, endY);
+    arrowPath.lineTo(arrowX1, arrowY1);
+    arrowPath.lineTo(arrowX2, arrowY2);
+    arrowPath.close();
+    
+    final arrowFillPaint = Paint()
+      ..color = subjectColor.withOpacity(0.9) // More opaque for visibility
+      ..style = PaintingStyle.fill;
+    
+    // Add arrow shadow
+    final arrowShadowPath = Path();
+    arrowShadowPath.moveTo(endX + 1, endY + 1);
+    arrowShadowPath.lineTo(arrowX1 + 1, arrowY1 + 1);
+    arrowShadowPath.lineTo(arrowX2 + 1, arrowY2 + 1);
+    arrowShadowPath.close();
+    
+    canvas.drawPath(arrowShadowPath, Paint()
+      ..color = Colors.black.withOpacity(0.2)
+      ..style = PaintingStyle.fill);
+    
+    canvas.drawPath(arrowPath, arrowFillPaint);
+
+    // Draw connection label if provided
+    if (label.isNotEmpty) {
+      final midX = (fromX + toX) / 2;
+      final midY = (fromY + toY) / 2;
+      
+      final textSpan = TextSpan(
+        text: label,
+        style: TextStyle(
+          color: subjectColor,
+          fontSize: 9,
+          fontWeight: FontWeight.w500,
+          backgroundColor: Colors.white.withOpacity(0.9),
+        ),
+      );
+      
+      final textPainter = TextPainter(
+        text: textSpan,
+        textDirection: TextDirection.ltr,
+      );
+      
+      textPainter.layout();
+      
+      // Draw background for text
+      final rect = Rect.fromCenter(
+        center: Offset(midX, midY),
+        width: textPainter.width + 4,
+        height: textPainter.height + 2,
+      );
+      
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(2)),
+        Paint()..color = Colors.white.withOpacity(0.9),
+      );
+      
+      textPainter.paint(canvas, Offset(midX - textPainter.width / 2, midY - textPainter.height / 2));
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

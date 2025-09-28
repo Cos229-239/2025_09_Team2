@@ -35,7 +35,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
   final TextEditingController _topicController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
   String _selectedSubject = 'General';
-  String _selectedLearningStyle = 'adaptive';
+  String _selectedLearningStyle = 'visual';
   int _cardCount = 5;
   String? _generationError;
 
@@ -252,7 +252,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
               _textController.clear();
               setState(() {
                 _selectedSubject = 'General';
-                _selectedLearningStyle = 'adaptive';
+                _selectedLearningStyle = 'visual';
                 _cardCount = 5;
               });
             },
