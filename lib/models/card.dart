@@ -35,6 +35,12 @@ class FlashCard {
   // Whether the last quiz attempt was correct
   final bool? lastQuizCorrect;
 
+  // Multi-modal content fields for enhanced learning experiences
+  final String? imageUrl; // URL to generated visual representation
+  final String? audioUrl; // URL to generated audio content
+  final String? diagramData; // JSON data for interactive diagrams
+  final Map<String, String>? visualMetadata; // Additional visual content info
+
   /// Constructor for creating a FlashCard instance
   /// @param id - Unique identifier for the card
   /// @param deckId - ID of the parent deck containing this card
@@ -60,6 +66,10 @@ class FlashCard {
     this.difficulty = 3, // Default to medium difficulty
     this.lastQuizAttempt, // No quiz attempt initially
     this.lastQuizCorrect, // No quiz result initially
+    this.imageUrl, // Optional visual content URL
+    this.audioUrl, // Optional audio content URL
+    this.diagramData, // Optional diagram JSON data
+    this.visualMetadata, // Optional visual metadata
   });
 
   /// Checks if quiz is available (not in cooldown period)
@@ -137,6 +147,10 @@ class FlashCard {
       difficulty: difficulty,
       lastQuizAttempt: attempted,
       lastQuizCorrect: correct,
+      imageUrl: imageUrl,
+      audioUrl: audioUrl,
+      diagramData: diagramData,
+      visualMetadata: visualMetadata,
     );
   }
 
@@ -155,6 +169,10 @@ class FlashCard {
         'lastQuizAttempt':
             lastQuizAttempt?.toIso8601String(), // Store quiz attempt time
         'lastQuizCorrect': lastQuizCorrect, // Store quiz result
+        'imageUrl': imageUrl, // Store visual content URL
+        'audioUrl': audioUrl, // Store audio content URL
+        'diagramData': diagramData, // Store diagram JSON data
+        'visualMetadata': visualMetadata, // Store visual metadata
       };
 
   /// Factory constructor to create a FlashCard from JSON data (database or API)
@@ -186,6 +204,12 @@ class FlashCard {
             : null,
         lastQuizCorrect:
             json['lastQuizCorrect'] as bool?, // Extract quiz result
+        imageUrl: json['imageUrl'] as String?, // Extract visual content URL
+        audioUrl: json['audioUrl'] as String?, // Extract audio content URL
+        diagramData: json['diagramData'] as String?, // Extract diagram JSON data
+        visualMetadata: json['visualMetadata'] != null
+            ? Map<String, String>.from(json['visualMetadata'] as Map)
+            : null, // Extract visual metadata
       );
 }
 
@@ -194,5 +218,21 @@ class FlashCard {
 enum CardType {
   basic, // Traditional front/back cards (question → answer)
   cloze, // Cloze deletion cards with fill-in-the-blank sections
-  reverse // Bidirectional cards that can be studied both ways
+  reverse, // Bidirectional cards that can be studied both ways
+  multipleChoice, // Multiple choice questions with 4 options
+  trueFalse, // True/false questions with explanations
+  comparison, // Compare and contrast questions
+  scenario, // Real-world application scenarios
+  causeEffect, // Cause and effect relationships
+  sequence, // Ordering or process questions
+  definitionExample, // Match definitions to examples
+  // Advanced question formats
+  caseStudy, // Multi-paragraph case studies with analysis
+  problemSolving, // Multi-step problem-solving chains
+  hypothesisTesting, // Evidence-based conclusion questions
+  decisionAnalysis, // Best approach evaluation questions
+  systemAnalysis, // Component interaction questions
+  prediction, // Pattern-based prediction questions
+  evaluation, // Effectiveness assessment questions
+  synthesis // Concept combination questions
 }

@@ -110,6 +110,7 @@ class StudyPalsAIProvider with ChangeNotifier {
   }
 
   /// Generate flashcards from text input
+  /// Automatically detects if user is visual learner and generates appropriate content
   Future<List<FlashCard>> generateFlashcards(
       String content, String subject, User user) async {
     if (!isAIEnabled) return [];
@@ -118,8 +119,15 @@ class StudyPalsAIProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final cards =
-          await _aiService.generateFlashcardsFromText(content, subject, user);
+      List<FlashCard> cards;
+      
+      // Use new dual model approach (Gemini 2.0 + 2.5 with fallback to interactive diagrams)
+      cards = await _aiService.generateFlashcardsWithDualModels(
+        content,
+        subject,
+        user,
+      );
+      
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -129,6 +137,7 @@ class StudyPalsAIProvider with ChangeNotifier {
   }
 
   /// Generate flashcards from text with additional options
+  /// Automatically detects if user is visual learner and generates appropriate content
   Future<List<FlashCard>> generateFlashcardsFromText(
     String content,
     User user, {
@@ -141,8 +150,44 @@ class StudyPalsAIProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final cards = await _aiService
-          .generateFlashcardsFromText(content, subject, user, count: count);
+      List<FlashCard> cards;
+      
+      // Use new dual model approach (Gemini 2.0 + 2.5 with fallback to interactive diagrams)
+      cards = await _aiService.generateFlashcardsWithDualModels(
+        content,
+        subject,
+        user,
+        count: count,
+      );
+      
+      _aiGeneratedCards.addAll(cards);
+      return cards;
+    } finally {
+      _isGeneratingContent = false;
+      notifyListeners();
+    }
+  }
+
+  /// Generate visual flashcards specifically for visual learners
+  Future<List<FlashCard>> generateVisualFlashcards(
+    String content,
+    String subject,
+    User user, {
+    int count = 5,
+  }) async {
+    if (!isAIEnabled) return [];
+
+    _isGeneratingContent = true;
+    notifyListeners();
+
+    try {
+      // Use new dual model approach for visual flashcards
+      final cards = await _aiService.generateFlashcardsWithDualModels(
+        content,
+        subject,
+        user,
+        count: count,
+      );
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {

@@ -1,6 +1,7 @@
 // Firebase configuration for StudyPals web app
 const firebaseConfig = {
-  apiKey: "AIzaSyALMGBRttLlvJE3kwXZNNZRoYfu-9wEKug",
+  //apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
+  apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
   authDomain: "studypals-9f7e1.firebaseapp.com",
   projectId: "studypals-9f7e1",
   storageBucket: "studypals-9f7e1.firebaseapp.com",

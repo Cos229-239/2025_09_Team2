@@ -18,6 +18,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Import screen for flashcard study interface
 import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
+// Import AI system test screen for validation
+import 'package:studypals/screens/ai_system_test_screen.dart'; // AI system validation
 // Import settings screen for app configuration
 import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
 // Import planner screen
@@ -538,7 +540,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     try {
       await aiProvider.configureAI(
         provider: AIProvider.google,
-        apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+          apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
+          //apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
       );
       debugPrint('Google AI automatically configured on dashboard load');
     } catch (e) {
@@ -871,8 +874,37 @@ class _DashboardHomeState extends State<DashboardHome>
       // LinkedIn-style notification bell with unread count badge
       const NotificationBellIcon(),
 
+
+      // AI System Test button - validates AI features
+      IconButton(
+        icon: const Icon(Icons.psychology, color: Colors.orange), 
+        tooltip: 'AI System Validation',
+        onPressed: () {
+          // Navigate to AI system test screen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AISystemTestScreen(),
+            ),
+          );
+        },
+      ),
+
+      // Settings button - opens app configuration panel
+      IconButton(
+        icon: const Icon(Icons.settings), // Gear icon for settings
+        onPressed: () {
+          // Navigate to settings screen
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SettingsScreen(),
+            ),
+          );
+        },
+      ),
+
       // Settings button - opens app configuration panel with gear rotation animation
       _buildAnimatedSettingsButton(context),
+
 
       // Logout button - signs out the current user
       IconButton(
