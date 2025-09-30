@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../providers/app_state.dart';
 import '../../providers/theme_provider.dart';
 import '../../widgets/ai/ai_settings_widget.dart';
+import '../../widgets/notifications/notification_panel.dart'; // Import for custom bell icon
 import 'spotify_integration_screen.dart';
+import '../../widgets/common/themed_background_wrapper.dart';
 
 /// Application settings screen
 /// Provides access to all app configuration options including AI settings
@@ -32,12 +34,15 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: SingleChildScrollView(
+    return ThemedBackgroundWrapper(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Settings'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,9 +237,10 @@ class SettingsScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.notifications,
-                          color: Theme.of(context).primaryColor,
+                        const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: NotificationBellIcon(),
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -452,6 +458,7 @@ class SettingsScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

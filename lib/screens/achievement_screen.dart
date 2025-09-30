@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/achievement_gamification_service.dart';
 import '../widgets/achievement/achievement_widgets.dart';
+import '../widgets/common/themed_background_wrapper.dart';
 
 // TODO: Achievement Screen - Missing Real Gamification Features
 // - Achievement service is completely placeholder implementation
@@ -61,11 +62,14 @@ class _AchievementScreenState extends State<AchievementScreen>
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Achievements'),
-        elevation: 0,
-        bottom: TabBar(
+    return ThemedBackgroundWrapper(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Achievements'),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          bottom: TabBar(
           controller: _tabController,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
@@ -84,7 +88,8 @@ class _AchievementScreenState extends State<AchievementScreen>
           _buildRewardsTab(),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildOverviewTab() {

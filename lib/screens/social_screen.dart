@@ -8,6 +8,7 @@ import 'profile_settings_screen.dart';
 import 'user_profile_screen.dart';
 import 'chat_screen.dart';
 import 'group_details_screen.dart';
+import '../widgets/common/themed_background_wrapper.dart';
 
 // TODO: Social Screen - Major Social Feature Implementation Gaps
 // - Social learning service is completely placeholder-based
@@ -81,21 +82,24 @@ class _SocialScreenState extends State<SocialScreen>
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Social Learning'),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: _showSearchDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showProfileSettings,
-          ),
-        ],
-        bottom: TabBar(
+    return ThemedBackgroundWrapper(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Social Learning'),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: _showSearchDialog,
+            ),
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: _showProfileSettings,
+            ),
+          ],
+          bottom: TabBar(
           controller: _tabController,
           tabs: [
             Tab(
@@ -148,7 +152,8 @@ class _SocialScreenState extends State<SocialScreen>
         ],
       ),
       floatingActionButton: _buildFloatingActionButton(),
-    );
+    ),
+  );
   }
 
   Widget _buildOverviewTab() {
