@@ -12,6 +12,8 @@ import '../services/enhanced_ai_tutor_service.dart';
 import '../services/ai_tutor_middleware.dart';
 import '../services/session_context.dart';
 import '../services/user_profile_store.dart';
+import '../services/web_search_service.dart';
+import '../config/gemini_config.dart';
 import 'ai_provider.dart';
 
 /// Log level enum for development logging
@@ -141,10 +143,20 @@ class EnhancedAITutorProvider extends ChangeNotifier {
   // AI Tutor Middleware components for production-ready validation
   SessionContext? _sessionContext;
   UserProfileStore? _userProfileStore;
+  
+  // Web search integration for real-time information
+  late final WebSearchService _webSearchService;
+  String? _userId; // Track current user ID for rate limiting
 
   EnhancedAITutorProvider(this._tutorService) {
     _instanceCount++;
     _log('EnhancedAITutorProvider instance #$_instanceCount created', level: LogLevel.debug);
+    
+    // Initialize web search service
+    _webSearchService = WebSearchService();
+    _webSearchService.initialize();
+    print('🌐 DEBUG: WebSearchService initialized. isAvailable=${_webSearchService.isAvailable}, enableWebSearch=${GeminiConfig.enableWebSearch}');
+    _log('WebSearchService initialized (enabled: ${GeminiConfig.enableWebSearch})', level: LogLevel.debug);
   }
 
   /// Logging utility for production-safe debug output
@@ -366,10 +378,71 @@ Ask me anything - all responses will be validated!
       _isGenerating = true;
       _quickReplies.clear();
       notifyListeners();
+      
+      // Store user ID for rate limiting
+      _userId = user?.id ?? _tutorService.auth.currentUser?.uid;
 
-      // Generate AI response using the working AI provider
+      // ========== 🌐 WEB SEARCH INTEGRATION ==========
+      // Check if this query needs web search
+      final needsWebSearch = _needsWebSearch(content.trim());
+      print('🔍 DEBUG: needsWebSearch=$needsWebSearch, isAvailable=${_webSearchService.isAvailable}, query="${content.trim()}"');
+      _log('needsWebSearch: $needsWebSearch, isAvailable: ${_webSearchService.isAvailable}', level: LogLevel.info, context: 'sendMessage');
+      
+      // Generate AI response using the working AI provider or web search
       String rawResponseContent;
-      if (_aiProvider != null && _aiProvider!.isAIEnabled) {
+      if (needsWebSearch && _webSearchService.isAvailable) {
+        print('🌐 DEBUG: Web search TRIGGERED!');
+        _log('🔍 Web search triggered for query: "$content"', level: LogLevel.info, context: 'sendMessage');
+        
+        try {
+          // Perform web search with conversation context
+          final searchResult = await _webSearchService.search(
+            content.trim(),
+            conversationContext: _sessionContext?.getContextSummary(),
+            userId: _userId,
+          );
+          
+          if (searchResult.hasError) {
+            _log('⚠️ Web search failed: ${searchResult.error}', level: LogLevel.warning, context: 'sendMessage');
+            // Fallback to local AI
+            if (_aiProvider != null && _aiProvider!.isAIEnabled) {
+              final prompt = _buildPromptForContent(content.trim());
+              rawResponseContent = await _aiProvider!.aiService.callGoogleAIWithRetry(prompt, 0);
+            } else {
+              rawResponseContent = searchResult.answer; // Use error message
+            }
+          } else {
+            // Web search successful!
+            rawResponseContent = searchResult.answer;
+            
+            // Add web search attribution
+            final attribution = StringBuffer('\n\n');
+            attribution.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            attribution.writeln('🌐 **Information Source: Web Search**');
+            attribution.writeln('📅 Retrieved: ${_formatDate(searchResult.timestamp)}');
+            if (searchResult.fromCache) {
+              attribution.writeln('⚡ Cached result (fresh)');
+            }
+            attribution.writeln();
+            attribution.writeln('*Note: This information was gathered from current online sources.');
+            attribution.writeln('For academic citations, please verify with primary sources.*');
+            attribution.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            
+            rawResponseContent += attribution.toString();
+            
+            _log('✅ Web search successful (${searchResult.fromCache ? "cached" : "fresh"})', level: LogLevel.info, context: 'sendMessage');
+          }
+        } catch (e) {
+          _log('❌ Web search error: $e', level: LogLevel.error, context: 'sendMessage');
+          // Fallback to local AI
+          if (_aiProvider != null && _aiProvider!.isAIEnabled) {
+            final prompt = _buildPromptForContent(content.trim());
+            rawResponseContent = await _aiProvider!.aiService.callGoogleAIWithRetry(prompt, 0);
+          } else {
+            rawResponseContent = 'I apologize, but I encountered an error. Please try again!';
+          }
+        }
+      } else if (_aiProvider != null && _aiProvider!.isAIEnabled) {
         // Use the working AI service that handles flashcards
         final prompt = _buildPromptForContent(content.trim());
         
@@ -1217,6 +1290,82 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
         .toList();
     
     return words.toSet().toList();
+  }
+
+  /// 🌐 Detect if a query needs web search
+  bool _needsWebSearch(String query) {
+    final queryLower = query.toLowerCase();
+    
+    // Patterns that indicate need for current/factual information
+    final searchIndicators = [
+      // Question words about real-world facts
+      r'who is\b',
+      r'what is the name',
+      r'where is\b',
+      r'when did\b',
+      r'when was\b',
+      
+      // Current/recent information requests
+      r'\bcurrent\b',
+      r'\blatest\b',
+      r'\btoday\b',
+      r'\bnow\b',
+      r'\brecent\b',
+      r'\bthis year\b',
+      r'\bthis month\b',
+      
+      // Educational institutions (like Full Sail example)
+      r'\buniversity\b',
+      r'\bcollege\b',
+      r'\bschool\b',
+      r'\bprofessor\b',
+      r'\bteacher\b',
+      r'\binstructor\b',
+      r'\bcourse\b',
+      
+      // Real-time data
+      r'\bweather\b',
+      r'\bnews\b',
+      r'\bstock\b',
+      r'\bprice\b',
+      r'\brate\b',
+      
+      // Specific factual queries
+      r'works for\b',
+      r'employed by\b',
+      r'located at\b',
+      r'teaches\b',
+    ];
+    
+    for (final pattern in searchIndicators) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(queryLower)) {
+        _log('Web search indicator detected: "$pattern" in query', level: LogLevel.debug, context: '_needsWebSearch');
+        return true;
+      }
+    }
+    
+    // Don't use web search for conversational/teaching queries
+    final conversationalIndicators = [
+      r'^(can you |could you |will you |would you )(help|explain|teach|show)',
+      r'^how (do|does|can|to)\b',
+      r'^(what|why) (is|are|does|do|did|would|should)',
+      r'(practice|quiz|test|example|problem)',
+      r'(understand|confused|clarify)',
+    ];
+    
+    for (final pattern in conversationalIndicators) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(queryLower)) {
+        // These are teaching requests, not factual lookups
+        return false;
+      }
+    }
+    
+    return false;
+  }
+
+  /// Format date for web search attribution
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   /// Format timestamp for conversation history
