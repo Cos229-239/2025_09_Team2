@@ -274,7 +274,7 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
               ),
             ],
           ),
-          body: AITutorChat(selectedPersona: _selectedPersona),
+          body: const AITutorChat(),
         ),
       ),
     );
