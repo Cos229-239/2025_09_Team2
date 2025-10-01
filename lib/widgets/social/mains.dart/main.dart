@@ -93,9 +93,8 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         // App title shown in app switcher and browser tab
         title: 'StudyPals',
-        // Light theme configuration for daytime usage
-        theme: AppTheme.rainbowParadiseTheme,
-        // Dark theme configuration for nighttime usage
+        // Always use dark theme
+        theme: AppTheme.darkParadiseTheme,
         darkTheme: AppTheme.darkParadiseTheme,
         // Starting screen - authentication wrapper with floating music button
         home: const AppWrapper(
