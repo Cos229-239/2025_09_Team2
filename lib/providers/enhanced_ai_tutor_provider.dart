@@ -888,7 +888,9 @@ $conversationHistory
 
 $relevantContext
 
-CURRENT STUDENT QUERY: "$content"
+═══════════════════════════════════════════════════════
+🎯 CURRENT STUDENT QUERY: "$content"
+═══════════════════════════════════════════════════════
 
 QUERY ANALYSIS:
 - Subject: ${analysis.subject.name}
@@ -926,13 +928,34 @@ QUALITY STANDARDS:
 - Encourage active learning
 - Provide accurate, verified information
 
-CRITICAL MEMORY RETRIEVAL:
-If the student asks about something they mentioned earlier (e.g., "What's my favorite color?", "Remember what we discussed about X?", "What did I tell you about Y?"):
-1. Check the CONVERSATION HISTORY above
-2. Check the RELEVANT PAST CONTEXT (if provided)
-3. Provide the accurate answer based on what they actually said
-4. DO NOT claim you don't remember if the information appears above
-5. Quote or paraphrase their exact words when possible
+═══════════════════════════════════════════════════════
+🚨 CRITICAL MEMORY RETRIEVAL INSTRUCTIONS 🚨
+═══════════════════════════════════════════════════════
+
+⚠️ BEFORE RESPONDING, YOU MUST:
+
+1. READ the "📋 CONVERSATION HISTORY" section above CAREFULLY
+2. READ the "🔑 KEY FACTS FROM CONVERSATION" section if present
+3. READ the "RELEVANT PAST CONTEXT" section if present
+
+If the student asks about something they mentioned earlier:
+✅ ALWAYS check these sections FIRST before saying "I don't know"
+✅ If you find the information above, USE IT in your answer
+✅ Quote or reference what the student actually said
+✅ DO NOT say "I don't have a record" if the info appears above
+✅ DO NOT say "I have no information" if it's in the conversation history
+
+Example correct responses:
+- "Based on what you told me earlier, [specific fact]"
+- "You mentioned that [exact quote from history]"
+- "From our conversation, I see that [reference to key fact]"
+
+Example WRONG responses (DO NOT USE):
+- "I don't have that information" (when it's in the history!)
+- "I have no record of us discussing..." (when we DID discuss it!)
+- "I don't recall..." (when it's clearly written above!)
+
+THE WORLD DEPENDS ON YOUR ACCURACY. READ THE CONTEXT CAREFULLY.
 
 Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemini.''';
   }
@@ -941,7 +964,7 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
   String _buildRelevantContext(String query, QueryAnalysis analysis) {
     // Check if this is a memory/recall query
     final isMemoryQuery = query.toLowerCase().contains(RegExp(
-      r'(remember|recall|favorite|told you|mentioned|discussed|we talked|you said|i said|preference)',
+      r'(remember|recall|favorite|told you|mentioned|discussed|we talked|you said|i said|preference|name|what|who)',
       caseSensitive: false
     ));
     
@@ -956,19 +979,24 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
       return '';
     }
     
-    final contextBuilder = StringBuffer('RELEVANT PAST CONTEXT:\n');
-    contextBuilder.writeln('(Messages semantically related to current query)');
+    final contextBuilder = StringBuffer('\n═══════════════════════════════════════════════════════\n');
+    contextBuilder.writeln('🎯 RELEVANT PAST CONTEXT (ANSWER IS HERE!)');
+    contextBuilder.writeln('═══════════════════════════════════════════════════════');
+    contextBuilder.writeln('⚠️ These messages are HIGHLY RELEVANT to the current query!');
+    contextBuilder.writeln('⚠️ The answer is PROBABLY in one of these messages below!');
     contextBuilder.writeln();
     
     for (var i = 0; i < relevantMessages.length; i++) {
       final msg = relevantMessages[i];
-      final role = msg.type == MessageType.user ? 'STUDENT' : 'AI TUTOR';
+      final role = msg.type == MessageType.user ? '👤 STUDENT' : '🤖 AI';
       final timestamp = _formatTimestamp(msg.timestamp);
       
-      contextBuilder.write('[$role - $timestamp]: ');
+      contextBuilder.write('🔍 [$role - $timestamp]: ');
       contextBuilder.writeln(msg.content);
       contextBuilder.writeln();
     }
+    
+    contextBuilder.writeln('═══════════════════════════════════════════════════════');
     
     return contextBuilder.toString().trim();
   }
@@ -990,13 +1018,15 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
         ? messages.sublist(messages.length - 20) 
         : messages;
     
-    final historyBuilder = StringBuffer('CONVERSATION HISTORY:\n');
-    historyBuilder.writeln('(Showing ${recentMessages.length} most recent messages from ${messages.length} total)');
+    final historyBuilder = StringBuffer('═══════════════════════════════════════════════════════\n');
+    historyBuilder.writeln('📋 CONVERSATION HISTORY (READ THIS CAREFULLY!)');
+    historyBuilder.writeln('═══════════════════════════════════════════════════════');
+    historyBuilder.writeln('Showing ${recentMessages.length} most recent messages from ${messages.length} total');
     historyBuilder.writeln();
     
     for (var i = 0; i < recentMessages.length; i++) {
       final msg = recentMessages[i];
-      final role = msg.type == MessageType.user ? 'STUDENT' : 'AI TUTOR';
+      final role = msg.type == MessageType.user ? '👤 STUDENT' : '🤖 AI';
       final timestamp = _formatTimestamp(msg.timestamp);
       
       historyBuilder.write('[$role${timestamp.isNotEmpty ? " - $timestamp" : ""}]: ');
@@ -1004,14 +1034,74 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
       historyBuilder.writeln(); // Add spacing for readability
     }
     
+    // 🔥 EXTRACT KEY FACTS - Make them impossible to miss!
+    final keyFacts = _extractKeyFacts(messages);
+    if (keyFacts.isNotEmpty) {
+      historyBuilder.writeln('═══════════════════════════════════════════════════════');
+      historyBuilder.writeln('🔑 KEY FACTS FROM CONVERSATION (MEMORIZE THESE!):');
+      historyBuilder.writeln('═══════════════════════════════════════════════════════');
+      for (var i = 0; i < keyFacts.length; i++) {
+        historyBuilder.writeln('${i + 1}. ${keyFacts[i]}');
+      }
+      historyBuilder.writeln();
+    }
+    
     // Add topic summary if available
     final topics = _sessionContext!.getRecentTopics(topK: 5);
     if (topics.isNotEmpty) {
-      final topicNames = topics.map((t) => '${t.topic} (mentioned ${t.mentionCount}x)').toList();
-      historyBuilder.writeln('KEY TOPICS DISCUSSED: ${topicNames.join(', ')}');
+      final topicNames = topics.map((t) => '${t.topic} (×${t.mentionCount})').toList();
+      historyBuilder.writeln('📊 KEY TOPICS: ${topicNames.join(' • ')}');
     }
     
+    historyBuilder.writeln('═══════════════════════════════════════════════════════');
+    
     return historyBuilder.toString().trim();
+  }
+
+  /// 🔑 Extract key facts from conversation that must be remembered
+  List<String> _extractKeyFacts(List<ChatMessage> messages) {
+    final facts = <String>[];
+    
+    // Patterns that indicate important facts
+    final factPatterns = [
+      // "X is Y" statements
+      RegExp(r'(.+?)\s+is\s+(.+?)(?:\.|$)', caseSensitive: false),
+      // "My X is Y" statements  
+      RegExp(r'my\s+(.+?)\s+(?:is|are)\s+(.+?)(?:\.|$)', caseSensitive: false),
+      // "X name is Y" or "name of X is Y" statements
+      RegExp(r'(.+?)\s+name\s+(?:is|was)\s+(.+?)(?:\.|$)', caseSensitive: false),
+      RegExp(r'name\s+of\s+(.+?)\s+(?:is|was)\s+(.+?)(?:\.|$)', caseSensitive: false),
+      // "I am X" statements
+      RegExp(r'i\s+am\s+(.+?)(?:\.|$)', caseSensitive: false),
+      // "I like/prefer/love X" statements
+      RegExp(r'i\s+(?:like|prefer|love|enjoy|want)\s+(.+?)(?:\.|$)', caseSensitive: false),
+    ];
+    
+    for (final msg in messages) {
+      if (msg.type != MessageType.user) continue;
+      
+      final content = msg.content;
+      
+      // Extract using patterns
+      for (final pattern in factPatterns) {
+        final matches = pattern.allMatches(content);
+        for (final match in matches) {
+          if (match.groupCount >= 1) {
+            // Clean and add the fact
+            final fact = match.group(0)?.trim();
+            if (fact != null && fact.length > 10 && fact.length < 200) {
+              facts.add(fact);
+            }
+          }
+        }
+      }
+    }
+    
+    // Deduplicate and limit to most recent 10 facts
+    final uniqueFacts = facts.toSet().toList();
+    return uniqueFacts.length > 10 
+        ? uniqueFacts.sublist(uniqueFacts.length - 10)
+        : uniqueFacts;
   }
 
   /// 🎯 Find semantically relevant past messages for current query
@@ -1021,17 +1111,21 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
     final allMessages = _sessionContext!.getAllMessages();
     if (allMessages.isEmpty) return [];
     
-    // Extract keywords from current query
+    // Extract keywords from current query (preserve capitalization for proper nouns!)
     final queryKeywords = _extractRelevantKeywords(query.toLowerCase());
-    if (queryKeywords.isEmpty) return [];
+    final properNouns = _extractProperNouns(query); // NEW: Detect names like "Reginald"
+    
+    if (queryKeywords.isEmpty && properNouns.isEmpty) return [];
     
     // Score each message by keyword overlap
     final scoredMessages = <Map<String, dynamic>>[];
     
     for (final message in allMessages) {
       final contentLower = message.content.toLowerCase();
+      final contentOriginal = message.content;
       var score = 0.0;
       
+      // Score regular keywords
       for (final keyword in queryKeywords) {
         if (contentLower.contains(keyword)) {
           score += 1.0;
@@ -1042,10 +1136,24 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
         }
       }
       
+      // Score proper nouns (case-sensitive, higher weight!)
+      for (final properNoun in properNouns) {
+        if (contentOriginal.contains(properNoun)) {
+          score += 5.0; // 🔥 MUCH higher weight for proper nouns (names, etc.)
+        } else if (contentLower.contains(properNoun.toLowerCase())) {
+          score += 2.0; // Still good even if case doesn't match
+        }
+      }
+      
       // Recency bonus (prefer recent messages)
       final age = DateTime.now().difference(message.timestamp).inMinutes;
       final recencyBonus = 1.0 / (1.0 + age / 60.0); // Decay over hours
       score += recencyBonus * 0.3;
+      
+      // Bonus for user messages (more likely to contain facts)
+      if (message.type == MessageType.user) {
+        score += 0.5;
+      }
       
       if (score > 0) {
         scoredMessages.add({
@@ -1062,6 +1170,33 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
         .take(maxResults)
         .map((m) => m['message'] as ChatMessage)
         .toList();
+  }
+
+  /// 🔍 Extract proper nouns (capitalized words) that are likely names
+  List<String> _extractProperNouns(String text) {
+    final properNouns = <String>[];
+    
+    // Split into words and find capitalized ones (but not first word of sentence)
+    final words = text.split(RegExp(r'\s+'));
+    
+    for (var i = 0; i < words.length; i++) {
+      final word = words[i].replaceAll(RegExp(r'[^\w]'), ''); // Remove punctuation
+      
+      // Must be capitalized, > 2 chars, and not a common word
+      if (word.length > 2 && word[0] == word[0].toUpperCase()) {
+        // Skip if it's the first word of a sentence (might just be capitalized)
+        final isFirstWord = i == 0 || (i > 0 && words[i - 1].endsWith('.'));
+        
+        // Common capitalized words to skip
+        final commonWords = {'The', 'I', 'My', 'What', 'When', 'Where', 'Who', 'Why', 'How', 'Can', 'Could', 'Would', 'Should'};
+        
+        if (!isFirstWord || !commonWords.contains(word)) {
+          properNouns.add(word);
+        }
+      }
+    }
+    
+    return properNouns;
   }
 
   /// Extract meaningful keywords for semantic search
