@@ -1918,15 +1918,27 @@ ADVANCED QUALITY STANDARDS:
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['candidates'] != null && data['candidates'].isNotEmpty) {
-          final result =
-              data['candidates'][0]['content']['parts'][0]['text'].trim();
-          debugPrint('Extracted result: $result');
-          return result;
-        } else {
-          debugPrint('No candidates in response: $data');
-          throw Exception('No response from Google AI');
+        if (data['candidates'] != null && 
+            data['candidates'] is List && 
+            (data['candidates'] as List).isNotEmpty) {
+          
+          final candidate = data['candidates'][0];
+          if (candidate['content'] != null && 
+              candidate['content']['parts'] != null &&
+              candidate['content']['parts'] is List &&
+              (candidate['content']['parts'] as List).isNotEmpty) {
+            
+            final text = candidate['content']['parts'][0]['text'];
+            if (text != null && text is String) {
+              final result = text.trim();
+              debugPrint('Extracted result: $result');
+              return result;
+            }
+          }
         }
+        
+        debugPrint('Invalid response structure: $data');
+        throw Exception('Invalid response structure from Google AI');
       } else {
         debugPrint('API call failed with status ${response.statusCode}');
         throw Exception(

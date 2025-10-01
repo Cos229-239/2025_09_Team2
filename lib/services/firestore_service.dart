@@ -1949,4 +1949,136 @@ class FirestoreService {
       return false;
     }
   }
+
+  // ==================== AI TUTOR CHAT MANAGEMENT METHODS ====================
+
+  /// Collection reference for chat messages
+  CollectionReference get chatMessagesCollection => _firestore.collection('chatMessages');
+
+  /// Create a new chat message
+  Future<String?> createChatMessage(Map<String, dynamic> messageData) async {
+    try {
+      final messageWithMeta = {
+        ...messageData,
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      final docRef = await chatMessagesCollection.add(messageWithMeta);
+      if (kDebugMode) {
+        print('✅ Created chat message: ${docRef.id}');
+      }
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating chat message: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get chat messages for a session
+  Future<List<Map<String, dynamic>>> getSessionChatMessages(String sessionId) async {
+    try {
+      final querySnapshot = await chatMessagesCollection
+          .where('metadata.sessionId', isEqualTo: sessionId)
+          .orderBy('timestamp', descending: false)
+          .get();
+
+      final messages = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+
+      if (kDebugMode) {
+        print('✅ Retrieved ${messages.length} chat messages for session: $sessionId');
+      }
+      return messages;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error retrieving chat messages: $e');
+      }
+      return [];
+    }
+  }
+
+  // ==================== TUTOR SESSION MANAGEMENT METHODS ====================
+
+  /// Collection reference for tutor sessions
+  CollectionReference get tutorSessionsCollection => _firestore.collection('tutorSessions');
+
+  /// Create a new tutor session
+  Future<String?> createTutorSession(Map<String, dynamic> sessionData) async {
+    try {
+      final sessionWithMeta = {
+        ...sessionData,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final docRef = await tutorSessionsCollection.add(sessionWithMeta);
+      if (kDebugMode) {
+        print('✅ Created tutor session: ${docRef.id}');
+      }
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error creating tutor session: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Update an existing tutor session
+  Future<bool> updateTutorSession(String sessionId, Map<String, dynamic> updateData) async {
+    try {
+      await tutorSessionsCollection.doc(sessionId).update({
+        ...updateData,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (kDebugMode) {
+        print('✅ Updated tutor session: $sessionId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating tutor session: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Get all tutor sessions for a user
+  Future<List<Map<String, dynamic>>> getUserTutorSessions(String uid) async {
+    try {
+      final querySnapshot = await tutorSessionsCollection
+          .where('userId', isEqualTo: uid)
+          .orderBy('startTime', descending: true)
+          .get();
+
+      final sessions = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+
+      if (kDebugMode) {
+        print('✅ Retrieved ${sessions.length} tutor sessions for user: $uid');
+      }
+      return sessions;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error retrieving tutor sessions: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Get real-time tutor sessions stream
+  Stream<QuerySnapshot> getUserTutorSessionsStream(String uid) {
+    return tutorSessionsCollection
+        .where('userId', isEqualTo: uid)
+        .orderBy('startTime', descending: true)
+        .snapshots();
+  }
 }

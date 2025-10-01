@@ -88,9 +88,12 @@ import 'providers/theme_provider.dart';
 import 'providers/social_session_provider.dart';
 import 'providers/calendar_provider.dart';
 import 'providers/planner_provider.dart';
+import 'providers/enhanced_ai_tutor_provider.dart';
 
 // Import services
 import 'services/social_learning_service.dart';
+import 'services/enhanced_ai_tutor_service.dart';
+import 'services/ai_service.dart';
 
 // Import auth wrapper for authentication flow
 import 'screens/auth/auth_wrapper.dart';
@@ -161,6 +164,20 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SRSProvider()),
         ChangeNotifierProvider(create: (_) => DailyQuestProvider()),
         ChangeNotifierProvider(create: (_) => StudyPalsAIProvider()),
+        ChangeNotifierProxyProvider<StudyPalsAIProvider, EnhancedAITutorProvider>(
+          create: (_) => EnhancedAITutorProvider(EnhancedAITutorService(AIService())),
+          update: (_, aiProvider, tutorProvider) {
+            // Always use the working AI provider
+            if (tutorProvider == null) {
+              final newProvider = EnhancedAITutorProvider(EnhancedAITutorService(aiProvider.aiService));
+              newProvider.setAIProvider(aiProvider);
+              return newProvider;
+            }
+            // Update existing provider with the working AI provider
+            tutorProvider.setAIProvider(aiProvider);
+            return tutorProvider;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => SocialSessionProvider()),
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
         ChangeNotifierProvider(create: (_) => PlannerProvider()),
