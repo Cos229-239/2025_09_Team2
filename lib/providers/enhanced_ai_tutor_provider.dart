@@ -9,6 +9,9 @@ import '../models/learning_profile.dart';
 import '../models/quiz_question.dart';
 import '../models/user.dart' as app_user;
 import '../services/enhanced_ai_tutor_service.dart';
+import '../services/ai_tutor_middleware.dart';
+import '../services/session_context.dart';
+import '../services/user_profile_store.dart';
 import 'ai_provider.dart';
 
 /// Log level enum for development logging
@@ -134,6 +137,10 @@ class EnhancedAITutorProvider extends ChangeNotifier {
   
   // Quick reply suggestions
   List<String> _quickReplies = [];
+  
+  // AI Tutor Middleware components for production-ready validation
+  SessionContext? _sessionContext;
+  UserProfileStore? _userProfileStore;
 
   EnhancedAITutorProvider(this._tutorService) {
     _instanceCount++;
@@ -197,10 +204,16 @@ class EnhancedAITutorProvider extends ChangeNotifier {
         await _tutorService.updateStreak(userId);
       }
       
+      // Initialize AI Tutor Middleware components for production
+      // CRITICAL: Initialize for ALL users (including demo/anonymous)
+      _userProfileStore = UserProfileStore();
+      _log('✅ UserProfileStore initialized', level: LogLevel.info, context: 'initialize');
+      
       _updateQuickReplies();
       notifyListeners();
     } catch (e) {
       _error = 'Failed to initialize: $e';
+      _log('❌ Initialization error: $e', level: LogLevel.error, context: 'initialize');
       notifyListeners();
     }
   }
@@ -247,6 +260,39 @@ class EnhancedAITutorProvider extends ChangeNotifier {
       // Get recommended concept
       final userId = _tutorService.auth.currentUser?.uid ?? 'anonymous';
       _log('User ID: $userId', level: LogLevel.info, context: 'startAdaptiveSession');
+      
+      // Initialize SessionContext for middleware tracking
+      _sessionContext = SessionContext(
+        userId: userId,
+        maxMessages: 100, // Store more context for better memory validation
+      );
+      // Add existing messages to context if any
+      for (final msg in _messages) {
+        _sessionContext!.addMessage(msg);
+      }
+      _log('✅ SessionContext initialized for subject: $_currentSubject with ${_messages.length} existing messages', 
+           level: LogLevel.info, context: 'startAdaptiveSession');
+      
+      // Add system message to show middleware is active
+      if (_messages.isEmpty) {
+        final systemMessage = ChatMessage(
+          id: 'system_${DateTime.now().millisecondsSinceEpoch}',
+          content: '''━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ **AI Tutor Middleware ACTIVATED**
+
+Your session now includes:
+• 🧠 Memory validation (prevents false claims)
+• ➗ Math verification (validates calculations)  
+• 📊 Learning style detection (adapts to you)
+• 💾 Session context tracking (remembers conversation)
+
+Ask me anything - all responses will be validated!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━''',
+          type: MessageType.assistant,
+          format: MessageFormat.text,
+        );
+        _messages.add(systemMessage);
+      }
       
       _currentConcept = _tutorService.getNextRecommendedConcept(
         userId,
@@ -310,34 +356,140 @@ class EnhancedAITutorProvider extends ChangeNotifier {
       
       _messages.add(userMessage);
       _log('Added user message to list. Total messages: ${_messages.length}', level: LogLevel.debug, context: 'sendMessage');
+      
+      // ========== CRITICAL: Add to SessionContext for memory tracking ==========
+      if (_sessionContext != null) {
+        _sessionContext!.addMessage(userMessage);
+        _log('📝 Added user message to SessionContext', level: LogLevel.info, context: 'sendMessage');
+      }
+      
       _isGenerating = true;
       _quickReplies.clear();
       notifyListeners();
 
       // Generate AI response using the working AI provider
-      String responseContent;
+      String rawResponseContent;
       if (_aiProvider != null && _aiProvider!.isAIEnabled) {
         // Use the working AI service that handles flashcards
         final prompt = _buildPromptForContent(content.trim());
         
-        responseContent = await _aiProvider!.aiService.callGoogleAIWithRetry(prompt, 0);
-        
-        // PRODUCTION QUALITY CONTROL - Validate response meets standards
-        final analysis = _performQueryAnalysis(content.trim());
-        responseContent = _validateAndOptimizeResponse(responseContent, analysis, content.trim());
+        rawResponseContent = await _aiProvider!.aiService.callGoogleAIWithRetry(prompt, 0);
+        _log('🤖 Raw AI response received (${rawResponseContent.length} chars)', level: LogLevel.info, context: 'sendMessage');
       } else {
-        responseContent = 'I apologize, but I encountered an error. Please try again!';
+        rawResponseContent = 'I apologize, but I encountered an error. Please try again!';
+      }
+      
+      // ========== CRITICAL: Process through AI Tutor Middleware ==========
+      String finalResponseContent;
+      if (_sessionContext != null && _userProfileStore != null) {
+        _log('🔄 Processing response through AI Tutor Middleware...', level: LogLevel.info, context: 'sendMessage');
+        
+        final processedResponse = await AITutorMiddleware.processAIResponse(
+          userQuery: content.trim(),
+          aiResponse: rawResponseContent,
+          sessionContext: _sessionContext!,
+          userProfileStore: _userProfileStore!,
+        );
+        
+        finalResponseContent = processedResponse.finalResponse;
+        
+        // Log all middleware findings
+        if (processedResponse.memoryIssues.isNotEmpty) {
+          _log('⚠️ MEMORY ISSUES DETECTED:', level: LogLevel.warning, context: 'sendMessage');
+          for (final issue in processedResponse.memoryIssues) {
+            _log('  - Claim: "${issue.claim}"', level: LogLevel.warning, context: 'sendMessage');
+            _log('    Honest Alternative: "${issue.honestAlternative}"', level: LogLevel.warning, context: 'sendMessage');
+          }
+        } else {
+          _log('✅ No false memory claims detected', level: LogLevel.info, context: 'sendMessage');
+        }
+        
+        if (processedResponse.mathIssues.isNotEmpty) {
+          _log('⚠️ MATH ISSUES DETECTED:', level: LogLevel.warning, context: 'sendMessage');
+          for (final issue in processedResponse.mathIssues) {
+            _log('  - Expression: "${issue.expression}" - ${issue.description}', level: LogLevel.warning, context: 'sendMessage');
+          }
+        } else if (processedResponse.mathValidations.isNotEmpty) {
+          _log('✅ Math validated: ${processedResponse.mathValidations.length} expressions checked', level: LogLevel.info, context: 'sendMessage');
+        }
+        
+        if (processedResponse.detectedLearningStyle != null) {
+          final style = processedResponse.detectedLearningStyle!;
+          final dominant = style.preferences.getDominantStyle();
+          _log('📊 Learning Style Detected: $dominant (confidence: ${style.confidence.toStringAsFixed(2)})', level: LogLevel.info, context: 'sendMessage');
+          _log('  - Visual: ${style.preferences.visual.toStringAsFixed(2)}', level: LogLevel.info, context: 'sendMessage');
+          _log('  - Auditory: ${style.preferences.auditory.toStringAsFixed(2)}', level: LogLevel.info, context: 'sendMessage');
+          _log('  - Kinesthetic: ${style.preferences.kinesthetic.toStringAsFixed(2)}', level: LogLevel.info, context: 'sendMessage');
+          _log('  - Reading: ${style.preferences.reading.toStringAsFixed(2)}', level: LogLevel.info, context: 'sendMessage');
+        }
+        
+        _log('✅ Middleware processing complete', level: LogLevel.info, context: 'sendMessage');
+        
+        // ========== ADD VISIBLE STATUS BADGES TO RESPONSE ==========
+        final statusBadges = StringBuffer();
+        statusBadges.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        statusBadges.writeln('🔍 **AI Tutor Validation Status:**');
+        statusBadges.writeln();
+        
+        if (processedResponse.memoryIssues.isEmpty) {
+          statusBadges.writeln('✅ Memory Check: PASSED');
+        } else {
+          statusBadges.writeln('⚠️ Memory Check: ${processedResponse.memoryIssues.length} issue(s) detected');
+        }
+        
+        if (processedResponse.mathIssues.isEmpty && processedResponse.mathValidations.isNotEmpty) {
+          statusBadges.writeln('✅ Math Validation: ${processedResponse.mathValidations.length} expression(s) verified');
+        } else if (processedResponse.mathIssues.isNotEmpty) {
+          statusBadges.writeln('⚠️ Math Check: ${processedResponse.mathIssues.length} issue(s) found');
+        } else {
+          statusBadges.writeln('ℹ️ Math Check: No math expressions found');
+        }
+        
+        if (processedResponse.detectedLearningStyle != null) {
+          final style = processedResponse.detectedLearningStyle!;
+          final dominant = style.preferences.getDominantStyle();
+          statusBadges.writeln('📊 Learning Style: $dominant (${(style.confidence * 100).toStringAsFixed(0)}% confidence)');
+        } else {
+          statusBadges.writeln('ℹ️ Learning Style: Analyzing...');
+        }
+        
+        statusBadges.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        statusBadges.writeln();
+        
+        // Prepend status badges to response
+        finalResponseContent = statusBadges.toString() + finalResponseContent;
+        
+      } else {
+        // Fallback: No middleware available
+        _log('⚠️ SessionContext or UserProfileStore not available, skipping middleware', level: LogLevel.warning, context: 'sendMessage');
+        final analysis = _performQueryAnalysis(content.trim());
+        finalResponseContent = _validateAndOptimizeResponse(rawResponseContent, analysis, content.trim());
+        
+        // Add warning badge when middleware is not available
+        final warningBadge = StringBuffer();
+        warningBadge.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        warningBadge.writeln('⚠️ **AI Tutor Middleware: NOT ACTIVE**');
+        warningBadge.writeln('Session not initialized. Start a new session to enable validation.');
+        warningBadge.writeln('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        warningBadge.writeln();
+        finalResponseContent = warningBadge.toString() + finalResponseContent;
       }
       
       final aiResponse = ChatMessage(
         id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
-        content: responseContent,
+        content: finalResponseContent,
         type: MessageType.assistant,
         format: MessageFormat.text,
       );
 
       _messages.add(aiResponse);
       _log('Added AI response to list. Total messages: ${_messages.length}', level: LogLevel.debug, context: 'sendMessage');
+      
+      // ========== CRITICAL: Add AI response to SessionContext ==========
+      if (_sessionContext != null) {
+        _sessionContext!.addMessage(aiResponse);
+        _log('📝 Added AI response to SessionContext', level: LogLevel.info, context: 'sendMessage');
+      }
       
       // Check if response contains a quiz (either by metadata or content)
       if (aiResponse.metadata?['type'] == 'quiz' || 
@@ -357,6 +509,7 @@ class EnhancedAITutorProvider extends ChangeNotifier {
       _updateQuickReplies();
     } catch (e) {
       _error = 'Failed to generate response: $e';
+      _log('❌ Error in sendMessage: $e', level: LogLevel.error, context: 'sendMessage');
       
       // Add error message
       final errorMessage = ChatMessage(
@@ -723,10 +876,21 @@ Be concise, direct, and encouraging.''';
     final contextualGuidance = _getContextualGuidance();
     final pedagogicalTechniques = _getPedagogicalTechniques(analysis.intent, analysis.complexity);
     
+    // 🔥 CHATGPT-LEVEL CONTEXT AWARENESS: Include full conversation history
+    final conversationHistory = _buildConversationHistory();
+    
+    // 🎯 SEMANTIC SEARCH: Find relevant past discussions for memory/recall queries
+    final relevantContext = _buildRelevantContext(content, analysis);
+    
     return '''You are a world-class AI tutor specializing in $subjectContext. 
-Student query: "$content"
 
-CURRENT ANALYSIS:
+$conversationHistory
+
+$relevantContext
+
+CURRENT STUDENT QUERY: "$content"
+
+QUERY ANALYSIS:
 - Subject: ${analysis.subject.name}
 - Complexity: ${analysis.complexity.name}
 - Intent: ${analysis.intent.name}
@@ -734,7 +898,7 @@ CURRENT ANALYSIS:
 - Question Type: ${analysis.questionType}
 - Keywords: ${analysis.keywords.join(', ')}
 
-CONVERSATION CONTEXT:
+SESSION INSIGHTS:
 $contextualGuidance
 
 RESPONSE REQUIREMENTS:
@@ -756,12 +920,179 @@ ${analysis.requiresSteps ? '✓ Provide step-by-step breakdown or process' : ''}
 QUALITY STANDARDS:
 - Be pedagogically sound and evidence-based
 - Adapt language to $_currentDifficulty level
-- Build upon established knowledge
+- Build upon established knowledge from this conversation
+- Reference previous topics/preferences when relevant
 - Maintain student engagement
 - Encourage active learning
 - Provide accurate, verified information
 
+CRITICAL MEMORY RETRIEVAL:
+If the student asks about something they mentioned earlier (e.g., "What's my favorite color?", "Remember what we discussed about X?", "What did I tell you about Y?"):
+1. Check the CONVERSATION HISTORY above
+2. Check the RELEVANT PAST CONTEXT (if provided)
+3. Provide the accurate answer based on what they actually said
+4. DO NOT claim you don't remember if the information appears above
+5. Quote or paraphrase their exact words when possible
+
 Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemini.''';
+  }
+
+  /// 🎯 Build relevant context section for memory/topic-based queries
+  String _buildRelevantContext(String query, QueryAnalysis analysis) {
+    // Check if this is a memory/recall query
+    final isMemoryQuery = query.toLowerCase().contains(RegExp(
+      r'(remember|recall|favorite|told you|mentioned|discussed|we talked|you said|i said|preference)',
+      caseSensitive: false
+    ));
+    
+    if (!isMemoryQuery) {
+      return ''; // No need for semantic search
+    }
+    
+    // Find semantically relevant past messages
+    final relevantMessages = _findRelevantPastMessages(query, maxResults: 5);
+    
+    if (relevantMessages.isEmpty) {
+      return '';
+    }
+    
+    final contextBuilder = StringBuffer('RELEVANT PAST CONTEXT:\n');
+    contextBuilder.writeln('(Messages semantically related to current query)');
+    contextBuilder.writeln();
+    
+    for (var i = 0; i < relevantMessages.length; i++) {
+      final msg = relevantMessages[i];
+      final role = msg.type == MessageType.user ? 'STUDENT' : 'AI TUTOR';
+      final timestamp = _formatTimestamp(msg.timestamp);
+      
+      contextBuilder.write('[$role - $timestamp]: ');
+      contextBuilder.writeln(msg.content);
+      contextBuilder.writeln();
+    }
+    
+    return contextBuilder.toString().trim();
+  }
+
+  /// 🚀 Build ChatGPT-style conversation history for context
+  String _buildConversationHistory() {
+    if (_sessionContext == null) {
+      return 'CONVERSATION HISTORY:\n(No prior messages in this session)';
+    }
+    
+    final messages = _sessionContext!.getAllMessages();
+    
+    if (messages.isEmpty) {
+      return 'CONVERSATION HISTORY:\n(No prior messages in this session)';
+    }
+    
+    // Get recent messages (last 20 for context, similar to ChatGPT's approach)
+    final recentMessages = messages.length > 20 
+        ? messages.sublist(messages.length - 20) 
+        : messages;
+    
+    final historyBuilder = StringBuffer('CONVERSATION HISTORY:\n');
+    historyBuilder.writeln('(Showing ${recentMessages.length} most recent messages from ${messages.length} total)');
+    historyBuilder.writeln();
+    
+    for (var i = 0; i < recentMessages.length; i++) {
+      final msg = recentMessages[i];
+      final role = msg.type == MessageType.user ? 'STUDENT' : 'AI TUTOR';
+      final timestamp = _formatTimestamp(msg.timestamp);
+      
+      historyBuilder.write('[$role${timestamp.isNotEmpty ? " - $timestamp" : ""}]: ');
+      historyBuilder.writeln(msg.content);
+      historyBuilder.writeln(); // Add spacing for readability
+    }
+    
+    // Add topic summary if available
+    final topics = _sessionContext!.getRecentTopics(topK: 5);
+    if (topics.isNotEmpty) {
+      final topicNames = topics.map((t) => '${t.topic} (mentioned ${t.mentionCount}x)').toList();
+      historyBuilder.writeln('KEY TOPICS DISCUSSED: ${topicNames.join(', ')}');
+    }
+    
+    return historyBuilder.toString().trim();
+  }
+
+  /// 🎯 Find semantically relevant past messages for current query
+  List<ChatMessage> _findRelevantPastMessages(String query, {int maxResults = 5}) {
+    if (_sessionContext == null) return [];
+    
+    final allMessages = _sessionContext!.getAllMessages();
+    if (allMessages.isEmpty) return [];
+    
+    // Extract keywords from current query
+    final queryKeywords = _extractRelevantKeywords(query.toLowerCase());
+    if (queryKeywords.isEmpty) return [];
+    
+    // Score each message by keyword overlap
+    final scoredMessages = <Map<String, dynamic>>[];
+    
+    for (final message in allMessages) {
+      final contentLower = message.content.toLowerCase();
+      var score = 0.0;
+      
+      for (final keyword in queryKeywords) {
+        if (contentLower.contains(keyword)) {
+          score += 1.0;
+          // Bonus for exact keyword match vs partial
+          if (contentLower.split(RegExp(r'\W+')).contains(keyword)) {
+            score += 0.5;
+          }
+        }
+      }
+      
+      // Recency bonus (prefer recent messages)
+      final age = DateTime.now().difference(message.timestamp).inMinutes;
+      final recencyBonus = 1.0 / (1.0 + age / 60.0); // Decay over hours
+      score += recencyBonus * 0.3;
+      
+      if (score > 0) {
+        scoredMessages.add({
+          'message': message,
+          'score': score,
+        });
+      }
+    }
+    
+    // Sort by score and take top results
+    scoredMessages.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
+    
+    return scoredMessages
+        .take(maxResults)
+        .map((m) => m['message'] as ChatMessage)
+        .toList();
+  }
+
+  /// Extract meaningful keywords for semantic search
+  List<String> _extractRelevantKeywords(String text) {
+    final stopWords = {
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be',
+      'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
+      'would', 'should', 'could', 'may', 'might', 'must', 'can', 'what',
+      'which', 'who', 'when', 'where', 'why', 'how', 'this', 'that',
+    };
+    
+    final words = text
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .where((word) => word.length > 2 && !stopWords.contains(word))
+        .toList();
+    
+    return words.toSet().toList();
+  }
+
+  /// Format timestamp for conversation history
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final diff = now.difference(timestamp);
+    
+    if (diff.inMinutes < 1) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 
   /// Update conversation context with new analysis
