@@ -1132,18 +1132,19 @@ class _AITutorChatState extends State<AITutorChat>
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    color: Colors.blue.withValues(alpha: 0.15), // More visible!
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                      color: Colors.blue.withValues(alpha: 0.5), // More visible border!
+                      width: 1.5,
                     ),
                   ),
                   child: Center(
                     child: Text(
                       reply,
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w500,
+                      style: const TextStyle(
+                        color: Colors.blue, // Bright blue text!
+                        fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
                     ),
@@ -1180,9 +1181,10 @@ class _AITutorChatState extends State<AITutorChat>
             children: [
               // Attachment button
               IconButton(
-                icon: Icon(
+                icon: const Icon(
                   Icons.attach_file,
-                  color: Theme.of(context).primaryColor,
+                  color: Colors.blue, // Bright blue for visibility!
+                  size: 26,
                 ),
                 onPressed: provider.isGenerating ? null : _handleAttachment,
                 tooltip: 'Attach file',
@@ -1199,7 +1201,10 @@ class _AITutorChatState extends State<AITutorChat>
                     textCapitalization: TextCapitalization.sentences,
                     keyboardType: TextInputType.multiline,
                     maxLines: null,
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black, // Fix: Make text visible!
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Ask me anything...',
                       hintStyle: TextStyle(
@@ -1236,9 +1241,10 @@ class _AITutorChatState extends State<AITutorChat>
               
               // Voice input button
               IconButton(
-                icon: Icon(
+                icon: const Icon(
                   Icons.mic,
-                  color: Theme.of(context).primaryColor,
+                  color: Colors.blue, // Bright blue for visibility!
+                  size: 26,
                 ),
                 onPressed: provider.isGenerating ? null : _handleVoiceInput,
                 tooltip: 'Voice input',
