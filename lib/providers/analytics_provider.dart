@@ -9,7 +9,7 @@ import '../services/analytics_service.dart';
 
 class AnalyticsProvider extends ChangeNotifier {
   final AnalyticsService _analyticsService = AnalyticsService();
-  
+
   StudyAnalytics? _currentAnalytics;
   bool _isLoading = false;
   String? _error;
@@ -20,22 +20,24 @@ class AnalyticsProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   StudySession? get activeSession => _activeSession;
-  
+
   bool get hasAnalytics => _currentAnalytics != null;
-  String get performanceLevel => _currentAnalytics?.performanceLevel ?? 'Beginner';
+  String get performanceLevel =>
+      _currentAnalytics?.performanceLevel ?? 'Beginner';
   double get overallAccuracy => _currentAnalytics?.overallAccuracy ?? 0.0;
   int get currentStreak => _currentAnalytics?.currentStreak ?? 0;
-  
+
   /// Load user analytics from the service
   Future<void> loadUserAnalytics(String userId) async {
     _setLoading(true);
     _error = null;
-    
+
     try {
       _currentAnalytics = await _analyticsService.getUserAnalytics(userId);
-      
+
       // If no analytics exist, calculate them
-      _currentAnalytics ??= await _analyticsService.calculateAndUpdateAnalytics(userId);
+      _currentAnalytics ??=
+          await _analyticsService.calculateAndUpdateAnalytics(userId);
     } catch (e) {
       _error = 'Failed to load analytics: $e';
       if (kDebugMode) debugPrint('AnalyticsProvider: $_error');
@@ -48,9 +50,10 @@ class AnalyticsProvider extends ChangeNotifier {
   Future<void> refreshAnalytics(String userId) async {
     _setLoading(true);
     _error = null;
-    
+
     try {
-      _currentAnalytics = await _analyticsService.calculateAndUpdateAnalytics(userId);
+      _currentAnalytics =
+          await _analyticsService.calculateAndUpdateAnalytics(userId);
     } catch (e) {
       _error = 'Failed to refresh analytics: $e';
       if (kDebugMode) debugPrint('AnalyticsProvider: $_error');
@@ -82,7 +85,7 @@ class AnalyticsProvider extends ChangeNotifier {
   /// Add activity to the current study session
   Future<void> addSessionActivity(SessionActivity activity) async {
     if (_activeSession == null) return;
-    
+
     try {
       await _analyticsService.addSessionActivity(_activeSession!.id, activity);
       // Update local session
@@ -97,41 +100,42 @@ class AnalyticsProvider extends ChangeNotifier {
   /// End the current study session
   Future<void> endStudySession(String userId) async {
     if (_activeSession == null) return;
-    
+
     try {
       await _analyticsService.endStudySession(_activeSession!.id, userId);
       _activeSession!.endSession();
-      
+
       // Refresh analytics after session ends
       await refreshAnalytics(userId);
-      
+
       _activeSession = null;
     } catch (e) {
       _error = 'Failed to end study session: $e';
       if (kDebugMode) debugPrint('AnalyticsProvider: $_error');
     }
-    
+
     notifyListeners();
   }
 
   /// Record a card being viewed
   void recordCardView(String cardId, String? subject) {
     if (_activeSession == null) return;
-    
+
     final activity = SessionActivity(
       type: 'card_view',
       timestamp: DateTime.now(),
       cardId: cardId,
       data: {'subject': subject ?? 'unknown'},
     );
-    
+
     addSessionActivity(activity);
   }
 
   /// Record an answer being given
-  void recordAnswer(String cardId, bool wasCorrect, int responseTimeMs, String? subject) {
+  void recordAnswer(
+      String cardId, bool wasCorrect, int responseTimeMs, String? subject) {
     if (_activeSession == null) return;
-    
+
     final activity = SessionActivity(
       type: 'answer',
       timestamp: DateTime.now(),
@@ -140,44 +144,47 @@ class AnalyticsProvider extends ChangeNotifier {
       responseTimeMs: responseTimeMs,
       data: {'subject': subject ?? 'unknown'},
     );
-    
+
     addSessionActivity(activity);
   }
 
   /// Record a hint being used
   void recordHintUsed(String cardId, String? subject) {
     if (_activeSession == null) return;
-    
+
     final activity = SessionActivity(
       type: 'hint_used',
       timestamp: DateTime.now(),
       cardId: cardId,
       data: {'subject': subject ?? 'unknown'},
     );
-    
+
     addSessionActivity(activity);
   }
 
   /// Record a card being skipped
   void recordCardSkip(String cardId, String? subject) {
     if (_activeSession == null) return;
-    
+
     final activity = SessionActivity(
       type: 'skip',
       timestamp: DateTime.now(),
       cardId: cardId,
       data: {'subject': subject ?? 'unknown'},
     );
-    
+
     addSessionActivity(activity);
   }
 
   /// Get performance insights for a specific subject
-  Future<Map<String, dynamic>> getSubjectInsights(String userId, String subject) async {
+  Future<Map<String, dynamic>> getSubjectInsights(
+      String userId, String subject) async {
     try {
       return await _analyticsService.getSubjectInsights(userId, subject);
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsProvider: Failed to get subject insights: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsProvider: Failed to get subject insights: $e');
+      }
       return {};
     }
   }
@@ -187,7 +194,9 @@ class AnalyticsProvider extends ChangeNotifier {
     try {
       return await _analyticsService.getUserPerformanceSummary(userId);
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsProvider: Failed to get performance summary: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsProvider: Failed to get performance summary: $e');
+      }
       return {};
     }
   }
@@ -208,7 +217,7 @@ class AnalyticsProvider extends ChangeNotifier {
         timeSpentMinutes: timeSpentMinutes,
         cardsCount: cardsCount,
       );
-      
+
       // Refresh analytics after quiz completion
       await refreshAnalytics(userId);
     } catch (e) {
@@ -232,7 +241,7 @@ class AnalyticsProvider extends ChangeNotifier {
         grades: grades,
         timeSpentMinutes: timeSpentMinutes,
       );
-      
+
       // Refresh analytics after review session
       await refreshAnalytics(userId);
     } catch (e) {
@@ -282,8 +291,6 @@ class AnalyticsProvider extends ChangeNotifier {
     _isLoading = loading;
     notifyListeners();
   }
-
-
 
   /// Clear all analytics data (for logout)
   void clear() {

@@ -7,7 +7,7 @@ import 'firestore_service.dart';
 import 'firebase_auth_service.dart';
 
 /// Optimized registration service with performance improvements
-/// 
+///
 /// TODO: OPTIMIZED REGISTRATION SERVICE IMPLEMENTATION GAPS
 /// - Current implementation has good performance optimization but missing key features
 /// - Debug mode email verification bypass is security risk for production
@@ -26,7 +26,7 @@ import 'firebase_auth_service.dart';
 class OptimizedRegistrationService {
   final FirebaseAuthService _authService = FirebaseAuthService();
   final FirestoreService _firestoreService = FirestoreService();
-  
+
   // Development flag to allow immediate dashboard access without email verification
   static const bool _allowImmediateAccess = kDebugMode; // Only in debug mode
 
@@ -80,15 +80,16 @@ class OptimizedRegistrationService {
       // Step 3.5: In debug mode, automatically verify email for immediate access
       if (_allowImmediateAccess) {
         try {
-          // Send verification email 
+          // Send verification email
           await _authService.sendEmailVerification();
-          
+
           // In debug mode, we'll mark the user as email verified in Firestore
           // This allows immediate dashboard access while still maintaining the verification flow
           await _markEmailAsVerifiedForDebug(firebaseUser.uid);
-          
+
           if (kDebugMode) {
-            print('Debug mode: Email verification sent and marked as verified for immediate access');
+            print(
+                'Debug mode: Email verification sent and marked as verified for immediate access');
           }
         } catch (e) {
           if (kDebugMode) {
@@ -129,9 +130,9 @@ class OptimizedRegistrationService {
       );
 
       return RegistrationResult.success(
-        message: _allowImmediateAccess 
-          ? 'Registration successful! Welcome to StudyPals! (Debug: Email verification not required)'
-          : 'Registration successful! Welcome to StudyPals!',
+        message: _allowImmediateAccess
+            ? 'Registration successful! Welcome to StudyPals! (Debug: Email verification not required)'
+            : 'Registration successful! Welcome to StudyPals!',
         user: firebaseUser,
         requiresEmailVerification: !_allowImmediateAccess,
       );
@@ -360,22 +361,23 @@ class OptimizedRegistrationService {
   /// Debug-only method to mark email as verified for immediate access
   Future<void> _markEmailAsVerifiedForDebug(String uid) async {
     if (!_allowImmediateAccess) return;
-    
+
     try {
       // Mark as verified in Firestore
       await _firestoreService.usersCollection.doc(uid).update({
         'emailVerified': true,
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
-      
+
       // Note: We cannot programmatically verify email in Firebase Auth
       // This is a security limitation. In debug mode, we simulate the verification
       // by updating Firestore, but actual Firebase Auth verification must be done
       // through the email link or manually by the developer in Firebase Console
-      
+
       if (kDebugMode) {
         print('Debug: Marked email as verified in Firestore for user $uid');
-        print('Note: Firebase Auth email verification still requires actual email verification');
+        print(
+            'Note: Firebase Auth email verification still requires actual email verification');
       }
     } catch (e) {
       if (kDebugMode) {

@@ -311,7 +311,7 @@ class AchievementGamificationService {
   List<Reward> _earnedRewards = [];
 
   /// Initialize the service
-  /// 
+  ///
   /// TODO: INITIALIZATION CRITICAL IMPROVEMENTS NEEDED
   /// - Current initialization only loads local data from SharedPreferences
   /// - Need to implement proper Firebase/Firestore initialization and data sync

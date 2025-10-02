@@ -7,7 +7,7 @@
 class StudyAnalytics {
   final String userId;
   final DateTime lastUpdated;
-  
+
   // Overall Performance Metrics
   final double overallAccuracy; // 0.0 to 1.0
   final int totalStudyTime; // in minutes
@@ -15,16 +15,16 @@ class StudyAnalytics {
   final int totalQuizzesTaken;
   final int currentStreak; // days
   final int longestStreak; // days
-  
+
   // Subject-specific performance
   final Map<String, SubjectPerformance> subjectPerformance;
-  
+
   // Learning pattern insights
   final LearningPatterns learningPatterns;
-  
+
   // Recent performance trend
   final PerformanceTrend recentTrend;
-  
+
   StudyAnalytics({
     required this.userId,
     required this.lastUpdated,
@@ -68,7 +68,7 @@ class StudyAnalytics {
   String getRecommendedDifficulty(String subject) {
     final performance = subjectPerformance[subject];
     if (performance == null) return 'moderate';
-    
+
     if (performance.accuracy >= 0.9) return 'challenging';
     if (performance.accuracy >= 0.8) return 'moderate';
     if (performance.accuracy >= 0.7) return 'easy';
@@ -76,35 +76,35 @@ class StudyAnalytics {
   }
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'lastUpdated': lastUpdated.toIso8601String(),
-    'overallAccuracy': overallAccuracy,
-    'totalStudyTime': totalStudyTime,
-    'totalCardsStudied': totalCardsStudied,
-    'totalQuizzesTaken': totalQuizzesTaken,
-    'currentStreak': currentStreak,
-    'longestStreak': longestStreak,
-    'subjectPerformance': subjectPerformance.map(
-      (key, value) => MapEntry(key, value.toJson())
-    ),
-    'learningPatterns': learningPatterns.toJson(),
-    'recentTrend': recentTrend.toJson(),
-  };
+        'userId': userId,
+        'lastUpdated': lastUpdated.toIso8601String(),
+        'overallAccuracy': overallAccuracy,
+        'totalStudyTime': totalStudyTime,
+        'totalCardsStudied': totalCardsStudied,
+        'totalQuizzesTaken': totalQuizzesTaken,
+        'currentStreak': currentStreak,
+        'longestStreak': longestStreak,
+        'subjectPerformance': subjectPerformance
+            .map((key, value) => MapEntry(key, value.toJson())),
+        'learningPatterns': learningPatterns.toJson(),
+        'recentTrend': recentTrend.toJson(),
+      };
 
   factory StudyAnalytics.fromJson(Map<String, dynamic> json) => StudyAnalytics(
-    userId: json['userId'],
-    lastUpdated: DateTime.parse(json['lastUpdated']),
-    overallAccuracy: json['overallAccuracy'].toDouble(),
-    totalStudyTime: json['totalStudyTime'],
-    totalCardsStudied: json['totalCardsStudied'],
-    totalQuizzesTaken: json['totalQuizzesTaken'],
-    currentStreak: json['currentStreak'],
-    longestStreak: json['longestStreak'],
-    subjectPerformance: (json['subjectPerformance'] as Map<String, dynamic>)
-        .map((key, value) => MapEntry(key, SubjectPerformance.fromJson(value))),
-    learningPatterns: LearningPatterns.fromJson(json['learningPatterns']),
-    recentTrend: PerformanceTrend.fromJson(json['recentTrend']),
-  );
+        userId: json['userId'],
+        lastUpdated: DateTime.parse(json['lastUpdated']),
+        overallAccuracy: json['overallAccuracy'].toDouble(),
+        totalStudyTime: json['totalStudyTime'],
+        totalCardsStudied: json['totalCardsStudied'],
+        totalQuizzesTaken: json['totalQuizzesTaken'],
+        currentStreak: json['currentStreak'],
+        longestStreak: json['longestStreak'],
+        subjectPerformance: (json['subjectPerformance'] as Map<String, dynamic>)
+            .map((key, value) =>
+                MapEntry(key, SubjectPerformance.fromJson(value))),
+        learningPatterns: LearningPatterns.fromJson(json['learningPatterns']),
+        recentTrend: PerformanceTrend.fromJson(json['recentTrend']),
+      );
 }
 
 /// Performance data for a specific subject/topic
@@ -118,7 +118,7 @@ class SubjectPerformance {
   final List<double> recentScores; // Last 10 quiz scores
   final Map<String, int> difficultyBreakdown; // easy/moderate/hard counts
   final double averageResponseTime; // in seconds
-  
+
   SubjectPerformance({
     required this.subject,
     required this.accuracy,
@@ -137,7 +137,7 @@ class SubjectPerformance {
     final recent = recentScores.take(3).toList();
     final older = recentScores.skip(3).take(3).toList();
     if (older.isEmpty) return false;
-    
+
     final recentAvg = recent.reduce((a, b) => a + b) / recent.length;
     final olderAvg = older.reduce((a, b) => a + b) / older.length;
     return recentAvg > olderAvg;
@@ -146,33 +146,36 @@ class SubjectPerformance {
   /// Get performance trend description
   String get trendDescription {
     if (isImproving) return 'Improving';
-    if (recentScores.isNotEmpty && recentScores.first >= 0.8) return 'Consistent';
+    if (recentScores.isNotEmpty && recentScores.first >= 0.8) {
+      return 'Consistent';
+    }
     return 'Needs Focus';
   }
 
   Map<String, dynamic> toJson() => {
-    'subject': subject,
-    'accuracy': accuracy,
-    'totalCards': totalCards,
-    'totalQuizzes': totalQuizzes,
-    'studyTimeMinutes': studyTimeMinutes,
-    'lastStudied': lastStudied.toIso8601String(),
-    'recentScores': recentScores,
-    'difficultyBreakdown': difficultyBreakdown,
-    'averageResponseTime': averageResponseTime,
-  };
+        'subject': subject,
+        'accuracy': accuracy,
+        'totalCards': totalCards,
+        'totalQuizzes': totalQuizzes,
+        'studyTimeMinutes': studyTimeMinutes,
+        'lastStudied': lastStudied.toIso8601String(),
+        'recentScores': recentScores,
+        'difficultyBreakdown': difficultyBreakdown,
+        'averageResponseTime': averageResponseTime,
+      };
 
-  factory SubjectPerformance.fromJson(Map<String, dynamic> json) => SubjectPerformance(
-    subject: json['subject'],
-    accuracy: json['accuracy'].toDouble(),
-    totalCards: json['totalCards'],
-    totalQuizzes: json['totalQuizzes'],
-    studyTimeMinutes: json['studyTimeMinutes'],
-    lastStudied: DateTime.parse(json['lastStudied']),
-    recentScores: List<double>.from(json['recentScores']),
-    difficultyBreakdown: Map<String, int>.from(json['difficultyBreakdown']),
-    averageResponseTime: json['averageResponseTime'].toDouble(),
-  );
+  factory SubjectPerformance.fromJson(Map<String, dynamic> json) =>
+      SubjectPerformance(
+        subject: json['subject'],
+        accuracy: json['accuracy'].toDouble(),
+        totalCards: json['totalCards'],
+        totalQuizzes: json['totalQuizzes'],
+        studyTimeMinutes: json['studyTimeMinutes'],
+        lastStudied: DateTime.parse(json['lastStudied']),
+        recentScores: List<double>.from(json['recentScores']),
+        difficultyBreakdown: Map<String, int>.from(json['difficultyBreakdown']),
+        averageResponseTime: json['averageResponseTime'].toDouble(),
+      );
 }
 
 /// Analysis of user's learning patterns and preferences
@@ -183,7 +186,7 @@ class LearningPatterns {
   final int preferredCardsPerSession;
   final Map<String, double> topicInterest; // topic -> engagement score
   final List<String> commonMistakePatterns;
-  
+
   LearningPatterns({
     required this.preferredStudyHours,
     required this.learningStyleEffectiveness,
@@ -203,9 +206,9 @@ class LearningPatterns {
   /// Get preferred study time
   String get preferredStudyTime {
     if (preferredStudyHours.isEmpty) return 'flexible';
-    final mostFrequent = preferredStudyHours.entries
-        .reduce((a, b) => a.value > b.value ? a : b);
-    
+    final mostFrequent =
+        preferredStudyHours.entries.reduce((a, b) => a.value > b.value ? a : b);
+
     final hour = int.parse(mostFrequent.key);
     if (hour < 12) return 'morning';
     if (hour < 17) return 'afternoon';
@@ -213,22 +216,24 @@ class LearningPatterns {
   }
 
   Map<String, dynamic> toJson() => {
-    'preferredStudyHours': preferredStudyHours,
-    'learningStyleEffectiveness': learningStyleEffectiveness,
-    'averageSessionLength': averageSessionLength,
-    'preferredCardsPerSession': preferredCardsPerSession,
-    'topicInterest': topicInterest,
-    'commonMistakePatterns': commonMistakePatterns,
-  };
+        'preferredStudyHours': preferredStudyHours,
+        'learningStyleEffectiveness': learningStyleEffectiveness,
+        'averageSessionLength': averageSessionLength,
+        'preferredCardsPerSession': preferredCardsPerSession,
+        'topicInterest': topicInterest,
+        'commonMistakePatterns': commonMistakePatterns,
+      };
 
-  factory LearningPatterns.fromJson(Map<String, dynamic> json) => LearningPatterns(
-    preferredStudyHours: Map<String, int>.from(json['preferredStudyHours']),
-    learningStyleEffectiveness: Map<String, double>.from(json['learningStyleEffectiveness']),
-    averageSessionLength: json['averageSessionLength'].toDouble(),
-    preferredCardsPerSession: json['preferredCardsPerSession'],
-    topicInterest: Map<String, double>.from(json['topicInterest']),
-    commonMistakePatterns: List<String>.from(json['commonMistakePatterns']),
-  );
+  factory LearningPatterns.fromJson(Map<String, dynamic> json) =>
+      LearningPatterns(
+        preferredStudyHours: Map<String, int>.from(json['preferredStudyHours']),
+        learningStyleEffectiveness:
+            Map<String, double>.from(json['learningStyleEffectiveness']),
+        averageSessionLength: json['averageSessionLength'].toDouble(),
+        preferredCardsPerSession: json['preferredCardsPerSession'],
+        topicInterest: Map<String, double>.from(json['topicInterest']),
+        commonMistakePatterns: List<String>.from(json['commonMistakePatterns']),
+      );
 }
 
 /// Recent performance trend analysis
@@ -237,7 +242,7 @@ class PerformanceTrend {
   final double changeRate; // percentage change per week
   final int weeksAnalyzed;
   final List<WeeklyStats> weeklyData;
-  
+
   PerformanceTrend({
     required this.direction,
     required this.changeRate,
@@ -260,20 +265,21 @@ class PerformanceTrend {
   }
 
   Map<String, dynamic> toJson() => {
-    'direction': direction,
-    'changeRate': changeRate,
-    'weeksAnalyzed': weeksAnalyzed,
-    'weeklyData': weeklyData.map((w) => w.toJson()).toList(),
-  };
+        'direction': direction,
+        'changeRate': changeRate,
+        'weeksAnalyzed': weeksAnalyzed,
+        'weeklyData': weeklyData.map((w) => w.toJson()).toList(),
+      };
 
-  factory PerformanceTrend.fromJson(Map<String, dynamic> json) => PerformanceTrend(
-    direction: json['direction'],
-    changeRate: json['changeRate'].toDouble(),
-    weeksAnalyzed: json['weeksAnalyzed'],
-    weeklyData: (json['weeklyData'] as List)
-        .map((w) => WeeklyStats.fromJson(w))
-        .toList(),
-  );
+  factory PerformanceTrend.fromJson(Map<String, dynamic> json) =>
+      PerformanceTrend(
+        direction: json['direction'],
+        changeRate: json['changeRate'].toDouble(),
+        weeksAnalyzed: json['weeksAnalyzed'],
+        weeklyData: (json['weeklyData'] as List)
+            .map((w) => WeeklyStats.fromJson(w))
+            .toList(),
+      );
 }
 
 /// Weekly performance statistics
@@ -283,7 +289,7 @@ class WeeklyStats {
   final int totalStudyTime; // minutes
   final int cardsStudied;
   final int quizzesCompleted;
-  
+
   WeeklyStats({
     required this.weekStart,
     required this.averageAccuracy,
@@ -293,20 +299,20 @@ class WeeklyStats {
   });
 
   Map<String, dynamic> toJson() => {
-    'weekStart': weekStart.toIso8601String(),
-    'averageAccuracy': averageAccuracy,
-    'totalStudyTime': totalStudyTime,
-    'cardsStudied': cardsStudied,
-    'quizzesCompleted': quizzesCompleted,
-  };
+        'weekStart': weekStart.toIso8601String(),
+        'averageAccuracy': averageAccuracy,
+        'totalStudyTime': totalStudyTime,
+        'cardsStudied': cardsStudied,
+        'quizzesCompleted': quizzesCompleted,
+      };
 
   factory WeeklyStats.fromJson(Map<String, dynamic> json) => WeeklyStats(
-    weekStart: DateTime.parse(json['weekStart']),
-    averageAccuracy: json['averageAccuracy'].toDouble(),
-    totalStudyTime: json['totalStudyTime'],
-    cardsStudied: json['cardsStudied'],
-    quizzesCompleted: json['quizzesCompleted'],
-  );
+        weekStart: DateTime.parse(json['weekStart']),
+        averageAccuracy: json['averageAccuracy'].toDouble(),
+        totalStudyTime: json['totalStudyTime'],
+        cardsStudied: json['cardsStudied'],
+        quizzesCompleted: json['quizzesCompleted'],
+      );
 }
 
 /// Real-time study session tracking
@@ -319,7 +325,7 @@ class StudySession {
   DateTime? endTime;
   final List<SessionActivity> activities;
   final Map<String, dynamic> metadata;
-  
+
   StudySession({
     required this.id,
     required this.userId,
@@ -342,10 +348,8 @@ class StudySession {
     final correctAnswers = activities
         .where((a) => a.type == 'answer' && a.wasCorrect == true)
         .length;
-    final totalAnswers = activities
-        .where((a) => a.type == 'answer')
-        .length;
-    
+    final totalAnswers = activities.where((a) => a.type == 'answer').length;
+
     return totalAnswers > 0 ? correctAnswers / totalAnswers : 0.0;
   }
 
@@ -360,28 +364,29 @@ class StudySession {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'userId': userId,
-    'deckId': deckId,
-    'subject': subject,
-    'startTime': startTime.toIso8601String(),
-    'endTime': endTime?.toIso8601String(),
-    'activities': activities.map((a) => a.toJson()).toList(),
-    'metadata': metadata,
-  };
+        'id': id,
+        'userId': userId,
+        'deckId': deckId,
+        'subject': subject,
+        'startTime': startTime.toIso8601String(),
+        'endTime': endTime?.toIso8601String(),
+        'activities': activities.map((a) => a.toJson()).toList(),
+        'metadata': metadata,
+      };
 
   factory StudySession.fromJson(Map<String, dynamic> json) => StudySession(
-    id: json['id'],
-    userId: json['userId'],
-    deckId: json['deckId'],
-    subject: json['subject'],
-    startTime: DateTime.parse(json['startTime']),
-    endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
-    activities: (json['activities'] as List)
-        .map((a) => SessionActivity.fromJson(a))
-        .toList(),
-    metadata: Map<String, dynamic>.from(json['metadata']),
-  );
+        id: json['id'],
+        userId: json['userId'],
+        deckId: json['deckId'],
+        subject: json['subject'],
+        startTime: DateTime.parse(json['startTime']),
+        endTime:
+            json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
+        activities: (json['activities'] as List)
+            .map((a) => SessionActivity.fromJson(a))
+            .toList(),
+        metadata: Map<String, dynamic>.from(json['metadata']),
+      );
 }
 
 /// Individual activity within a study session
@@ -392,7 +397,7 @@ class SessionActivity {
   final bool? wasCorrect;
   final int? responseTimeMs;
   final Map<String, dynamic> data;
-  
+
   SessionActivity({
     required this.type,
     required this.timestamp,
@@ -403,22 +408,23 @@ class SessionActivity {
   });
 
   Map<String, dynamic> toJson() => {
-    'type': type,
-    'timestamp': timestamp.toIso8601String(),
-    'cardId': cardId,
-    'wasCorrect': wasCorrect,
-    'responseTimeMs': responseTimeMs,
-    'data': data,
-  };
+        'type': type,
+        'timestamp': timestamp.toIso8601String(),
+        'cardId': cardId,
+        'wasCorrect': wasCorrect,
+        'responseTimeMs': responseTimeMs,
+        'data': data,
+      };
 
-  factory SessionActivity.fromJson(Map<String, dynamic> json) => SessionActivity(
-    type: json['type'],
-    timestamp: DateTime.parse(json['timestamp']),
-    cardId: json['cardId'],
-    wasCorrect: json['wasCorrect'],
-    responseTimeMs: json['responseTimeMs'],
-    data: Map<String, dynamic>.from(json['data']),
-  );
+  factory SessionActivity.fromJson(Map<String, dynamic> json) =>
+      SessionActivity(
+        type: json['type'],
+        timestamp: DateTime.parse(json['timestamp']),
+        cardId: json['cardId'],
+        wasCorrect: json['wasCorrect'],
+        responseTimeMs: json['responseTimeMs'],
+        data: Map<String, dynamic>.from(json['data']),
+      );
 }
 
 /// Analytics service for calculating and updating user performance
@@ -447,15 +453,15 @@ class AnalyticsCalculator {
     final allAnswers = sessions
         .expand((s) => s.activities)
         .where((a) => a.type == 'answer' && a.wasCorrect != null);
-    
+
     final correctAnswers = allAnswers.where((a) => a.wasCorrect == true).length;
-    final overallAccuracy = allAnswers.isNotEmpty ? 
-        correctAnswers / allAnswers.length : 0.0;
+    final overallAccuracy =
+        allAnswers.isNotEmpty ? correctAnswers / allAnswers.length : 0.0;
 
     // Calculate subject performance
     final subjectPerformance = <String, SubjectPerformance>{};
     final subjectSessions = <String, List<StudySession>>{};
-    
+
     for (final session in sessions) {
       if (session.subject != null) {
         subjectSessions.putIfAbsent(session.subject!, () => []).add(session);
@@ -465,14 +471,16 @@ class AnalyticsCalculator {
     for (final entry in subjectSessions.entries) {
       final subject = entry.key;
       final subjectSessionList = entry.value;
-      
+
       final subjectAnswers = subjectSessionList
           .expand((s) => s.activities)
           .where((a) => a.type == 'answer' && a.wasCorrect != null);
-      
-      final subjectCorrect = subjectAnswers.where((a) => a.wasCorrect == true).length;
-      final subjectAccuracy = subjectAnswers.isNotEmpty ? 
-          subjectCorrect / subjectAnswers.length : 0.0;
+
+      final subjectCorrect =
+          subjectAnswers.where((a) => a.wasCorrect == true).length;
+      final subjectAccuracy = subjectAnswers.isNotEmpty
+          ? subjectCorrect / subjectAnswers.length
+          : 0.0;
 
       final subjectCards = subjectSessionList
           .expand((s) => s.activities)
@@ -511,10 +519,12 @@ class AnalyticsCalculator {
     final learningPatterns = LearningPatterns(
       preferredStudyHours: studyHours,
       learningStyleEffectiveness: {}, // TODO: Calculate from performance data
-      averageSessionLength: sessions.isNotEmpty ? 
-          totalStudyTime / sessions.length.toDouble() : 0.0,
-      preferredCardsPerSession: sessions.isNotEmpty ?
-          (totalCardsStudied / sessions.length).round() : 0,
+      averageSessionLength: sessions.isNotEmpty
+          ? totalStudyTime / sessions.length.toDouble()
+          : 0.0,
+      preferredCardsPerSession: sessions.isNotEmpty
+          ? (totalCardsStudied / sessions.length).round()
+          : 0,
       topicInterest: {}, // TODO: Calculate from engagement metrics
       commonMistakePatterns: [], // TODO: Analyze common mistakes
     );

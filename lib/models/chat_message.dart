@@ -25,7 +25,7 @@ class ChatMessage {
   final Map<String, dynamic>? metadata;
   final List<String>? attachments;
   final bool isGenerating;
-  
+
   ChatMessage({
     required this.id,
     required this.content,
@@ -40,16 +40,16 @@ class ChatMessage {
 
   /// Convert to JSON for Firestore storage
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'content': content,
-    'type': type.name,
-    'format': format.name,
-    'timestamp': timestamp.toIso8601String(),
-    'userId': userId,
-    'metadata': metadata,
-    'attachments': attachments,
-    'isGenerating': isGenerating,
-  };
+        'id': id,
+        'content': content,
+        'type': type.name,
+        'format': format.name,
+        'timestamp': timestamp.toIso8601String(),
+        'userId': userId,
+        'metadata': metadata,
+        'attachments': attachments,
+        'isGenerating': isGenerating,
+      };
 
   /// Create from JSON from Firestore
   factory ChatMessage.fromJson(Map<String, dynamic> json) {

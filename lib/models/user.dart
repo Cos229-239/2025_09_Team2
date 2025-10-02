@@ -1,6 +1,6 @@
 /// User model representing a StudyPals application user
 /// Contains all user data including preferences, profile, and authentication status
-/// 
+///
 /// TODO: CRITICAL USER MODEL IMPLEMENTATION GAPS
 /// - Current model structure is basic and missing many essential user features
 /// - Need to implement proper user roles and permissions system

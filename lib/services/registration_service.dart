@@ -7,7 +7,7 @@ import 'firestore_service.dart';
 
 /// Comprehensive registration service that handles user registration with Firebase
 /// Includes validation, security measures, and error handling
-/// 
+///
 /// TODO: REGISTRATION SERVICE IMPLEMENTATION IMPROVEMENTS NEEDED
 /// - Current implementation has good structure but missing several security features
 /// - Need to implement proper email verification workflow with customized templates
@@ -328,9 +328,10 @@ class RegistrationService {
   ) async {
     try {
       if (kDebugMode) {
-        print('🔄 Attempting to create Firebase Auth account for: ${email.trim().toLowerCase()}');
+        print(
+            '🔄 Attempting to create Firebase Auth account for: ${email.trim().toLowerCase()}');
       }
-      
+
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email.trim().toLowerCase(),
         password: password,

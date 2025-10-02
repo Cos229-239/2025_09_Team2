@@ -1,8 +1,8 @@
 /// TODO: CRITICAL STUDYPALS APPLICATION ARCHITECTURE GAPS
-/// 
+///
 /// MAJOR MISSING SERVICES (NOT IMPLEMENTED):
 /// - StudyService: Core study session management and analytics
-/// - FileService: File upload, sharing, and management 
+/// - FileService: File upload, sharing, and management
 /// - ImageService: Image processing, upload, and optimization
 /// - AudioService: Voice recording, audio processing, and playback
 /// - VideoService: Video recording, processing, and streaming
@@ -21,7 +21,7 @@
 /// - LoggingService: Comprehensive application logging and monitoring
 /// - BackupService: Automated data backup and recovery
 /// - MigrationService: Data migration and schema updates
-/// 
+///
 /// MAJOR PLACEHOLDER/FAKE IMPLEMENTATIONS:
 /// - Spotify Service: 100% mock implementation, no real Spotify API integration
 /// - Live Session Features: Fake video calling and collaboration UI only
@@ -33,7 +33,7 @@
 /// - File Sharing: UI mockups only, no actual file handling
 /// - Notification System: Local notifications only, no push notifications
 /// - Real-time Features: No WebSocket or real-time synchronization
-/// 
+///
 /// SECURITY AND COMPLIANCE GAPS:
 /// - Using Base64 instead of proper encryption
 /// - No data validation or sanitization
@@ -43,7 +43,7 @@
 /// - Missing user consent management
 /// - No data retention policies
 /// - Missing audit logging for security events
-/// 
+///
 /// INFRASTRUCTURE AND SCALABILITY GAPS:
 /// - No load balancing or performance optimization
 /// - Missing error monitoring and crash reporting
@@ -53,7 +53,7 @@
 /// - Missing CDN integration for media files
 /// - No horizontal scaling preparation
 /// - Missing monitoring and alerting systems
-/// 
+///
 /// CORE FEATURES NEEDING REAL IMPLEMENTATION:
 /// - Study effectiveness tracking and optimization
 /// - Personalized learning recommendations
@@ -97,8 +97,6 @@ import 'services/ai_service.dart';
 
 // Import auth wrapper for authentication flow
 import 'screens/auth/auth_wrapper.dart';
-// Import app wrapper for global functionality
-import 'widgets/common/app_wrapper.dart';
 
 void main() async {
   // Ensure Flutter is initialized
@@ -112,7 +110,7 @@ void main() async {
     if (kDebugMode) {
       print('✅ Firebase initialized successfully');
     }
-    
+
     // Enable Firestore offline persistence for better connectivity
     try {
       // Note: This is only needed for mobile platforms, web handles it differently
@@ -164,12 +162,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SRSProvider()),
         ChangeNotifierProvider(create: (_) => DailyQuestProvider()),
         ChangeNotifierProvider(create: (_) => StudyPalsAIProvider()),
-        ChangeNotifierProxyProvider<StudyPalsAIProvider, EnhancedAITutorProvider>(
-          create: (_) => EnhancedAITutorProvider(EnhancedAITutorService(AIService())),
+        ChangeNotifierProxyProvider<StudyPalsAIProvider,
+            EnhancedAITutorProvider>(
+          create: (_) =>
+              EnhancedAITutorProvider(EnhancedAITutorService(AIService())),
           update: (_, aiProvider, tutorProvider) {
             // Always use the working AI provider
             if (tutorProvider == null) {
-              final newProvider = EnhancedAITutorProvider(EnhancedAITutorService(aiProvider.aiService));
+              final newProvider = EnhancedAITutorProvider(
+                  EnhancedAITutorService(aiProvider.aiService));
               newProvider.setAIProvider(aiProvider);
               return newProvider;
             }
@@ -190,9 +191,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'StudyPals',
             theme: themeProvider.currentTheme,
-            home: const AppWrapper(
-              child: AuthWrapper(),
-            ),
+            home: const AuthWrapper(),
           );
         },
       ),

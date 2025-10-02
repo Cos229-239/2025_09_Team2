@@ -70,26 +70,26 @@ class _AchievementScreenState extends State<AchievementScreen>
           elevation: 0,
           backgroundColor: Colors.transparent,
           bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
+              Tab(icon: Icon(Icons.emoji_events), text: 'Achievements'),
+              Tab(icon: Icon(Icons.trending_up), text: 'Streaks'),
+              Tab(icon: Icon(Icons.card_giftcard), text: 'Rewards'),
+            ],
+          ),
+        ),
+        body: TabBarView(
           controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
-            Tab(icon: Icon(Icons.emoji_events), text: 'Achievements'),
-            Tab(icon: Icon(Icons.trending_up), text: 'Streaks'),
-            Tab(icon: Icon(Icons.card_giftcard), text: 'Rewards'),
+          children: [
+            _buildOverviewTab(),
+            _buildAchievementsTab(),
+            _buildStreaksTab(),
+            _buildRewardsTab(),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildOverviewTab(),
-          _buildAchievementsTab(),
-          _buildStreaksTab(),
-          _buildRewardsTab(),
-        ],
-      ),
-    ),
-  );
+    );
   }
 
   Widget _buildOverviewTab() {

@@ -35,33 +35,36 @@ class LearningProfile {
 
   /// Convert to JSON for storage
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'subjectMastery': subjectMastery,
-    'conceptAttempts': conceptAttempts,
-    'conceptMastery': conceptMastery,
-    'completedConcepts': completedConcepts,
-    'strugglingConcepts': strugglingConcepts,
-    'totalPoints': totalPoints,
-    'currentStreak': currentStreak,
-    'lastActivity': lastActivity.toIso8601String(),
-    'unlockedBadges': unlockedBadges,
-    'preferences': preferences,
-  };
+        'userId': userId,
+        'subjectMastery': subjectMastery,
+        'conceptAttempts': conceptAttempts,
+        'conceptMastery': conceptMastery,
+        'completedConcepts': completedConcepts,
+        'strugglingConcepts': strugglingConcepts,
+        'totalPoints': totalPoints,
+        'currentStreak': currentStreak,
+        'lastActivity': lastActivity.toIso8601String(),
+        'unlockedBadges': unlockedBadges,
+        'preferences': preferences,
+      };
 
   /// Create from JSON
   factory LearningProfile.fromJson(Map<String, dynamic> json) {
     return LearningProfile(
       userId: json['userId'] as String,
-      subjectMastery: (json['subjectMastery'] as Map<String, dynamic>?)?.cast<String, double>(),
-      conceptAttempts: (json['conceptAttempts'] as Map<String, dynamic>?)?.cast<String, int>(),
-      conceptMastery: (json['conceptMastery'] as Map<String, dynamic>?)?.cast<String, double>(),
+      subjectMastery: (json['subjectMastery'] as Map<String, dynamic>?)
+          ?.cast<String, double>(),
+      conceptAttempts: (json['conceptAttempts'] as Map<String, dynamic>?)
+          ?.cast<String, int>(),
+      conceptMastery: (json['conceptMastery'] as Map<String, dynamic>?)
+          ?.cast<String, double>(),
       completedConcepts: (json['completedConcepts'] as List?)?.cast<String>(),
       strugglingConcepts: (json['strugglingConcepts'] as List?)?.cast<String>(),
       totalPoints: json['totalPoints'] as int? ?? 0,
       currentStreak: json['currentStreak'] as int? ?? 0,
-      lastActivity: json['lastActivity'] != null 
-        ? DateTime.parse(json['lastActivity'] as String)
-        : DateTime.now(),
+      lastActivity: json['lastActivity'] != null
+          ? DateTime.parse(json['lastActivity'] as String)
+          : DateTime.now(),
       unlockedBadges: (json['unlockedBadges'] as List?)?.cast<String>(),
       preferences: json['preferences'] as Map<String, dynamic>?,
     );

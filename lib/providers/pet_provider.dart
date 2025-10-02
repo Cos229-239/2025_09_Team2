@@ -57,7 +57,7 @@ class PetProvider extends ChangeNotifier {
 
     final oldLevel = _currentPet!.level; // Store current level for comparison
     final updatedPet = await _firestoreService.addPetXP(amount);
-    
+
     if (updatedPet != null) {
       _currentPet = updatedPet;
 
@@ -153,9 +153,10 @@ class PetProvider extends ChangeNotifier {
     try {
       final pet = await _firestoreService.getUserPet();
       _currentPet = pet;
-      
+
       if (pet != null) {
-        developer.log('Pet loaded successfully: Level ${pet.level}, XP ${pet.xp}', 
+        developer.log(
+            'Pet loaded successfully: Level ${pet.level}, XP ${pet.xp}',
             name: 'PetProvider');
       } else {
         developer.log('No pet found for user', name: 'PetProvider');

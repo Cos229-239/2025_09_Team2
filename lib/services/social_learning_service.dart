@@ -833,45 +833,49 @@ class SocialLearningService {
         // First, let's try a simpler query without the isActive filter
         // since that field might not exist on all user documents
         final usersQuery = _firestoreService.usersCollection.limit(limit);
-        
+
         final querySnapshot = await usersQuery.get();
-        
-        debugPrint('Found ${querySnapshot.docs.length} total documents in users collection');
-        
+
+        debugPrint(
+            'Found ${querySnapshot.docs.length} total documents in users collection');
+
         List<UserProfile> userProfiles = [];
-        
+
         for (final doc in querySnapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
           final uid = data['uid'] as String?;
-          
-          debugPrint('Processing user document - UID: $uid, Data keys: ${data.keys.toList()}');
-          
+
+          debugPrint(
+              'Processing user document - UID: $uid, Data keys: ${data.keys.toList()}');
+
           // Skip current user
           if (uid == currentUser.uid) {
             debugPrint('Skipping current user: $uid');
             continue;
           }
-          
+
           // Convert Firestore user data to UserProfile
           final userProfile = _mapFirestoreUserToProfile(data);
           if (userProfile != null) {
-            debugPrint('Successfully mapped user profile: ${userProfile.displayName}');
+            debugPrint(
+                'Successfully mapped user profile: ${userProfile.displayName}');
             userProfiles.add(userProfile);
           } else {
             debugPrint('Failed to map user profile for UID: $uid');
           }
         }
-        
+
         debugPrint('Returning ${userProfiles.length} user profiles');
         return userProfiles;
       } catch (firestoreError) {
         debugPrint('Firestore query failed: $firestoreError');
         debugPrint('Error type: ${firestoreError.runtimeType}');
         debugPrint('Error string: ${firestoreError.toString()}');
-        
+
         // If Firestore is offline or unavailable, return some mock users for demo purposes
         // This ensures the UI doesn't show empty state when there are connection issues
-        debugPrint('Firebase client has connection issues, returning demo users');
+        debugPrint(
+            'Firebase client has connection issues, returning demo users');
         return _getMockUsersForOfflineDemo();
       }
     } catch (e) {
@@ -887,7 +891,8 @@ class SocialLearningService {
         id: 'demo_user_1',
         username: 'alex_study',
         displayName: 'Alex Chen',
-        bio: 'Computer Science student passionate about algorithms and data structures.',
+        bio:
+            'Computer Science student passionate about algorithms and data structures.',
         joinDate: DateTime.now().subtract(const Duration(days: 45)),
         level: 7,
         totalXP: 2150,
@@ -913,7 +918,8 @@ class SocialLearningService {
         id: 'demo_user_3',
         username: 'mike_physics',
         displayName: 'Michael Rodriguez',
-        bio: 'Physics enthusiast studying quantum mechanics and theoretical physics.',
+        bio:
+            'Physics enthusiast studying quantum mechanics and theoretical physics.',
         joinDate: DateTime.now().subtract(const Duration(days: 60)),
         level: 8,
         totalXP: 2800,
@@ -926,7 +932,8 @@ class SocialLearningService {
         id: 'demo_user_4',
         username: 'emma_lit',
         displayName: 'Emma Thompson',
-        bio: 'English Literature student with interests in contemporary fiction.',
+        bio:
+            'English Literature student with interests in contemporary fiction.',
         joinDate: DateTime.now().subtract(const Duration(days: 25)),
         level: 4,
         totalXP: 980,
@@ -944,61 +951,64 @@ class SocialLearningService {
       final uid = data['uid'] as String?;
       final displayName = data['displayName'] as String?;
       final email = data['email'] as String?;
-      
-      debugPrint('Mapping user profile - UID: $uid, DisplayName: $displayName, Email: $email');
-      
+
+      debugPrint(
+          'Mapping user profile - UID: $uid, DisplayName: $displayName, Email: $email');
+
       if (uid == null) {
         debugPrint('Missing UID field');
         return null;
       }
-      
+
       // Use fallback for displayName if missing
-      final finalDisplayName = displayName ?? email?.split('@').first ?? 'StudyPal User';
-      
+      final finalDisplayName =
+          displayName ?? email?.split('@').first ?? 'StudyPal User';
+
       // Extract bio and interests
       final bio = data['bio'] as String?;
       final studyStats = data['studyStats'] as Map<String, dynamic>?;
-      
+
       // Create a reasonable username from email or displayName
-      String username = email?.split('@').first ?? finalDisplayName.toLowerCase().replaceAll(' ', '_');
-      
+      String username = email?.split('@').first ??
+          finalDisplayName.toLowerCase().replaceAll(' ', '_');
+
       // Extract study-related interests or generate some based on their data
       List<String> interests = [];
       final major = data['major'] as String?;
       final school = data['school'] as String?;
-      
+
       if (major != null && major.isNotEmpty) {
         interests.add(major);
       }
       if (school != null && school.isNotEmpty) {
         interests.add(school);
       }
-      
+
       // Add some study-related interests based on their study stats
       final cardsStudied = studyStats?['cardsStudied'] as int? ?? 0;
       final totalStudyTime = studyStats?['totalStudyTime'] as int? ?? 0;
-      
+
       if (cardsStudied > 100) interests.add('Flashcards');
       if (totalStudyTime > 1000) interests.add('Study Sessions');
-      
+
       // If no interests, add some general ones
       if (interests.isEmpty) {
         interests.addAll(['Learning', 'Education']);
       }
-      
+
       // Calculate level based on study stats
       final level = _calculateLevelFromStudyStats(studyStats);
-      final totalXP = (studyStats?['cardsStudied'] as int? ?? 0) * 10 + 
-                     (studyStats?['totalStudyTime'] as int? ?? 0);
-      
+      final totalXP = (studyStats?['cardsStudied'] as int? ?? 0) * 10 +
+          (studyStats?['totalStudyTime'] as int? ?? 0);
+
       // Generate title based on level
       String title = _getTitleForLevel(level);
-      
+
       // Determine online status (assume recently active users are online)
       final lastActiveAt = data['lastActiveAt'];
       bool isOnline = false;
       DateTime? lastActive;
-      
+
       if (lastActiveAt != null) {
         if (lastActiveAt is DateTime) {
           lastActive = lastActiveAt;
@@ -1006,11 +1016,11 @@ class SocialLearningService {
           // Handle Firestore timestamp
           lastActive = DateTime.now(); // Fallback
         }
-        
+
         // Consider user online if active within last 10 minutes
         isOnline = DateTime.now().difference(lastActive).inMinutes < 10;
       }
-      
+
       return UserProfile(
         id: uid,
         username: username,
@@ -1032,18 +1042,19 @@ class SocialLearningService {
       return null;
     }
   }
-  
+
   /// Calculate user level based on study statistics
   int _calculateLevelFromStudyStats(Map<String, dynamic>? studyStats) {
     if (studyStats == null) return 1;
-    
+
     final cardsStudied = studyStats['cardsStudied'] as int? ?? 0;
     final totalStudyTime = studyStats['totalStudyTime'] as int? ?? 0;
     final tasksCompleted = studyStats['tasksCompleted'] as int? ?? 0;
-    
+
     // Simple level calculation based on activity
-    final totalActivity = cardsStudied + (totalStudyTime ~/ 60) + (tasksCompleted * 5);
-    
+    final totalActivity =
+        cardsStudied + (totalStudyTime ~/ 60) + (tasksCompleted * 5);
+
     if (totalActivity < 50) return 1;
     if (totalActivity < 150) return 2;
     if (totalActivity < 300) return 3;
@@ -1055,24 +1066,35 @@ class SocialLearningService {
     if (totalActivity < 3000) return 9;
     return 10;
   }
-  
+
   /// Get title based on user level
   String _getTitleForLevel(int level) {
     switch (level) {
-      case 1: return 'Beginner';
-      case 2: return 'Novice';
-      case 3: return 'Student';
-      case 4: return 'Scholar';
-      case 5: return 'Dedicated Learner';
-      case 6: return 'Study Expert';
-      case 7: return 'Knowledge Seeker';
-      case 8: return 'Master Student';
-      case 9: return 'Study Guru';
-      case 10: return 'Learning Legend';
-      default: return 'Beginner';
+      case 1:
+        return 'Beginner';
+      case 2:
+        return 'Novice';
+      case 3:
+        return 'Student';
+      case 4:
+        return 'Scholar';
+      case 5:
+        return 'Dedicated Learner';
+      case 6:
+        return 'Study Expert';
+      case 7:
+        return 'Knowledge Seeker';
+      case 8:
+        return 'Master Student';
+      case 9:
+        return 'Study Guru';
+      case 10:
+        return 'Learning Legend';
+      default:
+        return 'Beginner';
     }
   }
-  
+
   /// Extract join date from Firestore data
   DateTime _extractJoinDate(Map<String, dynamic> data) {
     final createdAt = data['createdAt'];
@@ -1080,7 +1102,8 @@ class SocialLearningService {
       if (createdAt is DateTime) return createdAt;
       // Handle Firestore timestamp - fallback to current time
     }
-    return DateTime.now().subtract(const Duration(days: 30)); // Default to a month ago
+    return DateTime.now()
+        .subtract(const Duration(days: 30)); // Default to a month ago
   }
 
   /// Join a collaborative session

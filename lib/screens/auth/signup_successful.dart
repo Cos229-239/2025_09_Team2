@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 // Import video player package
 import 'package:video_player/video_player.dart';
-// Import animated particle background widget
-import 'package:studypals/widgets/common/animated_particle_background.dart';
 
 /// Signup successful screen with video and return to login
 /// Shows success message after account creation
@@ -89,159 +87,149 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
     // Builds the UI for the signup screen
     return Scaffold(
       // Provides basic app structure with app bar and body
-      body: AnimatedParticleBackground(
-        // Animated background with particles
-        gradientColors: const [
-          Color(0xFF2A3050),
-          Color(0xFF3A4268),
-        ],
-        child: Container(
-          // Main container for the screen content
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            // Applies a gradient background
-            gradient: LinearGradient(
-              // Linear gradient from top to bottom
-              begin: Alignment.topCenter,
-              // Start point of the gradient
-              end: Alignment.bottomCenter,
-              // End point of the gradient
-              colors: [
-                Color(0xFF1a2332), // Very dark blue-gray
-                Color(0xFF253142), // Dark blue-gray
-                Color(0xFF2a3543), // Slightly lighter dark blue-gray
-              ],
-              // Gradient color stops
-            ),
+      backgroundColor:
+          const Color(0xFF16181A), // Solid background color from Figma
+      body: Container(
+        // Main container for the screen content
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          // Applies a gradient background
+          gradient: LinearGradient(
+            // Linear gradient from top to bottom
+            begin: Alignment.topCenter,
+            // Start point of the gradient
+            end: Alignment.bottomCenter,
+            // End point of the gradient
+            colors: [
+              Color(0xFF1a2332), // Very dark blue-gray
+              Color(0xFF253142), // Dark blue-gray
+              Color(0xFF2a3543), // Slightly lighter dark blue-gray
+            ],
+            // Gradient color stops
           ),
-          child: SafeArea(
-            // Ensures content is within safe screen boundaries
-            child: Container(
-              // Outer container for thick border - fills entire safe area
-              width: double.infinity,
-              height: double.infinity,
-              decoration: const BoxDecoration(
-                // Styling for the thick outer border
-                color: Color(0xFF365069), // Thick border color from Figma
-              ),
-              child: Padding(
-                // Adds padding for the thick border effect - MATCHES LOGIN SCREEN
-                padding:
-                    const EdgeInsets.all(32.0), // Matches login screen padding
+        ),
+        child: SafeArea(
+          // Ensures content is within safe screen boundaries
+          child: Container(
+            // Outer container for thick border - fills entire safe area
+            width: double.infinity,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              // Styling for the thick outer border
+              color: Color(0xFF365069), // Thick border color from Figma
+            ),
+            child: Padding(
+              // Adds padding for the thick border effect - MATCHES LOGIN SCREEN
+              padding:
+                  const EdgeInsets.all(32.0), // Matches login screen padding
+              child: Container(
+                // Inner container for form and mascot
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(
+                  // Styling for the inner container
+                  color: Colors
+                      .transparent, // Transparent to show gradient background
+                  border: Border.all(
+                    // Adds the original orange border
+                    color: const Color(0xFF49F9F7), // Orange border
+                    width: 2,
+                    // Border thickness
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  // Rounded corners for the container
+                ),
                 child: Container(
-                  // Inner container for form and mascot
+                  // Container to apply gradient background inside the borders
                   width: double.infinity,
                   height: double.infinity,
-                  decoration: BoxDecoration(
-                    // Styling for the inner container
-                    color: Colors
-                        .transparent, // Transparent to show gradient background
-                    border: Border.all(
-                      // Adds the original orange border
-                      color: const Color(0xFF49F9F7), // Orange border
-                      width: 2,
-                      // Border thickness
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Color(0xFF1a2332), // Very dark blue-gray
+                        Color(0xFF253142), // Dark blue-gray
+                        Color(0xFF2a3543), // Slightly lighter dark blue-gray
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                    // Rounded corners for the container
+                    borderRadius: BorderRadius.all(Radius.circular(
+                        10)), // Slightly smaller radius to fit inside orange border
                   ),
-                  child: Container(
-                    // Container to apply gradient background inside the borders
-                    width: double.infinity,
-                    height: double.infinity,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF1a2332), // Very dark blue-gray
-                          Color(0xFF253142), // Dark blue-gray
-                          Color(0xFF2a3543), // Slightly lighter dark blue-gray
-                        ],
-                      ),
-                      borderRadius: BorderRadius.all(Radius.circular(
-                          10)), // Slightly smaller radius to fit inside orange border
-                    ),
-                    child: Stack(
-                      // Stack to overlay the back arrow on the content
-                      children: [
-                        // Main content
-                        SingleChildScrollView(
-                          // Allow scrolling on smaller screens
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: MediaQuery.of(context).size.height -
-                                  64, // Account for padding
-                            ),
-                            child: Padding(
-                              // Adds padding inside the container
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 40.0),
-                              child: Column(
-                                // Arranges children vertically in a column
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height >
-                                                  700
-                                              ? 60
-                                              : 20),
-                                  // Responsive top spacing
-                                  _buildMascotSection(),
-                                  // Builds the video mascot section
-                                  SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height >
-                                                  700
-                                              ? 32
-                                              : 16),
-                                  // Responsive space between video and text
-                                  const Text(
-                                    'Your account has been created successfully!',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 2.5,
-                                    ),
+                  child: Stack(
+                    // Stack to overlay the back arrow on the content
+                    children: [
+                      // Main content
+                      SingleChildScrollView(
+                        // Allow scrolling on smaller screens
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: MediaQuery.of(context).size.height -
+                                64, // Account for padding
+                          ),
+                          child: Padding(
+                            // Adds padding inside the container
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 40.0),
+                            child: Column(
+                              // Arranges children vertically in a column
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 60
+                                            : 20),
+                                // Responsive top spacing
+                                _buildMascotSection(),
+                                // Builds the video mascot section
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 32
+                                            : 16),
+                                // Responsive space between video and text
+                                const Text(
+                                  'Your account has been created successfully!',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2.5,
                                   ),
-                                  SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height >
-                                                  700
-                                              ? 40
-                                              : 20),
-                                  // Responsive space between text and button
-                                  _buildReturnToLoginButton(),
-                                  // Return to Login button
-                                  SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height >
-                                                  700
-                                              ? 30
-                                              : 15),
-                                  // Responsive space between button and smiley
-                                  const Icon(
-                                    Icons.sentiment_very_satisfied,
-                                    color: Color(0xFFe67e22),
-                                    size: 60,
-                                  ),
-                                  SizedBox(
-                                      height:
-                                          MediaQuery.of(context).size.height >
-                                                  700
-                                              ? 60
-                                              : 20),
-                                  // Responsive space at bottom
-                                ],
-                              ),
+                                ),
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 40
+                                            : 20),
+                                // Responsive space between text and button
+                                _buildReturnToLoginButton(),
+                                // Return to Login button
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 30
+                                            : 15),
+                                // Responsive space between button and smiley
+                                const Icon(
+                                  Icons.sentiment_very_satisfied,
+                                  color: Color(0xFFe67e22),
+                                  size: 60,
+                                ),
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 60
+                                            : 20),
+                                // Responsive space at bottom
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

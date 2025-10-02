@@ -164,10 +164,10 @@ class AppState extends ChangeNotifier {
           email: result.user!.email ?? email,
           name: result.user!.displayName ?? 'User',
         );
-        
+
         _currentUser = userObject;
         notifyListeners(); // Notify AuthWrapper to rebuild and show dashboard
-        
+
         // Auto-configure AI and update last active in background
         Future.microtask(() async {
           try {
@@ -177,7 +177,7 @@ class AppState extends ChangeNotifier {
             debugPrint('Background login tasks error: $e');
           }
         });
-        
+
         return userObject;
       } else {
         _setError(result.message);

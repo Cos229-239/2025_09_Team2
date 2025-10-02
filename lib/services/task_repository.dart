@@ -12,8 +12,8 @@ import 'dart:convert';
 /// Repository class handling all database operations for Task entities
 /// Provides an abstraction layer between the data layer (SQLite) and business logic
 /// All methods are static since this is a stateless data access object
-/// 
-/// TODO: CRITICAL TASK REPOSITORY LEGACY CODE - SHOULD BE REMOVED  
+///
+/// TODO: CRITICAL TASK REPOSITORY LEGACY CODE - SHOULD BE REMOVED
 /// - This entire repository is LEGACY and should be deleted - replaced by TaskProvider with Firestore
 /// - Current implementation uses deprecated SQLite/SharedPreferences approach
 /// - TaskProvider now handles all task operations through FirestoreService with cloud sync

@@ -1,4 +1,3 @@
-
 // enhanced_ai_tutor_service.dart
 
 import 'dart:math' as math;
@@ -13,8 +12,6 @@ import '../models/quiz_question.dart';
 import '../models/user.dart' as app_user;
 import 'ai_service.dart';
 import 'firestore_service.dart';
-
-
 
 /// Enhanced AI Tutor Service with adaptive learning
 class EnhancedAITutorService {
@@ -126,7 +123,8 @@ class EnhancedAITutorService {
         question: 'What is the value of x in: 2x + 5 = 15?',
         options: ['x = 5', 'x = 10', 'x = 7.5', 'x = 20'],
         correctIndex: 0,
-        explanation: 'Subtract 5 from both sides: 2x = 10. Then divide by 2: x = 5',
+        explanation:
+            'Subtract 5 from both sides: 2x = 10. Then divide by 2: x = 5',
         conceptId: 'math_algebra_basics',
         difficulty: 3,
       ),
@@ -147,7 +145,8 @@ class EnhancedAITutorService {
         question: 'What is the discriminant formula for ax² + bx + c = 0?',
         options: ['b² - 4ac', 'b² + 4ac', '2a', '-b/2a'],
         correctIndex: 0,
-        explanation: 'The discriminant is b² - 4ac, which determines the nature of roots',
+        explanation:
+            'The discriminant is b² - 4ac, which determines the nature of roots',
         conceptId: 'math_quadratic_equations',
         difficulty: 5,
       ),
@@ -159,10 +158,8 @@ class EnhancedAITutorService {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        final doc = await _firestore
-            .collection('learningProfiles')
-            .doc(user.uid)
-            .get();
+        final doc =
+            await _firestore.collection('learningProfiles').doc(user.uid).get();
 
         if (doc.exists) {
           _learningProfiles[user.uid] = LearningProfile.fromJson(doc.data()!);
@@ -186,16 +183,20 @@ class EnhancedAITutorService {
   /// Calculate session metrics for a given session
   Map<String, dynamic> calculateSessionMetrics(String sessionId) {
     final messages = _sessionMessages[sessionId] ?? [];
-    final userMessages = messages.where((m) => m.type == MessageType.user).length;
-    final assistantMessages = messages.where((m) => m.type == MessageType.assistant).length;
-    
+    final userMessages =
+        messages.where((m) => m.type == MessageType.user).length;
+    final assistantMessages =
+        messages.where((m) => m.type == MessageType.assistant).length;
+
     return {
       'totalMessages': messages.length,
       'userMessages': userMessages,
       'assistantMessages': assistantMessages,
-      'duration': messages.isNotEmpty 
-        ? messages.last.timestamp.difference(messages.first.timestamp).inMinutes
-        : 0,
+      'duration': messages.isNotEmpty
+          ? messages.last.timestamp
+              .difference(messages.first.timestamp)
+              .inMinutes
+          : 0,
     };
   }
 
@@ -223,7 +224,8 @@ class EnhancedAITutorService {
       final context = _sessionContext[sessionId] ?? {};
 
       // Analyze user message with advanced intelligence
-      final analysis = await _analyzeAdvancedMessageIntent(userMessage, context, userId);
+      final analysis =
+          await _analyzeAdvancedMessageIntent(userMessage, context, userId);
       final intent = analysis['intent'] as String;
 
       // Generate appropriate response based on intent
@@ -254,7 +256,8 @@ class EnhancedAITutorService {
             userId,
           );
           // Update context with new topic discussed
-          _updateSessionContext(sessionId, 
+          _updateSessionContext(
+            sessionId,
             newTopic: subject ?? 'General',
             progressIncrement: 5.0,
           );
@@ -281,7 +284,8 @@ class EnhancedAITutorService {
           response = quiz;
           metadata['type'] = 'quiz';
           // Update context with concept exploration
-          _updateSessionContext(sessionId, 
+          _updateSessionContext(
+            sessionId,
             newConcept: subject ?? 'General',
             progressIncrement: 10.0,
           );
@@ -351,7 +355,6 @@ class EnhancedAITutorService {
   /// Advanced message intent analysis with emotion detection and learning style recognition
   Future<Map<String, dynamic>> _analyzeAdvancedMessageIntent(
       String message, Map<String, dynamic> context, String userId) async {
-    
     final analysis = {
       'intent': 'general',
       'confidence': 0.0,
@@ -364,43 +367,88 @@ class EnhancedAITutorService {
     };
 
     final lowerMessage = message.toLowerCase().trim();
-    
+
     // Advanced Intent Classification
     final intentPatterns = {
       'deep_explanation': {
-        'patterns': [r'explain (in detail|thoroughly|completely)', r'how does .* work exactly', r'break down', r'walk me through'],
+        'patterns': [
+          r'explain (in detail|thoroughly|completely)',
+          r'how does .* work exactly',
+          r'break down',
+          r'walk me through'
+        ],
         'confidence': 0.9,
       },
       'quick_clarification': {
-        'patterns': [r'what (is|does|means?)', r'define', r'meaning of', r'quickly explain'],
+        'patterns': [
+          r'what (is|does|means?)',
+          r'define',
+          r'meaning of',
+          r'quickly explain'
+        ],
         'confidence': 0.85,
       },
       'problem_solving': {
-        'patterns': [r'how (do|can) i (solve|fix|calculate)', r'step by step', r'show me how'],
+        'patterns': [
+          r'how (do|can) i (solve|fix|calculate)',
+          r'step by step',
+          r'show me how'
+        ],
         'confidence': 0.9,
       },
       'conceptual_understanding': {
-        'patterns': [r'why (is|does|do)', r'what causes', r'relationship between', r'difference between'],
+        'patterns': [
+          r'why (is|does|do)',
+          r'what causes',
+          r'relationship between',
+          r'difference between'
+        ],
         'confidence': 0.8,
       },
       'application_request': {
-        'patterns': [r'example of', r'real world', r'practical use', r'applied to'],
+        'patterns': [
+          r'example of',
+          r'real world',
+          r'practical use',
+          r'applied to'
+        ],
         'confidence': 0.85,
       },
       'confusion_signal': {
-        'patterns': [r"don't understand", r'confused', r'lost', r'unclear', r'what do you mean'],
+        'patterns': [
+          r"don't understand",
+          r'confused',
+          r'lost',
+          r'unclear',
+          r'what do you mean'
+        ],
         'confidence': 0.95,
       },
       'confusion': {
-        'patterns': [r"don't understand", r'confused', r'explain', r'what do you mean'],
+        'patterns': [
+          r"don't understand",
+          r'confused',
+          r'explain',
+          r'what do you mean'
+        ],
         'confidence': 0.9,
       },
       'validation_seeking': {
-        'patterns': [r'is this (right|correct)', r'am i (right|correct)', r'does this make sense', r'true or false'],
+        'patterns': [
+          r'is this (right|correct)',
+          r'am i (right|correct)',
+          r'does this make sense',
+          r'true or false'
+        ],
         'confidence': 0.9,
       },
       'progress_inquiry': {
-        'patterns': [r'how am i doing', r'my progress', r'performance', r'improvement'],
+        'patterns': [
+          r'how am i doing',
+          r'my progress',
+          r'performance',
+          r'improvement'
+        ],
         'confidence': 0.9,
       },
       'progress_check': {
@@ -420,11 +468,11 @@ class EnhancedAITutorService {
     // Determine primary intent
     double maxConfidence = 0.0;
     String primaryIntent = 'general';
-    
+
     for (final intentType in intentPatterns.keys) {
       final patterns = intentPatterns[intentType]!['patterns'] as List<String>;
       final confidence = intentPatterns[intentType]!['confidence'] as double;
-      
+
       for (final pattern in patterns) {
         if (RegExp(pattern, caseSensitive: false).hasMatch(lowerMessage)) {
           if (confidence > maxConfidence) {
@@ -440,15 +488,38 @@ class EnhancedAITutorService {
 
     // Emotion Detection
     final emotionKeywords = {
-      'frustrated': ['frustrated', 'stuck', 'hard', 'difficult', "can't", 'impossible', 'hate'],
-      'excited': ['excited', 'awesome', 'amazing', 'love', 'great', 'fantastic', 'cool'],
-      'curious': ['interesting', 'wonder', 'curious', 'want to learn', 'tell me more'],
+      'frustrated': [
+        'frustrated',
+        'stuck',
+        'hard',
+        'difficult',
+        "can't",
+        'impossible',
+        'hate'
+      ],
+      'excited': [
+        'excited',
+        'awesome',
+        'amazing',
+        'love',
+        'great',
+        'fantastic',
+        'cool'
+      ],
+      'curious': [
+        'interesting',
+        'wonder',
+        'curious',
+        'want to learn',
+        'tell me more'
+      ],
       'confident': ['easy', 'got it', 'understand', 'makes sense', 'clear'],
       'uncertain': ['maybe', 'think', 'guess', 'not sure', 'probably'],
     };
 
     for (final emotion in emotionKeywords.keys) {
-      if (emotionKeywords[emotion]!.any((keyword) => lowerMessage.contains(keyword))) {
+      if (emotionKeywords[emotion]!
+          .any((keyword) => lowerMessage.contains(keyword))) {
         analysis['emotion'] = emotion;
         break;
       }
@@ -482,7 +553,8 @@ class EnhancedAITutorService {
         detectedStyles.add(style);
       }
     }
-    analysis['learningStyle'] = detectedStyles.isNotEmpty ? detectedStyles.first : 'mixed';
+    analysis['learningStyle'] =
+        detectedStyles.isNotEmpty ? detectedStyles.first : 'mixed';
 
     // Store conversation memory
     _conversationMemory[userId] ??= [];
@@ -503,12 +575,9 @@ class EnhancedAITutorService {
     return analysis;
   }
 
-
-
   /// Build personalized response configuration based on user patterns
   Map<String, dynamic> _buildPersonalizedResponse(
       String message, String userId, Map<String, dynamic> analysis) {
-    
     // Get user's learning patterns
     final patterns = _learningPatterns[userId] ?? {};
     final personality = _userPersonality[userId] ?? {};
@@ -516,7 +585,8 @@ class EnhancedAITutorService {
 
     // Analyze user's preferred response style from history
     final recentInteractions = memory.take(5).toList();
-    final preferredComplexity = _determinePreferredComplexity(recentInteractions);
+    final preferredComplexity =
+        _determinePreferredComplexity(recentInteractions);
     final emotionalState = analysis['emotion'] as String;
     final learningStyle = analysis['learningStyle'] as String;
 
@@ -550,31 +620,34 @@ class EnhancedAITutorService {
     }
   }
 
-  String _determinePreferredComplexity(List<Map<String, dynamic>> interactions) {
+  String _determinePreferredComplexity(
+      List<Map<String, dynamic>> interactions) {
     if (interactions.isEmpty) return 'medium';
-    
+
     // Analyze user's engagement with different complexity levels
     final complexityEngagement = <String, int>{};
     for (final interaction in interactions) {
       final analysis = interaction['analysis'] as Map<String, dynamic>;
       final complexity = analysis['complexity'] as String;
-      complexityEngagement[complexity] = (complexityEngagement[complexity] ?? 0) + 1;
+      complexityEngagement[complexity] =
+          (complexityEngagement[complexity] ?? 0) + 1;
     }
-    
+
     return complexityEngagement.entries
         .reduce((a, b) => a.value > b.value ? a : b)
         .key;
   }
 
-  bool _shouldIncludeExamples(String learningStyle, Map<String, dynamic> analysis) {
-    return learningStyle == 'kinesthetic' || 
-           learningStyle == 'visual' || 
-           analysis['intent'] == 'application_request';
+  bool _shouldIncludeExamples(
+      String learningStyle, Map<String, dynamic> analysis) {
+    return learningStyle == 'kinesthetic' ||
+        learningStyle == 'visual' ||
+        analysis['intent'] == 'application_request';
   }
 
   bool _shouldUseAnalogies(Map<String, dynamic> patterns) {
     return patterns['responds_well_to_analogies'] == true ||
-           patterns['conceptual_learner'] == true;
+        patterns['conceptual_learner'] == true;
   }
 
   String _getEncouragementLevel(String emotion) {
@@ -606,7 +679,9 @@ class EnhancedAITutorService {
     }
   }
 
-  List<String> _generateSmartFollowUps(String message, Map<String, dynamic> analysis, {String? userId}) {
+  List<String> _generateSmartFollowUps(
+      String message, Map<String, dynamic> analysis,
+      {String? userId}) {
     final intent = analysis['intent'] as String;
     final followUps = <String>[];
 
@@ -654,19 +729,19 @@ class EnhancedAITutorService {
   /// Generate topic-based follow-up questions
   List<String> _generateTopicBasedFollowUps(String message, String userId) {
     final followUps = <String>[];
-    
+
     // Extract key topics from current message
     final currentTopics = _extractTopicsFromMessage(message);
-    
+
     // Get stored follow-ups for these topics
     for (final topic in currentTopics) {
       final topicFollowUps = _topicFollowUps[topic] ?? [];
       followUps.addAll(topicFollowUps.take(2));
     }
-    
+
     // Update topic follow-ups based on conversation patterns
     _updateTopicFollowUps(currentTopics, userId);
-    
+
     return followUps.take(2).toList();
   }
 
@@ -674,55 +749,79 @@ class EnhancedAITutorService {
   List<String> _extractTopicsFromMessage(String message) {
     final topics = <String>[];
     final lowerMessage = message.toLowerCase();
-    
+
     // Common academic topics
     final topicKeywords = {
-      'mathematics': ['math', 'algebra', 'geometry', 'calculus', 'equation', 'formula'],
-      'science': ['biology', 'chemistry', 'physics', 'experiment', 'hypothesis'],
+      'mathematics': [
+        'math',
+        'algebra',
+        'geometry',
+        'calculus',
+        'equation',
+        'formula'
+      ],
+      'science': [
+        'biology',
+        'chemistry',
+        'physics',
+        'experiment',
+        'hypothesis'
+      ],
       'history': ['history', 'historical', 'war', 'civilization', 'empire'],
       'literature': ['literature', 'poetry', 'novel', 'author', 'character'],
-      'programming': ['code', 'programming', 'algorithm', 'function', 'variable'],
+      'programming': [
+        'code',
+        'programming',
+        'algorithm',
+        'function',
+        'variable'
+      ],
     };
-    
+
     for (final topic in topicKeywords.keys) {
-      if (topicKeywords[topic]!.any((keyword) => lowerMessage.contains(keyword))) {
+      if (topicKeywords[topic]!
+          .any((keyword) => lowerMessage.contains(keyword))) {
         topics.add(topic);
       }
     }
-    
+
     return topics;
   }
 
   /// Update topic follow-ups based on user patterns
   void _updateTopicFollowUps(List<String> topics, String userId) {
     final userPatterns = _learningPatterns[userId] ?? {};
-    final preferredIntents = userPatterns['preferred_intents'] as Map<String, int>? ?? {};
-    
+    final preferredIntents =
+        userPatterns['preferred_intents'] as Map<String, int>? ?? {};
+
     for (final topic in topics) {
       _topicFollowUps[topic] ??= [];
-      
+
       // Add follow-ups based on user's preferred learning style
-      if (preferredIntents['deep_explanation'] != null && preferredIntents['deep_explanation']! > 2) {
+      if (preferredIntents['deep_explanation'] != null &&
+          preferredIntents['deep_explanation']! > 2) {
         _topicFollowUps[topic]!.addAll([
           'Want to explore the deeper principles behind $topic?',
           'Should we examine the theoretical foundations of $topic?'
         ]);
       }
-      
-      if (preferredIntents['application_request'] != null && preferredIntents['application_request']! > 2) {
+
+      if (preferredIntents['application_request'] != null &&
+          preferredIntents['application_request']! > 2) {
         _topicFollowUps[topic]!.addAll([
           'How might you apply $topic in real-world scenarios?',
           'Want to see practical examples of $topic?'
         ]);
       }
-      
-      if (preferredIntents['problem_solving'] != null && preferredIntents['problem_solving']! > 2) {
+
+      if (preferredIntents['problem_solving'] != null &&
+          preferredIntents['problem_solving']! > 2) {
         _topicFollowUps[topic]!.addAll([
           'Ready for some $topic practice problems?',
           'Should we work through a challenging $topic example?'
         ]);
       }
-      
+
       // Limit follow-ups per topic to prevent bloat
       if (_topicFollowUps[topic]!.length > 10) {
         _topicFollowUps[topic] = _topicFollowUps[topic]!.take(10).toList();
@@ -731,15 +830,11 @@ class EnhancedAITutorService {
   }
 
   /// Generate sophisticated Socratic response using Bloom's taxonomy
-  Future<String> _generateSocraticResponse(
-      String message, 
-      String subject, 
-      Map<String, dynamic> analysis,
-      String userId) async {
-    
+  Future<String> _generateSocraticResponse(String message, String subject,
+      Map<String, dynamic> analysis, String userId) async {
     final userLevel = _determineBloomLevel(message, analysis);
     final targetLevel = _getNextBloomLevel(userLevel);
-    
+
     final socraticPrompts = {
       'knowledge': [
         'What do you already know about this topic?',
@@ -773,60 +868,83 @@ class EnhancedAITutorService {
       ]
     };
 
-    final questions = socraticPrompts[targetLevel] ?? socraticPrompts['comprehension']!;
+    final questions =
+        socraticPrompts[targetLevel] ?? socraticPrompts['comprehension']!;
     final selectedQuestion = questions[math.Random().nextInt(questions.length)];
-    
+
     return selectedQuestion;
   }
 
   String _determineBloomLevel(String message, Map<String, dynamic> analysis) {
     final lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.contains(RegExp(r'what is|define|list|name'))) return 'knowledge';
-    if (lowerMessage.contains(RegExp(r'explain|describe|summarize'))) return 'comprehension';
-    if (lowerMessage.contains(RegExp(r'apply|use|solve|calculate'))) return 'application';
-    if (lowerMessage.contains(RegExp(r'analyze|compare|contrast|why'))) return 'analysis';
-    if (lowerMessage.contains(RegExp(r'create|design|combine|develop'))) return 'synthesis';
-    if (lowerMessage.contains(RegExp(r'evaluate|judge|critique|assess'))) return 'evaluation';
-    
+
+    if (lowerMessage.contains(RegExp(r'what is|define|list|name'))) {
+      return 'knowledge';
+    }
+    if (lowerMessage.contains(RegExp(r'explain|describe|summarize'))) {
+      return 'comprehension';
+    }
+    if (lowerMessage.contains(RegExp(r'apply|use|solve|calculate'))) {
+      return 'application';
+    }
+    if (lowerMessage.contains(RegExp(r'analyze|compare|contrast|why'))) {
+      return 'analysis';
+    }
+    if (lowerMessage.contains(RegExp(r'create|design|combine|develop'))) {
+      return 'synthesis';
+    }
+    if (lowerMessage.contains(RegExp(r'evaluate|judge|critique|assess'))) {
+      return 'evaluation';
+    }
+
     return 'comprehension';
   }
 
   String _getNextBloomLevel(String currentLevel) {
-    final levels = ['knowledge', 'comprehension', 'application', 'analysis', 'synthesis', 'evaluation'];
+    final levels = [
+      'knowledge',
+      'comprehension',
+      'application',
+      'analysis',
+      'synthesis',
+      'evaluation'
+    ];
     final currentIndex = levels.indexOf(currentLevel);
-    return currentIndex < levels.length - 1 ? levels[currentIndex + 1] : currentLevel;
+    return currentIndex < levels.length - 1
+        ? levels[currentIndex + 1]
+        : currentLevel;
   }
 
-  bool _shouldUseSocraticMethod(Map<String, dynamic> analysis, LearningProfile profile) {
+  bool _shouldUseSocraticMethod(
+      Map<String, dynamic> analysis, LearningProfile profile) {
     final intent = analysis['intent'] as String;
     final complexity = analysis['complexity'] as String;
-    
+
     // Use Socratic method for deeper learning
-    return intent == 'conceptual_understanding' || 
-           intent == 'deep_explanation' ||
-           (complexity == 'complex' && profile.preferences['teaching_style'] != 'direct');
+    return intent == 'conceptual_understanding' ||
+        intent == 'deep_explanation' ||
+        (complexity == 'complex' &&
+            profile.preferences['teaching_style'] != 'direct');
   }
 
-
-
   Future<String> _handleAdvancedQuestion(
-      String question,
-      String subject,
-      LearningProfile profile,
-      List<ChatMessage> history,
-      String userId,
+    String question,
+    String subject,
+    LearningProfile profile,
+    List<ChatMessage> history,
+    String userId,
   ) async {
-    
     // Analyze the question comprehensively
     final analysis = await _analyzeAdvancedMessageIntent(question, {}, userId);
-    final responseConfig = _buildPersonalizedResponse(question, userId, analysis);
-    
+    final responseConfig =
+        _buildPersonalizedResponse(question, userId, analysis);
+
     // Determine if we should use Socratic method
     final useSocratic = _shouldUseSocraticMethod(analysis, profile);
-    
+
     if (useSocratic && analysis['intent'] != 'quick_clarification') {
-      final socraticQuestion = await _generateSocraticResponse(question, subject, analysis, userId);
+      final socraticQuestion =
+          await _generateSocraticResponse(question, subject, analysis, userId);
       return socraticQuestion;
     }
 
@@ -843,23 +961,23 @@ class EnhancedAITutorService {
     // Check response cache first
     final cacheKey = _generateCacheKey(question, subject, analysis);
     final cachedResponse = _responseCache[cacheKey];
-    
+
     String response;
     if (cachedResponse != null && _shouldUseCachedResponse(analysis, profile)) {
       response = cachedResponse;
     } else {
       response = await _aiService.callGoogleAIWithRetry(prompt, 0);
-      
+
       // Cache response for frequently asked questions
       if (_shouldCacheResponse(analysis, response)) {
         _responseCache[cacheKey] = response;
         _pruneResponseCache();
       }
     }
-    
+
     // Learn from this interaction
     _updateLearningPatterns(userId, analysis, response);
-    
+
     return response;
   }
 
@@ -871,13 +989,12 @@ class EnhancedAITutorService {
     required Map<String, dynamic> responseConfig,
     required List<ChatMessage> history,
   }) {
-    
     final intent = analysis['intent'] as String;
     final emotion = analysis['emotion'] as String;
     final tone = responseConfig['tone'] as String;
     final complexity = responseConfig['complexity'] as String;
     final includeExamples = responseConfig['examples'] as bool;
-    
+
     final basePrompt = '''
 You are an expert AI tutor specializing in $subject with a $tone approach.
 
@@ -941,39 +1058,42 @@ RESPONSE REQUIREMENTS:
     }
   }
 
-  void _updateLearningPatterns(String userId, Map<String, dynamic> analysis, String response) {
+  void _updateLearningPatterns(
+      String userId, Map<String, dynamic> analysis, String response) {
     _learningPatterns[userId] ??= {};
     final patterns = _learningPatterns[userId]!;
-    
+
     // Track what types of responses the user engages well with
     final intent = analysis['intent'] as String;
     patterns['preferred_intents'] ??= <String, int>{};
-    patterns['preferred_intents'][intent] = (patterns['preferred_intents'][intent] ?? 0) + 1;
-    
+    patterns['preferred_intents'][intent] =
+        (patterns['preferred_intents'][intent] ?? 0) + 1;
+
     // Track response characteristics
     if (response.length < 100) {
       patterns['prefers_concise'] = (patterns['prefers_concise'] ?? 0) + 1;
     } else {
       patterns['prefers_detailed'] = (patterns['prefers_detailed'] ?? 0) + 1;
     }
-    
+
     // Update user personality profile
     _userPersonality[userId] ??= {};
     final personality = _userPersonality[userId]!;
-    
+
     final emotion = analysis['emotion'] as String;
     personality['dominant_emotions'] ??= <String, int>{};
-    personality['dominant_emotions'][emotion] = (personality['dominant_emotions'][emotion] ?? 0) + 1;
-    
+    personality['dominant_emotions'][emotion] =
+        (personality['dominant_emotions'][emotion] ?? 0) + 1;
+
     // Update behavior analytics
     _updateBehaviorAnalytics(userId, analysis, response);
-    
+
     // Update difficulty adaptation based on successful response generation
-    final wasSuccessful = response.isNotEmpty && !response.contains('error') && !response.contains('sorry');
+    final wasSuccessful = response.isNotEmpty &&
+        !response.contains('error') &&
+        !response.contains('sorry');
     _updateDifficultyAdaptation(userId, analysis, wasSuccessful);
   }
-
-
 
   /// Handle confusion with progressive clarification
   Future<String> _handleConfusion(
@@ -1091,9 +1211,8 @@ Make it educational and age-appropriate for students.''';
       'Show the solution method with a similar example',
     ];
 
-    final hintInstruction = hintLevel < hintTypes.length
-        ? hintTypes[hintLevel]
-        : hintTypes.last;
+    final hintInstruction =
+        hintLevel < hintTypes.length ? hintTypes[hintLevel] : hintTypes.last;
 
     final prompt = '''
 The student needs help with: "$question"
@@ -1112,9 +1231,8 @@ Don't give the complete answer unless it's hint level 4+.''';
   /// Generate progress report
   String _generateProgressReport(LearningProfile profile, String subject) {
     final mastery = profile.subjectMastery[subject] ?? 0;
-    final totalConcepts = _knowledgeGraph.values
-        .where((n) => n.subject == subject)
-        .length;
+    final totalConcepts =
+        _knowledgeGraph.values.where((n) => n.subject == subject).length;
     final completedConcepts = profile.completedConcepts
         .where((id) => _knowledgeGraph[id]?.subject == subject)
         .length;
@@ -1191,8 +1309,6 @@ Keep response under 150 words.''';
     return await _aiService.callGoogleAIWithRetry(prompt, 0);
   }
 
-
-
   /// Update concept mastery based on performance
   void _updateConceptMastery(
     LearningProfile profile,
@@ -1245,8 +1361,8 @@ Keep response under 150 words.''';
 
         switch (badgeId) {
           case 'first_session':
-            shouldUnlock = _sessionMessages.containsKey(userId) && 
-                          _sessionMessages[userId]!.isNotEmpty;
+            shouldUnlock = _sessionMessages.containsKey(userId) &&
+                _sessionMessages[userId]!.isNotEmpty;
             badgeName = 'First Session';
             badgeIcon = '🌱';
             break;
@@ -1422,7 +1538,8 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
     debugPrint('🔧 Service: Starting session...');
     final user = _auth.currentUser;
     final sessionId = 'session_${DateTime.now().millisecondsSinceEpoch}';
-    final userId = user?.uid ?? 'anonymous_${DateTime.now().millisecondsSinceEpoch}';
+    final userId =
+        user?.uid ?? 'anonymous_${DateTime.now().millisecondsSinceEpoch}';
     debugPrint('🔧 Service: User ID: $userId, Session ID: $sessionId');
 
     // Update streak
@@ -1495,11 +1612,8 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
   /// Generate personalized welcome message
   String _generatePersonalizedWelcome(LearningProfile profile, String subject) {
     final mastery = profile.subjectMastery[subject] ?? 0;
-    final hasReturned = profile.lastActivity
-            .difference(DateTime.now())
-            .abs()
-            .inDays <
-        1;
+    final hasReturned =
+        profile.lastActivity.difference(DateTime.now()).abs().inDays < 1;
 
     String greeting = hasReturned
         ? "Welcome back! Great to see you again!"
@@ -1549,11 +1663,11 @@ How can I help you today?
     availableConcepts.sort((a, b) {
       final aMastery = profile.conceptMastery[a.id] ?? 0;
       final bMastery = profile.conceptMastery[b.id] ?? 0;
-      
+
       // Prioritize concepts with lower mastery but appropriate difficulty
       final aScore = a.difficulty * (1 - aMastery);
       final bScore = b.difficulty * (1 - bMastery);
-      
+
       return aScore.compareTo(bScore);
     });
 
@@ -1599,20 +1713,28 @@ How can I help you today?
   Map<String, dynamic> _calculateSessionMetrics(String sessionId) {
     final messages = _sessionMessages[sessionId] ?? [];
     final context = _sessionContext[sessionId] ?? {};
-    
-    final userMessages = messages.where((m) => m.type == MessageType.user).length;
-    final assistantMessages = messages.where((m) => m.type == MessageType.assistant).length;
-    final quizMessages = messages.where((m) => m.metadata?['type'] == 'quiz').length;
-    final hintMessages = messages.where((m) => m.metadata?['hintLevel'] != null).length;
-    final correctAnswers = messages.where((m) => m.metadata?['isCorrect'] == true).length;
-    
+
+    final userMessages =
+        messages.where((m) => m.type == MessageType.user).length;
+    final assistantMessages =
+        messages.where((m) => m.type == MessageType.assistant).length;
+    final quizMessages =
+        messages.where((m) => m.metadata?['type'] == 'quiz').length;
+    final hintMessages =
+        messages.where((m) => m.metadata?['hintLevel'] != null).length;
+    final correctAnswers =
+        messages.where((m) => m.metadata?['isCorrect'] == true).length;
+
     // Calculate context-aware metrics using session context
     final topicsDiscussed = context['topics_discussed'] as List<String>? ?? [];
-    final conceptsExplored = context['concepts_explored'] as List<String>? ?? [];
-    final difficultyProgression = context['difficulty_progression'] as List<String>? ?? [];
-    final learningPathProgress = context['learning_path_progress'] as double? ?? 0.0;
+    final conceptsExplored =
+        context['concepts_explored'] as List<String>? ?? [];
+    final difficultyProgression =
+        context['difficulty_progression'] as List<String>? ?? [];
+    final learningPathProgress =
+        context['learning_path_progress'] as double? ?? 0.0;
     final adaptiveAdjustments = context['adaptive_adjustments'] as int? ?? 0;
-    
+
     return {
       'totalMessages': messages.length,
       'userMessages': userMessages,
@@ -1621,7 +1743,9 @@ How can I help you today?
       'hintsRequested': hintMessages,
       'correctAnswers': correctAnswers,
       'duration': messages.isNotEmpty
-          ? messages.last.timestamp.difference(messages.first.timestamp).inMinutes
+          ? messages.last.timestamp
+              .difference(messages.first.timestamp)
+              .inMinutes
           : 0,
       'engagementScore': _calculateEngagementScore(messages),
       // Context-aware metrics
@@ -1635,7 +1759,8 @@ How can I help you today?
   }
 
   /// Update session context with new information
-  void _updateSessionContext(String sessionId, {
+  void _updateSessionContext(
+    String sessionId, {
     String? newTopic,
     String? newConcept,
     String? difficultyChange,
@@ -1668,7 +1793,8 @@ How can I help you today?
 
     if (progressIncrement != null) {
       final currentProgress = context['learning_path_progress'] as double;
-      context['learning_path_progress'] = (currentProgress + progressIncrement).clamp(0.0, 100.0);
+      context['learning_path_progress'] =
+          (currentProgress + progressIncrement).clamp(0.0, 100.0);
     }
 
     if (adaptiveAdjustment == true) {
@@ -1680,20 +1806,23 @@ How can I help you today?
   /// Calculate context complexity based on session data
   double _calculateContextComplexity(Map<String, dynamic> context) {
     double complexity = 0.0;
-    
+
     // Base complexity from topics and concepts
-    final topicsCount = (context['topics_discussed'] as List<String>? ?? []).length;
-    final conceptsCount = (context['concepts_explored'] as List<String>? ?? []).length;
+    final topicsCount =
+        (context['topics_discussed'] as List<String>? ?? []).length;
+    final conceptsCount =
+        (context['concepts_explored'] as List<String>? ?? []).length;
     complexity += topicsCount * 0.5 + conceptsCount * 0.3;
-    
+
     // Difficulty progression complexity
-    final difficultyProgression = context['difficulty_progression'] as List<String>? ?? [];
+    final difficultyProgression =
+        context['difficulty_progression'] as List<String>? ?? [];
     complexity += difficultyProgression.length * 0.2;
-    
+
     // Adaptive adjustments indicate complexity
     final adaptiveAdjustments = context['adaptive_adjustments'] as int? ?? 0;
     complexity += adaptiveAdjustments * 0.1;
-    
+
     return complexity.clamp(0.0, 10.0); // Keep complexity score between 0-10
   }
 
@@ -1702,22 +1831,23 @@ How can I help you today?
     if (messages.isEmpty) return 0.0;
 
     double score = 0.0;
-    
+
     // Points for message frequency
     score += math.min(messages.length * 0.05, 0.3);
-    
+
     // Points for asking questions
     score += messages
             .where((m) => m.type == MessageType.user && m.content.contains('?'))
             .length *
         0.1;
-    
+
     // Points for quiz participation
     score += messages.where((m) => m.metadata?['type'] == 'quiz').length * 0.15;
-    
+
     // Points for correct answers
-    score += messages.where((m) => m.metadata?['isCorrect'] == true).length * 0.2;
-    
+    score +=
+        messages.where((m) => m.metadata?['isCorrect'] == true).length * 0.2;
+
     return math.min(score, 1.0);
   }
 
@@ -1748,11 +1878,13 @@ How can I help you today?
   Future<void> _saveTutorSession(TutorSession session) async {
     try {
       // Add timeout to prevent hanging
-      await _firestoreService.createTutorSession(session.toJson())
+      await _firestoreService
+          .createTutorSession(session.toJson())
           .timeout(const Duration(seconds: 5));
       debugPrint('✅ Session saved to Firestore successfully');
     } catch (e) {
-      debugPrint('⚠️ Warning: Could not save to Firestore (session will continue locally): $e');
+      debugPrint(
+          '⚠️ Warning: Could not save to Firestore (session will continue locally): $e');
       // Continue even if Firestore fails - this allows offline usage
     }
   }
@@ -1771,7 +1903,7 @@ How can I help you today?
   /// Get learning analytics for a user
   Map<String, dynamic> getUserAnalytics(String userId) {
     final profile = _getUserProfile(userId);
-    
+
     return {
       'totalPoints': profile.totalPoints,
       'currentStreak': profile.currentStreak,
@@ -1794,17 +1926,18 @@ How can I help you today?
   }
 
   /// Generate detailed progress analysis with advanced tracking
-  Map<String, dynamic> _generateDetailedProgressAnalysis(String userId, String subject) {
+  Map<String, dynamic> _generateDetailedProgressAnalysis(
+      String userId, String subject) {
     final profile = _getUserProfile(userId);
     final patterns = _learningPatterns[userId] ?? {};
     final memory = _conversationMemory[userId] ?? [];
-    
+
     // Analyze learning trajectory
     final recentSessions = memory.take(10).toList();
     final progressTrend = _calculateProgressTrend(recentSessions);
     final knowledgeGaps = _identifyKnowledgeGaps(profile, subject);
     final strengths = _identifyStrengths(profile, subject);
-    
+
     return {
       'overall_mastery': profile.subjectMastery[subject] ?? 0,
       'progress_trend': progressTrend,
@@ -1819,22 +1952,30 @@ How can I help you today?
 
   String _calculateProgressTrend(List<Map<String, dynamic>> recentSessions) {
     if (recentSessions.length < 3) return 'insufficient_data';
-    
+
     // Analyze complexity of questions over time
     final complexityScores = recentSessions.map((session) {
       final analysis = session['analysis'] as Map<String, dynamic>;
       switch (analysis['complexity']) {
-        case 'simple': return 1.0;
-        case 'medium': return 2.0;
-        case 'complex': return 3.0;
-        default: return 2.0;
+        case 'simple':
+          return 1.0;
+        case 'medium':
+          return 2.0;
+        case 'complex':
+          return 3.0;
+        default:
+          return 2.0;
       }
     }).toList();
-    
+
     // Calculate trend
-    final early = complexityScores.take(complexityScores.length ~/ 2).fold(0.0, (a, b) => a + b);
-    final late = complexityScores.skip(complexityScores.length ~/ 2).fold(0.0, (a, b) => a + b);
-    
+    final early = complexityScores
+        .take(complexityScores.length ~/ 2)
+        .fold(0.0, (a, b) => a + b);
+    final late = complexityScores
+        .skip(complexityScores.length ~/ 2)
+        .fold(0.0, (a, b) => a + b);
+
     if (late > early * 1.2) return 'improving';
     if (late < early * 0.8) return 'declining';
     return 'stable';
@@ -1842,7 +1983,7 @@ How can I help you today?
 
   List<String> _identifyKnowledgeGaps(LearningProfile profile, String subject) {
     final gaps = <String>[];
-    
+
     // Check prerequisite concepts
     for (final conceptId in profile.strugglingConcepts) {
       final concept = _knowledgeGraph[conceptId];
@@ -1850,35 +1991,35 @@ How can I help you today?
         gaps.add(concept!.name);
       }
     }
-    
+
     return gaps;
   }
 
   List<String> _identifyStrengths(LearningProfile profile, String subject) {
     final strengths = <String>[];
-    
+
     for (final entry in profile.conceptMastery.entries) {
       final concept = _knowledgeGraph[entry.key];
       if (concept?.subject == subject && entry.value > 0.8) {
         strengths.add(concept!.name);
       }
     }
-    
+
     return strengths;
   }
 
   List<String> _getRecommendedTopics(LearningProfile profile, String subject) {
     final recommendations = <String>[];
-    
+
     // Find concepts ready to be learned based on prerequisites
     for (final concept in _knowledgeGraph.values) {
-      if (concept.subject == subject && 
+      if (concept.subject == subject &&
           !profile.completedConcepts.contains(concept.id) &&
           _arePrerequisitesMet(concept, profile)) {
         recommendations.add(concept.name);
       }
     }
-    
+
     return recommendations.take(5).toList();
   }
 
@@ -1893,45 +2034,52 @@ How can I help you today?
 
   double _calculateLearningVelocity(List<Map<String, dynamic>> memory) {
     if (memory.length < 2) return 0.0;
-    
+
     // Calculate concepts learned per session
     final recentSessions = memory.take(5).toList();
     int conceptsEngaged = 0;
-    
+
     for (final session in recentSessions) {
       final analysis = session['analysis'] as Map<String, dynamic>;
-      if (analysis['intent'] == 'deep_explanation' || 
+      if (analysis['intent'] == 'deep_explanation' ||
           analysis['intent'] == 'conceptual_understanding') {
         conceptsEngaged++;
       }
     }
-    
+
     return conceptsEngaged / recentSessions.length;
   }
 
-  double _calculateCurrentEngagement(Map<String, dynamic> patterns, {String? userId}) {
+  double _calculateCurrentEngagement(Map<String, dynamic> patterns,
+      {String? userId}) {
     // Base engagement on interaction frequency and depth
-    final preferredIntents = patterns['preferred_intents'] as Map<String, int>? ?? {};
-    final deepLearningIntents = ['deep_explanation', 'conceptual_understanding', 'problem_solving'];
-    
+    final preferredIntents =
+        patterns['preferred_intents'] as Map<String, int>? ?? {};
+    final deepLearningIntents = [
+      'deep_explanation',
+      'conceptual_understanding',
+      'problem_solving'
+    ];
+
     int deepEngagement = 0;
     int totalInteractions = 0;
-    
+
     for (final entry in preferredIntents.entries) {
       totalInteractions += entry.value;
       if (deepLearningIntents.contains(entry.key)) {
         deepEngagement += entry.value;
       }
     }
-    
-    double baseEngagement = totalInteractions > 0 ? deepEngagement / totalInteractions : 0.5;
-    
+
+    double baseEngagement =
+        totalInteractions > 0 ? deepEngagement / totalInteractions : 0.5;
+
     // Factor in timing engagement if userId is provided
     if (userId != null) {
       final timingEngagement = _calculateTimingEngagement(userId);
       baseEngagement = (baseEngagement + timingEngagement) / 2;
     }
-    
+
     return baseEngagement;
   }
 
@@ -1939,12 +2087,12 @@ How can I help you today?
   double _calculateTimingEngagement(String userId) {
     final lastInteraction = _lastInteractionTime[userId];
     if (lastInteraction == null) return 0.0;
-    
+
     final timeSinceLastInteraction = DateTime.now().difference(lastInteraction);
     final memory = _conversationMemory[userId] ?? [];
-    
+
     if (memory.length < 2) return 0.5;
-    
+
     // Penalize long gaps in interaction (indicates lower engagement)
     double recentEngagementMultiplier = 1.0;
     if (timeSinceLastInteraction.inHours > 24) {
@@ -1954,22 +2102,24 @@ How can I help you today?
     } else if (timeSinceLastInteraction.inMinutes > 30) {
       recentEngagementMultiplier = 0.8; // Recent but not immediate
     }
-    
+
     // Calculate average time between interactions
     double totalInterval = 0.0;
     int intervals = 0;
-    
+
     for (int i = 1; i < memory.length; i++) {
-      final prevTimestamp = DateTime.parse(memory[i-1]['timestamp'] as String);
+      final prevTimestamp =
+          DateTime.parse(memory[i - 1]['timestamp'] as String);
       final currTimestamp = DateTime.parse(memory[i]['timestamp'] as String);
-      totalInterval += currTimestamp.difference(prevTimestamp).inMinutes.toDouble();
+      totalInterval +=
+          currTimestamp.difference(prevTimestamp).inMinutes.toDouble();
       intervals++;
     }
-    
+
     if (intervals == 0) return 0.5 * recentEngagementMultiplier;
-    
+
     final avgInterval = totalInterval / intervals;
-    
+
     // High engagement: short intervals (< 2 minutes), consistent interaction
     // Medium engagement: moderate intervals (2-10 minutes)
     // Low engagement: long intervals (> 10 minutes)
@@ -1981,12 +2131,13 @@ How can I help you today?
     } else {
       baseEngagement = 0.3;
     }
-    
+
     return baseEngagement * recentEngagementMultiplier;
   }
 
   /// Update comprehensive user behavior analytics
-  void _updateBehaviorAnalytics(String userId, Map<String, dynamic> analysis, String response) {
+  void _updateBehaviorAnalytics(
+      String userId, Map<String, dynamic> analysis, String response) {
     _userBehaviorAnalytics[userId] ??= {
       'session_count': 0,
       'total_interactions': 0,
@@ -2000,44 +2151,51 @@ How can I help you today?
       'average_response_length': 0.0,
       'engagement_history': <double>[],
     };
-    
+
     final analytics = _userBehaviorAnalytics[userId]!;
     final intent = analysis['intent'] as String;
     final complexity = analysis['complexity'] as String;
     final emotion = analysis['emotion'] as String;
-    
+
     // Update interaction counts
-    analytics['total_interactions'] = (analytics['total_interactions'] as int) + 1;
-    
+    analytics['total_interactions'] =
+        (analytics['total_interactions'] as int) + 1;
+
     // Track question types
     final questionTypes = analytics['question_types'] as Map<String, int>;
     questionTypes[intent] = (questionTypes[intent] ?? 0) + 1;
-    
+
     // Track learning patterns
-    final learningPatterns = analytics['learning_patterns'] as Map<String, dynamic>;
+    final learningPatterns =
+        analytics['learning_patterns'] as Map<String, dynamic>;
     learningPatterns['complexity_preference'] ??= <String, int>{};
-    final complexityPref = learningPatterns['complexity_preference'] as Map<String, int>;
+    final complexityPref =
+        learningPatterns['complexity_preference'] as Map<String, int>;
     complexityPref[complexity] = (complexityPref[complexity] ?? 0) + 1;
-    
+
     learningPatterns['emotional_states'] ??= <String, int>{};
-    final emotionalStates = learningPatterns['emotional_states'] as Map<String, int>;
+    final emotionalStates =
+        learningPatterns['emotional_states'] as Map<String, int>;
     emotionalStates[emotion] = (emotionalStates[emotion] ?? 0) + 1;
-    
+
     // Track confusion and success patterns
     if (intent == 'confusion_signal') {
-      analytics['confusion_instances'] = (analytics['confusion_instances'] as int) + 1;
+      analytics['confusion_instances'] =
+          (analytics['confusion_instances'] as int) + 1;
     }
-    
+
     if (intent == 'validation_seeking' || emotion == 'confident') {
-      analytics['successful_completions'] = (analytics['successful_completions'] as int) + 1;
+      analytics['successful_completions'] =
+          (analytics['successful_completions'] as int) + 1;
     }
-    
+
     // Update average response length for personalization
     final currentAvg = analytics['average_response_length'] as double;
     final totalInteractions = analytics['total_interactions'] as int;
-    analytics['average_response_length'] = 
-        (currentAvg * (totalInteractions - 1) + response.length) / totalInteractions;
-    
+    analytics['average_response_length'] =
+        (currentAvg * (totalInteractions - 1) + response.length) /
+            totalInteractions;
+
     // Track preferred topics from message content
     final preferredTopics = analytics['preferred_topics'] as Map<String, int>;
     final message = analysis['message'] as String? ?? '';
@@ -2045,24 +2203,29 @@ How can I help you today?
     for (final topic in topics) {
       preferredTopics[topic] = (preferredTopics[topic] ?? 0) + 1;
     }
-    
+
     // Calculate and store current engagement score
     final engagementHistory = analytics['engagement_history'] as List<double>;
-    final currentEngagement = _calculateCurrentEngagement(_learningPatterns[userId] ?? {}, userId: userId);
+    final currentEngagement = _calculateCurrentEngagement(
+        _learningPatterns[userId] ?? {},
+        userId: userId);
     engagementHistory.add(currentEngagement);
-    
+
     // Keep only last 20 engagement scores
     if (engagementHistory.length > 20) {
       engagementHistory.removeAt(0);
     }
-    
+
     // Update performance metrics
-    final performanceMetrics = analytics['performance_metrics'] as Map<String, double>;
+    final performanceMetrics =
+        analytics['performance_metrics'] as Map<String, double>;
     performanceMetrics['current_engagement'] = currentEngagement;
-    performanceMetrics['confusion_rate'] = 
-        (analytics['confusion_instances'] as int) / (analytics['total_interactions'] as int);
-    performanceMetrics['success_rate'] = 
-        (analytics['successful_completions'] as int) / (analytics['total_interactions'] as int);
+    performanceMetrics['confusion_rate'] =
+        (analytics['confusion_instances'] as int) /
+            (analytics['total_interactions'] as int);
+    performanceMetrics['success_rate'] =
+        (analytics['successful_completions'] as int) /
+            (analytics['total_interactions'] as int);
   }
 
   /// Get behavior analytics for a user
@@ -2105,10 +2268,11 @@ How can I help you today?
   }
 
   @visibleForTesting
-  void updateUserPersonality(String userId, String emotion, String learningStyle) {
+  void updateUserPersonality(
+      String userId, String emotion, String learningStyle) {
     _userPersonality[userId] ??= {};
     _userPersonality[userId]!['dominant_emotions'] ??= <String, int>{};
-    _userPersonality[userId]!['dominant_emotions'][emotion] = 
+    _userPersonality[userId]!['dominant_emotions'][emotion] =
         (_userPersonality[userId]!['dominant_emotions'][emotion] ?? 0) + 1;
     _userPersonality[userId]!['learning_style'] = learningStyle;
   }
@@ -2151,18 +2315,20 @@ How can I help you today?
   }
 
   @visibleForTesting
-  List<String> testGenerateTopicBasedFollowUps(String message, Map<String, dynamic> analysis, String userId) {
+  List<String> testGenerateTopicBasedFollowUps(
+      String message, Map<String, dynamic> analysis, String userId) {
     return _generateTopicBasedFollowUps(message, userId);
   }
 
   @visibleForTesting
-  void testUpdateTopicFollowUps(String userId, String topic, List<String> followUps) {
+  void testUpdateTopicFollowUps(
+      String userId, String topic, List<String> followUps) {
     _topicFollowUps[userId] ??= [];
     // Add topic to list (simplified for testing)
     if (!_topicFollowUps[userId]!.contains(topic)) {
       _topicFollowUps[userId]!.add(topic);
     }
-    
+
     // Limit to 20 topics per user
     if (_topicFollowUps[userId]!.length > 20) {
       _topicFollowUps[userId]!.removeAt(0);
@@ -2180,7 +2346,8 @@ How can I help you today?
   }
 
   @visibleForTesting
-  void testUpdateBehaviorAnalytics(String userId, Map<String, dynamic> analysis, String response) {
+  void testUpdateBehaviorAnalytics(
+      String userId, Map<String, dynamic> analysis, String response) {
     _updateBehaviorAnalytics(userId, analysis, response);
   }
 
@@ -2190,7 +2357,8 @@ How can I help you today?
   }
 
   @visibleForTesting
-  void testUpdateDifficultyAdaptation(String userId, Map<String, dynamic> analysis, bool wasSuccessful) {
+  void testUpdateDifficultyAdaptation(
+      String userId, Map<String, dynamic> analysis, bool wasSuccessful) {
     _updateDifficultyAdaptation(userId, analysis, wasSuccessful);
   }
 
@@ -2200,18 +2368,20 @@ How can I help you today?
   }
 
   @visibleForTesting
-  Map<String, dynamic> testApplyDifficultyAdaptation(String userId, Map<String, dynamic> responseConfig) {
+  Map<String, dynamic> testApplyDifficultyAdaptation(
+      String userId, Map<String, dynamic> responseConfig) {
     return _applyDifficultyAdaptation(userId, responseConfig);
   }
 
   /// Update difficulty adaptation based on user performance
-  void _updateDifficultyAdaptation(String userId, Map<String, dynamic> analysis, bool wasSuccessful) {
+  void _updateDifficultyAdaptation(
+      String userId, Map<String, dynamic> analysis, bool wasSuccessful) {
     _difficultyAdaptation[userId] ??= [];
     final adaptationHistory = _difficultyAdaptation[userId]!;
-    
+
     final complexity = analysis['complexity'] as String;
     final intent = analysis['intent'] as String;
-    
+
     // Convert complexity and success to numerical score
     double complexityScore = 0.0;
     switch (complexity) {
@@ -2225,19 +2395,20 @@ How can I help you today?
         complexityScore = 3.0;
         break;
     }
-    
+
     // Adjust score based on success/failure
-    double performanceScore = wasSuccessful ? complexityScore : complexityScore * 0.5;
-    
+    double performanceScore =
+        wasSuccessful ? complexityScore : complexityScore * 0.5;
+
     // Factor in intent difficulty
     if (intent == 'deep_explanation' || intent == 'problem_solving') {
       performanceScore *= 1.2;
     } else if (intent == 'quick_clarification') {
       performanceScore *= 0.8;
     }
-    
+
     adaptationHistory.add(performanceScore);
-    
+
     // Keep only last 10 performance scores for adaptation
     if (adaptationHistory.length > 10) {
       adaptationHistory.removeAt(0);
@@ -2250,18 +2421,25 @@ How can I help you today?
     if (adaptationHistory == null || adaptationHistory.isEmpty) {
       return 'medium'; // Default difficulty
     }
-    
+
     // Calculate average performance score
-    final avgScore = adaptationHistory.reduce((a, b) => a + b) / adaptationHistory.length;
-    
+    final avgScore =
+        adaptationHistory.reduce((a, b) => a + b) / adaptationHistory.length;
+
     // Recent performance trend (last 3 vs previous scores)
     double recentTrend = 0.0;
     if (adaptationHistory.length >= 6) {
-      final recent = adaptationHistory.skip(adaptationHistory.length - 3).fold(0.0, (a, b) => a + b) / 3;
-      final previous = adaptationHistory.take(adaptationHistory.length - 3).fold(0.0, (a, b) => a + b) / (adaptationHistory.length - 3);
+      final recent = adaptationHistory
+              .skip(adaptationHistory.length - 3)
+              .fold(0.0, (a, b) => a + b) /
+          3;
+      final previous = adaptationHistory
+              .take(adaptationHistory.length - 3)
+              .fold(0.0, (a, b) => a + b) /
+          (adaptationHistory.length - 3);
       recentTrend = recent - previous;
     }
-    
+
     // Adjust difficulty based on performance and trend
     if (avgScore >= 2.5 && recentTrend >= 0) {
       return 'hard'; // User is performing well, increase difficulty
@@ -2275,10 +2453,11 @@ How can I help you today?
   }
 
   /// Apply difficulty adaptation to response configuration
-  Map<String, dynamic> _applyDifficultyAdaptation(String userId, Map<String, dynamic> responseConfig) {
+  Map<String, dynamic> _applyDifficultyAdaptation(
+      String userId, Map<String, dynamic> responseConfig) {
     final recommendedDifficulty = getRecommendedDifficulty(userId);
     final adaptedConfig = Map<String, dynamic>.from(responseConfig);
-    
+
     switch (recommendedDifficulty) {
       case 'beginner':
         adaptedConfig['complexity'] = 'simple';
@@ -2299,40 +2478,44 @@ How can I help you today?
         adaptedConfig['structure'] = 'structured_detailed';
         break;
     }
-    
+
     return adaptedConfig;
   }
 
   /// Generate cache key for response caching
-  String _generateCacheKey(String question, String subject, Map<String, dynamic> analysis) {
+  String _generateCacheKey(
+      String question, String subject, Map<String, dynamic> analysis) {
     final intent = analysis['intent'] as String;
     final complexity = analysis['complexity'] as String;
-    
+
     // Create a normalized key based on question essence and context
-    final normalizedQuestion = question.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
+    final normalizedQuestion =
+        question.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
     return '${subject}_${intent}_${complexity}_${normalizedQuestion.hashCode}';
   }
 
   /// Determine if cached response should be used
-  bool _shouldUseCachedResponse(Map<String, dynamic> analysis, LearningProfile profile) {
+  bool _shouldUseCachedResponse(
+      Map<String, dynamic> analysis, LearningProfile profile) {
     final intent = analysis['intent'] as String;
-    
+
     // Use cache for factual questions and quick clarifications
     // Avoid cache for personalized or complex queries
-    return intent == 'quick_clarification' || 
-           intent == 'validation_seeking' ||
-           (intent == 'question' && analysis['complexity'] == 'simple');
+    return intent == 'quick_clarification' ||
+        intent == 'validation_seeking' ||
+        (intent == 'question' && analysis['complexity'] == 'simple');
   }
 
   /// Determine if response should be cached
   bool _shouldCacheResponse(Map<String, dynamic> analysis, String response) {
     final intent = analysis['intent'] as String;
-    
+
     // Cache short, factual responses that are likely to be reused
-    return (intent == 'quick_clarification' || intent == 'validation_seeking') &&
-           response.length < 200 &&
-           !response.contains('you') && // Avoid personalized responses
-           !response.contains('your');
+    return (intent == 'quick_clarification' ||
+            intent == 'validation_seeking') &&
+        response.length < 200 &&
+        !response.contains('you') && // Avoid personalized responses
+        !response.contains('your');
   }
 
   /// Prune response cache to prevent memory bloat
@@ -2341,7 +2524,7 @@ How can I help you today?
     if (_responseCache.length > 100) {
       final entries = _responseCache.entries.toList();
       _responseCache.clear();
-      
+
       // Keep the last 100 entries (simple LRU-like approach)
       for (int i = entries.length - 100; i < entries.length; i++) {
         _responseCache[entries[i].key] = entries[i].value;
@@ -2351,7 +2534,7 @@ How can I help you today?
 
   String _getNextMilestone(LearningProfile profile, String subject) {
     final mastery = profile.subjectMastery[subject] ?? 0.0;
-    
+
     if (mastery < 0.25) return 'Complete 5 basic concepts';
     if (mastery < 0.5) return 'Achieve 50% subject mastery';
     if (mastery < 0.75) return 'Master intermediate topics';

@@ -14,7 +14,7 @@ import 'package:studypals/providers/deck_provider.dart';
 /// Widget displaying key study statistics and progress metrics
 /// Shows task completion, deck count, review progress, pet level, and study streak
 /// Provides at-a-glance overview of user's study progress and engagement
-/// 
+///
 /// TODO: QUICK STATS WIDGET IMPLEMENTATION IMPROVEMENTS NEEDED
 /// - Current implementation shows basic statistics but missing advanced analytics
 /// - Need to implement real-time statistics updates with WebSocket connections
@@ -54,7 +54,7 @@ class QuickStatsWidget extends StatelessWidget {
 
         // Get current pet data for level display
         final pet = petProvider.currentPet;
-        
+
         // Get review statistics (using local stats for immediate display)
         final dueReviews = srsProvider.dueCount;
 
@@ -111,8 +111,7 @@ class QuickStatsWidget extends StatelessWidget {
                         context,
                         icon: Icons.quiz, // Quiz icon for reviews
                         label: 'Reviews Today', // Label for daily review count
-                        value:
-                            '$dueReviews', // Reviews due today
+                        value: '$dueReviews', // Reviews due today
                         color:
                             Colors.orange, // Orange color for review progress
                       ),

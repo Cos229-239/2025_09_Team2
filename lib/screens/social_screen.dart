@@ -100,60 +100,60 @@ class _SocialScreenState extends State<SocialScreen>
             ),
           ],
           bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              icon: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(Icons.dashboard),
-                  if (_socialService!.pendingFriendRequests.isNotEmpty)
-                    Positioned(
-                      right: -6,
-                      top: -6,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '${_socialService!.pendingFriendRequests.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+            controller: _tabController,
+            tabs: [
+              Tab(
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.dashboard),
+                    if (_socialService!.pendingFriendRequests.isNotEmpty)
+                      Positioned(
+                        right: -6,
+                        top: -6,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
                           ),
-                          textAlign: TextAlign.center,
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '${_socialService!.pendingFriendRequests.length}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
+                text: 'Overview',
               ),
-              text: 'Overview',
-            ),
-            const Tab(icon: Icon(Icons.people), text: 'Friends'),
-            const Tab(icon: Icon(Icons.groups), text: 'Groups'),
-            const Tab(icon: Icon(Icons.video_call), text: 'Sessions'),
+              const Tab(icon: Icon(Icons.people), text: 'Friends'),
+              const Tab(icon: Icon(Icons.groups), text: 'Groups'),
+              const Tab(icon: Icon(Icons.video_call), text: 'Sessions'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildOverviewTab(),
+            _buildFriendsTab(),
+            _buildGroupsTab(),
+            _buildSessionsTab(),
           ],
         ),
+        floatingActionButton: _buildFloatingActionButton(),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildOverviewTab(),
-          _buildFriendsTab(),
-          _buildGroupsTab(),
-          _buildSessionsTab(),
-        ],
-      ),
-      floatingActionButton: _buildFloatingActionButton(),
-    ),
-  );
+    );
   }
 
   Widget _buildOverviewTab() {
@@ -454,7 +454,8 @@ class _SocialScreenState extends State<SocialScreen>
 
   Widget _buildFindPeople() {
     return FutureBuilder<List<service.UserProfile>>(
-      future: _socialService?.getUsersForDiscovery(limit: 20) ?? Future.value([]),
+      future:
+          _socialService?.getUsersForDiscovery(limit: 20) ?? Future.value([]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(

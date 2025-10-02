@@ -5,7 +5,7 @@ import '../../models/study_pal_persona.dart';
 import 'ai_tutor_chat.dart';
 
 /// AI Assistant Widget with Persona Selection
-/// 
+///
 /// TODO: AI ASSISTANT WIDGET IMPLEMENTATION GAPS
 /// - Current implementation has persona selection UI but NO REAL AI INTEGRATION
 /// - Persona selection doesn't affect actual AI behavior or responses
@@ -293,7 +293,7 @@ class _AIAssistantWidgetState extends State<AIAssistantWidget> {
                     .borderRadius
                 : BorderRadius.circular(16),
             border: Border.all(
-              color: const Color(0xFFF8B67F),
+              color: const Color(0xFF6FB8E9),
               width: 2,
             ),
             boxShadow: [
