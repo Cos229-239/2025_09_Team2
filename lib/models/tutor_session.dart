@@ -20,22 +20,22 @@ class TutorSession {
     this.endTime,
     Map<String, dynamic>? sessionMetrics,
     this.isActive = true,
-  }) : messageIds = messageIds ?? [],
-       startTime = startTime ?? DateTime.now(),
-       sessionMetrics = sessionMetrics ?? {};
+  })  : messageIds = messageIds ?? [],
+        startTime = startTime ?? DateTime.now(),
+        sessionMetrics = sessionMetrics ?? {};
 
   /// Convert to JSON for Firestore storage
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'userId': userId,
-    'subject': subject,
-    'difficulty': difficulty,
-    'messageIds': messageIds,
-    'startTime': startTime.toIso8601String(),
-    'endTime': endTime?.toIso8601String(),
-    'sessionMetrics': sessionMetrics,
-    'isActive': isActive,
-  };
+        'id': id,
+        'userId': userId,
+        'subject': subject,
+        'difficulty': difficulty,
+        'messageIds': messageIds,
+        'startTime': startTime.toIso8601String(),
+        'endTime': endTime?.toIso8601String(),
+        'sessionMetrics': sessionMetrics,
+        'isActive': isActive,
+      };
 
   /// Create from JSON from Firestore
   factory TutorSession.fromJson(Map<String, dynamic> json) {
@@ -46,9 +46,9 @@ class TutorSession {
       difficulty: json['difficulty'] as String,
       messageIds: (json['messageIds'] as List?)?.cast<String>() ?? [],
       startTime: DateTime.parse(json['startTime'] as String),
-      endTime: json['endTime'] != null 
-        ? DateTime.parse(json['endTime'] as String) 
-        : null,
+      endTime: json['endTime'] != null
+          ? DateTime.parse(json['endTime'] as String)
+          : null,
       sessionMetrics: json['sessionMetrics'] as Map<String, dynamic>? ?? {},
       isActive: json['isActive'] as bool? ?? true,
     );

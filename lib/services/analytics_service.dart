@@ -16,17 +16,17 @@ class AnalyticsService {
   /// Get user's study analytics from Firestore
   Future<StudyAnalytics?> getUserAnalytics(String userId) async {
     try {
-      final doc = await _firestore
-          .collection(_analyticsCollection)
-          .doc(userId)
-          .get();
+      final doc =
+          await _firestore.collection(_analyticsCollection).doc(userId).get();
 
       if (doc.exists) {
         return StudyAnalytics.fromJson(doc.data()!);
       }
       return null;
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error fetching user analytics: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error fetching user analytics: $e');
+      }
       return null;
     }
   }
@@ -55,7 +55,9 @@ class AnalyticsService {
 
       return analytics;
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error calculating analytics: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error calculating analytics: $e');
+      }
       // Return basic analytics as fallback
       return StudyAnalytics(
         userId: userId,
@@ -117,14 +119,13 @@ class AnalyticsService {
   ) async {
     try {
       // Add activity to session document
-      await _firestore
-          .collection(_sessionsCollection)
-          .doc(sessionId)
-          .update({
+      await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'activities': FieldValue.arrayUnion([activity.toJson()]),
       });
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error adding session activity: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error adding session activity: $e');
+      }
     }
   }
 
@@ -132,17 +133,16 @@ class AnalyticsService {
   Future<void> endStudySession(String sessionId, String userId) async {
     try {
       // Mark session as ended
-      await _firestore
-          .collection(_sessionsCollection)
-          .doc(sessionId)
-          .update({
+      await _firestore.collection(_sessionsCollection).doc(sessionId).update({
         'endTime': DateTime.now().toIso8601String(),
       });
 
       // Trigger analytics recalculation
       await calculateAndUpdateAnalytics(userId);
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error ending study session: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error ending study session: $e');
+      }
     }
   }
 
@@ -160,7 +160,9 @@ class AnalyticsService {
           .map((doc) => StudySession.fromJson(doc.data()))
           .toList();
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error fetching study sessions: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error fetching study sessions: $e');
+      }
       return [];
     }
   }
@@ -172,7 +174,9 @@ class AnalyticsService {
       // This would need to be implemented based on your quiz session storage
       return [];
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error fetching quiz sessions: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error fetching quiz sessions: $e');
+      }
       return [];
     }
   }
@@ -184,7 +188,9 @@ class AnalyticsService {
       // This would need to be implemented based on your review storage
       return [];
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error fetching reviews: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error fetching reviews: $e');
+      }
       return [];
     }
   }
@@ -224,7 +230,8 @@ class AnalyticsService {
       'strugglingSubjects': analytics.strugglingSubjects,
       'strongSubjects': analytics.strongSubjects,
       'preferredStudyTime': analytics.learningPatterns.preferredStudyTime,
-      'mostEffectiveLearningStyle': analytics.learningPatterns.mostEffectiveLearningStyle,
+      'mostEffectiveLearningStyle':
+          analytics.learningPatterns.mostEffectiveLearningStyle,
       'recentTrend': analytics.recentTrend.description,
     };
   }
@@ -250,7 +257,9 @@ class AnalyticsService {
           for (int i = 0; i < cardsCount; i++)
             SessionActivity(
               type: 'answer',
-              timestamp: DateTime.now().subtract(Duration(minutes: timeSpentMinutes - (i * (timeSpentMinutes ~/ cardsCount)))),
+              timestamp: DateTime.now().subtract(Duration(
+                  minutes: timeSpentMinutes -
+                      (i * (timeSpentMinutes ~/ cardsCount)))),
               cardId: 'quiz_card_$i',
               wasCorrect: i < (cardsCount * accuracy).round(),
               responseTimeMs: (timeSpentMinutes * 60 * 1000) ~/ cardsCount,
@@ -269,7 +278,9 @@ class AnalyticsService {
       // Update analytics
       await calculateAndUpdateAnalytics(userId);
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error recording quiz completion: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error recording quiz completion: $e');
+      }
     }
   }
 
@@ -282,16 +293,17 @@ class AnalyticsService {
   }) async {
     try {
       final activities = <SessionActivity>[];
-      
+
       for (int i = 0; i < grades.length; i++) {
         final grade = grades[i];
-        final wasCorrect = grade == ReviewGrade.good || grade == ReviewGrade.easy;
-        
+        final wasCorrect =
+            grade == ReviewGrade.good || grade == ReviewGrade.easy;
+
         activities.add(SessionActivity(
           type: 'answer',
-          timestamp: DateTime.now().subtract(
-            Duration(minutes: timeSpentMinutes - (i * (timeSpentMinutes ~/ grades.length)))
-          ),
+          timestamp: DateTime.now().subtract(Duration(
+              minutes: timeSpentMinutes -
+                  (i * (timeSpentMinutes ~/ grades.length)))),
           cardId: 'review_card_$i',
           wasCorrect: wasCorrect,
           responseTimeMs: (timeSpentMinutes * 60 * 1000) ~/ grades.length,
@@ -318,7 +330,9 @@ class AnalyticsService {
       // Update analytics
       await calculateAndUpdateAnalytics(userId);
     } catch (e) {
-      if (kDebugMode) debugPrint('AnalyticsService: Error recording review session: $e');
+      if (kDebugMode) {
+        debugPrint('AnalyticsService: Error recording review session: $e');
+      }
     }
   }
 }

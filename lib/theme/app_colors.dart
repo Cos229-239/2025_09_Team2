@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Application color constants
 class AppColors {
   // Primary colors
-  static const primaryAccent = Color(0xFFF8B67F); // Flash Cards border color
+  static const primaryAccent = Color(0xFF6FB8E9); // New blue border color from Figma
   static const primaryBackground = Color(0xFF2A3050); // Dark background color
 
   // Text colors

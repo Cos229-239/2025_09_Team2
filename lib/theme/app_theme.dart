@@ -19,13 +19,16 @@ class AppTheme {
     }
   }
 
-  /// StudyPals Dark Theme - Based on Dashboard Design
+  /// StudyPals Dark Theme - Based on Dashboard Design with #16181A background
   static ThemeData get darkParadiseTheme {
-    const primaryColor = Color(0xFFF8B67F); // Flash Cards border color
-    const secondaryColor = Color(0xFFF8B67F); // Same as primary for consistency
-    const tertiaryColor = Color(0xFFF8B67F); // Same as primary for consistency
+    const primaryColor = Color(0xFF6FB8E9); // New blue border color from Figma
+    const secondaryColor = Color(0xFF6FB8E9); // Same as primary for consistency
+    const tertiaryColor = Color(0xFF6FB8E9); // Same as primary for consistency
     const errorColor = Color(0xFFEF5350); // Error red
-    const surfaceColor = Color(0xFF2A3050); // Dark background color
+    const backgroundColor =
+        Color(0xFF16181A); // New solid background color from Figma
+    const surfaceColor =
+        Color(0xFF2A3050); // Dark surface color for cards/containers
 
     return ThemeData(
       useMaterial3: true,
@@ -40,11 +43,13 @@ class AppTheme {
         tertiary: tertiaryColor,
         error: errorColor,
         surface: surfaceColor,
+        background: backgroundColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onTertiary: Colors.white,
         onError: Colors.white,
         onSurface: const Color(0xFFF9FAFB),
+        onBackground: const Color(0xFFF9FAFB),
       ),
 
       // Card theme matching dashboard design
@@ -161,6 +166,9 @@ class AppTheme {
         color: primaryColor.withValues(alpha: 0.1),
         thickness: 1,
       ),
+
+      // Scaffold background color
+      scaffoldBackgroundColor: backgroundColor,
     );
   }
 }

@@ -4,8 +4,8 @@ import 'social_learning_service.dart';
 import 'competitive_learning_service.dart';
 
 /// Central service that integrates all social features with AI companion
-/// 
-/// TODO: CRITICAL SOCIAL INTEGRATION SERVICE IMPLEMENTATION GAPS  
+///
+/// TODO: CRITICAL SOCIAL INTEGRATION SERVICE IMPLEMENTATION GAPS
 /// - Current implementation is 100% MOCK DATA - NO REAL SOCIAL FEATURES
 /// - Need to implement real user friendship system with Firebase/Firestore
 /// - Missing actual real-time social interactions and messaging
@@ -54,7 +54,7 @@ class SocialIntegrationService extends ChangeNotifier {
       List.unmodifiable(_socialRecommendations);
 
   /// Initialize the social integration service
-  /// 
+  ///
   /// TODO: INITIALIZATION CRITICAL IMPROVEMENTS NEEDED
   /// - Current initialization only loads mock services with fake data
   /// - Need to implement real Firebase/Firestore integration for user social data
@@ -542,7 +542,7 @@ class SocialIntegrationService extends ChangeNotifier {
   }
 
   /// Get AI-generated social message for user
-  /// 
+  ///
   /// TODO: AI SOCIAL MESSAGE GENERATION CRITICAL IMPROVEMENTS NEEDED
   /// - Current implementation returns only hardcoded mock responses
   /// - Need to implement real AI integration for personalized message generation

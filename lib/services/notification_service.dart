@@ -6,7 +6,7 @@ import '../models/daily_quest.dart';
 
 /// Service for managing app notifications with quiz expiration and review scheduling
 /// Integrates with quest system and SRS to generate timely notifications
-/// 
+///
 /// TODO: CRITICAL NOTIFICATION SERVICE IMPLEMENTATION GAPS
 /// - Current implementation is LOCAL ONLY - NO PUSH NOTIFICATIONS OR FCM INTEGRATION
 /// - Need to implement Firebase Cloud Messaging (FCM) for real push notifications
@@ -17,7 +17,7 @@ import '../models/daily_quest.dart';
 /// - Missing notification analytics and delivery tracking
 /// - Need to implement notification personalization based on user behavior
 /// - Missing notification throttling and rate limiting to prevent spam
-/// - Need to implement proper notification localization and time zone handling  
+/// - Need to implement proper notification localization and time zone handling
 /// - Missing integration with user presence and do-not-disturb modes
 /// - Need to implement notification grouping and bundling for better UX
 /// - Missing notification action buttons and deep linking
@@ -314,7 +314,7 @@ class NotificationService {
   }
 
   /// Schedule recurring notification checks (placeholder for background tasks)
-  /// 
+  ///
   /// TODO: BACKGROUND TASK SCHEDULING CRITICAL IMPROVEMENTS NEEDED
   /// - Current implementation is PLACEHOLDER ONLY - no actual background scheduling
   /// - Need to implement proper iOS/Android background task registration

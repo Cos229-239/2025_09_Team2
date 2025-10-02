@@ -537,7 +537,8 @@ class QuizService {
   Future<void> _loadDeckCooldowns() async {
     try {
       // Add timeout to prevent hanging on Firestore calls
-      final cooldowns = await _firestoreService.getAllDeckCooldowns()
+      final cooldowns = await _firestoreService
+          .getAllDeckCooldowns()
           .timeout(const Duration(seconds: 8));
       _deckCooldowns.clear();
       cooldowns.forEach((deckId, cooldownEnd) {
@@ -570,7 +571,8 @@ class QuizService {
           _activeSessions[session.id] = session;
         }
       }
-      debugPrint('Loaded ${_activeSessions.length} active quiz sessions from Firestore');
+      debugPrint(
+          'Loaded ${_activeSessions.length} active quiz sessions from Firestore');
     } catch (e) {
       debugPrint('Error loading quiz sessions: $e');
     }

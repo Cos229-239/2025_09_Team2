@@ -9,7 +9,6 @@ import 'package:studypals/models/user.dart';
 // Import Firebase services
 import 'package:studypals/screens/auth/email_verification_screen.dart';
 import 'package:studypals/screens/auth/signup_screen.dart';
-import 'package:studypals/widgets/common/animated_particle_background.dart';
 // Import Lottie for animated icons
 import 'package:lottie/lottie.dart';
 
@@ -21,7 +20,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> 
+class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -50,36 +49,31 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: AnimatedParticleBackground(
-        gradientColors: const [
-          Color(0xFF2A3050),
-          Color(0xFF3A4268),
-        ],
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
+      backgroundColor:
+          const Color(0xFF16181A), // Solid background color from Figma
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 40),
 
-                // App branding section
-                _buildBrandingSection(context),
+              // App branding section
+              _buildBrandingSection(context),
 
-                const SizedBox(height: 40),
+              const SizedBox(height: 40),
 
-                // Login form card
-                _buildLoginCard(context),
+              // Login form card
+              _buildLoginCard(context),
 
-                const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-                // Bottom links
-                _buildBottomLinks(context),
+              // Bottom links
+              _buildBottomLinks(context),
 
-                const SizedBox(height: 40),
-              ],
-            ),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
@@ -242,7 +236,9 @@ class _LoginScreenState extends State<LoginScreen>
                         errorBuilder: (context, error, stackTrace) {
                           // Fallback to standard icon if Lottie fails
                           return Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             size: 20,
                             color: Theme.of(context).colorScheme.primary,
                           );
@@ -253,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen>
                       setState(() {
                         _obscurePassword = !_obscurePassword;
                       });
-                      
+
                       // Control animation based on password visibility
                       if (_obscurePassword) {
                         // Password is hidden, show closed eye (animate to 0)
@@ -489,7 +485,8 @@ class _LoginScreenState extends State<LoginScreen>
                 MaterialPageRoute(
                   builder: (context) => EmailVerificationScreen(
                     email: _emailController.text.trim(),
-                    displayName: 'User', // We don't have display name from failed login
+                    displayName:
+                        'User', // We don't have display name from failed login
                   ),
                 ),
               );

@@ -5,7 +5,7 @@ import 'firebase_auth_service.dart';
 import 'firestore_service.dart';
 
 /// Optimized login service with performance improvements
-/// 
+///
 /// TODO: OPTIMIZED LOGIN SERVICE IMPLEMENTATION IMPROVEMENTS NEEDED
 /// - Current implementation has good performance but missing advanced security features
 /// - Need to implement proper multi-factor authentication (MFA) support
@@ -47,16 +47,17 @@ class OptimizedLoginService {
       try {
         await user.reload(); // Refresh user data from Firebase
         final refreshedUser = _authService.currentUser;
-        
+
         if (refreshedUser == null || !refreshedUser.emailVerified) {
           return LoginResult.unverified(
             'Please verify your email before logging in. If you just verified it, please try logging in again.',
             refreshedUser ?? user,
           );
         }
-        
+
         if (kDebugMode) {
-          print('User email verification status: ${refreshedUser.emailVerified}');
+          print(
+              'User email verification status: ${refreshedUser.emailVerified}');
         }
       } catch (e) {
         if (kDebugMode) {

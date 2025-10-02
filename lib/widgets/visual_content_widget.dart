@@ -76,16 +76,16 @@ class VisualContentWidgetState extends State<VisualContentWidget>
           children: [
             // Visual content for visual learners
             if (_shouldShowVisualContent()) _buildVisualContent(),
-            
+
             // Audio content for auditory learners
             if (_shouldShowAudioContent()) _buildAudioContent(),
-            
+
             // Interactive diagram for kinesthetic learners
             if (_shouldShowDiagramContent()) _buildDiagramContent(),
-            
+
             // Main text content (always shown)
             _buildTextContent(),
-            
+
             // Content controls
             if (_hasMultiModalContent()) _buildContentControls(),
           ],
@@ -96,31 +96,31 @@ class VisualContentWidgetState extends State<VisualContentWidget>
 
   /// Determine if visual content should be displayed
   bool _shouldShowVisualContent() {
-    return widget.card.imageUrl != null && 
-           (widget.user.preferences.learningStyle == 'visual' || 
+    return widget.card.imageUrl != null &&
+        (widget.user.preferences.learningStyle == 'visual' ||
             widget.user.preferences.learningStyle == 'adaptive');
   }
 
   /// Determine if audio content should be displayed
   bool _shouldShowAudioContent() {
-    return widget.card.audioUrl != null && 
-           (widget.user.preferences.learningStyle == 'auditory' || 
+    return widget.card.audioUrl != null &&
+        (widget.user.preferences.learningStyle == 'auditory' ||
             widget.user.preferences.learningStyle == 'adaptive');
   }
 
   /// Determine if diagram content should be displayed
   bool _shouldShowDiagramContent() {
-    return widget.card.diagramData != null && 
-           (widget.user.preferences.learningStyle == 'kinesthetic' || 
+    return widget.card.diagramData != null &&
+        (widget.user.preferences.learningStyle == 'kinesthetic' ||
             widget.user.preferences.learningStyle == 'visual' ||
             widget.user.preferences.learningStyle == 'adaptive');
   }
 
   /// Check if card has any multi-modal content
   bool _hasMultiModalContent() {
-    return widget.card.imageUrl != null || 
-           widget.card.audioUrl != null || 
-           widget.card.diagramData != null;
+    return widget.card.imageUrl != null ||
+        widget.card.audioUrl != null ||
+        widget.card.diagramData != null;
   }
 
   /// Build visual content display
@@ -239,7 +239,10 @@ class VisualContentWidgetState extends State<VisualContentWidget>
                   'Optimized for auditory learning',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -304,21 +307,22 @@ class VisualContentWidgetState extends State<VisualContentWidget>
     try {
       final diagramData = jsonDecode(widget.card.diagramData!);
       final elements = diagramData['elements'] as List;
-      
+
       return Stack(
         children: elements.map<Widget>((element) {
           final x = (element['x'] as num).toDouble();
           final y = (element['y'] as num).toDouble();
           final label = element['label'] as String;
           final type = element['type'] as String;
-          
+
           return Positioned(
             left: x - 40,
             top: y - 15,
             child: GestureDetector(
               onTap: () => _showElementDetails(element),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: _getElementColor(type),
                   borderRadius: BorderRadius.circular(16),
@@ -370,7 +374,7 @@ class VisualContentWidgetState extends State<VisualContentWidget>
   /// Build main text content
   Widget _buildTextContent() {
     final content = widget.showFront ? widget.card.front : widget.card.back;
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Text(
@@ -450,10 +454,10 @@ class VisualContentWidgetState extends State<VisualContentWidget>
     setState(() {
       _isAudioPlaying = !_isAudioPlaying;
     });
-    
+
     // In production, integrate with actual audio player
     HapticFeedback.selectionClick();
-    
+
     if (_isAudioPlaying) {
       // Start audio playback
       debugPrint('Playing audio: ${widget.card.audioUrl}');
@@ -474,7 +478,7 @@ class VisualContentWidgetState extends State<VisualContentWidget>
   /// Show full-screen image
   void _showFullScreenImage() {
     if (widget.card.imageUrl == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -535,7 +539,8 @@ class VisualContentWidgetState extends State<VisualContentWidget>
       context: context,
       builder: (context) => AlertDialog(
         title: Text(element['label'] as String),
-        content: Text('Type: ${element['type']}\nPosition: (${element['x']}, ${element['y']})'),
+        content: Text(
+            'Type: ${element['type']}\nPosition: (${element['x']}, ${element['y']})'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

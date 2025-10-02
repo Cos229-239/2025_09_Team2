@@ -4,7 +4,7 @@ import 'package:studypals/models/card.dart';
 import 'package:studypals/models/user.dart';
 
 /// StudyPals AI Provider for managing intelligent study features
-/// 
+///
 /// TODO: CRITICAL AI PROVIDER IMPLEMENTATION GAPS
 /// - Current implementation has basic structure but limited real AI functionality
 /// - Need to implement proper AI model management and fallback mechanisms
@@ -94,7 +94,7 @@ class StudyPalsAIProvider with ChangeNotifier {
   }
 
   /// Initialize AI features
-  /// 
+  ///
   /// TODO: AI INITIALIZATION CRITICAL IMPROVEMENTS NEEDED
   /// - Current initialization only tests basic connection
   /// - Need to implement proper AI model downloading and caching
@@ -120,14 +120,14 @@ class StudyPalsAIProvider with ChangeNotifier {
 
     try {
       List<FlashCard> cards;
-      
+
       // Use new dual model approach (Gemini 2.0 + 2.5 with fallback to interactive diagrams)
       cards = await _aiService.generateFlashcardsWithDualModels(
         content,
         subject,
         user,
       );
-      
+
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -151,7 +151,7 @@ class StudyPalsAIProvider with ChangeNotifier {
 
     try {
       List<FlashCard> cards;
-      
+
       // Use new dual model approach (Gemini 2.0 + 2.5 with fallback to interactive diagrams)
       cards = await _aiService.generateFlashcardsWithDualModels(
         content,
@@ -159,7 +159,7 @@ class StudyPalsAIProvider with ChangeNotifier {
         user,
         count: count,
       );
-      
+
       _aiGeneratedCards.addAll(cards);
       return cards;
     } finally {
@@ -204,7 +204,8 @@ class StudyPalsAIProvider with ChangeNotifier {
     }
 
     try {
-      _lastRecommendation = await _aiService.getStudyRecommendation(stats, user);
+      _lastRecommendation =
+          await _aiService.getStudyRecommendation(stats, user);
       notifyListeners();
       return _lastRecommendation;
     } catch (e) {

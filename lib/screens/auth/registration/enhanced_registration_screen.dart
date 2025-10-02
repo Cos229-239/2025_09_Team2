@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../services/optimized_registration_service.dart';
 import '../../../utils/registration_validator.dart';
-import '../../../widgets/common/animated_particle_background.dart';
 import '../email_verification_screen.dart';
 
 /// Enhanced multi-step registration screen with comprehensive validation
@@ -17,7 +16,8 @@ class EnhancedRegistrationScreen extends StatefulWidget {
 class _EnhancedRegistrationScreenState extends State<EnhancedRegistrationScreen>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController();
-  final OptimizedRegistrationService _registrationService = OptimizedRegistrationService();
+  final OptimizedRegistrationService _registrationService =
+      OptimizedRegistrationService();
 
   // Animation controllers
   late AnimationController _fadeController;
@@ -134,51 +134,47 @@ class _EnhancedRegistrationScreenState extends State<EnhancedRegistrationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedParticleBackground(
-        gradientColors: [
-          Theme.of(context).primaryColor.withValues(alpha: 0.1),
-          Theme.of(context).primaryColor.withValues(alpha: 0.05),
-        ],
-        child: Stack(
-          children: [
-            // Main content
-            SafeArea(
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    _buildHeader(),
-                    _buildProgressIndicator(),
-                    Expanded(
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: PageView(
-                          controller: _pageController,
-                          physics: const NeverScrollableScrollPhysics(),
-                          children: [
-                            _buildStep1(), // Account Details
-                            _buildStep2(), // Personal Information
-                            _buildStep3(), // Terms & Confirmation
-                          ],
-                        ),
+      backgroundColor:
+          const Color(0xFF16181A), // Solid background color from Figma
+      body: Stack(
+        children: [
+          // Main content
+          SafeArea(
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  _buildProgressIndicator(),
+                  Expanded(
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildStep1(), // Account Details
+                          _buildStep2(), // Personal Information
+                          _buildStep3(), // Terms & Confirmation
+                        ],
                       ),
                     ),
-                    _buildBottomNavigation(),
-                  ],
-                ),
+                  ),
+                  _buildBottomNavigation(),
+                ],
               ),
             ),
+          ),
 
-            // Loading overlay
-            if (_isLoading)
-              Container(
-                color: Colors.black54,
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+          // Loading overlay
+          if (_isLoading)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }

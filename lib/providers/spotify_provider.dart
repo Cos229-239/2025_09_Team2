@@ -52,7 +52,7 @@ class SpotifyProvider with ChangeNotifier {
   bool get isAuthenticated => _spotifyService.isAuthenticated;
 
   /// Initialize the provider
-  /// 
+  ///
   /// TODO: INITIALIZATION CRITICAL IMPROVEMENTS NEEDED
   /// - Current initialization only checks mock authentication status
   /// - Need to implement proper Spotify API connectivity verification

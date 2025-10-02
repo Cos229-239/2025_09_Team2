@@ -659,12 +659,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   Widget _buildCardContent() {
     final appState = Provider.of<AppState>(context, listen: false);
     final user = appState.currentUser;
-    
+
     // Check if user is visual learner or card has visual metadata
-    final bool isVisualLearner = user?.preferences.learningStyle.toLowerCase() == 'visual';
-    final bool hasVisualMetadata = _currentCard.visualMetadata != null && 
-                                   _currentCard.visualMetadata!.isNotEmpty;
-    
+    final bool isVisualLearner =
+        user?.preferences.learningStyle.toLowerCase() == 'visual';
+    final bool hasVisualMetadata = _currentCard.visualMetadata != null &&
+        _currentCard.visualMetadata!.isNotEmpty;
+
     // Use visual widget for visual learners or cards with visual content
     if (isVisualLearner || hasVisualMetadata) {
       return VisualFlashcardWidget(
@@ -672,7 +673,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         showBack: _showAnswer,
       );
     }
-    
+
     // Default text display for non-visual content
     return Text(
       _showAnswer ? _currentCard.back : _currentCard.front,
@@ -1127,7 +1128,6 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-
                   // Quiz cooldown/status info
                   if (!_quizService.canTakeQuiz(_currentCard))
                     Container(

@@ -82,28 +82,28 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                   // Visual learner indicator header
                   _buildVisualLearnerHeader(context),
                   const SizedBox(height: 16),
-                  
+
                   // Visual content section
                   if (_hasVisualContent()) ...[
                     _buildVisualContentSection(context),
                     const SizedBox(height: 20),
                   ],
-                  
+
                   // Interactive diagram section
                   if (widget.flashcard.diagramData != null) ...[
                     _buildInteractiveDiagramSection(context),
                     const SizedBox(height: 20),
                   ],
-                  
+
                   // Question section with visual styling
                   _buildQuestionSection(context),
-                  
+
                   // Answer section (if showing back)
                   if (widget.showBack) ...[
                     const SizedBox(height: 16),
                     _buildAnswerSection(context),
                   ],
-                  
+
                   // Visual metadata footer
                   if (_hasVisualMetadata()) ...[
                     const SizedBox(height: 16),
@@ -201,7 +201,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
               )
             else
               _buildVisualPlaceholder(context),
-            
+
             // Visual content overlay
             Positioned(
               bottom: 0,
@@ -292,12 +292,14 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
 
   /// Build interactive diagram section
   Widget _buildInteractiveDiagramSection(BuildContext context) {
-    debugPrint('Building interactive diagram section for card: ${widget.flashcard.id}');
+    debugPrint(
+        'Building interactive diagram section for card: ${widget.flashcard.id}');
     debugPrint('Diagram data exists: ${widget.flashcard.diagramData != null}');
     if (widget.flashcard.diagramData != null) {
-      debugPrint('Diagram data preview: ${widget.flashcard.diagramData!.substring(0, math.min(100, widget.flashcard.diagramData!.length))}...');
+      debugPrint(
+          'Diagram data preview: ${widget.flashcard.diagramData!.substring(0, math.min(100, widget.flashcard.diagramData!.length))}...');
     }
-    
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -338,7 +340,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -347,7 +350,9 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          _showDiagramDetails ? Icons.expand_less : Icons.expand_more,
+                          _showDiagramDetails
+                              ? Icons.expand_less
+                              : Icons.expand_more,
                           size: 16,
                           color: Colors.blue[700],
                         ),
@@ -367,7 +372,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
               ],
             ),
           ),
-          
+
           // Diagram content
           Container(
             height: _showDiagramDetails ? null : 140,
@@ -384,7 +389,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     try {
       final diagramData = jsonDecode(widget.flashcard.diagramData!);
       final diagramType = diagramData['type'] as String;
-      
+
       switch (diagramType) {
         case 'flowchart':
           return _buildFlowchartDiagram(diagramData);
@@ -405,20 +410,21 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
   /// Build flowchart diagram
   Widget _buildFlowchartDiagram(Map<String, dynamic> data) {
     final elements = (data['elements'] as List<dynamic>?) ?? [];
-    
+
     return SingleChildScrollView(
       child: Column(
         children: elements.asMap().entries.map((entry) {
           final index = entry.key;
           final element = entry.value as Map<String, dynamic>;
-          
+
           return Column(
             children: [
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _getElementColor(element['type'] as String? ?? 'process'),
+                  color:
+                      _getElementColor(element['type'] as String? ?? 'process'),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
@@ -452,9 +458,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
   Widget _buildConceptMapDiagram(Map<String, dynamic> data) {
     final elements = (data['elements'] as List<dynamic>?) ?? [];
     final connections = (data['connections'] as List<dynamic>?) ?? [];
-    
-    debugPrint('🗺️ Building concept map with ${elements.length} elements and ${connections.length} connections');
-    
+
+    debugPrint(
+        '🗺️ Building concept map with ${elements.length} elements and ${connections.length} connections');
+
     return Container(
       height: 250, // Increased height for better visibility
       padding: const EdgeInsets.all(16),
@@ -466,9 +473,11 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       child: LayoutBuilder(
         builder: (context, constraints) {
           // Normalize positions to fit within the available space
-          final normalizedElements = _normalizeElementPositions(elements, constraints);
-          final normalizedConnections = _normalizeConnections(connections, normalizedElements);
-          
+          final normalizedElements =
+              _normalizeElementPositions(elements, constraints);
+          final normalizedConnections =
+              _normalizeConnections(connections, normalizedElements);
+
           return CustomPaint(
             painter: ConceptMapPainter(
               elements: normalizedElements,
@@ -482,82 +491,108 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                 final y = (elementMap['y'] as num?)?.toDouble() ?? 0.0;
                 final type = elementMap['type'] as String? ?? 'concept';
                 final label = elementMap['label'] as String? ?? 'Concept';
-                
+
                 final nodeWidth = type == 'central' ? 140.0 : 110.0;
                 final nodeHeight = type == 'central' ? 70.0 : 55.0;
-                
+
                 return Positioned(
-                  left: math.max(0, math.min(x - nodeWidth/2, constraints.maxWidth - nodeWidth)),
-                  top: math.max(0, math.min(y - nodeHeight/2, constraints.maxHeight - nodeHeight)),
+                  left: math.max(
+                      0,
+                      math.min(
+                          x - nodeWidth / 2, constraints.maxWidth - nodeWidth)),
+                  top: math.max(
+                      0,
+                      math.min(y - nodeHeight / 2,
+                          constraints.maxHeight - nodeHeight)),
                   child: Container(
-                    width: type == 'central' ? 140 : 110, // Increased sizes for better visibility
+                    width: type == 'central'
+                        ? 140
+                        : 110, // Increased sizes for better visibility
                     height: type == 'central' ? 70 : 55,
                     padding: EdgeInsets.all(type == 'central' ? 14 : 10),
                     decoration: BoxDecoration(
-                      color: type == 'central' 
-                        ? _getSubjectColor() 
-                        : Colors.white,
-                      borderRadius: BorderRadius.circular(type == 'central' ? 35 : 16),
+                      color:
+                          type == 'central' ? _getSubjectColor() : Colors.white,
+                      borderRadius:
+                          BorderRadius.circular(type == 'central' ? 35 : 16),
                       border: Border.all(
                         color: _getSubjectColor(),
-                        width: type == 'central' ? 4 : 3, // Thicker borders for prominence
+                        width: type == 'central'
+                            ? 4
+                            : 3, // Thicker borders for prominence
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: type == 'central' ? 0.3 : 0.15),
-                          blurRadius: type == 'central' ? 12 : 8, // More pronounced shadows
+                          color: Colors.black.withValues(
+                              alpha: type == 'central' ? 0.3 : 0.15),
+                          blurRadius: type == 'central'
+                              ? 12
+                              : 8, // More pronounced shadows
                           offset: Offset(0, type == 'central' ? 4 : 3),
                           spreadRadius: type == 'central' ? 2 : 1,
                         ),
                         // Add inner shadow for depth
-                        if (type == 'central') BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: const Offset(-1, -1),
-                          spreadRadius: 0,
-                        ),
+                        if (type == 'central')
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(-1, -1),
+                            spreadRadius: 0,
+                          ),
                       ],
-                      gradient: type == 'central' ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          _getSubjectColor().withValues(alpha: 0.9),
-                          _getSubjectColor(),
-                          _getSubjectColor().withValues(alpha: 0.8),
-                        ],
-                        stops: const [0.0, 0.5, 1.0],
-                      ) : LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.white,
-                          _getSubjectColor().withValues(alpha: 0.05),
-                        ],
-                      ),
+                      gradient: type == 'central'
+                          ? LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                _getSubjectColor().withValues(alpha: 0.9),
+                                _getSubjectColor(),
+                                _getSubjectColor().withValues(alpha: 0.8),
+                              ],
+                              stops: const [0.0, 0.5, 1.0],
+                            )
+                          : LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.white,
+                                _getSubjectColor().withValues(alpha: 0.05),
+                              ],
+                            ),
                     ),
                     child: Container(
-                      decoration: type == 'central' ? BoxDecoration(
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ) : null,
+                      decoration: type == 'central'
+                          ? BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            )
+                          : null,
                       child: Center(
                         child: Text(
                           label,
                           style: TextStyle(
-                            fontSize: type == 'central' ? 13 : 11, // Larger text
-                            fontWeight: type == 'central' ? FontWeight.w900 : FontWeight.w700,
-                            color: type == 'central' ? Colors.white : _getSubjectColor(),
+                            fontSize:
+                                type == 'central' ? 13 : 11, // Larger text
+                            fontWeight: type == 'central'
+                                ? FontWeight.w900
+                                : FontWeight.w700,
+                            color: type == 'central'
+                                ? Colors.white
+                                : _getSubjectColor(),
                             letterSpacing: type == 'central' ? 0.5 : 0.3,
-                            shadows: type == 'central' ? [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                offset: const Offset(1, 1),
-                                blurRadius: 2,
-                              ),
-                            ] : null,
+                            shadows: type == 'central'
+                                ? [
+                                    Shadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.3),
+                                      offset: const Offset(1, 1),
+                                      blurRadius: 2,
+                                    ),
+                                  ]
+                                : null,
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
@@ -574,31 +609,36 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       ),
     );
   }
-  
+
   /// Normalize element positions to fit within container bounds
-  List<Map<String, dynamic>> _normalizeElementPositions(List<dynamic> elements, BoxConstraints constraints) {
+  List<Map<String, dynamic>> _normalizeElementPositions(
+      List<dynamic> elements, BoxConstraints constraints) {
     if (elements.isEmpty) return [];
-    
+
     final normalizedElements = <Map<String, dynamic>>[];
     final containerWidth = constraints.maxWidth;
     final containerHeight = constraints.maxHeight;
-    
-    debugPrint('🔄 Normalizing ${elements.length} elements in ${containerWidth}x$containerHeight container');
-    
+
+    debugPrint(
+        '🔄 Normalizing ${elements.length} elements in ${containerWidth}x$containerHeight container');
+
     // Find central element first
-    var centralIndex = elements.indexWhere((e) => (e as Map<String, dynamic>)['type'] == 'central');
+    var centralIndex = elements
+        .indexWhere((e) => (e as Map<String, dynamic>)['type'] == 'central');
     if (centralIndex == -1) centralIndex = 0;
-    
+
     if (elements.length == 1) {
       // Single element - place in center
-      final element = Map<String, dynamic>.from(elements[0] as Map<String, dynamic>);
+      final element =
+          Map<String, dynamic>.from(elements[0] as Map<String, dynamic>);
       element['x'] = containerWidth / 2;
       element['y'] = containerHeight / 2;
       normalizedElements.add(element);
     } else if (elements.length == 2) {
       // Two elements - side by side
       for (int i = 0; i < elements.length; i++) {
-        final element = Map<String, dynamic>.from(elements[i] as Map<String, dynamic>);
+        final element =
+            Map<String, dynamic>.from(elements[i] as Map<String, dynamic>);
         element['x'] = (containerWidth / 3) * (i + 1); // 1/3 and 2/3 positions
         element['y'] = containerHeight / 2;
         normalizedElements.add(element);
@@ -606,8 +646,9 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     } else {
       // Multiple elements - improved circular arrangement
       for (int i = 0; i < elements.length; i++) {
-        final element = Map<String, dynamic>.from(elements[i] as Map<String, dynamic>);
-        
+        final element =
+            Map<String, dynamic>.from(elements[i] as Map<String, dynamic>);
+
         if (i == centralIndex) {
           // Central element in the middle
           element['x'] = containerWidth / 2;
@@ -617,48 +658,53 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           // Calculate position for non-central elements
           final nonCentralIndex = i - (i > centralIndex ? 1 : 0);
           final totalNonCentral = elements.length - 1;
-          
+
           // Improved angle calculation for better distribution
           final baseAngle = (2 * math.pi * nonCentralIndex) / totalNonCentral;
           final angle = baseAngle - (math.pi / 2); // Start from top
-          
+
           // Calculate radius ensuring no overlap with enhanced spacing
           final minRadius = 140.0; // Increased minimum distance from center
           final maxRadius = math.min(containerWidth, containerHeight) * 0.4;
           final radius = math.max(minRadius, maxRadius);
-          
+
           // Calculate position
           final centerX = containerWidth / 2;
           final centerY = containerHeight / 2;
-          
+
           var x = centerX + radius * math.cos(angle);
           var y = centerY + radius * math.sin(angle);
-          
+
           // Ensure elements stay within bounds with generous margins for new larger sizes
           final nodeWidth = 110.0; // Updated to match new size
           final nodeHeight = 55.0; // Updated to match new size
           final margin = 30.0; // Increased margin
-          
-          x = math.max(margin + nodeWidth/2, math.min(x, containerWidth - margin - nodeWidth/2));
-          y = math.max(margin + nodeHeight/2, math.min(y, containerHeight - margin - nodeHeight/2));
-          
+
+          x = math.max(margin + nodeWidth / 2,
+              math.min(x, containerWidth - margin - nodeWidth / 2));
+          y = math.max(margin + nodeHeight / 2,
+              math.min(y, containerHeight - margin - nodeHeight / 2));
+
           element['x'] = x;
           element['y'] = y;
-          
-          debugPrint('📍 Element $i: ${element['label']} at (${x.toInt()}, ${y.toInt()})');
+
+          debugPrint(
+              '📍 Element $i: ${element['label']} at (${x.toInt()}, ${y.toInt()})');
         }
-        
+
         normalizedElements.add(element);
       }
     }
-    
+
     return normalizedElements;
   }
-  
+
   /// Normalize connections based on new element positions
-  List<Map<String, dynamic>> _normalizeConnections(List<dynamic> connections, List<Map<String, dynamic>> elements) {
+  List<Map<String, dynamic>> _normalizeConnections(
+      List<dynamic> connections, List<Map<String, dynamic>> elements) {
     return connections.map((conn) {
-      final connection = Map<String, dynamic>.from(conn as Map<String, dynamic>);
+      final connection =
+          Map<String, dynamic>.from(conn as Map<String, dynamic>);
       // Connections reference element indices, which remain the same
       return connection;
     }).toList();
@@ -667,7 +713,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
   /// Build comparison diagram
   Widget _buildComparisonDiagram(Map<String, dynamic> data) {
     final elements = (data['elements'] as List<dynamic>?) ?? [];
-    
+
     return Row(
       children: elements.take(2).map<Widget>((element) {
         final elementMap = element as Map<String, dynamic>;
@@ -678,7 +724,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _getSubjectColor().withValues(alpha: 0.3)),
+              border:
+                  Border.all(color: _getSubjectColor().withValues(alpha: 0.3)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -709,7 +756,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
   /// Build structural diagram
   Widget _buildStructuralDiagram(Map<String, dynamic> data) {
     final elements = (data['elements'] as List<dynamic>?) ?? [];
-    
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -720,7 +767,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           decoration: BoxDecoration(
             color: _getSubjectColor().withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _getSubjectColor().withValues(alpha: 0.3)),
+            border:
+                Border.all(color: _getSubjectColor().withValues(alpha: 0.3)),
           ),
           child: Text(
             elementMap['label'] as String? ?? 'Component',
@@ -948,8 +996,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
 
   /// Check if flashcard has visual metadata
   bool _hasVisualMetadata() {
-    return widget.flashcard.visualMetadata != null && 
-           widget.flashcard.visualMetadata!.isNotEmpty;
+    return widget.flashcard.visualMetadata != null &&
+        widget.flashcard.visualMetadata!.isNotEmpty;
   }
 
   /// Get visual type from metadata
@@ -959,7 +1007,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
 
   /// Get subject-appropriate color
   Color _getSubjectColor() {
-    final subject = widget.flashcard.visualMetadata?['subject']?.toLowerCase() ?? '';
+    final subject =
+        widget.flashcard.visualMetadata?['subject']?.toLowerCase() ?? '';
     if (subject.contains('biology')) return const Color(0xFF4CAF50);
     if (subject.contains('chemistry')) return const Color(0xFF2196F3);
     if (subject.contains('physics')) return const Color(0xFFFF9800);
@@ -971,7 +1020,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
 
   /// Get subject-appropriate icon
   IconData _getSubjectIcon() {
-    final subject = widget.flashcard.visualMetadata?['subject']?.toLowerCase() ?? '';
+    final subject =
+        widget.flashcard.visualMetadata?['subject']?.toLowerCase() ?? '';
     if (subject.contains('biology')) return Icons.biotech;
     if (subject.contains('chemistry')) return Icons.science;
     if (subject.contains('physics')) return Icons.electrical_services;
@@ -1047,7 +1097,7 @@ class ConceptMapPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (elements.isEmpty) return;
-    
+
     final paint = Paint()
       ..color = subjectColor.withValues(alpha: 0.7)
       ..strokeWidth = 2.0
@@ -1064,7 +1114,8 @@ class ConceptMapPainter extends CustomPainter {
       if (centralIndex >= 0) {
         for (int i = 0; i < elements.length; i++) {
           if (i != centralIndex) {
-            _drawConnection(canvas, elements[centralIndex], elements[i], linePaint, paint, '');
+            _drawConnection(canvas, elements[centralIndex], elements[i],
+                linePaint, paint, '');
           }
         }
       }
@@ -1075,20 +1126,29 @@ class ConceptMapPainter extends CustomPainter {
         final to = connection['to'] as int?;
         final label = connection['label'] as String? ?? '';
 
-        if (from != null && to != null && from < elements.length && to < elements.length) {
-          _drawConnection(canvas, elements[from], elements[to], linePaint, paint, label);
+        if (from != null &&
+            to != null &&
+            from < elements.length &&
+            to < elements.length) {
+          _drawConnection(
+              canvas, elements[from], elements[to], linePaint, paint, label);
         }
       }
     }
   }
 
-  void _drawConnection(Canvas canvas, Map<String, dynamic> fromElement, Map<String, dynamic> toElement, 
-                      Paint linePaint, Paint arrowPaint, String label) {
+  void _drawConnection(
+      Canvas canvas,
+      Map<String, dynamic> fromElement,
+      Map<String, dynamic> toElement,
+      Paint linePaint,
+      Paint arrowPaint,
+      String label) {
     final fromX = (fromElement['x'] as num?)?.toDouble() ?? 0.0;
     final fromY = (fromElement['y'] as num?)?.toDouble() ?? 0.0;
     final toX = (toElement['x'] as num?)?.toDouble() ?? 0.0;
     final toY = (toElement['y'] as num?)?.toDouble() ?? 0.0;
-    
+
     final fromType = fromElement['type'] as String? ?? 'concept';
     final toType = toElement['type'] as String? ?? 'concept';
 
@@ -1096,16 +1156,16 @@ class ConceptMapPainter extends CustomPainter {
     final dx = toX - fromX;
     final dy = toY - fromY;
     final length = math.sqrt(dx * dx + dy * dy);
-    
+
     if (length < 40) return; // Skip if nodes are too close
-    
+
     final unitX = dx / length;
     final unitY = dy / length;
-    
+
     // Calculate edge points based on updated node sizes
     final fromRadius = fromType == 'central' ? 70.0 : 55.0; // Updated radii
     final toRadius = toType == 'central' ? 70.0 : 55.0;
-    
+
     final startX = fromX + unitX * fromRadius;
     final startY = fromY + unitY * fromRadius;
     final endX = toX - unitX * toRadius;
@@ -1118,11 +1178,12 @@ class ConceptMapPainter extends CustomPainter {
           subjectColor.withValues(alpha: 0.8),
           subjectColor.withValues(alpha: 0.6),
         ],
-      ).createShader(Rect.fromPoints(Offset(startX, startY), Offset(endX, endY)))
+      ).createShader(
+          Rect.fromPoints(Offset(startX, startY), Offset(endX, endY)))
       ..strokeWidth = 3.5 // Thicker lines for better visibility
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    
+
     // Add shadow for depth
     final shadowPaint = Paint()
       ..color = Colors.black.withValues(alpha: 0.2)
@@ -1133,62 +1194,74 @@ class ConceptMapPainter extends CustomPainter {
     // Draw connection line with smooth curve
     final path = Path();
     path.moveTo(startX, startY);
-    
+
     // Add slight curve for visual appeal
     final midX = (startX + endX) / 2;
     final midY = (startY + endY) / 2;
     final controlOffset = math.min(20.0, length * 0.1);
     final controlX = midX + (endY - startY) * controlOffset / length;
     final controlY = midY - (endX - startX) * controlOffset / length;
-    
+
     path.quadraticBezierTo(controlX, controlY, endX, endY);
-    
+
     // Draw shadow first for depth
     final shadowPath = Path();
     shadowPath.moveTo(startX + 1, startY + 1);
-    shadowPath.quadraticBezierTo(controlX + 1, controlY + 1, endX + 1, endY + 1);
+    shadowPath.quadraticBezierTo(
+        controlX + 1, controlY + 1, endX + 1, endY + 1);
     canvas.drawPath(shadowPath, shadowPaint);
-    
+
     // Draw main connection line
     canvas.drawPath(path, gradientPaint);
 
     // Draw enhanced arrowhead with better visibility
     final arrowLength = 14.0; // Larger arrows
     final arrowAngle = math.pi / 4; // Wider angle for better visibility
-    
-    final arrowX1 = endX - arrowLength * (unitX * math.cos(arrowAngle) - unitY * math.sin(arrowAngle));
-    final arrowY1 = endY - arrowLength * (unitY * math.cos(arrowAngle) + unitX * math.sin(arrowAngle));
-    final arrowX2 = endX - arrowLength * (unitX * math.cos(-arrowAngle) - unitY * math.sin(-arrowAngle));
-    final arrowY2 = endY - arrowLength * (unitY * math.cos(-arrowAngle) + unitX * math.sin(-arrowAngle));
+
+    final arrowX1 = endX -
+        arrowLength *
+            (unitX * math.cos(arrowAngle) - unitY * math.sin(arrowAngle));
+    final arrowY1 = endY -
+        arrowLength *
+            (unitY * math.cos(arrowAngle) + unitX * math.sin(arrowAngle));
+    final arrowX2 = endX -
+        arrowLength *
+            (unitX * math.cos(-arrowAngle) - unitY * math.sin(-arrowAngle));
+    final arrowY2 = endY -
+        arrowLength *
+            (unitY * math.cos(-arrowAngle) + unitX * math.sin(-arrowAngle));
 
     final arrowPath = Path();
     arrowPath.moveTo(endX, endY);
     arrowPath.lineTo(arrowX1, arrowY1);
     arrowPath.lineTo(arrowX2, arrowY2);
     arrowPath.close();
-    
+
     final arrowFillPaint = Paint()
-      ..color = subjectColor.withValues(alpha: 0.9) // More opaque for visibility
+      ..color =
+          subjectColor.withValues(alpha: 0.9) // More opaque for visibility
       ..style = PaintingStyle.fill;
-    
+
     // Add arrow shadow
     final arrowShadowPath = Path();
     arrowShadowPath.moveTo(endX + 1, endY + 1);
     arrowShadowPath.lineTo(arrowX1 + 1, arrowY1 + 1);
     arrowShadowPath.lineTo(arrowX2 + 1, arrowY2 + 1);
     arrowShadowPath.close();
-    
-    canvas.drawPath(arrowShadowPath, Paint()
-      ..color = Colors.black.withValues(alpha: 0.2)
-      ..style = PaintingStyle.fill);
-    
+
+    canvas.drawPath(
+        arrowShadowPath,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.2)
+          ..style = PaintingStyle.fill);
+
     canvas.drawPath(arrowPath, arrowFillPaint);
 
     // Draw connection label if provided
     if (label.isNotEmpty) {
       final midX = (fromX + toX) / 2;
       final midY = (fromY + toY) / 2;
-      
+
       final textSpan = TextSpan(
         text: label,
         style: TextStyle(
@@ -1198,27 +1271,28 @@ class ConceptMapPainter extends CustomPainter {
           backgroundColor: Colors.white.withValues(alpha: 0.9),
         ),
       );
-      
+
       final textPainter = TextPainter(
         text: textSpan,
         textDirection: TextDirection.ltr,
       );
-      
+
       textPainter.layout();
-      
+
       // Draw background for text
       final rect = Rect.fromCenter(
         center: Offset(midX, midY),
         width: textPainter.width + 4,
         height: textPainter.height + 2,
       );
-      
+
       canvas.drawRRect(
         RRect.fromRectAndRadius(rect, const Radius.circular(2)),
         Paint()..color = Colors.white.withValues(alpha: 0.9),
       );
-      
-      textPainter.paint(canvas, Offset(midX - textPainter.width / 2, midY - textPainter.height / 2));
+
+      textPainter.paint(canvas,
+          Offset(midX - textPainter.width / 2, midY - textPainter.height / 2));
     }
   }
 

@@ -154,7 +154,12 @@ void main() {
 
     group('✅ TASK 2: Multi-Modal Content Generation', () {
       test('Learning Styles Support', () {
-        final supportedStyles = ['visual', 'auditory', 'kinesthetic', 'reading'];
+        final supportedStyles = [
+          'visual',
+          'auditory',
+          'kinesthetic',
+          'reading'
+        ];
         for (final style in supportedStyles) {
           expect(style, isNotEmpty);
         }
@@ -162,9 +167,19 @@ void main() {
       });
 
       test('Card Type Variety', () {
-        final basicTypes = [CardType.basic, CardType.cloze, CardType.reverse, CardType.multipleChoice];
-        final advancedTypes = [CardType.trueFalse, CardType.comparison, CardType.scenario, CardType.causeEffect];
-        
+        final basicTypes = [
+          CardType.basic,
+          CardType.cloze,
+          CardType.reverse,
+          CardType.multipleChoice
+        ];
+        final advancedTypes = [
+          CardType.trueFalse,
+          CardType.comparison,
+          CardType.scenario,
+          CardType.causeEffect
+        ];
+
         expect(basicTypes.length, equals(4));
         expect(advancedTypes.length, equals(4));
         debugPrint('✅ Card Type Variety: PASSED');
@@ -175,14 +190,14 @@ void main() {
       test('18 Question Types Available', () {
         final allTypes = CardType.values;
         expect(allTypes.length, greaterThanOrEqualTo(18));
-        
+
         // Verify specific advanced types exist
         expect(allTypes, contains(CardType.caseStudy));
         expect(allTypes, contains(CardType.problemSolving));
         expect(allTypes, contains(CardType.hypothesisTesting));
         expect(allTypes, contains(CardType.evaluation));
         expect(allTypes, contains(CardType.synthesis));
-        
+
         debugPrint('✅ 18 Question Types Available: PASSED');
       });
 
@@ -198,15 +213,18 @@ void main() {
         expect(testAnalytics.overallAccuracy, greaterThan(0));
         expect(testAnalytics.subjectPerformance, isNotEmpty);
         expect(testAnalytics.recentTrend.direction, isNotEmpty);
-        expect(testAnalytics.learningPatterns.learningStyleEffectiveness, isNotEmpty);
+        expect(testAnalytics.learningPatterns.learningStyleEffectiveness,
+            isNotEmpty);
         debugPrint('✅ Analytics Data Structure: PASSED');
       });
 
       test('Performance Context Integration', () {
         expect(testAnalytics.totalStudyTime, greaterThan(0));
         expect(testAnalytics.totalCardsStudied, greaterThan(0));
-        expect(testAnalytics.learningPatterns.averageSessionLength, greaterThan(0));
-        expect(testAnalytics.learningPatterns.preferredCardsPerSession, greaterThan(0));
+        expect(testAnalytics.learningPatterns.averageSessionLength,
+            greaterThan(0));
+        expect(testAnalytics.learningPatterns.preferredCardsPerSession,
+            greaterThan(0));
         debugPrint('✅ Performance Context Integration: PASSED');
       });
     });
@@ -222,7 +240,8 @@ void main() {
       });
 
       test('Adaptive Recommendations Data', () {
-        final recommendations = aiService.getAdaptiveRecommendations(testUser, testAnalytics, 'Computer Science');
+        final recommendations = aiService.getAdaptiveRecommendations(
+            testUser, testAnalytics, 'Computer Science');
         expect(recommendations, isNotNull);
         expect(recommendations, containsPair('difficulty', isNotNull));
         expect(recommendations, containsPair('questionTypes', isNotNull));
@@ -242,7 +261,7 @@ void main() {
           CardType.evaluation,
           CardType.synthesis
         ];
-        
+
         for (final type in advancedTypes) {
           expect(CardType.values, contains(type));
         }
@@ -251,7 +270,10 @@ void main() {
 
       test('Error Handling and Fallback', () {
         expect(aiService.isConfigured, isTrue);
-        expect(() => aiService.getAdaptiveRecommendations(testUser, null, 'Test Subject'), returnsNormally);
+        expect(
+            () => aiService.getAdaptiveRecommendations(
+                testUser, null, 'Test Subject'),
+            returnsNormally);
         debugPrint('✅ Error Handling and Fallback: PASSED');
       });
     });
@@ -261,8 +283,9 @@ void main() {
         expect(testUser.id, isNotEmpty);
         expect(testAnalytics.userId, equals(testUser.id));
         expect(aiService.isConfigured, isTrue);
-        
-        final recommendations = aiService.getAdaptiveRecommendations(testUser, testAnalytics, 'Computer Science');
+
+        final recommendations = aiService.getAdaptiveRecommendations(
+            testUser, testAnalytics, 'Computer Science');
         expect(recommendations, isNotNull);
         debugPrint('✅ Full User-Analytics-AI Integration: PASSED');
       });
@@ -270,16 +293,22 @@ void main() {
       test('Public API Functionality', () async {
         // Test public API methods that users actually interact with
         expect(() => aiService.isConfigured, returnsNormally);
-        expect(() => aiService.getAdaptiveRecommendations(testUser, testAnalytics, 'CS'), returnsNormally);
+        expect(
+            () => aiService.getAdaptiveRecommendations(
+                testUser, testAnalytics, 'CS'),
+            returnsNormally);
         debugPrint('✅ Public API Functionality: PASSED');
       });
 
       test('Data Model Consistency', () {
         // Verify all data models work together
-        expect(testUser.preferences.learningStyle, isIn(['visual', 'auditory', 'kinesthetic', 'reading', 'adaptive']));
+        expect(testUser.preferences.learningStyle,
+            isIn(['visual', 'auditory', 'kinesthetic', 'reading', 'adaptive']));
         expect(testAnalytics.overallAccuracy, inInclusiveRange(0.0, 1.0));
-        expect(testAnalytics.learningPatterns.learningStyleEffectiveness.keys, 
-               everyElement(isIn(['visual', 'auditory', 'kinesthetic', 'reading'])));
+        expect(
+            testAnalytics.learningPatterns.learningStyleEffectiveness.keys,
+            everyElement(
+                isIn(['visual', 'auditory', 'kinesthetic', 'reading'])));
         debugPrint('✅ Data Model Consistency: PASSED');
       });
     });
@@ -288,7 +317,8 @@ void main() {
 
 // Simple test helpers without accessing private methods
 extension TestHelpers on AIService {
-  Map<String, dynamic> getTestRecommendations(User user, StudyAnalytics? analytics, String subject) {
+  Map<String, dynamic> getTestRecommendations(
+      User user, StudyAnalytics? analytics, String subject) {
     return getAdaptiveRecommendations(user, analytics, subject);
   }
 }

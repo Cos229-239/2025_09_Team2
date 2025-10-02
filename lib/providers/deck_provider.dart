@@ -50,76 +50,81 @@ class DeckProvider extends ChangeNotifier {
       // Load decks from Firestore
       final deckData = await _firestoreService.getUserDecks(currentUser.uid);
       _decks = deckData.map((data) => _convertFirestoreToDeck(data)).toList();
-      
+
       debugPrint('✅ Loaded ${_decks.length} decks from Firestore');
 
       // If no decks found, add sample data for development
       if (_decks.isEmpty) {
         debugPrint('No decks found, adding sample deck');
         _decks = [
-        Deck(
-          id: '1', // Sample deck ID
-          title: 'Sample Deck', // Sample deck title
-          tags: ['sample'], // Sample tags for categorization
-          cards: [
-            // Add some sample flashcards for testing
-            FlashCard(
-              id: '1',
-              deckId: '1',
-              type: CardType.basic,
-              front: 'What is the capital of France?',
-              back: 'Paris',
-              multipleChoiceOptions: ['London', 'Paris', 'Berlin', 'Madrid'],
-              correctAnswerIndex: 1,
-              difficulty: 2,
-            ),
-            FlashCard(
-              id: '2',
-              deckId: '1',
-              type: CardType.basic,
-              front: 'What is 2 + 2?',
-              back: '4',
-              multipleChoiceOptions: ['3', '4', '5', '6'],
-              correctAnswerIndex: 1,
-              difficulty: 1,
-            ),
-            FlashCard(
-              id: '3',
-              deckId: '1',
-              type: CardType.basic,
-              front: 'What is the largest planet in our solar system?',
-              back: 'Jupiter',
-              multipleChoiceOptions: ['Earth', 'Saturn', 'Jupiter', 'Neptune'],
-              correctAnswerIndex: 2,
-              difficulty: 3,
-            ),
-            FlashCard(
-              id: '4',
-              deckId: '1',
-              type: CardType.basic,
-              front: 'Who wrote "Romeo and Juliet"?',
-              back: 'William Shakespeare',
-              multipleChoiceOptions: [
-                'Charles Dickens',
-                'William Shakespeare',
-                'Mark Twain',
-                'Jane Austen'
-              ],
-              correctAnswerIndex: 1,
-              difficulty: 2,
-            ),
-            FlashCard(
-              id: '5',
-              deckId: '1',
-              type: CardType.basic,
-              front: 'What is the chemical symbol for gold?',
-              back: 'Au',
-              multipleChoiceOptions: ['Go', 'Gd', 'Au', 'Ag'],
-              correctAnswerIndex: 2,
-              difficulty: 4,
-            ),
-          ], // Sample cards for testing
-        ),
+          Deck(
+            id: '1', // Sample deck ID
+            title: 'Sample Deck', // Sample deck title
+            tags: ['sample'], // Sample tags for categorization
+            cards: [
+              // Add some sample flashcards for testing
+              FlashCard(
+                id: '1',
+                deckId: '1',
+                type: CardType.basic,
+                front: 'What is the capital of France?',
+                back: 'Paris',
+                multipleChoiceOptions: ['London', 'Paris', 'Berlin', 'Madrid'],
+                correctAnswerIndex: 1,
+                difficulty: 2,
+              ),
+              FlashCard(
+                id: '2',
+                deckId: '1',
+                type: CardType.basic,
+                front: 'What is 2 + 2?',
+                back: '4',
+                multipleChoiceOptions: ['3', '4', '5', '6'],
+                correctAnswerIndex: 1,
+                difficulty: 1,
+              ),
+              FlashCard(
+                id: '3',
+                deckId: '1',
+                type: CardType.basic,
+                front: 'What is the largest planet in our solar system?',
+                back: 'Jupiter',
+                multipleChoiceOptions: [
+                  'Earth',
+                  'Saturn',
+                  'Jupiter',
+                  'Neptune'
+                ],
+                correctAnswerIndex: 2,
+                difficulty: 3,
+              ),
+              FlashCard(
+                id: '4',
+                deckId: '1',
+                type: CardType.basic,
+                front: 'Who wrote "Romeo and Juliet"?',
+                back: 'William Shakespeare',
+                multipleChoiceOptions: [
+                  'Charles Dickens',
+                  'William Shakespeare',
+                  'Mark Twain',
+                  'Jane Austen'
+                ],
+                correctAnswerIndex: 1,
+                difficulty: 2,
+              ),
+              FlashCard(
+                id: '5',
+                deckId: '1',
+                type: CardType.basic,
+                front: 'What is the chemical symbol for gold?',
+                back: 'Au',
+                multipleChoiceOptions: ['Go', 'Gd', 'Au', 'Ag'],
+                correctAnswerIndex: 2,
+                difficulty: 4,
+              ),
+            ], // Sample cards for testing
+          ),
         ];
       }
     } catch (e) {
@@ -135,8 +140,9 @@ class DeckProvider extends ChangeNotifier {
   /// Convert Firestore document data to Deck object
   Deck _convertFirestoreToDeck(Map<String, dynamic> data) {
     final cardsData = data['cards'] as List<dynamic>? ?? [];
-    final cards = cardsData.map((cardData) => _convertFirestoreToCard(cardData)).toList();
-    
+    final cards =
+        cardsData.map((cardData) => _convertFirestoreToCard(cardData)).toList();
+
     return Deck(
       id: data['id'] ?? '',
       title: data['title'] ?? 'Untitled Deck',
@@ -155,7 +161,8 @@ class DeckProvider extends ChangeNotifier {
       type: _parseCardType(cardData['type']),
       front: cardData['front'] ?? '',
       back: cardData['back'] ?? '',
-      multipleChoiceOptions: List<String>.from(cardData['multipleChoiceOptions'] ?? []),
+      multipleChoiceOptions:
+          List<String>.from(cardData['multipleChoiceOptions'] ?? []),
       correctAnswerIndex: cardData['correctAnswerIndex'] ?? 0,
       difficulty: cardData['difficulty'] ?? 1,
     );
@@ -180,12 +187,13 @@ class DeckProvider extends ChangeNotifier {
   Future<void> addDeck(Deck deck) async {
     _decks.add(deck); // Add deck to the list locally first
     notifyListeners(); // Notify UI of the addition immediately
-    
+
     // Save to Firestore in the background
     final currentUser = _auth.currentUser;
     if (currentUser != null) {
       try {
-        final cardsData = deck.cards.map((card) => _convertCardToFirestore(card)).toList();
+        final cardsData =
+            deck.cards.map((card) => _convertCardToFirestore(card)).toList();
         final deckId = await _firestoreService.createDeckWithCards(
           uid: currentUser.uid,
           title: deck.title,
@@ -194,10 +202,10 @@ class DeckProvider extends ChangeNotifier {
           category: deck.tags.isEmpty ? 'General' : deck.tags.first,
           tags: deck.tags,
         );
-        
+
         if (deckId != null) {
           debugPrint('✅ Saved deck to Firestore with ID: $deckId');
-          
+
           // Update the local deck with the Firestore ID
           final deckIndex = _decks.indexWhere((d) => d.id == deck.id);
           if (deckIndex != -1) {
