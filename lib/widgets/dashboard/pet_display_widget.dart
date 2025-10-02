@@ -333,7 +333,6 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.white70,
                 fontSize: 10,
               ),
         ),
@@ -341,7 +340,6 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
         Text(
           isPercentage ? '$value%' : '$value',
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
         ),

@@ -34,6 +34,7 @@ import 'package:studypals/widgets/dashboard/pet_display_widget.dart'; // Pet dis
 import 'package:studypals/widgets/dashboard/calendar_display_widget.dart'; // Calendar display widget
 // Import AI widgets for intelligent study features
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
+import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
 import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/task_provider.dart'; // Task management state
@@ -879,9 +880,13 @@ class _DashboardHomeState extends State<DashboardHome>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Status bar area for time, WiFi, notch spacing
+                  _buildStatusBar(context),
+                  
                   // Header with responsive spacing
                   Container(
                     height: ResponsiveSpacing.getHeaderHeight(context),
+                    color: const Color(0xFF242628),
                     padding: EdgeInsets.symmetric(
                       horizontal: ResponsiveSpacing.getHorizontalPadding(context),
                       vertical: ResponsiveSpacing.getSmallSpacing(context),
@@ -899,7 +904,12 @@ class _DashboardHomeState extends State<DashboardHome>
                   // Content section with responsive padding
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(ResponsiveSpacing.getHorizontalPadding(context)),
+                      padding: EdgeInsets.fromLTRB(
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                        ResponsiveSpacing.getVerticalSpacing(context) * 0.5, // Small top margin
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                      ),
                       child: Column(
                         children: [
                           // Calendar Display Widget with responsive height
@@ -977,90 +987,147 @@ class _DashboardHomeState extends State<DashboardHome>
           ],
         ),
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Horizontal divider line
-          Container(
-            height: 1,
-            color: const Color(0xFF6FB8E9), // New blue color
-          ),
-          // Navigation bar container
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF2A3050),
-              border: Border(
-                top: BorderSide(color: const Color(0xFF6FB8E9), width: 1), // New blue color
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                  offset: const Offset(0, -4),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveSpacing.getHorizontalPadding(context), // Left padding matching dashboard containers
+          0, // No top padding
+          ResponsiveSpacing.getHorizontalPadding(context), // Right padding matching dashboard containers  
+          ResponsiveSpacing.getHorizontalPadding(context), // Bottom padding matching horizontal container spacing
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Floating navigation toolbar with rounded corners
+            Container(
+              height: 68, // Adjusted to fit content with exact AI Tutor spacing
+              decoration: BoxDecoration(
+                color: const Color(0xFF242628), // Dark background color
+                borderRadius: BorderRadius.circular(34), // Rounded corners (half of height for pill shape)
+                border: Border.all(
+                  color: const Color(0xFF6FB8E9), // Blue border
+                  width: 1,
                 ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 5,
-                  spreadRadius: 0,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveSpacing.getHorizontalPadding(context),
-                vertical: ResponsiveSpacing.getSmallSpacing(context),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildNavButton(
-                    context,
-                    index: 0,
-                    icon: Icons.home,
-                    label: 'Home',
-                    isSelected: _selectedTabIndex == 0,
-                    onTap: () => _tabController.animateTo(0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.25),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -4),
                   ),
-                  _buildNavButton(
-                    context,
-                    index: 1,
-                    icon: Icons.school,
-                    label: 'Learn',
-                    isSelected: _selectedTabIndex == 1,
-                    onTap: () => _tabController.animateTo(1),
-                  ),
-                  _buildNavButton(
-                    context,
-                    index: 2,
-                    icon: Icons.psychology,
-                    label: 'AI Tutor',
-                    isSelected: _selectedTabIndex == 2,
-                    onTap: () => _tabController.animateTo(2),
-                  ),
-                  _buildNavButton(
-                    context,
-                    index: 3,
-                    icon: Icons.people,
-                    label: 'Social',
-                    isSelected: _selectedTabIndex == 3,
-                    onTap: () => _tabController.animateTo(3),
-                  ),
-                  _buildNavButton(
-                    context,
-                    index: 4,
-                    icon: Icons.pets,
-                    label: 'Pet',
-                    isSelected: _selectedTabIndex == 4,
-                    onTap: () => _tabController.animateTo(4),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 5,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -2),
                   ),
                 ],
               ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24), // Internal padding
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavButton(
+                      context,
+                      index: 0,
+                      icon: Icons.home,
+                      label: 'Home',
+                      isSelected: _selectedTabIndex == 0,
+                      onTap: () => _tabController.animateTo(0),
+                    ),
+                    _buildNavButton(
+                      context,
+                      index: 1,
+                      icon: Icons.school,
+                      label: 'Learn',
+                      isSelected: _selectedTabIndex == 1,
+                      onTap: () => _tabController.animateTo(1),
+                    ),
+                    // Empty space for floating AI Tutor button
+                    const Expanded(child: SizedBox()),
+                    _buildNavButton(
+                      context,
+                      index: 3,
+                      icon: Icons.people,
+                      label: 'Social',
+                      isSelected: _selectedTabIndex == 3,
+                      onTap: () => _tabController.animateTo(3),
+                    ),
+                    _buildNavButton(
+                      context,
+                      index: 4,
+                      icon: Icons.pets,
+                      label: 'Pet',
+                      isSelected: _selectedTabIndex == 4,
+                      onTap: () => _tabController.animateTo(4),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
+            // Floating AI Tutor button positioned above the toolbar
+            Positioned(
+              top: -31, // Moved down 4 pixels (from -35 to -31)
+              left: 0,
+              right: 0,
+              child: Center(
+                child: _buildFloatingAIButton(context),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  /// Build the status bar with time, connectivity, and notch spacing
+  Widget _buildStatusBar(BuildContext context) {
+    return StreamBuilder<DateTime>(
+      stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+      builder: (context, snapshot) {
+        final now = snapshot.data ?? DateTime.now();
+        final timeString = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+        
+        return Container(
+          height: 44, // Standard status bar height with notch consideration
+          color: const Color(0xFF242628), // Match header color
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveSpacing.getHorizontalPadding(context),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Time display
+              Text(
+                timeString,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              
+              // Connectivity indicators
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // WiFi signal icon
+                  Icon(
+                    Icons.wifi,
+                    size: 18,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  const SizedBox(width: 8),
+                  // Battery icon (optional)
+                  Icon(
+                    Icons.battery_full,
+                    size: 18,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -1134,7 +1201,6 @@ class _DashboardHomeState extends State<DashboardHome>
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
           ),
@@ -1213,9 +1279,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       ),
                       Text(
                         'Navigate to features',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -1224,7 +1288,7 @@ class _DashboardHomeState extends State<DashboardHome>
                     onPressed: () => Navigator.pop(context),
                     icon: Icon(
                       Icons.close,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).iconTheme.color,
                     ),
                   ),
                 ],
@@ -1378,9 +1442,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
@@ -1389,7 +1451,7 @@ class _DashboardHomeState extends State<DashboardHome>
                 // Arrow
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.grey[400],
+                  color: Theme.of(context).iconTheme.color,
                   size: 16,
                 ),
               ],
@@ -1464,16 +1526,14 @@ class _DashboardHomeState extends State<DashboardHome>
               ),
               child: Icon(
                 icon,
-                color: Colors.grey[600],
+                color: Theme.of(context).iconTheme.color,
                 size: 20,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -1668,6 +1728,9 @@ class _DashboardHomeState extends State<DashboardHome>
     return SafeArea(
       child: Column(
         children: [
+          // Status bar area for consistency
+          _buildStatusBar(context),
+          
           // Header
           Container(
             padding: const EdgeInsets.all(16),
@@ -1728,71 +1791,7 @@ class _DashboardHomeState extends State<DashboardHome>
 
   /// Build AI Tutor tab content
   Widget _buildAITutorTab() {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Statistics',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 20),
-            // Study stats cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Cards Studied',
-                    '150',
-                    Icons.style,
-                    Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Study Streak',
-                    '7 days',
-                    Icons.local_fire_department,
-                    Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Tasks Done',
-                    '23',
-                    Icons.task_alt,
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Notes Created',
-                    '45',
-                    Icons.note,
-                    Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    return const AITutorChat(); // Use the actual AI Tutor chat interface
   }
 
   /// Build Social tab content
@@ -1820,9 +1819,7 @@ class _DashboardHomeState extends State<DashboardHome>
               child: Text(
                 'Connect with study buddies, share progress, and collaborate on study goals.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white70,
-                    ),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
             ),
             const SizedBox(height: 32),
@@ -1842,10 +1839,9 @@ class _DashboardHomeState extends State<DashboardHome>
                   vertical: 16,
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Explore Social',
-                style: TextStyle(
-                  color: Colors.white,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1967,9 +1963,7 @@ class _DashboardHomeState extends State<DashboardHome>
           ),
           Text(
             title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(context).textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
         ],
@@ -2012,8 +2006,7 @@ class _DashboardHomeState extends State<DashboardHome>
         trailing: task.dueAt != null
             ? Text(
                 _formatDate(task.dueAt!),
-                style: TextStyle(
-                  color: Colors.grey[600],
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontSize: 12,
                 ),
               )
@@ -2069,55 +2062,62 @@ class _DashboardHomeState extends State<DashboardHome>
                   onTap: onTap,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: ResponsiveSpacing.getSmallSpacing(context),
-                      horizontal: ResponsiveSpacing.getSmallSpacing(context) * 0.6,
-                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Icon container with selection styling and animations
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeInOut,
-                          padding: EdgeInsets.all(label == 'AI Tutor' && isSelected ? 
-                            ResponsiveSpacing.getSmallSpacing(context) : 
-                            ResponsiveSpacing.getSmallSpacing(context) * 0.75),
-                          decoration: BoxDecoration(
-                            color: (label == 'AI Tutor' && isSelected) 
-                                ? const Color(0xFF6FB8E9) // Blue background for selected AI Tutor
-                                : Colors.transparent, // Transparent for others
-                            borderRadius: BorderRadius.circular(label == 'AI Tutor' && isSelected ? 24 : 16),
-                            border: (label != 'AI Tutor' || !isSelected) ? Border.all(
-                              color: Colors.transparent,
-                              width: 0,
-                            ) : null,
+                        // Icon container with consistent height for alignment
+                        SizedBox(
+                          height: 40, // Fixed height to ensure all icons align horizontally
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              padding: EdgeInsets.all(label == 'AI Tutor' && isSelected ? 
+                                2.0 : // Minimal padding for AI Tutor when selected
+                                1.0), // Minimal padding for all other icons
+                              decoration: BoxDecoration(
+                                color: (label == 'AI Tutor' && isSelected) 
+                                    ? const Color(0xFF6FB8E9) // Blue background for selected AI Tutor
+                                    : Colors.transparent, // Transparent for others
+                                borderRadius: BorderRadius.circular(label == 'AI Tutor' && isSelected ? 24 : 16),
+                                border: (label != 'AI Tutor' || !isSelected) ? Border.all(
+                                  color: Colors.transparent,
+                                  width: 0,
+                                ) : null,
+                              ),
+                              child: _buildIconWithHollowEffect(
+                                  icon, isSelected, label),
+                            ),
                           ),
-                          child: _buildIconWithHollowEffect(
-                              icon, isSelected, label),
                         ),
-                        SizedBox(height: ResponsiveSpacing.getSmallSpacing(context) * 0.25),
-                        // Label text with animation
-                        AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: (label == 'AI Tutor' && isSelected)
-                                            ? Colors.white // White text for selected AI Tutor
-                                            : (label == 'AI Tutor')
-                                                ? const Color(0xFF6FB8E9) // Blue for unselected AI Tutor
-                                                : const Color(0xFFCFCFCF), // Gray for all others
-                                        fontWeight: isSelected
-                                            ? FontWeight.w600
-                                            : FontWeight.w500,
-                                        fontSize: 11,
-                                      ) ??
-                                  const TextStyle(),
-                          child: Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        // No spacing - text immediately under icon
+                        // Label text with consistent baseline alignment
+                        SizedBox(
+                          height: 14, // Fixed height to ensure all text aligns horizontally
+                          child: Center(
+                            child: AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 200),
+                              style:
+                                  Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            color: (label == 'AI Tutor' && isSelected)
+                                                ? Colors.white // White text for selected AI Tutor
+                                                : (label == 'AI Tutor')
+                                                    ? const Color(0xFF6FB8E9) // Blue for unselected AI Tutor
+                                                    : const Color(0xFFCFCFCF), // Gray for all others
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.w500,
+                                            fontSize: 10, // Reduced from 11 to fit better
+                                          ) ??
+                                      const TextStyle(),
+                              child: Text(
+                                label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -2129,6 +2129,70 @@ class _DashboardHomeState extends State<DashboardHome>
           );
         },
       ),
+    );
+  }
+
+  /// Build floating AI Tutor button with hollow circle design
+  Widget _buildFloatingAIButton(BuildContext context) {
+    final isSelected = _selectedTabIndex == 2;
+    
+    return AnimatedBuilder(
+      animation: _scaleAnimations[2], // Use existing animation for AI Tutor
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimations[2].value,
+          child: GestureDetector(
+            onTap: () => _tabController.animateTo(2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                      ? const Color(0xFF6FB8E9) 
+                      : const Color(0xFF242628), // Match footer background when not selected
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF6FB8E9),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.psychology,
+                    color: isSelected 
+                      ? Colors.white 
+                      : const Color(0xFF6FB8E9),
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'AI Tutor',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: isSelected
+                      ? const Color(0xFF6FB8E9)
+                      : const Color(0xFFCFCFCF),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -2752,10 +2816,7 @@ class _NotesScreenState extends State<NotesScreen>
                         const SizedBox(height: 4),
                         Text(
                           quest.description,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
                     ),
@@ -3374,17 +3435,13 @@ class _NotesScreenState extends State<NotesScreen>
                           child: Row(
                             children: [
                               Icon(Icons.calendar_today,
-                                  color: Colors.grey[600]),
+                                  color: Theme.of(context).iconTheme.color),
                               const SizedBox(width: 8),
                               Text(
                                 selectedDueDate != null
                                     ? 'Due: ${_formatDate(selectedDueDate!)}'
                                     : 'Set due date (optional)',
-                                style: TextStyle(
-                                  color: selectedDueDate != null
-                                      ? Colors.black
-                                      : Colors.grey[600],
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               const Spacer(),
                               if (selectedDueDate != null)

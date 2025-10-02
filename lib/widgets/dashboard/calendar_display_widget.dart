@@ -26,7 +26,6 @@ class CalendarDisplayWidget extends StatelessWidget {
           Text(
             '$currentMonth $currentYear',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 1.0,
                 ),
@@ -74,7 +73,7 @@ class CalendarDisplayWidget extends StatelessWidget {
                                 ?.copyWith(
                                   color: _isToday(date)
                                       ? Colors.white
-                                      : Colors.white70,
+                                      : Theme.of(context).textTheme.bodyMedium?.color,
                                   fontWeight: _isToday(date)
                                       ? FontWeight.w600
                                       : FontWeight.normal,
