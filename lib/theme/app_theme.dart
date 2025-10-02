@@ -48,8 +48,27 @@ class AppTheme {
         onSecondary: Colors.white,
         onTertiary: Colors.white,
         onError: Colors.white,
-        onSurface: const Color(0xFFF9FAFB),
-        onBackground: const Color(0xFFF9FAFB),
+        onSurface: const Color(0xFFD9D9D9),
+        onBackground: const Color(0xFFD9D9D9),
+      ),
+
+      // Text theme with consistent D9D9D9 color
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: Color(0xFFD9D9D9)),
+        displayMedium: TextStyle(color: Color(0xFFD9D9D9)),
+        displaySmall: TextStyle(color: Color(0xFFD9D9D9)),
+        headlineLarge: TextStyle(color: Color(0xFFD9D9D9)),
+        headlineMedium: TextStyle(color: Color(0xFFD9D9D9)),
+        headlineSmall: TextStyle(color: Color(0xFFD9D9D9)),
+        titleLarge: TextStyle(color: Color(0xFFD9D9D9)),
+        titleMedium: TextStyle(color: Color(0xFFD9D9D9)),
+        titleSmall: TextStyle(color: Color(0xFFD9D9D9)),
+        bodyLarge: TextStyle(color: Color(0xFFD9D9D9)),
+        bodyMedium: TextStyle(color: Color(0xFFD9D9D9)),
+        bodySmall: TextStyle(color: Color(0xFFD9D9D9)),
+        labelLarge: TextStyle(color: Color(0xFFD9D9D9)),
+        labelMedium: TextStyle(color: Color(0xFFD9D9D9)),
+        labelSmall: TextStyle(color: Color(0xFFD9D9D9)),
       ),
 
       // Card theme matching dashboard design
@@ -70,13 +89,28 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: const Color(0xFFD9D9D9),
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: const BorderSide(color: Colors.transparent),
           ),
+        ),
+      ),
+
+      // Text button theme
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: const Color(0xFFD9D9D9),
+        ),
+      ),
+
+      // Outlined button theme
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFFD9D9D9),
+          side: const BorderSide(color: Color(0xFFD9D9D9)),
         ),
       ),
 
@@ -98,16 +132,18 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
-        labelStyle: TextStyle(color: primaryColor.withValues(alpha: 0.7)),
+        labelStyle: const TextStyle(color: Color(0xFFD9D9D9)),
+        hintStyle: const TextStyle(color: Color(0xFFD9D9D9)),
       ),
 
       // App bar theme
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceColor,
-        foregroundColor: Colors.white,
+        foregroundColor: Color(0xFFD9D9D9),
         elevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: primaryColor),
+        titleTextStyle: TextStyle(color: Color(0xFFD9D9D9)),
       ),
 
       // Navigation bar theme
@@ -119,7 +155,7 @@ class AppTheme {
           return TextStyle(
             color: states.contains(WidgetState.selected)
                 ? primaryColor
-                : Colors.white70,
+                : const Color(0xFFD9D9D9),
             fontSize: 12,
           );
         }),

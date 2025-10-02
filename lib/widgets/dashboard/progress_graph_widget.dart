@@ -163,8 +163,8 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
               return touchedBarSpots.map((barSpot) {
                 return LineTooltipItem(
                   '${barSpot.y.toInt()}',
-                  const TextStyle(
-                    color: Colors.white,
+                  TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFFD9D9D9),
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),

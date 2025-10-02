@@ -879,9 +879,13 @@ class _DashboardHomeState extends State<DashboardHome>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Status bar area for time, WiFi, notch spacing
+                  _buildStatusBar(context),
+                  
                   // Header with responsive spacing
                   Container(
                     height: ResponsiveSpacing.getHeaderHeight(context),
+                    color: const Color(0xFF242628),
                     padding: EdgeInsets.symmetric(
                       horizontal: ResponsiveSpacing.getHorizontalPadding(context),
                       vertical: ResponsiveSpacing.getSmallSpacing(context),
@@ -899,7 +903,12 @@ class _DashboardHomeState extends State<DashboardHome>
                   // Content section with responsive padding
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.all(ResponsiveSpacing.getHorizontalPadding(context)),
+                      padding: EdgeInsets.fromLTRB(
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                        ResponsiveSpacing.getVerticalSpacing(context) * 0.5, // Small top margin
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                      ),
                       child: Column(
                         children: [
                           // Calendar Display Widget with responsive height
@@ -988,7 +997,7 @@ class _DashboardHomeState extends State<DashboardHome>
           // Navigation bar container
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF2A3050),
+              color: const Color(0xFF242628),
               border: Border(
                 top: BorderSide(color: const Color(0xFF6FB8E9), width: 1), // New blue color
               ),
@@ -1064,6 +1073,57 @@ class _DashboardHomeState extends State<DashboardHome>
     );
   }
 
+  /// Build the status bar with time, connectivity, and notch spacing
+  Widget _buildStatusBar(BuildContext context) {
+    return StreamBuilder<DateTime>(
+      stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+      builder: (context, snapshot) {
+        final now = snapshot.data ?? DateTime.now();
+        final timeString = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+        
+        return Container(
+          height: 44, // Standard status bar height with notch consideration
+          color: const Color(0xFF242628), // Match header color
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveSpacing.getHorizontalPadding(context),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Time display
+              Text(
+                timeString,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              
+              // Connectivity indicators
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // WiFi signal icon
+                  Icon(
+                    Icons.wifi,
+                    size: 18,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  const SizedBox(width: 8),
+                  // Battery icon (optional)
+                  Icon(
+                    Icons.battery_full,
+                    size: 18,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   /// Build the header section with greeting and action buttons
   Widget _buildHeader(BuildContext context) {
     return Row(
@@ -1134,7 +1194,6 @@ class _DashboardHomeState extends State<DashboardHome>
           child: Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
           ),
@@ -1213,9 +1272,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       ),
                       Text(
                         'Navigate to features',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -1224,7 +1281,7 @@ class _DashboardHomeState extends State<DashboardHome>
                     onPressed: () => Navigator.pop(context),
                     icon: Icon(
                       Icons.close,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).iconTheme.color,
                     ),
                   ),
                 ],
@@ -1378,9 +1435,7 @@ class _DashboardHomeState extends State<DashboardHome>
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
@@ -1389,7 +1444,7 @@ class _DashboardHomeState extends State<DashboardHome>
                 // Arrow
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.grey[400],
+                  color: Theme.of(context).iconTheme.color,
                   size: 16,
                 ),
               ],
@@ -1464,16 +1519,14 @@ class _DashboardHomeState extends State<DashboardHome>
               ),
               child: Icon(
                 icon,
-                color: Colors.grey[600],
+                color: Theme.of(context).iconTheme.color,
                 size: 20,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -1668,6 +1721,9 @@ class _DashboardHomeState extends State<DashboardHome>
     return SafeArea(
       child: Column(
         children: [
+          // Status bar area for consistency
+          _buildStatusBar(context),
+          
           // Header
           Container(
             padding: const EdgeInsets.all(16),
@@ -1820,9 +1876,7 @@ class _DashboardHomeState extends State<DashboardHome>
               child: Text(
                 'Connect with study buddies, share progress, and collaborate on study goals.',
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white70,
-                    ),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
             ),
             const SizedBox(height: 32),
@@ -1842,10 +1896,9 @@ class _DashboardHomeState extends State<DashboardHome>
                   vertical: 16,
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Explore Social',
-                style: TextStyle(
-                  color: Colors.white,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1967,9 +2020,7 @@ class _DashboardHomeState extends State<DashboardHome>
           ),
           Text(
             title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(context).textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
         ],
@@ -2012,8 +2063,7 @@ class _DashboardHomeState extends State<DashboardHome>
         trailing: task.dueAt != null
             ? Text(
                 _formatDate(task.dueAt!),
-                style: TextStyle(
-                  color: Colors.grey[600],
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   fontSize: 12,
                 ),
               )
@@ -2752,10 +2802,7 @@ class _NotesScreenState extends State<NotesScreen>
                         const SizedBox(height: 4),
                         Text(
                           quest.description,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
                     ),
@@ -3374,17 +3421,13 @@ class _NotesScreenState extends State<NotesScreen>
                           child: Row(
                             children: [
                               Icon(Icons.calendar_today,
-                                  color: Colors.grey[600]),
+                                  color: Theme.of(context).iconTheme.color),
                               const SizedBox(width: 8),
                               Text(
                                 selectedDueDate != null
                                     ? 'Due: ${_formatDate(selectedDueDate!)}'
                                     : 'Set due date (optional)',
-                                style: TextStyle(
-                                  color: selectedDueDate != null
-                                      ? Colors.black
-                                      : Colors.grey[600],
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               const Spacer(),
                               if (selectedDueDate != null)
