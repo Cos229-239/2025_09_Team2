@@ -62,7 +62,7 @@ class CalendarDisplayWidget extends StatelessWidget {
                           color: _isToday(date)
                               ? const Color(0xFF6FB8E9)
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
+                          shape: BoxShape.circle, // Changed to circular shape
                         ),
                         child: Center(
                           child: Text(

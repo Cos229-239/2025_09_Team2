@@ -52,19 +52,35 @@ class NotificationPanel extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: Column(
-            children: [
-              // Header with title and controls
-              _buildHeader(context, notificationProvider),
+          child: ClipRect(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // If height is very small during animation, show minimal content
+                if (constraints.maxHeight < 100) {
+                  return Container(
+                    height: constraints.maxHeight,
+                    width: double.infinity,
+                    color: Colors.transparent,
+                  );
+                }
+                
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header with title and controls
+                    _buildHeader(context, notificationProvider),
 
-              // Filter bar
-              _buildFilterBar(context, notificationProvider),
+                    // Filter bar
+                    _buildFilterBar(context, notificationProvider),
 
-              // Notification list
-              Expanded(
-                child: _buildNotificationList(context, notificationProvider),
-              ),
-            ],
+                    // Notification list - takes remaining space
+                    Expanded(
+                      child: _buildNotificationList(context, notificationProvider),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         );
       },
@@ -122,25 +138,19 @@ class NotificationPanel extends StatelessWidget {
           // Action buttons
           Row(
             children: [
-              // Mark all as read button
-              if (provider.unreadCount > 0)
-                IconButton(
-                  icon: const Icon(Icons.done_all),
-                  onPressed: () => provider.markAllAsRead(),
-                  tooltip: 'Mark all as read',
+              // Mark all as read text button - always visible
+              GestureDetector(
+                onTap: provider.unreadCount > 0 ? () => provider.markAllAsRead() : null,
+                child: Text(
+                  'Mark all as read',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: provider.unreadCount > 0 
+                        ? const Color(0xFF6FB8E9) 
+                        : const Color(0xFF6FB8E9).withOpacity(0.5), // Dimmed when no unread
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-
-              // Settings button
-              AnimatedSettingsButton(
-                onPressed: () => _showNotificationSettings(context),
               ),
-
-              // Close button (for bottom sheet)
-              if (onClose != null)
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: onClose,
-                ),
             ],
           ),
         ],
@@ -159,7 +169,6 @@ class NotificationPanel extends StatelessWidget {
             child: DropdownButtonFormField<NotificationType?>(
               initialValue: provider.selectedFilter,
               decoration: const InputDecoration(
-                labelText: 'Filter by type',
                 border: OutlineInputBorder(),
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -212,34 +221,59 @@ class NotificationPanel extends StatelessWidget {
     final notifications = provider.notifications;
 
     if (notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_none,
-              size: 64,
-              color: Colors.grey.shade400,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          // Scale down the illustration if space is limited during animation
+          final availableHeight = constraints.maxHeight;
+          final shouldShowIllustration = availableHeight > 200;
+          final illustrationSize = availableHeight > 300 ? 160.0 : (availableHeight * 0.4).clamp(80.0, 160.0);
+          
+          return Center(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: availableHeight > 0 ? availableHeight : 0,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (shouldShowIllustration) ...[
+                      // Static detective cat image (ONLY this image, no fallbacks)
+                      Container(
+                        width: illustrationSize,
+                        height: illustrationSize,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.transparent,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            'assets/detective_cat_final.png',
+                            width: illustrationSize,
+                            height: illustrationSize,
+                            fit: BoxFit.contain,
+                            // NO ERROR BUILDER - only show the detective cat image
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    if (availableHeight > 100) // Only show text if there's enough space
+                      Text(
+                        'Looks like nothing\'s here...',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: const Color(0xFFD9D9D9), // Matching app text color
+                              fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              provider.showUnreadOnly
-                  ? 'No unread notifications'
-                  : 'No notifications',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'We\'ll notify you about quiz deadlines and study reminders',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade500,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          );
+        },
       );
     }
 
@@ -712,13 +746,17 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
     required bool isSelected,
     required double waveProgress,
   }) {
-    final primaryColor = Theme.of(context).primaryColor;
     final iconColor = Theme.of(context).iconTheme.color;
+
+    // If the notification panel is open (selected), show X icon with blue color
+    if (isSelected) {
+      return NotificationCloseIconPainter(iconColor: const Color(0xFF6FB8E9));
+    }
 
     // Always use the same visual style regardless of unread status
     // Only the ringing animation changes, not the icon appearance
-    if (isSelected) {
-      return NotificationBellFilledPainter(fillColor: primaryColor);
+    if (hasUnread) {
+      return NotificationBellOutlinedPainter(iconColor: iconColor);
     } else {
       return NotificationBellOutlinedPainter(iconColor: iconColor);
     }
@@ -1212,5 +1250,42 @@ class _AnimatedSettingsButtonState extends State<AnimatedSettingsButton>
         );
       },
     );
+  }
+}
+
+/// Custom painter for close (X) icon when notification panel is open
+class NotificationCloseIconPainter extends CustomPainter {
+  final Color? iconColor;
+
+  NotificationCloseIconPainter({this.iconColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = iconColor ?? Colors.grey.shade600
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+
+    final double centerX = size.width / 2;
+    final double centerY = size.height / 2;
+    final double length = size.width * 0.35; // X size relative to icon size
+
+    // Draw X lines
+    canvas.drawLine(
+      Offset(centerX - length, centerY - length),
+      Offset(centerX + length, centerY + length),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(centerX + length, centerY - length),
+      Offset(centerX - length, centerY + length),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(NotificationCloseIconPainter oldDelegate) {
+    return iconColor != oldDelegate.iconColor;
   }
 }
