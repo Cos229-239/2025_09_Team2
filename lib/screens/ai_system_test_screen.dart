@@ -6,7 +6,7 @@ import '../utils/ai_system_validator.dart';
 
 class AISystemTestScreen extends StatefulWidget {
   const AISystemTestScreen({super.key});
-  
+
   @override
   AISystemTestScreenState createState() => AISystemTestScreenState();
 }
@@ -15,12 +15,13 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
   Map<String, bool>? validationResults;
   bool isRunning = false;
   String testOutput = '';
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('🚀 AI System Validation', style: TextStyle(color: Colors.white)),
+        title: Text('🚀 AI System Validation',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.indigo[700],
         elevation: 0,
       ),
@@ -50,7 +51,7 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
       ),
     );
   }
-  
+
   Widget _buildHeader() {
     return Card(
       color: Colors.white.withValues(alpha: 0.9),
@@ -83,7 +84,8 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.orange[50],
-                border: Border(left: BorderSide(width: 4, color: Colors.orange)),
+                border:
+                    Border(left: BorderSide(width: 4, color: Colors.orange)),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -100,7 +102,7 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
       ),
     );
   }
-  
+
   Widget _buildValidationButton() {
     return Center(
       child: isRunning
@@ -119,7 +121,8 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
           : ElevatedButton.icon(
               onPressed: _runValidation,
               icon: Icon(Icons.play_arrow, size: 24),
-              label: Text('🚀 RUN COMPLETE AI VALIDATION', style: TextStyle(fontSize: 16)),
+              label: Text('🚀 RUN COMPLETE AI VALIDATION',
+                  style: TextStyle(fontSize: 16)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green[600],
                 foregroundColor: Colors.white,
@@ -132,10 +135,10 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
             ),
     );
   }
-  
+
   Widget _buildTestOutput() {
     if (testOutput.isEmpty) return SizedBox();
-    
+
     return Expanded(
       child: Card(
         color: Colors.black87,
@@ -177,17 +180,20 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
       ),
     );
   }
-  
+
   Widget _buildResultsDisplay() {
     if (validationResults == null) return SizedBox();
-    
+
     final passed = validationResults!.values.where((result) => result).length;
     final total = validationResults!.length;
     final percentage = ((passed / total) * 100).round();
-    
-    Color resultColor = percentage >= 90 ? Colors.green : 
-                       percentage >= 75 ? Colors.orange : Colors.red;
-    
+
+    Color resultColor = percentage >= 90
+        ? Colors.green
+        : percentage >= 75
+            ? Colors.orange
+            : Colors.red;
+
     return Card(
       color: Colors.white.withValues(alpha: 0.95),
       child: Padding(
@@ -198,8 +204,11 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
             Row(
               children: [
                 Icon(
-                  percentage >= 90 ? Icons.check_circle : 
-                  percentage >= 75 ? Icons.warning : Icons.error,
+                  percentage >= 90
+                      ? Icons.check_circle
+                      : percentage >= 75
+                          ? Icons.warning
+                          : Icons.error,
                   color: resultColor,
                   size: 32,
                 ),
@@ -215,7 +224,7 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
               ],
             ),
             SizedBox(height: 16),
-            
+
             // Overall Score
             Container(
               padding: EdgeInsets.all(16),
@@ -251,9 +260,9 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
                 ],
               ),
             ),
-            
+
             SizedBox(height: 16),
-            
+
             // Status Message
             Container(
               padding: EdgeInsets.all(12),
@@ -262,10 +271,13 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                percentage >= 90 ? '🎉 EXCELLENT! AI System is fully implemented and working correctly!' :
-                percentage >= 75 ? '✅ GOOD! AI System is mostly implemented with minor issues.' :
-                percentage >= 50 ? '⚠️ PARTIAL! AI System has significant gaps that need attention.' :
-                '❌ CRITICAL! AI System has major implementation issues.',
+                percentage >= 90
+                    ? '🎉 EXCELLENT! AI System is fully implemented and working correctly!'
+                    : percentage >= 75
+                        ? '✅ GOOD! AI System is mostly implemented with minor issues.'
+                        : percentage >= 50
+                            ? '⚠️ PARTIAL! AI System has significant gaps that need attention.'
+                            : '❌ CRITICAL! AI System has major implementation issues.',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -278,62 +290,85 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
       ),
     );
   }
-  
+
   Future<void> _runValidation() async {
     setState(() {
       isRunning = true;
       testOutput = '';
       validationResults = null;
     });
-    
+
     try {
       // Create validator and initialize
       final validator = AISystemValidator();
       validator.initialize();
-      
+
       // Capture console output
       String output = '';
-      
+
       // Add header to output
       output += '🚀 STARTING COMPREHENSIVE AI SYSTEM VALIDATION\n';
       output += '═══════════════════════════════════════════════\n';
       output += 'Testing all 6 major AI enhancement tasks...\n\n';
-      
+
       // Run validation and capture results
       final results = await validator.validateAllFeatures();
-      
+
       // Add results summary to output
       final passed = results.values.where((result) => result).length;
       final total = results.length;
       final percentage = ((passed / total) * 100).round();
-      
+
       output += '\n🎯 VALIDATION RESULTS SUMMARY\n';
       output += '═══════════════════════════════════════════════\n';
       output += 'Overall Score: $passed/$total ($percentage%)\n\n';
-      
+
       // Group results by task
       final tasks = {
-        'Task 1 - AI Service Integration': ['16LayerPersonalization', 'MultiModalInstructions', 'ContextualInstructions', 'TimeBasedInstructions'],
-        'Task 2 - Multi-Modal Generation': ['LearningStyleAdaptation', 'CardTypeVariety'],
-        'Task 3 - Question Type Variety': ['18QuestionTypes', 'QuestionInstructions'],
-        'Task 4 - Difficulty Adaptation': ['DifficultyAdaptation', 'PerformanceContext'],
-        'Task 5 - Analytics Feedback': ['AnalyticsInstructions', 'AdaptiveRecommendations'],
+        'Task 1 - AI Service Integration': [
+          '16LayerPersonalization',
+          'MultiModalInstructions',
+          'ContextualInstructions',
+          'TimeBasedInstructions'
+        ],
+        'Task 2 - Multi-Modal Generation': [
+          'LearningStyleAdaptation',
+          'CardTypeVariety'
+        ],
+        'Task 3 - Question Type Variety': [
+          '18QuestionTypes',
+          'QuestionInstructions'
+        ],
+        'Task 4 - Difficulty Adaptation': [
+          'DifficultyAdaptation',
+          'PerformanceContext'
+        ],
+        'Task 5 - Analytics Feedback': [
+          'AnalyticsInstructions',
+          'AdaptiveRecommendations'
+        ],
         'Task 6 - Advanced Formats': ['AdvancedFormats', 'FallbackCards'],
         'Integration Testing': ['FullIntegration', 'ErrorHandling'],
       };
-      
+
       for (final task in tasks.entries) {
-        final taskResults = task.value.map((key) => results[key] ?? false).toList();
+        final taskResults =
+            task.value.map((key) => results[key] ?? false).toList();
         final taskPassed = taskResults.where((result) => result).length;
         final taskTotal = taskResults.length;
         final taskPercentage = ((taskPassed / taskTotal) * 100).round();
-        
-        final status = taskPercentage == 100 ? '✅' : taskPercentage >= 75 ? '⚠️' : '❌';
-        output += '$status ${task.key}: $taskPassed/$taskTotal ($taskPercentage%)\n';
+
+        final status = taskPercentage == 100
+            ? '✅'
+            : taskPercentage >= 75
+                ? '⚠️'
+                : '❌';
+        output +=
+            '$status ${task.key}: $taskPassed/$taskTotal ($taskPercentage%)\n';
       }
-      
+
       output += '\n═══════════════════════════════════════════════\n';
-      
+
       if (percentage >= 90) {
         output += '🎉 EXCELLENT! AI System is fully implemented!\n';
       } else if (percentage >= 75) {
@@ -343,13 +378,12 @@ class AISystemTestScreenState extends State<AISystemTestScreen> {
       } else {
         output += '❌ CRITICAL! AI System has major issues.\n';
       }
-      
+
       setState(() {
         validationResults = results;
         testOutput = output;
         isRunning = false;
       });
-      
     } catch (e) {
       setState(() {
         testOutput = 'ERROR: Failed to run validation - $e';

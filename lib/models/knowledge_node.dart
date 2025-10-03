@@ -22,14 +22,14 @@ class KnowledgeNode {
 
   /// Convert to JSON for storage
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'subject': subject,
-    'difficulty': difficulty,
-    'prerequisites': prerequisites,
-    'relatedConcepts': relatedConcepts,
-    'metadata': metadata,
-  };
+        'id': id,
+        'name': name,
+        'subject': subject,
+        'difficulty': difficulty,
+        'prerequisites': prerequisites,
+        'relatedConcepts': relatedConcepts,
+        'metadata': metadata,
+      };
 
   /// Create from JSON
   factory KnowledgeNode.fromJson(Map<String, dynamic> json) {

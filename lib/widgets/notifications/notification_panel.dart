@@ -52,19 +52,44 @@ class NotificationPanel extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: Column(
-            children: [
-              // Header with title and controls
-              _buildHeader(context, notificationProvider),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // If height is very small during animation, show minimal content
+              if (constraints.maxHeight < 100) {
+                return SizedBox(
+                  height: constraints.maxHeight,
+                  width: double.infinity,
+                );
+              }
+              
+              return ClipRect(
+                clipBehavior: Clip.hardEdge,
+                child: SizedBox(
+                  height: constraints.maxHeight,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header with title and controls
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: _buildHeader(context, notificationProvider),
+                      ),
 
-              // Filter bar
-              _buildFilterBar(context, notificationProvider),
+                      // Filter bar
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: _buildFilterBar(context, notificationProvider),
+                      ),
 
-              // Notification list
-              Expanded(
-                child: _buildNotificationList(context, notificationProvider),
-              ),
-            ],
+                      // Notification list - takes remaining space
+                      Expanded(
+                        child: _buildNotificationList(context, notificationProvider),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -122,25 +147,19 @@ class NotificationPanel extends StatelessWidget {
           // Action buttons
           Row(
             children: [
-              // Mark all as read button
-              if (provider.unreadCount > 0)
-                IconButton(
-                  icon: const Icon(Icons.done_all),
-                  onPressed: () => provider.markAllAsRead(),
-                  tooltip: 'Mark all as read',
+              // Mark all as read text button - always visible
+              GestureDetector(
+                onTap: provider.unreadCount > 0 ? () => provider.markAllAsRead() : null,
+                child: Text(
+                  'Mark all as read',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: provider.unreadCount > 0 
+                        ? const Color(0xFF6FB8E9) 
+                        : const Color(0xFF6FB8E9).withValues(alpha: 0.5), // Dimmed when no unread
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-
-              // Settings button
-              AnimatedSettingsButton(
-                onPressed: () => _showNotificationSettings(context),
               ),
-
-              // Close button (for bottom sheet)
-              if (onClose != null)
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: onClose,
-                ),
             ],
           ),
         ],
@@ -159,7 +178,6 @@ class NotificationPanel extends StatelessWidget {
             child: DropdownButtonFormField<NotificationType?>(
               initialValue: provider.selectedFilter,
               decoration: const InputDecoration(
-                labelText: 'Filter by type',
                 border: OutlineInputBorder(),
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -212,38 +230,64 @@ class NotificationPanel extends StatelessWidget {
     final notifications = provider.notifications;
 
     if (notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.notifications_none,
-              size: 64,
-              color: Colors.grey.shade400,
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          // Scale down the illustration if space is limited during animation
+          final availableHeight = constraints.maxHeight;
+          final shouldShowIllustration = availableHeight > 200;
+          final illustrationSize = availableHeight > 300 ? 160.0 : (availableHeight * 0.4).clamp(80.0, 160.0);
+          
+          return Center(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: availableHeight > 0 ? availableHeight : 0,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (shouldShowIllustration) ...[
+                      // Static detective cat image (ONLY this image, no fallbacks)
+                      Container(
+                        width: illustrationSize,
+                        height: illustrationSize,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.transparent,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.asset(
+                            'assets/detective_cat_final.png',
+                            width: illustrationSize,
+                            height: illustrationSize,
+                            fit: BoxFit.contain,
+                            // NO ERROR BUILDER - only show the detective cat image
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    if (availableHeight > 100) // Only show text if there's enough space
+                      Text(
+                        'Looks like nothing\'s here...',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: const Color(0xFFD9D9D9), // Matching app text color
+                              fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              provider.showUnreadOnly
-                  ? 'No unread notifications'
-                  : 'No notifications',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey.shade600,
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'We\'ll notify you about quiz deadlines and study reminders',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey.shade500,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          );
+        },
       );
     }
 
     return ListView.builder(
+      padding: EdgeInsets.zero,
       itemCount: notifications.length,
       itemBuilder: (context, index) {
         final notification = notifications[index];
@@ -442,14 +486,6 @@ class NotificationPanel extends StatelessWidget {
         break;
     }
   }
-
-  /// Show notification settings dialog
-  void _showNotificationSettings(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const NotificationSettingsDialog(),
-    );
-  }
 }
 
 /// Settings dialog for notification preferences
@@ -548,7 +584,7 @@ class NotificationBellIcon extends StatefulWidget {
   State<NotificationBellIcon> createState() => _NotificationBellIconState();
 }
 
-class _NotificationBellIconState extends State<NotificationBellIcon> 
+class _NotificationBellIconState extends State<NotificationBellIcon>
     with TickerProviderStateMixin {
   late AnimationController _ringAnimationController;
   late Animation<double> _ringAnimation;
@@ -565,31 +601,37 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
       duration: const Duration(milliseconds: 1700), // Total animation duration
       vsync: this,
     );
-    
+
     // Bell ringing animation with keyframes matching the Lottie animation
     _ringAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0, end: 18).chain(CurveTween(curve: const Cubic(0.455, 1, 0.7, 0))),
+        tween: Tween<double>(begin: 0, end: 18)
+            .chain(CurveTween(curve: const Cubic(0.455, 1, 0.7, 0))),
         weight: 23, // 0 to 7 frames (7/30 * 100 ≈ 23%)
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 18, end: -18).chain(CurveTween(curve: const Cubic(0.279, 1, 0.7, 0))),
+        tween: Tween<double>(begin: 18, end: -18)
+            .chain(CurveTween(curve: const Cubic(0.279, 1, 0.7, 0))),
         weight: 23, // 7 to 14 frames
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -18, end: 18).chain(CurveTween(curve: const Cubic(0.334, 0.997, 0.7, 0))),
+        tween: Tween<double>(begin: -18, end: 18)
+            .chain(CurveTween(curve: const Cubic(0.334, 0.997, 0.7, 0))),
         weight: 30, // 14 to 23 frames
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 18, end: -9).chain(CurveTween(curve: const Cubic(0.335, 1, 0.7, 0))),
+        tween: Tween<double>(begin: 18, end: -9)
+            .chain(CurveTween(curve: const Cubic(0.335, 1, 0.7, 0))),
         weight: 27, // 23 to 31 frames
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: -9, end: 5).chain(CurveTween(curve: const Cubic(0.7, 1, 0.3, 0))),
+        tween: Tween<double>(begin: -9, end: 5)
+            .chain(CurveTween(curve: const Cubic(0.7, 1, 0.3, 0))),
         weight: 23, // 31 to 38 frames
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 5, end: 0).chain(CurveTween(curve: const Cubic(0.194, 1.949, 0.3, 0))),
+        tween: Tween<double>(begin: 5, end: 0)
+            .chain(CurveTween(curve: const Cubic(0.194, 1.949, 0.3, 0))),
         weight: 40, // 38 to 50 frames
       ),
     ]).animate(_ringAnimationController);
@@ -633,7 +675,7 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
         // Determine notification state
         bool hasUnread = provider.unreadCount > 0;
         bool isSelected = widget.isSelected;
-        
+
         // Start/stop animations based on unread status
         if (hasUnread && !_ringAnimationController.isAnimating) {
           _ringAnimationController.repeat(reverse: false);
@@ -645,29 +687,33 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
         }
 
         return AnimatedBuilder(
-          animation: Listenable.merge([_ringAnimation, _dotScaleAnimation, _dotOpacityAnimation]),
+          animation: Listenable.merge(
+              [_ringAnimation, _dotScaleAnimation, _dotOpacityAnimation]),
           builder: (context, child) {
             return Stack(
               children: [
                 Transform.rotate(
-                  angle: hasUnread ? _ringAnimation.value * (3.14159 / 180) : 0, // Only animate rotation when there are unread notifications
-                  child: IconButton(
-                    icon: CustomPaint(
-                      size: const Size(24, 24),
+                  angle: hasUnread
+                      ? _ringAnimation.value * (3.14159 / 180)
+                      : 0, // Only animate rotation when there are unread notifications
+                  child: GestureDetector(
+                    onTap: widget.onTap ?? () => _showNotificationPanel(context),
+                    child: CustomPaint(
+                      size: const Size(28, 28),
                       painter: _getNotificationPainter(
                         hasUnread: hasUnread,
                         isSelected: isSelected,
-                        waveProgress: 0, // Always 0 to keep consistent visual style
+                        waveProgress:
+                            0, // Always 0 to keep consistent visual style
                       ),
                     ),
-                    onPressed: widget.onTap ?? () => _showNotificationPanel(context),
                   ),
                 ),
                 // Red notification dot (matching Lottie animation)
                 if (hasUnread)
                   Positioned(
-                    right: 8,
-                    top: 8,
+                    right: 0,
+                    top: 0,
                     child: Transform.scale(
                       scale: _dotScaleAnimation.value,
                       child: Opacity(
@@ -676,7 +722,8 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEF3737), // Red color matching Lottie: [0.937254961799,0.215686289469,0.215686289469,1]
+                            color: const Color(
+                                0xFFEF3737), // Red color matching Lottie: [0.937254961799,0.215686289469,0.215686289469,1]
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Colors.white,
@@ -700,13 +747,17 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
     required bool isSelected,
     required double waveProgress,
   }) {
-    final primaryColor = Theme.of(context).primaryColor;
     final iconColor = Theme.of(context).iconTheme.color;
-    
+
+    // If the notification panel is open (selected), show X icon with blue color
+    if (isSelected) {
+      return NotificationCloseIconPainter(iconColor: const Color(0xFF6FB8E9));
+    }
+
     // Always use the same visual style regardless of unread status
     // Only the ringing animation changes, not the icon appearance
-    if (isSelected) {
-      return NotificationBellFilledPainter(fillColor: primaryColor);
+    if (hasUnread) {
+      return NotificationBellOutlinedPainter(iconColor: iconColor);
     } else {
       return NotificationBellOutlinedPainter(iconColor: iconColor);
     }
@@ -741,98 +792,128 @@ class NotificationBellOutlinedPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final path = Path();
-    
+
     // Convert SVG path to Flutter coordinates
     // SVG viewBox is 0 0 24 24, so we scale to our size
     final scaleX = size.width / 24;
     final scaleY = size.height / 24;
-    
+
     // Main bell shape: M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31
     path.moveTo(14.857 * scaleX, 17.082 * scaleY);
-    
+
     // Curve for right side of bell
     path.cubicTo(
-      17.571 * scaleX, 16.562 * scaleY,
-      19.595 * scaleX, 15.982 * scaleY,
-      20.311 * scaleX, 15.772 * scaleY,
+      17.571 * scaleX,
+      16.562 * scaleY,
+      19.595 * scaleX,
+      15.982 * scaleY,
+      20.311 * scaleX,
+      15.772 * scaleY,
     );
-    
+
     // Right bell curve to top
     path.cubicTo(
-      19.033 * scaleX, 12.75 * scaleY,
-      18 * scaleX, 11.358 * scaleY,
-      18 * scaleX, 9.75 * scaleY,
+      19.033 * scaleX,
+      12.75 * scaleY,
+      18 * scaleX,
+      11.358 * scaleY,
+      18 * scaleX,
+      9.75 * scaleY,
     );
-    
+
     // Top of bell
     path.lineTo(18 * scaleX, 9 * scaleY);
     path.cubicTo(
-      18 * scaleX, 5.686 * scaleY,
-      15.314 * scaleX, 3 * scaleY,
-      12 * scaleX, 3 * scaleY,
+      18 * scaleX,
+      5.686 * scaleY,
+      15.314 * scaleX,
+      3 * scaleY,
+      12 * scaleX,
+      3 * scaleY,
     );
     path.cubicTo(
-      8.686 * scaleX, 3 * scaleY,
-      6 * scaleX, 5.686 * scaleY,
-      6 * scaleX, 9 * scaleY,
+      8.686 * scaleX,
+      3 * scaleY,
+      6 * scaleX,
+      5.686 * scaleY,
+      6 * scaleX,
+      9 * scaleY,
     );
-    
+
     // Left side of bell
     path.lineTo(6 * scaleX, 9.75 * scaleY);
     path.cubicTo(
-      6 * scaleX, 11.358 * scaleY,
-      4.967 * scaleX, 12.75 * scaleY,
-      3.688 * scaleX, 15.772 * scaleY,
+      6 * scaleX,
+      11.358 * scaleY,
+      4.967 * scaleX,
+      12.75 * scaleY,
+      3.688 * scaleX,
+      15.772 * scaleY,
     );
-    
+
     // Left bell curve
     path.cubicTo(
-      5.421 * scaleX, 16.412 * scaleY,
-      7.248 * scaleX, 16.857 * scaleY,
-      9.143 * scaleX, 17.082 * scaleY,
+      5.421 * scaleX,
+      16.412 * scaleY,
+      7.248 * scaleX,
+      16.857 * scaleY,
+      9.143 * scaleX,
+      17.082 * scaleY,
     );
 
     canvas.drawPath(path, paint);
-    
+
     // Draw the bell clapper/bottom part: m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0
     final clapperPath = Path();
-    
+
     // Bottom line of bell
     clapperPath.moveTo(9.143 * scaleX, 17.082 * scaleY);
     clapperPath.lineTo(14.857 * scaleX, 17.082 * scaleY);
-    
+
     // Clapper semicircle
     clapperPath.moveTo(14.857 * scaleX, 17.082 * scaleY);
     clapperPath.cubicTo(
-      14.857 * scaleX, 18.74 * scaleY,
-      13.657 * scaleX, 20.082 * scaleY,
-      12 * scaleX, 20.082 * scaleY,
+      14.857 * scaleX,
+      18.74 * scaleY,
+      13.657 * scaleX,
+      20.082 * scaleY,
+      12 * scaleX,
+      20.082 * scaleY,
     );
     clapperPath.cubicTo(
-      10.343 * scaleX, 20.082 * scaleY,
-      9.143 * scaleX, 18.74 * scaleY,
-      9.143 * scaleX, 17.082 * scaleY,
+      10.343 * scaleX,
+      20.082 * scaleY,
+      9.143 * scaleX,
+      18.74 * scaleY,
+      9.143 * scaleX,
+      17.082 * scaleY,
     );
 
     canvas.drawPath(clapperPath, paint);
-    
+
     // Draw the top sound lines: M3.124 7.5A8.969 8.969 0 0 1 5.292 3m13.416 0a8.969 8.969 0 0 1 2.168 4.5
     final soundPath = Path();
-    
+
     // Left sound line
     soundPath.moveTo(3.124 * scaleX, 7.5 * scaleY);
     soundPath.cubicTo(
-      3.847 * scaleX, 5.813 * scaleY,
-      4.569 * scaleX, 4.407 * scaleY,
-      5.292 * scaleX, 3 * scaleY,
+      3.847 * scaleX,
+      5.813 * scaleY,
+      4.569 * scaleX,
+      4.407 * scaleY,
+      5.292 * scaleX,
+      3 * scaleY,
     );
-    
-    // Right sound line  
+
+    // Right sound line
     soundPath.moveTo(18.708 * scaleX, 3 * scaleY);
     soundPath.cubicTo(
-      19.431 * scaleX, 4.407 * scaleY,
-      20.153 * scaleX, 5.813 * scaleY,
-      20.876 * scaleX, 7.5 * scaleY,
+      19.431 * scaleX,
+      4.407 * scaleY,
+      20.153 * scaleX,
+      5.813 * scaleY,
+      20.876 * scaleX,
+      7.5 * scaleY,
     );
 
     canvas.drawPath(soundPath, paint);
@@ -855,28 +936,33 @@ class NotificationBellFilledPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final path = Path();
-    
+
     // Bell body - filled
     path.moveTo(size.width * 0.2, size.height * 0.75);
     path.quadraticBezierTo(
-      size.width * 0.2, size.height * 0.4,
-      size.width * 0.5, size.height * 0.15,
+      size.width * 0.2,
+      size.height * 0.4,
+      size.width * 0.5,
+      size.height * 0.15,
     );
     path.quadraticBezierTo(
-      size.width * 0.8, size.height * 0.4,
-      size.width * 0.8, size.height * 0.75,
+      size.width * 0.8,
+      size.height * 0.4,
+      size.width * 0.8,
+      size.height * 0.75,
     );
-    
+
     // Bell bottom
     path.lineTo(size.width * 0.2, size.height * 0.75);
-    
+
     // Bell clapper
     final clapperRect = Rect.fromCenter(
       center: Offset(size.width * 0.5, size.height * 0.85),
       width: size.width * 0.15,
       height: size.height * 0.1,
     );
-    path.addRRect(RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
+    path.addRRect(
+        RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
 
     canvas.drawPath(path, paint);
   }
@@ -900,28 +986,33 @@ class NotificationBellOutlinedWithWavesPainter extends CustomPainter {
       ..strokeWidth = 1.5;
 
     final bellPath = Path();
-    
+
     // Bell body - outlined
     bellPath.moveTo(size.width * 0.2, size.height * 0.75);
     bellPath.quadraticBezierTo(
-      size.width * 0.2, size.height * 0.4,
-      size.width * 0.5, size.height * 0.15,
+      size.width * 0.2,
+      size.height * 0.4,
+      size.width * 0.5,
+      size.height * 0.15,
     );
     bellPath.quadraticBezierTo(
-      size.width * 0.8, size.height * 0.4,
-      size.width * 0.8, size.height * 0.75,
+      size.width * 0.8,
+      size.height * 0.4,
+      size.width * 0.8,
+      size.height * 0.75,
     );
-    
+
     // Bell bottom
     bellPath.lineTo(size.width * 0.2, size.height * 0.75);
-    
+
     // Bell clapper
     final clapperRect = Rect.fromCenter(
       center: Offset(size.width * 0.5, size.height * 0.85),
       width: size.width * 0.15,
       height: size.height * 0.1,
     );
-    bellPath.addRRect(RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
+    bellPath.addRRect(
+        RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
 
     canvas.drawPath(bellPath, bellPaint);
 
@@ -932,27 +1023,33 @@ class NotificationBellOutlinedWithWavesPainter extends CustomPainter {
       ..strokeWidth = 1.0;
 
     // Left wave
-    final leftWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    final leftWaveRadius =
+        (size.width * 0.3) + (size.width * 0.2 * waveProgress);
     canvas.drawCircle(
       Offset(size.width * 0.3, size.height * 0.5),
       leftWaveRadius,
-      wavePaint..color = wavePaint.color.withValues(alpha: 0.8 - (0.6 * waveProgress)),
+      wavePaint
+        ..color = wavePaint.color.withValues(alpha: 0.8 - (0.6 * waveProgress)),
     );
 
-    // Right wave  
-    final rightWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    // Right wave
+    final rightWaveRadius =
+        (size.width * 0.3) + (size.width * 0.2 * waveProgress);
     canvas.drawCircle(
       Offset(size.width * 0.7, size.height * 0.5),
       rightWaveRadius,
-      wavePaint..color = wavePaint.color.withValues(alpha: 0.8 - (0.6 * waveProgress)),
+      wavePaint
+        ..color = wavePaint.color.withValues(alpha: 0.8 - (0.6 * waveProgress)),
     );
 
     // Center wave (smaller)
-    final centerWaveRadius = (size.width * 0.2) + (size.width * 0.15 * waveProgress);
+    final centerWaveRadius =
+        (size.width * 0.2) + (size.width * 0.15 * waveProgress);
     canvas.drawCircle(
       Offset(size.width * 0.5, size.height * 0.4),
       centerWaveRadius,
-      wavePaint..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
+      wavePaint
+        ..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
     );
   }
 
@@ -963,7 +1060,7 @@ class NotificationBellOutlinedWithWavesPainter extends CustomPainter {
   }
 }
 
-/// Custom painter for filled notification bell with animated wave lines (unread + selected state)  
+/// Custom painter for filled notification bell with animated wave lines (unread + selected state)
 class NotificationBellFilledWithWavesPainter extends CustomPainter {
   final double waveProgress;
   final Color? fillColor;
@@ -981,28 +1078,33 @@ class NotificationBellFilledWithWavesPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final bellPath = Path();
-    
+
     // Bell body - filled
     bellPath.moveTo(size.width * 0.2, size.height * 0.75);
     bellPath.quadraticBezierTo(
-      size.width * 0.2, size.height * 0.4,
-      size.width * 0.5, size.height * 0.15,
+      size.width * 0.2,
+      size.height * 0.4,
+      size.width * 0.5,
+      size.height * 0.15,
     );
     bellPath.quadraticBezierTo(
-      size.width * 0.8, size.height * 0.4,
-      size.width * 0.8, size.height * 0.75,
+      size.width * 0.8,
+      size.height * 0.4,
+      size.width * 0.8,
+      size.height * 0.75,
     );
-    
+
     // Bell bottom
     bellPath.lineTo(size.width * 0.2, size.height * 0.75);
-    
+
     // Bell clapper
     final clapperRect = Rect.fromCenter(
       center: Offset(size.width * 0.5, size.height * 0.85),
       width: size.width * 0.15,
       height: size.height * 0.1,
     );
-    bellPath.addRRect(RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
+    bellPath.addRRect(
+        RRect.fromRectAndRadius(clapperRect, const Radius.circular(2)));
 
     canvas.drawPath(bellPath, bellPaint);
 
@@ -1013,27 +1115,33 @@ class NotificationBellFilledWithWavesPainter extends CustomPainter {
       ..strokeWidth = 1.2;
 
     // Left wave
-    final leftWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    final leftWaveRadius =
+        (size.width * 0.3) + (size.width * 0.2 * waveProgress);
     canvas.drawCircle(
       Offset(size.width * 0.3, size.height * 0.5),
       leftWaveRadius,
-      wavePaint..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
+      wavePaint
+        ..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
     );
 
-    // Right wave  
-    final rightWaveRadius = (size.width * 0.3) + (size.width * 0.2 * waveProgress);
+    // Right wave
+    final rightWaveRadius =
+        (size.width * 0.3) + (size.width * 0.2 * waveProgress);
     canvas.drawCircle(
       Offset(size.width * 0.7, size.height * 0.5),
       rightWaveRadius,
-      wavePaint..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
+      wavePaint
+        ..color = wavePaint.color.withValues(alpha: 0.9 - (0.7 * waveProgress)),
     );
 
     // Center wave (smaller)
-    final centerWaveRadius = (size.width * 0.2) + (size.width * 0.15 * waveProgress);
+    final centerWaveRadius =
+        (size.width * 0.2) + (size.width * 0.15 * waveProgress);
     canvas.drawCircle(
       Offset(size.width * 0.5, size.height * 0.4),
       centerWaveRadius,
-      wavePaint..color = wavePaint.color.withValues(alpha: 1.0 - (0.8 * waveProgress)),
+      wavePaint
+        ..color = wavePaint.color.withValues(alpha: 1.0 - (0.8 * waveProgress)),
     );
   }
 
@@ -1047,7 +1155,7 @@ class NotificationBellFilledWithWavesPainter extends CustomPainter {
 /// Animated settings button widget with gear rotation matching Lottie animation
 class AnimatedSettingsButton extends StatefulWidget {
   final VoidCallback onPressed;
-  
+
   const AnimatedSettingsButton({
     super.key,
     required this.onPressed,
@@ -1057,44 +1165,50 @@ class AnimatedSettingsButton extends StatefulWidget {
   State<AnimatedSettingsButton> createState() => _AnimatedSettingsButtonState();
 }
 
-class _AnimatedSettingsButtonState extends State<AnimatedSettingsButton> with TickerProviderStateMixin {
+class _AnimatedSettingsButtonState extends State<AnimatedSettingsButton>
+    with TickerProviderStateMixin {
   late AnimationController _settingsController;
   late Animation<double> _settingsRotationAnimation;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize Settings icon animation controller matching dashboard
     _settingsController = AnimationController(
-      duration: const Duration(milliseconds: 1000), // 1 second (60 frames at 60fps)
+      duration:
+          const Duration(milliseconds: 1000), // 1 second (60 frames at 60fps)
       vsync: this,
     );
     // Create complex rotation animation matching Lottie keyframes
     _settingsRotationAnimation = TweenSequence<double>([
       // 0-16 frames: 0° to 64°
       TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: 64/360).chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(begin: 0.0, end: 64 / 360)
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 27, // 16/60 * 100 ≈ 27%
       ),
       // 16-25 frames: 64° to 60° (slight back)
       TweenSequenceItem(
-        tween: Tween<double>(begin: 64/360, end: 60/360).chain(CurveTween(curve: Curves.easeInOut)),
+        tween: Tween<double>(begin: 64 / 360, end: 60 / 360)
+            .chain(CurveTween(curve: Curves.easeInOut)),
         weight: 15, // 9/60 * 100 = 15%
       ),
       // 25-32 frames: hold at 60°
       TweenSequenceItem(
-        tween: Tween<double>(begin: 60/360, end: 60/360),
+        tween: Tween<double>(begin: 60 / 360, end: 60 / 360),
         weight: 12, // 7/60 * 100 ≈ 12%
       ),
       // 32-48 frames: 60° to 124°
       TweenSequenceItem(
-        tween: Tween<double>(begin: 60/360, end: 124/360).chain(CurveTween(curve: Curves.easeInOut)),
+        tween: Tween<double>(begin: 60 / 360, end: 124 / 360)
+            .chain(CurveTween(curve: Curves.easeInOut)),
         weight: 27, // 16/60 * 100 ≈ 27%
       ),
       // 48-57 frames: 124° to 120° (settle)
       TweenSequenceItem(
-        tween: Tween<double>(begin: 124/360, end: 120/360).chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(begin: 124 / 360, end: 120 / 360)
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 19, // 9/60 * 100 ≈ 15%, remaining 4% for balance
       ),
     ]).animate(_settingsController);
@@ -1113,7 +1227,9 @@ class _AnimatedSettingsButtonState extends State<AnimatedSettingsButton> with Ti
       builder: (context, child) {
         return IconButton(
           icon: Transform.rotate(
-            angle: _settingsRotationAnimation.value * 2 * 3.14159, // Convert to radians
+            angle: _settingsRotationAnimation.value *
+                2 *
+                3.14159, // Convert to radians
             child: CustomPaint(
               size: const Size(24, 24),
               painter: SettingsGearPainter(
@@ -1127,7 +1243,7 @@ class _AnimatedSettingsButtonState extends State<AnimatedSettingsButton> with Ti
               // Reset animation after completion
               _settingsController.reset();
             });
-            
+
             // Call the provided callback
             widget.onPressed();
           },
@@ -1135,5 +1251,42 @@ class _AnimatedSettingsButtonState extends State<AnimatedSettingsButton> with Ti
         );
       },
     );
+  }
+}
+
+/// Custom painter for close (X) icon when notification panel is open
+class NotificationCloseIconPainter extends CustomPainter {
+  final Color? iconColor;
+
+  NotificationCloseIconPainter({this.iconColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = iconColor ?? Colors.grey.shade600
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round;
+
+    final double centerX = size.width / 2;
+    final double centerY = size.height / 2;
+    final double length = size.width * 0.35; // X size relative to icon size
+
+    // Draw X lines
+    canvas.drawLine(
+      Offset(centerX - length, centerY - length),
+      Offset(centerX + length, centerY + length),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(centerX + length, centerY - length),
+      Offset(centerX - length, centerY + length),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(NotificationCloseIconPainter oldDelegate) {
+    return iconColor != oldDelegate.iconColor;
   }
 }

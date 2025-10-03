@@ -20,14 +20,14 @@ class QuizQuestion {
 
   /// Convert to JSON for storage
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'question': question,
-    'options': options,
-    'correctIndex': correctIndex,
-    'explanation': explanation,
-    'conceptId': conceptId,
-    'difficulty': difficulty,
-  };
+        'id': id,
+        'question': question,
+        'options': options,
+        'correctIndex': correctIndex,
+        'explanation': explanation,
+        'conceptId': conceptId,
+        'difficulty': difficulty,
+      };
 
   /// Create from JSON
   factory QuizQuestion.fromJson(Map<String, dynamic> json) {

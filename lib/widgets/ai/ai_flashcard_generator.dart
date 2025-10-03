@@ -94,15 +94,16 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       debugPrint('Card Count: $_cardCount');
 
       // Get current user or create default user with selected learning style
-      final user = appState.currentUser ?? User(
-        id: 'generator_user',
-        email: 'user@studypals.com',
-        name: 'User',
-        preferences: UserPreferences(
-          learningStyle: _selectedLearningStyle,
-          difficultyPreference: 'moderate',
-        ),
-      );
+      final user = appState.currentUser ??
+          User(
+            id: 'generator_user',
+            email: 'user@studypals.com',
+            name: 'User',
+            preferences: UserPreferences(
+              learningStyle: _selectedLearningStyle,
+              difficultyPreference: 'moderate',
+            ),
+          );
 
       debugPrint('User learning style: ${user.preferences.learningStyle}');
 
@@ -168,7 +169,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     try {
       final aiProvider =
           Provider.of<StudyPalsAIProvider>(context, listen: false);
-      
+
       // Create a sample user for debugging (in production, get from user provider)
       final sampleUser = User(
         id: 'debug_user',
@@ -179,7 +180,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
           difficultyPreference: 'moderate',
         ),
       );
-      
+
       final response = await aiProvider.aiService.debugFlashcardGeneration(
         _topicController.text.trim(),
         _selectedSubject,
@@ -413,7 +414,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                         items: _learningStyles.map((style) {
                           return DropdownMenuItem(
                             value: style,
-                            child: Text(style.substring(0, 1).toUpperCase() + style.substring(1)),
+                            child: Text(style.substring(0, 1).toUpperCase() +
+                                style.substring(1)),
                           );
                         }).toList(),
                         onChanged: (value) {

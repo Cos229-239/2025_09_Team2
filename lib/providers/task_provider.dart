@@ -69,11 +69,13 @@ class TaskProvider extends ChangeNotifier {
     try {
       // Get current user
       final user = _auth.currentUser;
-      
+
       if (user != null) {
         // Fetch tasks from Firestore for the current user
         final taskMaps = await _firestoreService.getUserFullTasks(user.uid);
-        _tasks = taskMaps.map((taskMap) => _convertFirestoreToTask(taskMap)).toList();
+        _tasks = taskMaps
+            .map((taskMap) => _convertFirestoreToTask(taskMap))
+            .toList();
       } else {
         // No user logged in, use empty list
         _tasks = [];
@@ -147,7 +149,7 @@ class TaskProvider extends ChangeNotifier {
       id: data['id'] as String,
       title: data['title'] as String,
       estMinutes: data['estMinutes'] as int,
-      dueAt: data['dueAt'] != null 
+      dueAt: data['dueAt'] != null
           ? (data['dueAt'] as dynamic).toDate() as DateTime
           : null,
       priority: data['priority'] as int? ?? 1,

@@ -13,7 +13,7 @@
 // - Need to implement proper offline playlist caching for study sessions
 // - Missing actual user profile integration and listening history
 // - Need to implement proper API key management and security
-// - Missing integration with study analytics for music effectiveness tracking  
+// - Missing integration with study analytics for music effectiveness tracking
 // - Need to implement proper background music management during study
 // - Missing actual deep linking from Spotify back to StudyPals app
 // - Need to implement proper subscription status checking and premium features

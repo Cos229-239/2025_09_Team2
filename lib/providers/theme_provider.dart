@@ -4,7 +4,6 @@ import '../theme/app_theme.dart';
 /// Provider for managing app theme state
 /// Always uses dark theme
 class ThemeProvider extends ChangeNotifier {
-
   String _currentThemeName = 'Dark';
 
   /// Current theme name

@@ -16,7 +16,7 @@ class FirestoreService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+
   /// Initialize Firestore with offline support
   void _initializeFirestore() {
     try {
@@ -28,7 +28,7 @@ class FirestoreService {
           cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
         );
       }
-      
+
       if (kDebugMode) {
         print('✅ Firestore configured with offline support');
       }
@@ -435,7 +435,8 @@ class FirestoreService {
   // ==================== ENHANCED TASK MANAGEMENT METHODS ====================
 
   /// Create a new task using the full Task model
-  Future<String?> createFullTask(String uid, Map<String, dynamic> taskData) async {
+  Future<String?> createFullTask(
+      String uid, Map<String, dynamic> taskData) async {
     try {
       final taskWithMeta = {
         ...taskData,
@@ -486,7 +487,8 @@ class FirestoreService {
   }
 
   /// Update an existing task using the full Task model
-  Future<bool> updateFullTask(String taskId, Map<String, dynamic> updateData) async {
+  Future<bool> updateFullTask(
+      String taskId, Map<String, dynamic> updateData) async {
     try {
       await tasksCollection.doc(taskId).update({
         ...updateData,
@@ -654,10 +656,12 @@ class FirestoreService {
   // ==================== DAILY QUEST MANAGEMENT METHODS ====================
 
   /// Collection reference for daily quests
-  CollectionReference get dailyQuestsCollection => _firestore.collection('dailyQuests');
+  CollectionReference get dailyQuestsCollection =>
+      _firestore.collection('dailyQuests');
 
   /// Create a new daily quest for user
-  Future<String?> createDailyQuest(String uid, Map<String, dynamic> questData) async {
+  Future<String?> createDailyQuest(
+      String uid, Map<String, dynamic> questData) async {
     try {
       final questWithMeta = {
         ...questData,
@@ -708,7 +712,8 @@ class FirestoreService {
   }
 
   /// Update an existing daily quest
-  Future<bool> updateDailyQuest(String questId, Map<String, dynamic> updateData) async {
+  Future<bool> updateDailyQuest(
+      String questId, Map<String, dynamic> updateData) async {
     try {
       await dailyQuestsCollection.doc(questId).update({
         ...updateData,
@@ -758,10 +763,12 @@ class FirestoreService {
   // ==================== CALENDAR EVENT MANAGEMENT METHODS ====================
 
   /// Collection reference for calendar events
-  CollectionReference get calendarEventsCollection => _firestore.collection('calendarEvents');
+  CollectionReference get calendarEventsCollection =>
+      _firestore.collection('calendarEvents');
 
   /// Create a new calendar event for user
-  Future<String?> createCalendarEvent(String uid, Map<String, dynamic> eventData) async {
+  Future<String?> createCalendarEvent(
+      String uid, Map<String, dynamic> eventData) async {
     try {
       final eventWithMeta = {
         ...eventData,
@@ -812,7 +819,8 @@ class FirestoreService {
   }
 
   /// Update an existing calendar event
-  Future<bool> updateCalendarEvent(String eventId, Map<String, dynamic> updateData) async {
+  Future<bool> updateCalendarEvent(
+      String eventId, Map<String, dynamic> updateData) async {
     try {
       await calendarEventsCollection.doc(eventId).update({
         ...updateData,
@@ -1187,7 +1195,7 @@ class FirestoreService {
   }
 
   // ==================== Pet CRUD Operations ====================
-  
+
   /// Get user's pet data from Firestore
   /// @param userId - User ID to get pet for (optional, uses current user if null)
   /// @return Pet object or null if no pet exists
@@ -1199,8 +1207,12 @@ class FirestoreService {
         return null;
       }
 
-      final doc = await usersCollection.doc(uid).collection('pets').doc('currentPet').get();
-      
+      final doc = await usersCollection
+          .doc(uid)
+          .collection('pets')
+          .doc('currentPet')
+          .get();
+
       if (!doc.exists) {
         if (kDebugMode) print('ℹ️ No pet found for user: $uid');
         return null;
@@ -1226,10 +1238,11 @@ class FirestoreService {
         return false;
       }
 
-      await usersCollection.doc(uid).collection('pets').doc('currentPet').set(
-        pet.toJson(),
-        SetOptions(merge: true)
-      );
+      await usersCollection
+          .doc(uid)
+          .collection('pets')
+          .doc('currentPet')
+          .set(pet.toJson(), SetOptions(merge: true));
 
       if (kDebugMode) print('✅ Pet saved successfully for user: $uid');
       return true;
@@ -1296,10 +1309,11 @@ class FirestoreService {
 
       final updatedPet = currentPet.addXP(xpAmount);
       final success = await savePet(updatedPet, uid);
-      
+
       if (success) {
         if (kDebugMode) {
-          print('✅ Added $xpAmount XP to pet. Level: ${updatedPet.level}, XP: ${updatedPet.xp}');
+          print(
+              '✅ Added $xpAmount XP to pet. Level: ${updatedPet.level}, XP: ${updatedPet.xp}');
         }
         return updatedPet;
       }
@@ -1327,10 +1341,10 @@ class FirestoreService {
           .doc('currentPet')
           .snapshots()
           .map((doc) {
-            if (!doc.exists) return null;
-            final data = doc.data() as Map<String, dynamic>;
-            return Pet.fromJson(data);
-          });
+        if (!doc.exists) return null;
+        final data = doc.data() as Map<String, dynamic>;
+        return Pet.fromJson(data);
+      });
     } catch (e) {
       if (kDebugMode) print('❌ Error creating pet stream: $e');
       return Stream.value(null);
@@ -1348,8 +1362,12 @@ class FirestoreService {
         return false;
       }
 
-      await usersCollection.doc(uid).collection('pets').doc('currentPet').delete();
-      
+      await usersCollection
+          .doc(uid)
+          .collection('pets')
+          .doc('currentPet')
+          .delete();
+
       if (kDebugMode) print('✅ Pet deleted for user: $uid');
       return true;
     } catch (e) {
@@ -1359,7 +1377,7 @@ class FirestoreService {
   }
 
   // ==================== Review CRUD Operations (SRS System) ====================
-  
+
   /// Get all reviews for a specific user
   /// @param userId - User ID to get reviews for (optional, uses current user if null)
   /// @return List of Review objects
@@ -1371,16 +1389,15 @@ class FirestoreService {
         return [];
       }
 
-      final querySnapshot = await usersCollection
-          .doc(uid)
-          .collection('reviews')
-          .get();
+      final querySnapshot =
+          await usersCollection.doc(uid).collection('reviews').get();
 
-      final reviews = querySnapshot.docs
-          .map((doc) => Review.fromJson(doc.data()))
-          .toList();
+      final reviews =
+          querySnapshot.docs.map((doc) => Review.fromJson(doc.data())).toList();
 
-      if (kDebugMode) print('✅ Retrieved ${reviews.length} reviews for user: $uid');
+      if (kDebugMode) {
+        print('✅ Retrieved ${reviews.length} reviews for user: $uid');
+      }
       return reviews;
     } catch (e) {
       if (kDebugMode) print('❌ Error retrieving reviews: $e');
@@ -1396,7 +1413,9 @@ class FirestoreService {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for card review retrieval');
+        if (kDebugMode) {
+          print('❌ No user ID provided for card review retrieval');
+        }
         return null;
       }
 
@@ -1424,7 +1443,9 @@ class FirestoreService {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for due reviews retrieval');
+        if (kDebugMode) {
+          print('❌ No user ID provided for due reviews retrieval');
+        }
         return [];
       }
 
@@ -1435,11 +1456,12 @@ class FirestoreService {
           .where('dueAt', isLessThanOrEqualTo: now.toIso8601String())
           .get();
 
-      final dueReviews = querySnapshot.docs
-          .map((doc) => Review.fromJson(doc.data()))
-          .toList();
+      final dueReviews =
+          querySnapshot.docs.map((doc) => Review.fromJson(doc.data())).toList();
 
-      if (kDebugMode) print('✅ Retrieved ${dueReviews.length} due reviews for user: $uid');
+      if (kDebugMode) {
+        print('✅ Retrieved ${dueReviews.length} due reviews for user: $uid');
+      }
       return dueReviews;
     } catch (e) {
       if (kDebugMode) print('❌ Error retrieving due reviews: $e');
@@ -1511,7 +1533,8 @@ class FirestoreService {
   /// @param grade - User's performance grade
   /// @param userId - User ID (optional, uses current user if null)
   /// @return Updated Review object or null if failed
-  Future<Review?> updateReviewWithGrade(String cardId, ReviewGrade grade, [String? userId]) async {
+  Future<Review?> updateReviewWithGrade(String cardId, ReviewGrade grade,
+      [String? userId]) async {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
@@ -1522,19 +1545,22 @@ class FirestoreService {
       // Get current review or create if doesn't exist
       Review? currentReview = await getCardReview(cardId, uid);
       currentReview ??= await createReview(cardId, uid);
-      
+
       if (currentReview == null) {
-        if (kDebugMode) print('❌ Failed to get or create review for card: $cardId');
+        if (kDebugMode) {
+          print('❌ Failed to get or create review for card: $cardId');
+        }
         return null;
       }
 
       // Update review with the grade using SM-2 algorithm
       final updatedReview = currentReview.updateWithGrade(grade);
-      
+
       final success = await saveReview(updatedReview, uid);
       if (success) {
         if (kDebugMode) {
-          print('✅ Review updated for card: $cardId, Grade: $grade, Next due: ${updatedReview.dueAt}');
+          print(
+              '✅ Review updated for card: $cardId, Grade: $grade, Next due: ${updatedReview.dueAt}');
         }
         return updatedReview;
       }
@@ -1563,10 +1589,8 @@ class FirestoreService {
           .where('dueAt', isLessThanOrEqualTo: now.toIso8601String())
           .snapshots()
           .map((snapshot) {
-            return snapshot.docs
-                .map((doc) => Review.fromJson(doc.data()))
-                .toList();
-          });
+        return snapshot.docs.map((doc) => Review.fromJson(doc.data())).toList();
+      });
     } catch (e) {
       if (kDebugMode) print('❌ Error creating due reviews stream: $e');
       return Stream.value([]);
@@ -1585,11 +1609,7 @@ class FirestoreService {
         return false;
       }
 
-      await usersCollection
-          .doc(uid)
-          .collection('reviews')
-          .doc(cardId)
-          .delete();
+      await usersCollection.doc(uid).collection('reviews').doc(cardId).delete();
 
       if (kDebugMode) print('✅ Review deleted for card: $cardId');
       return true;
@@ -1612,10 +1632,14 @@ class FirestoreService {
 
       final reviews = await getUserReviews(uid);
       final now = DateTime.now();
-      
-      final dueCount = reviews.where((r) => r.dueAt.isBefore(now) || r.dueAt.isAtSameMomentAs(now)).length;
+
+      final dueCount = reviews
+          .where((r) => r.dueAt.isBefore(now) || r.dueAt.isAtSameMomentAs(now))
+          .length;
       final totalCards = reviews.length;
-      final averageEase = reviews.isEmpty ? 0.0 : reviews.map((r) => r.ease).reduce((a, b) => a + b) / reviews.length;
+      final averageEase = reviews.isEmpty
+          ? 0.0
+          : reviews.map((r) => r.ease).reduce((a, b) => a + b) / reviews.length;
       final totalReps = reviews.map((r) => r.reps).fold(0, (a, b) => a + b);
 
       final stats = {
@@ -1635,7 +1659,7 @@ class FirestoreService {
   }
 
   // ==================== Quiz Session CRUD Operations ====================
-  
+
   /// Save a quiz session to Firestore
   /// @param session - QuizSession object to save
   /// @param userId - User ID (optional, uses current user if null)
@@ -1666,11 +1690,14 @@ class FirestoreService {
   /// @param sessionId - ID of the quiz session
   /// @param userId - User ID (optional, uses current user if null)
   /// @return QuizSession object or null if not found
-  Future<QuizSession?> getQuizSession(String sessionId, [String? userId]) async {
+  Future<QuizSession?> getQuizSession(String sessionId,
+      [String? userId]) async {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for quiz session retrieval');
+        if (kDebugMode) {
+          print('❌ No user ID provided for quiz session retrieval');
+        }
         return null;
       }
 
@@ -1698,7 +1725,9 @@ class FirestoreService {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for quiz sessions retrieval');
+        if (kDebugMode) {
+          print('❌ No user ID provided for quiz sessions retrieval');
+        }
         return [];
       }
 
@@ -1712,7 +1741,9 @@ class FirestoreService {
           .map((doc) => QuizSession.fromJson(doc.data()))
           .toList();
 
-      if (kDebugMode) print('✅ Retrieved ${sessions.length} quiz sessions for user: $uid');
+      if (kDebugMode) {
+        print('✅ Retrieved ${sessions.length} quiz sessions for user: $uid');
+      }
       return sessions;
     } catch (e) {
       if (kDebugMode) print('❌ Error retrieving quiz sessions: $e');
@@ -1724,11 +1755,14 @@ class FirestoreService {
   /// @param deckId - ID of the deck
   /// @param userId - User ID (optional, uses current user if null)
   /// @return List of QuizSession objects for the deck
-  Future<List<QuizSession>> getQuizSessionsForDeck(String deckId, [String? userId]) async {
+  Future<List<QuizSession>> getQuizSessionsForDeck(String deckId,
+      [String? userId]) async {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for deck quiz sessions retrieval');
+        if (kDebugMode) {
+          print('❌ No user ID provided for deck quiz sessions retrieval');
+        }
         return [];
       }
 
@@ -1743,7 +1777,9 @@ class FirestoreService {
           .map((doc) => QuizSession.fromJson(doc.data()))
           .toList();
 
-      if (kDebugMode) print('✅ Retrieved ${sessions.length} quiz sessions for deck: $deckId');
+      if (kDebugMode) {
+        print('✅ Retrieved ${sessions.length} quiz sessions for deck: $deckId');
+      }
       return sessions;
     } catch (e) {
       if (kDebugMode) print('❌ Error retrieving deck quiz sessions: $e');
@@ -1759,7 +1795,9 @@ class FirestoreService {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for quiz session deletion');
+        if (kDebugMode) {
+          print('❌ No user ID provided for quiz session deletion');
+        }
         return false;
       }
 
@@ -1778,13 +1816,14 @@ class FirestoreService {
   }
 
   // ==================== Deck Cooldown CRUD Operations ====================
-  
+
   /// Save deck cooldown data to Firestore
   /// @param deckId - ID of the deck
   /// @param cooldownEnd - When the cooldown ends
   /// @param userId - User ID (optional, uses current user if null)
   /// @return Success status
-  Future<bool> saveDeckCooldown(String deckId, DateTime cooldownEnd, [String? userId]) async {
+  Future<bool> saveDeckCooldown(String deckId, DateTime cooldownEnd,
+      [String? userId]) async {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
@@ -1797,12 +1836,14 @@ class FirestoreService {
           .collection('deckCooldowns')
           .doc(deckId)
           .set({
-            'deckId': deckId,
-            'cooldownEnd': cooldownEnd.toIso8601String(),
-            'createdAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
+        'deckId': deckId,
+        'cooldownEnd': cooldownEnd.toIso8601String(),
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
-      if (kDebugMode) print('✅ Deck cooldown saved: $deckId until $cooldownEnd');
+      if (kDebugMode) {
+        print('✅ Deck cooldown saved: $deckId until $cooldownEnd');
+      }
       return true;
     } catch (e) {
       if (kDebugMode) print('❌ Error saving deck cooldown: $e');
@@ -1818,7 +1859,9 @@ class FirestoreService {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for deck cooldown retrieval');
+        if (kDebugMode) {
+          print('❌ No user ID provided for deck cooldown retrieval');
+        }
         return null;
       }
 
@@ -1835,7 +1878,7 @@ class FirestoreService {
       final data = doc.data()!;
       final cooldownEndString = data['cooldownEnd'] as String;
       final cooldownEnd = DateTime.parse(cooldownEndString);
-      
+
       // Check if cooldown has expired
       if (cooldownEnd.isBefore(DateTime.now())) {
         // Cooldown expired, delete the document
@@ -1857,7 +1900,9 @@ class FirestoreService {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for deck cooldowns retrieval');
+        if (kDebugMode) {
+          print('❌ No user ID provided for deck cooldowns retrieval');
+        }
         return {};
       }
 
@@ -1876,7 +1921,9 @@ class FirestoreService {
         cooldowns[deckId] = cooldownEnd;
       }
 
-      if (kDebugMode) print('✅ Retrieved ${cooldowns.length} active deck cooldowns');
+      if (kDebugMode) {
+        print('✅ Retrieved ${cooldowns.length} active deck cooldowns');
+      }
       return cooldowns;
     } catch (e) {
       if (kDebugMode) print('❌ Error retrieving deck cooldowns: $e');
@@ -1892,7 +1939,9 @@ class FirestoreService {
     try {
       final String uid = userId ?? _auth.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        if (kDebugMode) print('❌ No user ID provided for deck cooldown removal');
+        if (kDebugMode) {
+          print('❌ No user ID provided for deck cooldown removal');
+        }
         return false;
       }
 
@@ -1922,27 +1971,23 @@ class FirestoreService {
       }
 
       final batch = _firestore.batch();
-      
+
       // Delete all quiz sessions
-      final sessionsSnapshot = await usersCollection
-          .doc(uid)
-          .collection('quizSessions')
-          .get();
+      final sessionsSnapshot =
+          await usersCollection.doc(uid).collection('quizSessions').get();
       for (final doc in sessionsSnapshot.docs) {
         batch.delete(doc.reference);
       }
 
       // Delete all deck cooldowns
-      final cooldownsSnapshot = await usersCollection
-          .doc(uid)
-          .collection('deckCooldowns')
-          .get();
+      final cooldownsSnapshot =
+          await usersCollection.doc(uid).collection('deckCooldowns').get();
       for (final doc in cooldownsSnapshot.docs) {
         batch.delete(doc.reference);
       }
 
       await batch.commit();
-      
+
       if (kDebugMode) print('✅ All quiz data cleared for user: $uid');
       return true;
     } catch (e) {
@@ -1954,7 +1999,8 @@ class FirestoreService {
   // ==================== AI TUTOR CHAT MANAGEMENT METHODS ====================
 
   /// Collection reference for chat messages
-  CollectionReference get chatMessagesCollection => _firestore.collection('chatMessages');
+  CollectionReference get chatMessagesCollection =>
+      _firestore.collection('chatMessages');
 
   /// Create a new chat message
   Future<String?> createChatMessage(Map<String, dynamic> messageData) async {
@@ -1987,7 +2033,8 @@ class FirestoreService {
   }
 
   /// Get chat messages for a session
-  Future<List<Map<String, dynamic>>> getSessionChatMessages(String sessionId) async {
+  Future<List<Map<String, dynamic>>> getSessionChatMessages(
+      String sessionId) async {
     try {
       final querySnapshot = await chatMessagesCollection
           .where('metadata.sessionId', isEqualTo: sessionId)
@@ -2001,7 +2048,8 @@ class FirestoreService {
       }).toList();
 
       if (kDebugMode) {
-        print('✅ Retrieved ${messages.length} chat messages for session: $sessionId');
+        print(
+            '✅ Retrieved ${messages.length} chat messages for session: $sessionId');
       }
       return messages;
     } catch (e) {
@@ -2015,7 +2063,8 @@ class FirestoreService {
   // ==================== TUTOR SESSION MANAGEMENT METHODS ====================
 
   /// Collection reference for tutor sessions
-  CollectionReference get tutorSessionsCollection => _firestore.collection('tutorSessions');
+  CollectionReference get tutorSessionsCollection =>
+      _firestore.collection('tutorSessions');
 
   /// Create a new tutor session
   Future<String?> createTutorSession(Map<String, dynamic> sessionData) async {
@@ -2040,7 +2089,8 @@ class FirestoreService {
   }
 
   /// Update an existing tutor session
-  Future<bool> updateTutorSession(String sessionId, Map<String, dynamic> updateData) async {
+  Future<bool> updateTutorSession(
+      String sessionId, Map<String, dynamic> updateData) async {
     try {
       await tutorSessionsCollection.doc(sessionId).update({
         ...updateData,

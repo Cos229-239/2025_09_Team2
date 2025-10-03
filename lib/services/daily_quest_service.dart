@@ -74,7 +74,8 @@ class DailyQuestService {
   Future<void> updateQuestProgress(String questId, int progress) async {
     try {
       final quests = await getTodaysQuests();
-      final quest = quests.firstWhere((q) => q.id == questId, orElse: () => throw Exception('Quest not found'));
+      final quest = quests.firstWhere((q) => q.id == questId,
+          orElse: () => throw Exception('Quest not found'));
 
       final wasCompleted = quest.isCompleted;
       final isNowCompleted = progress >= quest.targetCount;
@@ -85,7 +86,8 @@ class DailyQuestService {
         'isCompleted': isNowCompleted,
       };
 
-      final success = await _firestoreService.updateDailyQuest(questId, updateData);
+      final success =
+          await _firestoreService.updateDailyQuest(questId, updateData);
       if (!success) {
         throw Exception('Failed to update quest in Firestore');
       }
@@ -120,7 +122,8 @@ class DailyQuestService {
   Future<void> completeQuest(String questId) async {
     try {
       final quests = await getTodaysQuests();
-      final quest = quests.firstWhere((q) => q.id == questId, orElse: () => throw Exception('Quest not found'));
+      final quest = quests.firstWhere((q) => q.id == questId,
+          orElse: () => throw Exception('Quest not found'));
 
       if (quest.isCompleted) return;
 
@@ -130,7 +133,8 @@ class DailyQuestService {
         'isCompleted': true,
       };
 
-      final success = await _firestoreService.updateDailyQuest(questId, updateData);
+      final success =
+          await _firestoreService.updateDailyQuest(questId, updateData);
       if (!success) {
         throw Exception('Failed to complete quest in Firestore');
       }

@@ -206,7 +206,8 @@ class FlashCard {
             json['lastQuizCorrect'] as bool?, // Extract quiz result
         imageUrl: json['imageUrl'] as String?, // Extract visual content URL
         audioUrl: json['audioUrl'] as String?, // Extract audio content URL
-        diagramData: json['diagramData'] as String?, // Extract diagram JSON data
+        diagramData:
+            json['diagramData'] as String?, // Extract diagram JSON data
         visualMetadata: json['visualMetadata'] != null
             ? Map<String, String>.from(json['visualMetadata'] as Map)
             : null, // Extract visual metadata

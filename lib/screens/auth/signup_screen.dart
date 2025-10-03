@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:studypals/services/firebase_auth_service.dart';
 import 'package:studypals/services/firestore_service.dart';
 import 'package:studypals/screens/auth/email_verification_screen.dart';
-import 'package:studypals/widgets/common/animated_particle_background.dart';
 
 /// Modern signup screen that matches the app's Material 3 design system
 class SignupScreenNew extends StatefulWidget {
@@ -37,7 +36,8 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor:
+          const Color(0xFF16181A), // Solid background color from Figma
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -49,35 +49,29 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: AnimatedParticleBackground(
-        gradientColors: const [
-          Color(0xFF2A3050),
-          Color(0xFF3A4268),
-        ],
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
 
-                // App branding section
-                _buildBrandingSection(context),
+              // App branding section
+              _buildBrandingSection(context),
 
-                const SizedBox(height: 40),
+              const SizedBox(height: 40),
 
-                // Signup form card
-                _buildSignupCard(context),
+              // Signup form card
+              _buildSignupCard(context),
 
-                const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-                // Bottom links
-                _buildBottomLinks(context),
+              // Bottom links
+              _buildBottomLinks(context),
 
-                const SizedBox(height: 40),
-              ],
-            ),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),

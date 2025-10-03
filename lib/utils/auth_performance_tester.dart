@@ -16,7 +16,8 @@ class AuthPerformanceTester {
     }
 
     // Test data
-    final testEmail = 'test${DateTime.now().millisecondsSinceEpoch}@example.com';
+    final testEmail =
+        'test${DateTime.now().millisecondsSinceEpoch}@example.com';
     const testPassword = 'TestPassword123!';
     const testName = 'Test User Performance';
 
@@ -27,7 +28,7 @@ class AuthPerformanceTester {
       }
       final originalService = RegistrationService();
       final originalStopwatch = Stopwatch()..start();
-      
+
       final originalResult = await originalService.registerUser(
         email: testEmail,
         password: testPassword,
@@ -36,12 +37,13 @@ class AuthPerformanceTester {
         acceptedTerms: true,
         acceptedPrivacy: true,
       );
-      
+
       originalStopwatch.stop();
       if (kDebugMode) {
-        print('⏱️ Original Registration: ${originalStopwatch.elapsedMilliseconds}ms');
+        print(
+            '⏱️ Original Registration: ${originalStopwatch.elapsedMilliseconds}ms');
       }
-      
+
       // Note: User cleanup would require Firebase Admin SDK
 
       // Wait a bit to avoid rate limiting
@@ -53,34 +55,36 @@ class AuthPerformanceTester {
       }
       final optimizedService = OptimizedRegistrationService();
       final optimizedStopwatch = Stopwatch()..start();
-      
+
       final optimizedResult = await optimizedService.registerUser(
         email: '${testEmail}2',
         password: testPassword,
         fullName: testName,
       );
-      
+
       optimizedStopwatch.stop();
       if (kDebugMode) {
-        print('⏱️ Optimized Registration: ${optimizedStopwatch.elapsedMilliseconds}ms');
+        print(
+            '⏱️ Optimized Registration: ${optimizedStopwatch.elapsedMilliseconds}ms');
       }
-      
+
       // Note: User cleanup would require Firebase Admin SDK
       // ignore: unused_local_variable
       final _ = [originalResult, optimizedResult]; // Suppress unused warnings
 
       // Calculate improvement
-      final improvement = originalStopwatch.elapsedMilliseconds - 
+      final improvement = originalStopwatch.elapsedMilliseconds -
           optimizedStopwatch.elapsedMilliseconds;
-      final improvementPercent = (improvement / originalStopwatch.elapsedMilliseconds) * 100;
-      
+      final improvementPercent =
+          (improvement / originalStopwatch.elapsedMilliseconds) * 100;
+
       if (kDebugMode) {
         print('=' * 60);
         print('🚀 PERFORMANCE IMPROVEMENT: ${improvement}ms faster');
-        print('📈 PERCENTAGE IMPROVEMENT: ${improvementPercent.toStringAsFixed(1)}%');
+        print(
+            '📈 PERCENTAGE IMPROVEMENT: ${improvementPercent.toStringAsFixed(1)}%');
         print('=' * 60);
       }
-
     } catch (e) {
       if (kDebugMode) {
         print('❌ Performance test error: $e');
@@ -116,17 +120,17 @@ class AuthPerformanceTester {
         print('📊 Testing Standard Login Flow...');
       }
       final standardStopwatch = Stopwatch()..start();
-      
+
       final standardResult = await authService.signInWithEmailAndPassword(
         email: testEmail,
         password: testPassword,
       );
-      
+
       standardStopwatch.stop();
       if (kDebugMode) {
         print('⏱️ Standard Login: ${standardStopwatch.elapsedMilliseconds}ms');
       }
-      
+
       if (standardResult.success) {
         await authService.signOut();
       }
@@ -140,15 +144,16 @@ class AuthPerformanceTester {
       }
       final optimizedLoginService = OptimizedLoginService();
       final optimizedStopwatch = Stopwatch()..start();
-      
+
       final optimizedResult = await optimizedLoginService.signInUser(
         email: testEmail,
         password: testPassword,
       );
-      
+
       optimizedStopwatch.stop();
       if (kDebugMode) {
-        print('⏱️ Optimized Login: ${optimizedStopwatch.elapsedMilliseconds}ms');
+        print(
+            '⏱️ Optimized Login: ${optimizedStopwatch.elapsedMilliseconds}ms');
       }
 
       // Suppress unused warnings
@@ -156,19 +161,20 @@ class AuthPerformanceTester {
       final _ = [standardResult, optimizedResult];
 
       // Calculate improvement
-      final improvement = standardStopwatch.elapsedMilliseconds - 
+      final improvement = standardStopwatch.elapsedMilliseconds -
           optimizedStopwatch.elapsedMilliseconds;
-      final improvementPercent = (improvement / standardStopwatch.elapsedMilliseconds) * 100;
-      
+      final improvementPercent =
+          (improvement / standardStopwatch.elapsedMilliseconds) * 100;
+
       if (kDebugMode) {
         print('=' * 60);
         print('🚀 LOGIN IMPROVEMENT: ${improvement}ms faster');
-        print('📈 PERCENTAGE IMPROVEMENT: ${improvementPercent.toStringAsFixed(1)}%');
+        print(
+            '📈 PERCENTAGE IMPROVEMENT: ${improvementPercent.toStringAsFixed(1)}%');
         print('=' * 60);
       }
 
       // Note: User cleanup would require Firebase Admin SDK
-
     } catch (e) {
       if (kDebugMode) {
         print('❌ Login performance test error: $e');
@@ -219,19 +225,19 @@ Future<void> demonstrateAuthPerformanceImprovements() async {
   if (!kDebugMode) return;
 
   AuthPerformanceTester.printOptimizationSummary();
-  
+
   if (kDebugMode) {
     print('');
     print('🧪 Running Performance Tests...');
     print('');
-    
+
     // Note: Uncomment these lines to run actual performance tests
     // They create and delete Firebase users so use with caution
-    
+
     // await AuthPerformanceTester.testRegistrationPerformance();
     // await Future.delayed(const Duration(seconds: 2));
     // await AuthPerformanceTester.testLoginPerformance();
-    
+
     print('✅ Performance optimization implementation complete!');
   }
 }

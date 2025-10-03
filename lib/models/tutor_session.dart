@@ -22,9 +22,9 @@ class TutorSession {
     this.endTime,
     Map<String, dynamic>? sessionMetrics,
     this.isActive = true,
-  }) : messageIds = messageIds ?? [],
-       startTime = startTime ?? DateTime.now(),
-       sessionMetrics = sessionMetrics ?? {};
+  })  : messageIds = messageIds ?? [],
+        startTime = startTime ?? DateTime.now(),
+        sessionMetrics = sessionMetrics ?? {};
 
   /// Convert to JSON for Firestore storage
   Map<String, dynamic> toJson() => {
@@ -33,8 +33,8 @@ class TutorSession {
     'subject': subject,
     'difficulty': difficulty,
     'messageIds': messageIds,
-    'startTime': Timestamp.fromDate(startTime), // 🔥 FIX: Save as Timestamp, not String
-    'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null, // 🔥 FIX: Save as Timestamp
+    'startTime': Timestamp.fromDate(startTime), // Save as Timestamp for Firestore
+    'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null,
     'sessionMetrics': sessionMetrics,
     'isActive': isActive,
   };
@@ -49,7 +49,7 @@ class TutorSession {
       messageIds: (json['messageIds'] as List?)?.cast<String>() ?? [],
       startTime: json['startTime'] is Timestamp 
         ? (json['startTime'] as Timestamp).toDate()
-        : DateTime.parse(json['startTime'] as String), // Support both formats
+        : DateTime.parse(json['startTime'] as String), // Support both formats for migration
       endTime: json['endTime'] != null 
         ? (json['endTime'] is Timestamp
             ? (json['endTime'] as Timestamp).toDate()

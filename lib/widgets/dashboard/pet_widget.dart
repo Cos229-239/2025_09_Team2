@@ -10,7 +10,7 @@ import 'package:studypals/models/pet.dart';
 /// Widget displaying the virtual pet with interactive gamification features
 /// Shows pet avatar, level progress, mood, study streak, and interaction buttons
 /// Core component of the gamification system to motivate study engagement
-/// 
+///
 /// TODO: PET WIDGET IMPLEMENTATION IMPROVEMENTS NEEDED
 /// - Current implementation has basic UI but missing advanced pet interactions
 /// - Need to implement pet animation system for mood and activity states

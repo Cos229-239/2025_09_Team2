@@ -8,11 +8,11 @@ class MultiModalErrorHandler {
   static const int _maxRetryAttempts = 3;
   static const Duration _retryDelay = Duration(seconds: 2);
   static const Duration _circuitBreakerTimeout = Duration(minutes: 5);
-  
+
   // Circuit breaker state tracking
   static final Map<String, DateTime> _lastFailureTime = {};
   static final Map<String, int> _failureCount = {};
-  
+
   /// Execute a multi-modal operation with comprehensive error handling
   static Future<T?> executeWithFallback<T>({
     required String operationName,
@@ -32,29 +32,30 @@ class MultiModalErrorHandler {
 
     while (attempts < (enableRetry ? _maxRetryAttempts : 1)) {
       attempts++;
-      
+
       try {
-        debugPrint('Attempting $operationName (attempt $attempts/$_maxRetryAttempts)');
-        
+        debugPrint(
+            'Attempting $operationName (attempt $attempts/$_maxRetryAttempts)');
+
         final result = await operation().timeout(
           const Duration(seconds: 30),
           onTimeout: () {
-            throw TimeoutException('Operation $operationName timed out after 30 seconds');
+            throw TimeoutException(
+                'Operation $operationName timed out after 30 seconds');
           },
         );
-        
+
         // Success - reset failure counter
         _failureCount[operationName] = 0;
         debugPrint('✅ $operationName completed successfully');
         return result;
-        
       } catch (e) {
         lastException = e is Exception ? e : Exception(e.toString());
         debugPrint('❌ $operationName failed (attempt $attempts): $e');
-        
+
         // Record failure for circuit breaker
         _recordFailure(operationName);
-        
+
         // If not the last attempt and retry is enabled, wait before retrying
         if (attempts < _maxRetryAttempts && enableRetry) {
           await Future.delayed(_retryDelay * attempts); // Exponential backoff
@@ -63,9 +64,10 @@ class MultiModalErrorHandler {
     }
 
     // All retries failed - use fallback
-    debugPrint('🔄 $operationName failed after $_maxRetryAttempts attempts - using fallback');
+    debugPrint(
+        '🔄 $operationName failed after $_maxRetryAttempts attempts - using fallback');
     debugPrint('Last error: $lastException');
-    
+
     try {
       return fallback?.call();
     } catch (fallbackError) {
@@ -81,7 +83,7 @@ class MultiModalErrorHandler {
     required User user,
   }) {
     debugPrint('Generating fallback visual content for: $concept');
-    
+
     return {
       'imageUrl': null, // No image available
       'visualMetadata': {
@@ -101,8 +103,9 @@ class MultiModalErrorHandler {
     required String subject,
     required User user,
   }) {
-    debugPrint('Audio generation fallback - no audio available for: ${text.substring(0, text.length > 50 ? 50 : text.length)}...');
-    
+    debugPrint(
+        'Audio generation fallback - no audio available for: ${text.substring(0, text.length > 50 ? 50 : text.length)}...');
+
     // Return null since we can't generate actual audio as fallback
     // The UI will handle this gracefully by not showing audio controls
     return null;
@@ -115,7 +118,7 @@ class MultiModalErrorHandler {
     required User user,
   }) {
     debugPrint('Generating fallback diagram for: $concept');
-    
+
     // Create a simple text-based diagram structure
     final fallbackDiagram = {
       'type': 'simple',
@@ -136,7 +139,7 @@ class MultiModalErrorHandler {
         'subject': subject,
       }
     };
-    
+
     return jsonEncode(fallbackDiagram);
   }
 
@@ -146,13 +149,13 @@ class MultiModalErrorHandler {
       debugPrint('Visual content validation failed: null or empty');
       return false;
     }
-    
+
     final imageUrl = content['imageUrl'] as String?;
     if (imageUrl != null && (Uri.tryParse(imageUrl)?.hasAbsolutePath != true)) {
       debugPrint('Visual content validation failed: invalid image URL');
       return false;
     }
-    
+
     debugPrint('✅ Visual content validation passed');
     return true;
   }
@@ -163,12 +166,12 @@ class MultiModalErrorHandler {
       debugPrint('Audio content validation: no audio URL (acceptable)');
       return true; // null is acceptable for audio
     }
-    
+
     if (Uri.tryParse(audioUrl)?.hasAbsolutePath != true) {
       debugPrint('Audio content validation failed: invalid audio URL');
       return false;
     }
-    
+
     debugPrint('✅ Audio content validation passed');
     return true;
   }
@@ -179,20 +182,20 @@ class MultiModalErrorHandler {
       debugPrint('Diagram content validation: no diagram data (acceptable)');
       return true; // null is acceptable for diagrams
     }
-    
+
     try {
       final parsed = jsonDecode(diagramData);
       if (parsed is! Map<String, dynamic>) {
         debugPrint('Diagram content validation failed: not a JSON object');
         return false;
       }
-      
+
       final elements = parsed['elements'];
       if (elements != null && elements is! List) {
         debugPrint('Diagram content validation failed: elements is not a list');
         return false;
       }
-      
+
       debugPrint('✅ Diagram content validation passed');
       return true;
     } catch (e) {
@@ -205,11 +208,11 @@ class MultiModalErrorHandler {
   static bool _isCircuitBreakerOpen(String operationName) {
     final failureCount = _failureCount[operationName] ?? 0;
     final lastFailure = _lastFailureTime[operationName];
-    
+
     if (failureCount < 5) return false; // Not enough failures
-    
+
     if (lastFailure == null) return false;
-    
+
     final timeSinceLastFailure = DateTime.now().difference(lastFailure);
     return timeSinceLastFailure < _circuitBreakerTimeout;
   }
@@ -221,7 +224,8 @@ class MultiModalErrorHandler {
   }
 
   /// Get visual fallback suggestions for users
-  static List<String> _getVisualFallbackSuggestions(String concept, String subject) {
+  static List<String> _getVisualFallbackSuggestions(
+      String concept, String subject) {
     return [
       'Try searching for "$concept" images online',
       'Create a hand-drawn diagram of the concept',
@@ -266,7 +270,7 @@ class MultiModalErrorHandler {
 class TimeoutException implements Exception {
   final String message;
   const TimeoutException(this.message);
-  
+
   @override
   String toString() => 'TimeoutException: $message';
 }
@@ -275,7 +279,7 @@ class TimeoutException implements Exception {
 class ValidationException implements Exception {
   final String message;
   const ValidationException(this.message);
-  
+
   @override
   String toString() => 'ValidationException: $message';
 }
@@ -308,7 +312,8 @@ class MultiModalResult<T> {
     );
   }
 
-  factory MultiModalResult.fallback(T? fallbackData, String error, int attempts, Duration duration) {
+  factory MultiModalResult.fallback(
+      T? fallbackData, String error, int attempts, Duration duration) {
     return MultiModalResult(
       data: fallbackData,
       success: false,
@@ -319,7 +324,8 @@ class MultiModalResult<T> {
     );
   }
 
-  factory MultiModalResult.failure(String error, int attempts, Duration duration) {
+  factory MultiModalResult.failure(
+      String error, int attempts, Duration duration) {
     return MultiModalResult(
       success: false,
       error: error,

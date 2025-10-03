@@ -25,7 +25,7 @@ import '../models/spotify_models.dart';
 /// - Storing and refreshing tokens
 /// - Making authenticated API requests
 /// - Handling API errors and retries
-/// 
+///
 /// TODO: CRITICAL SPOTIFY SERVICE IMPLEMENTATION GAPS
 /// - Current implementation is 100% PLACEHOLDER/MOCK - NO REAL SPOTIFY INTEGRATION
 /// - Need to implement actual Spotify Web API integration with proper credentials
@@ -77,7 +77,7 @@ class SpotifyService {
   }
 
   /// Initialize the service by loading stored tokens
-  /// 
+  ///
   /// TODO: INITIALIZATION IMPROVEMENTS NEEDED
   /// - Current initialization is basic token loading only
   /// - Need to implement proper service health checks during initialization

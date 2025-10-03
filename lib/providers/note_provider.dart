@@ -49,7 +49,7 @@ class NoteProvider extends ChangeNotifier {
       final notesData = await _firestoreService.getUserNotes(currentUser.uid);
       _notes.clear();
       _notes.addAll(notesData.map((data) => _convertFirestoreToNote(data)));
-      
+
       debugPrint('✅ Loaded ${_notes.length} notes from Firestore');
 
       // If no notes found, add sample data for development
@@ -151,7 +151,7 @@ class NoteProvider extends ChangeNotifier {
   Future<void> addNote(Note note) async {
     _notes.add(note); // Add note to the list locally first
     notifyListeners(); // Notify UI of the addition immediately
-    
+
     // Save to Firestore in the background
     final currentUser = _auth.currentUser;
     if (currentUser != null) {
@@ -162,10 +162,10 @@ class NoteProvider extends ChangeNotifier {
           contentMd: note.contentMd,
           tags: note.tags,
         );
-        
+
         if (noteId != null) {
           debugPrint('✅ Saved note to Firestore with ID: $noteId');
-          
+
           // Update the local note with the Firestore ID
           final noteIndex = _notes.indexWhere((n) => n.id == note.id);
           if (noteIndex != -1) {
@@ -192,7 +192,7 @@ class NoteProvider extends ChangeNotifier {
       // If note found
       _notes[index] = note; // Replace with updated note locally
       notifyListeners(); // Notify UI of the change immediately
-      
+
       // Update in Firestore in the background
       final currentUser = _auth.currentUser;
       if (currentUser != null) {
@@ -204,7 +204,7 @@ class NoteProvider extends ChangeNotifier {
             contentMd: note.contentMd,
             tags: note.tags,
           );
-          
+
           if (success) {
             debugPrint('✅ Updated note in Firestore: ${note.id}');
           } else {
@@ -226,7 +226,7 @@ class NoteProvider extends ChangeNotifier {
       if (user != null) {
         await _firestoreService.deleteNote(noteId);
       }
-      
+
       // Remove from local list
       _notes.removeWhere((note) => note.id == noteId);
       notifyListeners(); // Notify UI of the removal

@@ -34,12 +34,12 @@ class _FirebaseTestScreenState extends State<FirebaseTestScreen> {
       }
 
       setState(() {
-        _status = 'Firebase Auth initialized ✅\nProject: ${app.options.projectId}';
+        _status =
+            'Firebase Auth initialized ✅\nProject: ${app.options.projectId}';
       });
 
       // Test 2: Try to create a test user
       await _testUserCreation();
-
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Firebase test error: $e');
@@ -57,7 +57,8 @@ class _FirebaseTestScreenState extends State<FirebaseTestScreen> {
       });
 
       // Try to create a test user
-      final testEmail = 'test${DateTime.now().millisecondsSinceEpoch}@example.com';
+      final testEmail =
+          'test${DateTime.now().millisecondsSinceEpoch}@example.com';
       final testPassword = 'TestPassword123!';
 
       if (kDebugMode) {
@@ -87,7 +88,6 @@ class _FirebaseTestScreenState extends State<FirebaseTestScreen> {
           _status += '\n✅ Test cleanup completed';
         });
       }
-
     } catch (e) {
       if (kDebugMode) {
         print('❌ User creation test failed: $e');

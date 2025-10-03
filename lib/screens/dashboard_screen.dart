@@ -14,32 +14,35 @@
 
 // Import Flutter's material design components for UI elements
 import 'package:flutter/material.dart';
+import 'dart:math';
 // Import Provider package for accessing state management across widgets
 import 'package:provider/provider.dart';
 // Import screen for flashcard study interface
 import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
-// Import AI system test screen for validation
-import 'package:studypals/screens/ai_system_test_screen.dart'; // AI system validation
-// Import settings screen for app configuration
-import 'package:studypals/screens/settings_screen.dart'; // Settings and configuration screen
+// Import additional screens for hamburger menu navigation
+import 'package:studypals/screens/achievement_screen.dart'; // Achievement and rewards screen
+import 'package:studypals/screens/social_screen.dart'; // Social learning screen
+import 'package:studypals/screens/profile_settings_screen.dart'; // Profile settings screen
+import 'package:studypals/screens/settings_screen.dart'; // Main settings screen
 // Import planner screen
 import 'package:studypals/screens/planner_page.dart';
 // Import creation screens for notes and tasks
 import 'package:studypals/screens/create_note_screen.dart'; // Note creation screen
 import 'package:studypals/screens/create_task_screen.dart'; // Task creation screen
-// Import notification models and provider for test notifications
-import '../models/notification.dart';
+// Import learning screen
+import 'package:studypals/screens/learning_screen.dart'; // Learning hub screen
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
-// Import animated particle background
-import 'package:studypals/widgets/common/animated_particle_background.dart';
+import 'package:studypals/widgets/dashboard/progress_graph_widget.dart'; // Progress graph widget
+import 'package:studypals/widgets/dashboard/pet_display_widget.dart'; // Pet display widget
+import 'package:studypals/widgets/dashboard/calendar_display_widget.dart'; // Calendar display widget
+// Import custom icon widgets
+import 'package:studypals/widgets/icons/profile_icon.dart'; // Custom profile icon
 // Import AI widgets for intelligent study features
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
-import 'package:studypals/widgets/ai/ai_assistant_widget.dart'; // AI Assistant with persona selection
-import 'package:studypals/widgets/common/modern_hamburger_menu.dart'; // Modern hamburger menu
+import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
 import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
 // Import state providers for loading data from different app modules
-import 'package:studypals/providers/app_state.dart'; // Global app state for authentication
 import 'package:studypals/providers/task_provider.dart'; // Task management state
 import 'package:studypals/providers/note_provider.dart'; // Notes management state
 import 'package:studypals/providers/deck_provider.dart'; // Flashcard deck state
@@ -49,6 +52,7 @@ import 'package:studypals/providers/ai_provider.dart'; // AI provider state
 import 'package:studypals/providers/daily_quest_provider.dart'; // Daily quest gamification state
 import 'package:studypals/models/task.dart'; // Task model
 import 'package:studypals/providers/notification_provider.dart'; // Notification system state
+import 'package:studypals/utils/responsive_spacing.dart'; // Responsive spacing utility
 import 'package:studypals/services/ai_service.dart'; // AI service for provider enum
 // Import notification widgets for LinkedIn-style notifications
 import 'package:studypals/widgets/notifications/notification_panel.dart'; // Notification bell and panel
@@ -154,13 +158,16 @@ class AnimatedBarChartPainter extends CustomPainter {
 
     // Calculate individual bar animation progress based on staggered timing from Lottie
     // Bar 1 (left): starts at frame 0 (0%), peaks at frame 15 (25%), returns at frame 50 (83.3%)
-    double bar1Progress = _calculateBarProgress(animationProgress, 0.0, 0.25, 0.833);
-    
+    double bar1Progress =
+        _calculateBarProgress(animationProgress, 0.0, 0.25, 0.833);
+
     // Bar 2 (middle): starts at frame 5 (8.3%), peaks at frame 20 (33.3%), returns at frame 55 (91.6%)
-    double bar2Progress = _calculateBarProgress(animationProgress, 0.083, 0.333, 0.916);
-    
+    double bar2Progress =
+        _calculateBarProgress(animationProgress, 0.083, 0.333, 0.916);
+
     // Bar 3 (right): starts at frame 10 (16.6%), peaks at frame 25 (41.6%), returns at frame 60 (100%)
-    double bar3Progress = _calculateBarProgress(animationProgress, 0.166, 0.416, 1.0);
+    double bar3Progress =
+        _calculateBarProgress(animationProgress, 0.166, 0.416, 1.0);
 
     // Base bar heights (normal state)
     const double bar1BaseHeight = 6.75;
@@ -169,7 +176,7 @@ class AnimatedBarChartPainter extends CustomPainter {
 
     // Extension amounts during animation (30 units extension like in Lottie)
     const double extensionAmount = 30.0 * 0.2; // Scale down for icon size
-    
+
     // Bar 1 (left, shortest) with animation
     final bar1Height = bar1BaseHeight + (extensionAmount * bar1Progress);
     final bar1Y = 19.875 - bar1Height; // Grow upward from bottom
@@ -218,7 +225,8 @@ class AnimatedBarChartPainter extends CustomPainter {
   /// [startTime] When this bar starts animating (0.0 to 1.0)
   /// [peakTime] When this bar reaches maximum extension (0.0 to 1.0)
   /// [endTime] When this bar returns to normal (0.0 to 1.0)
-  double _calculateBarProgress(double progress, double startTime, double peakTime, double endTime) {
+  double _calculateBarProgress(
+      double progress, double startTime, double peakTime, double endTime) {
     if (progress < startTime) {
       return 0.0; // Not started yet
     } else if (progress < peakTime) {
@@ -241,8 +249,8 @@ class AnimatedBarChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is AnimatedBarChartPainter && 
-           (oldDelegate.animationProgress != animationProgress ||
+    return oldDelegate is AnimatedBarChartPainter &&
+        (oldDelegate.animationProgress != animationProgress ||
             oldDelegate.isFilled != isFilled);
   }
 }
@@ -276,9 +284,11 @@ class TasksIconPainter extends CustomPainter {
     if (animationProgress > 0.0) {
       // Create a bounce effect: up from frames 1-20, down from frames 20-59
       double bouncePhase = animationProgress;
-      if (bouncePhase <= 0.333) { // First third - move up
+      if (bouncePhase <= 0.333) {
+        // First third - move up
         bounceOffset = -6.0 * _easeInOut(bouncePhase * 3) * scaleY;
-      } else if (bouncePhase <= 0.983) { // Rest - move back down
+      } else if (bouncePhase <= 0.983) {
+        // Rest - move back down
         double returnPhase = (bouncePhase - 0.333) / (0.983 - 0.333);
         bounceOffset = -6.0 * (1.0 - _easeInOut(returnPhase)) * scaleY;
       }
@@ -293,14 +303,14 @@ class TasksIconPainter extends CustomPainter {
     if (isFilled) {
       // FILLED STATE: Inverted design - solid clipboard with hollow/white text lines
       paint.style = PaintingStyle.fill;
-      
+
       // Draw the entire clipboard as one solid filled shape (apply bounce animation)
       final fullClipboard = RRect.fromRectAndRadius(
         Rect.fromLTWH(
-          83.362 * scaleX,                    // Main clipboard left
-          (62.324 * scaleY) + bounceOffset,   // Main clipboard top + bounce
-          296.828 * scaleX,                   // Width: 380.19 - 83.362
-          396.526 * scaleY,                   // Height: 458.303 - 62.324
+          83.362 * scaleX, // Main clipboard left
+          (62.324 * scaleY) + bounceOffset, // Main clipboard top + bounce
+          296.828 * scaleX, // Width: 380.19 - 83.362
+          396.526 * scaleY, // Height: 458.303 - 62.324
         ),
         Radius.circular(36.452 * scaleX), // Main border radius
       );
@@ -309,10 +319,10 @@ class TasksIconPainter extends CustomPainter {
       // Top clip/header area (same color as main clipboard, also bounces)
       final headerClip = RRect.fromRectAndRadius(
         Rect.fromLTWH(
-          182.304 * scaleX,                   // Header left
-          (41.702 * scaleY) + bounceOffset,   // Header top + bounce
-          135.395 * scaleX,                   // Header width: 317.699 - 182.304
-          72.905 * scaleY,                    // Header height: includes overlap
+          182.304 * scaleX, // Header left
+          (41.702 * scaleY) + bounceOffset, // Header top + bounce
+          135.395 * scaleX, // Header width: 317.699 - 182.304
+          72.905 * scaleY, // Header height: includes overlap
         ),
         Radius.circular(15.622 * scaleX), // Header radius
       );
@@ -320,14 +330,21 @@ class TasksIconPainter extends CustomPainter {
 
       // Now create transparent text lines by drawing background-colored rounded rectangles
       final transparentTextPaint = Paint()
-        ..color = backgroundColor // Use background color to create transparent effect
+        ..color =
+            backgroundColor // Use background color to create transparent effect
         ..style = PaintingStyle.fill;
 
       // Calculate which text lines should be visible based on animation progress
       // Based on Lottie: lines draw on sequentially starting around frame 16-22
-      double line1Progress = animationProgress > 0.0 ? _calculateLineProgress(animationProgress, 0.0, 0.467) : 1.0;
-      double line2Progress = animationProgress > 0.0 ? _calculateLineProgress(animationProgress, 0.05, 0.517) : 1.0;  
-      double line3Progress = animationProgress > 0.0 ? _calculateLineProgress(animationProgress, 0.1, 0.567) : 1.0;
+      double line1Progress = animationProgress > 0.0
+          ? _calculateLineProgress(animationProgress, 0.0, 0.467)
+          : 1.0;
+      double line2Progress = animationProgress > 0.0
+          ? _calculateLineProgress(animationProgress, 0.05, 0.517)
+          : 1.0;
+      double line3Progress = animationProgress > 0.0
+          ? _calculateLineProgress(animationProgress, 0.1, 0.567)
+          : 1.0;
 
       // First transparent text line (with bounce offset and progressive width)
       if (line1Progress > 0.0) {
@@ -335,8 +352,8 @@ class TasksIconPainter extends CustomPainter {
         final hollowLine1 = RRect.fromRectAndRadius(
           Rect.fromLTWH(
             161.473 * scaleX,
-            (228.964 * scaleY) + bounceOffset,  // Apply bounce to text lines too
-            line1Width,                         // Animated width
+            (228.964 * scaleY) + bounceOffset, // Apply bounce to text lines too
+            line1Width, // Animated width
             31.245 * scaleY,
           ),
           Radius.circular(15.622 * scaleX),
@@ -350,8 +367,8 @@ class TasksIconPainter extends CustomPainter {
         final hollowLine2 = RRect.fromRectAndRadius(
           Rect.fromLTWH(
             161.473 * scaleX,
-            (286.663 * scaleY) + bounceOffset,  // Apply bounce
-            line2Width,                         // Animated width
+            (286.663 * scaleY) + bounceOffset, // Apply bounce
+            line2Width, // Animated width
             31.245 * scaleY,
           ),
           Radius.circular(15.622 * scaleX),
@@ -365,24 +382,23 @@ class TasksIconPainter extends CustomPainter {
         final hollowLine3 = RRect.fromRectAndRadius(
           Rect.fromLTWH(
             161.473 * scaleX,
-            (343.737 * scaleY) + bounceOffset,  // Apply bounce
-            line3Width,                         // Animated width (shorter line)
+            (343.737 * scaleY) + bounceOffset, // Apply bounce
+            line3Width, // Animated width (shorter line)
             31.245 * scaleY,
           ),
           Radius.circular(15.622 * scaleX),
         );
         canvas.drawRRect(hollowLine3, transparentTextPaint);
       }
-
     } else {
       // OUTLINED STATE: Draw stroke-only version (also with bounce animation)
       paint.style = PaintingStyle.stroke;
-      
+
       // Main clipboard outline (with bounce)
       final clipboardOutline = RRect.fromRectAndRadius(
         Rect.fromLTWH(
           83.362 * scaleX,
-          (62.324 * scaleY) + bounceOffset,   // Apply bounce
+          (62.324 * scaleY) + bounceOffset, // Apply bounce
           296.828 * scaleX,
           396.526 * scaleY,
         ),
@@ -394,7 +410,7 @@ class TasksIconPainter extends CustomPainter {
       final innerOutline = RRect.fromRectAndRadius(
         Rect.fromLTWH(
           119.814 * scaleX,
-          (98.776 * scaleY) + bounceOffset,   // Apply bounce
+          (98.776 * scaleY) + bounceOffset, // Apply bounce
           260.572 * scaleX,
           322.074 * scaleY,
         ),
@@ -406,7 +422,7 @@ class TasksIconPainter extends CustomPainter {
       final headerOutline = RRect.fromRectAndRadius(
         Rect.fromLTWH(
           182.304 * scaleX,
-          (41.702 * scaleY) + bounceOffset,   // Apply bounce
+          (41.702 * scaleY) + bounceOffset, // Apply bounce
           135.395 * scaleX,
           72.905 * scaleY,
         ),
@@ -422,16 +438,24 @@ class TasksIconPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       // Calculate line progress for outlined state (same timing as filled)
-      double line1Progress = animationProgress > 0.0 ? _calculateLineProgress(animationProgress, 0.0, 0.467) : 1.0;
-      double line2Progress = animationProgress > 0.0 ? _calculateLineProgress(animationProgress, 0.05, 0.517) : 1.0;  
-      double line3Progress = animationProgress > 0.0 ? _calculateLineProgress(animationProgress, 0.1, 0.567) : 1.0;
+      double line1Progress = animationProgress > 0.0
+          ? _calculateLineProgress(animationProgress, 0.0, 0.467)
+          : 1.0;
+      double line2Progress = animationProgress > 0.0
+          ? _calculateLineProgress(animationProgress, 0.05, 0.517)
+          : 1.0;
+      double line3Progress = animationProgress > 0.0
+          ? _calculateLineProgress(animationProgress, 0.1, 0.567)
+          : 1.0;
 
       // First text line (with bounce and progressive drawing)
       if (line1Progress > 0.0) {
         final line1EndX = 161.473 * scaleX + (177.057 * scaleX * line1Progress);
         canvas.drawLine(
-          Offset(161.473 * scaleX, (244.586 * scaleY) + bounceOffset), // Start with bounce
-          Offset(line1EndX, (244.586 * scaleY) + bounceOffset),        // End with progressive length
+          Offset(161.473 * scaleX,
+              (244.586 * scaleY) + bounceOffset), // Start with bounce
+          Offset(line1EndX,
+              (244.586 * scaleY) + bounceOffset), // End with progressive length
           textPaint,
         );
       }
@@ -440,8 +464,10 @@ class TasksIconPainter extends CustomPainter {
       if (line2Progress > 0.0) {
         final line2EndX = 161.473 * scaleX + (177.057 * scaleX * line2Progress);
         canvas.drawLine(
-          Offset(161.473 * scaleX, (302.285 * scaleY) + bounceOffset), // Start with bounce
-          Offset(line2EndX, (302.285 * scaleY) + bounceOffset),        // End with progressive length
+          Offset(161.473 * scaleX,
+              (302.285 * scaleY) + bounceOffset), // Start with bounce
+          Offset(line2EndX,
+              (302.285 * scaleY) + bounceOffset), // End with progressive length
           textPaint,
         );
       }
@@ -450,8 +476,12 @@ class TasksIconPainter extends CustomPainter {
       if (line3Progress > 0.0) {
         final line3EndX = 161.473 * scaleX + (72.905 * scaleX * line3Progress);
         canvas.drawLine(
-          Offset(161.473 * scaleX, (359.359 * scaleY) + bounceOffset), // Start with bounce
-          Offset(line3EndX, (359.359 * scaleY) + bounceOffset),        // End with progressive length (shorter)
+          Offset(161.473 * scaleX,
+              (359.359 * scaleY) + bounceOffset), // Start with bounce
+          Offset(
+              line3EndX,
+              (359.359 * scaleY) +
+                  bounceOffset), // End with progressive length (shorter)
           textPaint,
         );
       }
@@ -465,9 +495,10 @@ class TasksIconPainter extends CustomPainter {
 
   /// Calculate progress for individual text lines drawing animation
   /// [progress] Overall animation progress (0.0 to 1.0)
-  /// [startTime] When this line starts drawing (0.0 to 1.0)  
+  /// [startTime] When this line starts drawing (0.0 to 1.0)
   /// [endTime] When this line finishes drawing (0.0 to 1.0)
-  double _calculateLineProgress(double progress, double startTime, double endTime) {
+  double _calculateLineProgress(
+      double progress, double startTime, double endTime) {
     if (progress < startTime) {
       return 0.0; // Not started yet
     } else if (progress > endTime) {
@@ -481,8 +512,8 @@ class TasksIconPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return oldDelegate is TasksIconPainter && 
-           (oldDelegate.isFilled != isFilled || 
+    return oldDelegate is TasksIconPainter &&
+        (oldDelegate.isFilled != isFilled ||
             oldDelegate.backgroundColor != backgroundColor ||
             oldDelegate.animationProgress != animationProgress);
   }
@@ -502,7 +533,8 @@ class DashboardScreen extends StatefulWidget {
 
 /// Private state class managing bottom navigation and data initialization
 /// Handles tab switching between Dashboard, Planner, Notes, Decks, and Progress
-class _DashboardScreenState extends State<DashboardScreen> with TickerProviderStateMixin {
+class _DashboardScreenState extends State<DashboardScreen>
+    with TickerProviderStateMixin {
   /// Widget initialization lifecycle method
   /// Called once when the widget is first created
   @override
@@ -540,8 +572,8 @@ class _DashboardScreenState extends State<DashboardScreen> with TickerProviderSt
     try {
       await aiProvider.configureAI(
         provider: AIProvider.google,
-          apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-          //apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+        apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
+        //apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
       );
       debugPrint('Google AI automatically configured on dashboard load');
     } catch (e) {
@@ -631,36 +663,50 @@ class _DashboardHomeState extends State<DashboardHome>
     with TickerProviderStateMixin {
   late TabController _tabController;
   int _selectedTabIndex = 0;
-  
+
   // Animation controllers for each navigation button
   late List<AnimationController> _iconAnimationControllers;
   late List<Animation<double>> _scaleAnimations;
   late List<Animation<double>> _bounceAnimations; // For vertical bounce effect
-  
+
   // Animation controller for Stats button bar chart transition
   late AnimationController _statsIconController;
   late Animation<double> _statsIconAnimation;
-  
-  // Animation controller for Settings button gear rotation
-  late AnimationController _settingsIconController;
-  late Animation<double> _settingsRotationAnimation;
-  
+
   // Animation controller for Home button hover-pinch effect
   late AnimationController _homeIconController;
   late Animation<double> _homeIconAnimation;
-  
+
   // Animation controller for Pet button paws hover-pinch effect
   late AnimationController _petIconController;
   late Animation<double> _petIconAnimation;
-  
+
+  // Animation controller for Social button hugging effect
+  late AnimationController _socialIconController;
+  late Animation<double> _socialIconAnimation;
+
+  // Animation controller for Learn button tassel sway effect
+  late AnimationController _learnIconController;
+  Animation<double>? _learnIconAnimation;
+
   // Animation controller for Tasks button clipboard animation
   late AnimationController _tasksAnimationController;
   late Animation<double> _tasksAnimation;
 
+  // Notification panel state and animation
+  bool _isNotificationPanelOpen = false;
+  late AnimationController _notificationPanelController;
+  late Animation<double> _notificationPanelAnimation;
+
+  // Hamburger menu state and animation
+  bool _isHamburgerMenuOpen = false;
+  late AnimationController _hamburgerMenuController;
+  late Animation<double> _hamburgerMenuAnimation;
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       // Animate icons when tab changes
       _animateTabChange(_selectedTabIndex, _tabController.index);
@@ -669,18 +715,20 @@ class _DashboardHomeState extends State<DashboardHome>
       });
     });
 
-    // Initialize animation controllers for each navigation button (4 buttons)
+    // Initialize animation controllers for each navigation button (5 buttons)
     _iconAnimationControllers = List.generate(
-      4,
+      5,
       (index) => AnimationController(
-        duration: const Duration(milliseconds: 400), // Slightly shorter for subtlety
+        duration:
+            const Duration(milliseconds: 400), // Slightly shorter for subtlety
         vsync: this,
       ),
     );
 
     // Initialize Stats icon animation controller (for bar chart pinch effect)
     _statsIconController = AnimationController(
-      duration: const Duration(milliseconds: 1000), // 60 frames at 60fps = 1000ms
+      duration:
+          const Duration(milliseconds: 1000), // 60 frames at 60fps = 1000ms
       vsync: this,
     );
     _statsIconAnimation = Tween<double>(
@@ -690,40 +738,6 @@ class _DashboardHomeState extends State<DashboardHome>
       parent: _statsIconController,
       curve: Curves.easeInOut,
     ));
-
-    // Initialize Settings icon animation controller
-    _settingsIconController = AnimationController(
-      duration: const Duration(milliseconds: 1000), // 1 second (60 frames at 60fps)
-      vsync: this,
-    );
-    // Create complex rotation animation matching Lottie keyframes
-    _settingsRotationAnimation = TweenSequence<double>([
-      // 0-16 frames: 0° to 64°
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.0, end: 64/360).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 27, // 16/60 * 100 ≈ 27%
-      ),
-      // 16-25 frames: 64° to 60° (slight back)
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 64/360, end: 60/360).chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 15, // 9/60 * 100 = 15%
-      ),
-      // 25-32 frames: hold at 60°
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 60/360, end: 60/360),
-        weight: 12, // 7/60 * 100 ≈ 12%
-      ),
-      // 32-48 frames: 60° to 124°
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 60/360, end: 124/360).chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 27, // 16/60 * 100 ≈ 27%
-      ),
-      // 48-57 frames: 124° to 120° (settle)
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 124/360, end: 120/360).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 19, // 9/60 * 100 ≈ 15%, remaining 4% for balance
-      ),
-    ]).animate(_settingsIconController);
 
     // Initialize Home icon hover-pinch animation controller
     _homeIconController = AnimationController(
@@ -740,7 +754,8 @@ class _DashboardHomeState extends State<DashboardHome>
 
     // Initialize Pet icon paws hover-pinch animation controller
     _petIconController = AnimationController(
-      duration: const Duration(milliseconds: 1000), // 1 second to match Lottie (60 frames at 60fps)
+      duration: const Duration(
+          milliseconds: 1000), // 1 second to match Lottie (60 frames at 60fps)
       vsync: this,
     );
     _petIconAnimation = Tween<double>(
@@ -751,9 +766,36 @@ class _DashboardHomeState extends State<DashboardHome>
       curve: Curves.easeInOut,
     ));
 
+    // Initialize Social icon hugging animation controller  
+    _socialIconController = AnimationController(
+      duration: const Duration(milliseconds: 1600), // Longer duration for full hug-and-release cycle
+      vsync: this,
+    );
+    _socialIconAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _socialIconController,
+      curve: Curves.easeInOutBack, // Smooth back-and-forth curve for hug-release effect
+    ));
+
+    // Initialize Learn icon tassel sway animation controller
+    _learnIconController = AnimationController(
+      duration: const Duration(milliseconds: 2000), // Gentle 2-second sway cycle
+      vsync: this,
+    );
+    _learnIconAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _learnIconController,
+      curve: Curves.easeInOut, // Smooth sway motion
+    ));
+
     // Initialize Tasks icon clipboard animation controller
     _tasksAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1000), // 1 second animation (60 frames at 60fps)
+      duration: const Duration(
+          milliseconds: 1000), // 1 second animation (60 frames at 60fps)
       vsync: this,
     );
     _tasksAnimation = Tween<double>(
@@ -764,31 +806,62 @@ class _DashboardHomeState extends State<DashboardHome>
       curve: Curves.easeInOut,
     ));
 
+    // Initialize notification panel animation controller
+    _notificationPanelController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _notificationPanelAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _notificationPanelController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Initialize hamburger menu animation controller
+    _hamburgerMenuController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _hamburgerMenuAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _hamburgerMenuController,
+      curve: Curves.easeInOut,
+    ));
+
     // Create subtle scale animations (very light growth)
-    _scaleAnimations = _iconAnimationControllers.map(
-      (controller) => Tween<double>(
-        begin: 1.0,
-        end: 1.08, // Much smaller scale increase
-      ).animate(CurvedAnimation(
-        parent: controller,
-        curve: Curves.easeOut, // Smooth ease out
-      )),
-    ).toList();
+    _scaleAnimations = _iconAnimationControllers
+        .map(
+          (controller) => Tween<double>(
+            begin: 1.0,
+            end: 1.08, // Much smaller scale increase
+          ).animate(CurvedAnimation(
+            parent: controller,
+            curve: Curves.easeOut, // Smooth ease out
+          )),
+        )
+        .toList();
 
     // Create vertical bounce animations (upward movement)
-    _bounceAnimations = _iconAnimationControllers.map(
-      (controller) => Tween<double>(
-        begin: 0.0,
-        end: -3.0, // Negative value for upward movement (3 pixels up)
-      ).animate(CurvedAnimation(
-        parent: controller,
-        curve: Curves.bounceOut, // Bounce effect for vertical movement
-      )),
-    ).toList();
+    _bounceAnimations = _iconAnimationControllers
+        .map(
+          (controller) => Tween<double>(
+            begin: 0.0,
+            end: -3.0, // Negative value for upward movement (3 pixels up)
+          ).animate(CurvedAnimation(
+            parent: controller,
+            curve: Curves.bounceOut, // Bounce effect for vertical movement
+          )),
+        )
+        .toList();
 
     // Start with first tab selected
     _iconAnimationControllers[0].forward();
-    _homeIconController.forward(); // Start home animation since it's the default tab
+    _homeIconController
+        .forward(); // Start home animation since it's the default tab
   }
 
   /// Animate transition between tabs
@@ -797,50 +870,91 @@ class _DashboardHomeState extends State<DashboardHome>
     _iconAnimationControllers[oldIndex].reverse();
     // Forward animation for newly selected tab
     _iconAnimationControllers[newIndex].forward();
-    
+
     // Special handling for Home button (index 0)
     if (newIndex == 0) {
       _homeIconController.forward();
     } else if (oldIndex == 0) {
       _homeIconController.reverse();
     }
-    
-    // Special handling for Tasks button (index 1)
+
+    // Special handling for Learn button (index 1)
     if (newIndex == 1) {
-      _tasksAnimationController.forward();
-      // Add repeating animation for tasks when selected
-      _tasksAnimationController.addStatusListener(_onTasksAnimationStatusChanged);
+      if (_learnIconAnimation != null) {
+        _learnIconController.repeat(reverse: true); // Start gentle tassel sway animation
+      }
     } else if (oldIndex == 1) {
-      _tasksAnimationController.removeStatusListener(_onTasksAnimationStatusChanged);
-      _tasksAnimationController.reverse();
+      if (_learnIconAnimation != null) {
+        _learnIconController.stop(); // Stop the sway animation
+        _learnIconController.reset(); // Reset to normal position
+      }
     }
-    
-    // Special handling for Stats button (index 2)
+
+    // Special handling for AI Tutor button (index 2)
     if (newIndex == 2) {
       _statsIconController.forward();
     } else if (oldIndex == 2) {
       _statsIconController.reverse();
     }
-    
-    // Special handling for Pet button (index 3)
+
+    // Special handling for Social button (index 3)
     if (newIndex == 3) {
-      _petIconController.forward();
+      _socialIconController.forward(); // Play hug-and-release animation once
     } else if (oldIndex == 3) {
+      _socialIconController.stop(); // Stop the animation
+      _socialIconController.reset(); // Reset to normal position
+    }
+
+    // Special handling for Pet button (index 4)
+    if (newIndex == 4) {
+      _petIconController.forward();
+    } else if (oldIndex == 4) {
       _petIconController.reverse();
     }
   }
 
-  /// Handle tasks animation completion to create repeating effect when selected
-  void _onTasksAnimationStatusChanged(AnimationStatus status) {
-    if (status == AnimationStatus.completed && _selectedTabIndex == 1) {
-      // Wait a bit then restart animation for subtle repeating effect
-      Future.delayed(const Duration(seconds: 3), () {
-        if (_selectedTabIndex == 1 && mounted) {
-          _tasksAnimationController.reset();
-          _tasksAnimationController.forward();
-        }
-      });
+  /// Build expand-from-bottom transition animation for tabs
+  /// Creates an effect where pages appear to expand from the toolbar button
+  Widget _buildExpandTransition(int tabIndex, Widget child) {
+    // Calculate animation progress for this specific tab
+    final animation = _tabController.animation!;
+    final value = (animation.value - tabIndex).abs();
+    
+    // Only animate when transitioning to/from this tab
+    if (value > 1.0) {
+      return const SizedBox.shrink(); // Hide completely when far from active
     }
+    
+    // Calculate progress (1.0 when fully visible, 0.0 when hidden)
+    final progress = (1.0 - value).clamp(0.0, 1.0);
+    
+    // Scale animation: starts small (from button) and grows to full screen
+    final scale = 0.2 + (progress * 0.8); // Start at 20% scale
+    
+    // Vertical translation: starts from bottom toolbar position
+    final screenHeight = MediaQuery.of(context).size.height;
+    final verticalOffset = (screenHeight * 0.4) * (1.0 - progress); // Start from 40% down
+    
+    // Opacity for smooth fade-in effect
+    final opacity = Curves.easeIn.transform(progress);
+    
+    // Apply transforms: translate, scale, and fade
+    return Transform.translate(
+      offset: Offset(0, verticalOffset),
+      child: Transform.scale(
+        scale: scale,
+        alignment: Alignment.bottomCenter, // Anchor scaling to bottom
+        child: Opacity(
+          opacity: opacity,
+          child: ClipRRect(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(30 * (1.0 - progress)), // Round corners during transition
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -851,149 +965,87 @@ class _DashboardHomeState extends State<DashboardHome>
       controller.dispose();
     }
     _statsIconController.dispose();
-    _settingsIconController.dispose();
     _homeIconController.dispose();
     _petIconController.dispose();
+    _socialIconController.dispose();
+    _learnIconController.dispose();
     _tasksAnimationController.dispose();
+    _notificationPanelController.dispose();
+    _hamburgerMenuController.dispose();
     super.dispose();
   }
 
-  /// Builds the app bar action buttons (notifications, settings, and logout)
+  /// Builds the app bar action buttons (notifications and profile)
   /// Separated into method to keep build method clean and organized
   /// @param context - Build context for navigation and state access
   /// @return List of IconButton widgets for the app bar actions
   List<Widget> _buildAppBarActions(BuildContext context) {
     return [
-      // Test notification button (temporary for demo)
-      IconButton(
-        icon: const Icon(Icons.add_alert, color: Colors.orange),
-        tooltip: 'Add Test Notification',
-        onPressed: () => _addTestNotification(context),
-      ),
-
       // LinkedIn-style notification bell with unread count badge
-      const NotificationBellIcon(),
-
-
-      // AI System Test button - validates AI features
-      IconButton(
-        icon: const Icon(Icons.psychology, color: Colors.orange), 
-        tooltip: 'AI System Validation',
-        onPressed: () {
-          // Navigate to AI system test screen
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => AISystemTestScreen(),
-            ),
-          );
-        },
+      SizedBox(
+        width: 48, // Standard IconButton width for consistency
+        height: 48, // Standard IconButton height for consistency
+        child: Center(
+          child: NotificationBellIcon(
+            onTap: _toggleNotificationPanel,
+            isSelected: _isNotificationPanelOpen,
+          ),
+        ),
       ),
 
-      // Settings button - opens app configuration panel
-      IconButton(
-        icon: const Icon(Icons.settings), // Gear icon for settings
-        onPressed: () {
-          // Navigate to settings screen
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SettingsScreen(),
-            ),
-          );
-        },
-      ),
-
-      // Settings button - opens app configuration panel with gear rotation animation
-      _buildAnimatedSettingsButton(context),
-
-
-      // Logout button - signs out the current user
-      IconButton(
-        icon: const Icon(Icons.logout), // Logout icon
-        onPressed: () async {
-          // Confirm logout with user
-          final shouldLogout = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Sign Out'),
-              content: const Text('Are you sure you want to sign out?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+      // Profile button - navigates to profile settings screen
+      SizedBox(
+        width: 48, // Standard IconButton width for consistency
+        height: 48, // Standard IconButton height for consistency
+        child: Center(
+          child: GestureDetector(
+            onTap: () {
+              // Navigate to profile settings screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ProfileSettingsScreen(),
                 ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Sign Out'),
-                ),
-              ],
-            ),
-          );
-
-          if (shouldLogout == true && context.mounted) {
-            // Sign out the user through AppState
-            await Provider.of<AppState>(context, listen: false).logout();
-          }
-        },
+              );
+            },
+            child: const ProfileIcon(size: 28),
+          ),
+        ),
       ),
     ];
   }
 
-  /// Adds a test notification to demonstrate the notification bell states
-  void _addTestNotification(BuildContext context) {
-    final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
-    
-    final testNotification = AppNotification(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: 'Test Notification',
-      message: 'This is a test notification to showcase the animated bell icon states.',
-      type: NotificationType.system,
-      createdAt: DateTime.now(),
-      isRead: false,
-    );
-    
-    notificationProvider.addNotification(testNotification);
-    
-    // Show confirmation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Test notification added! Check the notification bell animation.'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  /// Toggle notification panel slide animation
+  void _toggleNotificationPanel() {
+    setState(() {
+      _isNotificationPanelOpen = !_isNotificationPanelOpen;
+      if (_isNotificationPanelOpen) {
+        _notificationPanelController.forward();
+        // Close hamburger menu if open
+        if (_isHamburgerMenuOpen) {
+          _isHamburgerMenuOpen = false;
+          _hamburgerMenuController.reverse();
+        }
+      } else {
+        _notificationPanelController.reverse();
+      }
+    });
   }
 
-  /// Builds animated settings button with gear rotation effect
-  Widget _buildAnimatedSettingsButton(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _settingsRotationAnimation,
-      builder: (context, child) {
-        return IconButton(
-          icon: Transform.rotate(
-            angle: _settingsRotationAnimation.value * 2 * 3.14159, // Convert to radians
-            child: CustomPaint(
-              size: const Size(24, 24),
-              painter: SettingsGearPainter(
-                color: Theme.of(context).iconTheme.color,
-              ),
-            ),
-          ),
-          onPressed: () {
-            // Trigger gear rotation animation
-            _settingsIconController.forward().then((_) {
-              // Reset animation after completion
-              _settingsIconController.reset();
-            });
-            
-            // Navigate to settings screen
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
-            );
-          },
-        );
-      },
-    );
+  /// Toggle hamburger menu dropdown animation
+  void _toggleHamburgerMenu() {
+    setState(() {
+      _isHamburgerMenuOpen = !_isHamburgerMenuOpen;
+      if (_isHamburgerMenuOpen) {
+        _hamburgerMenuController.forward();
+        // Close notification panel if open
+        if (_isNotificationPanelOpen) {
+          _isNotificationPanelOpen = false;
+          _notificationPanelController.reverse();
+        }
+      } else {
+        _hamburgerMenuController.reverse();
+      }
+    });
   }
 
   /// Builds the main dashboard content with app widgets
@@ -1002,68 +1054,116 @@ class _DashboardHomeState extends State<DashboardHome>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedParticleBackground(
-        gradientColors: const [
-          Color(0xFF515B9B), // Lighter blue-purple from Figma
-          Color(0xFF1C1F35), // Darker blue-gray from Figma
-        ],
-        particleCount: 60,
-        child: TabBarView(
-          controller: _tabController,
-          children: [
-            // Home tab - responsive dashboard content
-            SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header with padding
-                  SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: _buildHeader(context),
-                    ),
-                  ),
+      body: Stack(
+        children: [
+          // Main dashboard content
+          Container(
+            color: const Color(0xFF16181A), // Solid background color from Figma
+            child: TabBarView(
+              controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(), // Disable swipe to control animation
+              children: [
+                // Tab 0: Home tab - responsive dashboard content - Wrapped with animation
+                AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) => _buildExpandTransition(0, child!),
+                  child: Stack(
+                    children: [
+                      // Main home tab content
+                      SafeArea(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Status bar area for time, WiFi, notch spacing
+                          _buildStatusBar(context),
+                          
+                          // Header with responsive spacing
+                          Container(
+                            height: ResponsiveSpacing.getHeaderHeight(context),
+                            color: const Color(0xFF242628),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: ResponsiveSpacing.getHorizontalPadding(context),
+                              vertical: ResponsiveSpacing.getSmallSpacing(context),
+                            ),
+                            child: _buildHeader(context),
+                          ),
 
-                  // Horizontal divider line - full width
-                  Container(
-                    width: double.infinity,
-                    height: 3.0, // Thicker line
-                    color: const Color(0xFFF8B67F),
-                  ),
+                          // Horizontal divider line - full width
+                          Container(
+                            width: double.infinity,
+                            height: 3.0,
+                            color: const Color(0xFF6FB8E9),
+                          ),
 
-                  // Content section with padding
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
+                          // Content section with responsive padding
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: EdgeInsets.fromLTRB(
+                                ResponsiveSpacing.getHorizontalPadding(context),
+                                ResponsiveSpacing.getVerticalSpacing(context) * 0.5, // Small top margin
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                        ResponsiveSpacing.getHorizontalPadding(context),
+                      ),
                       child: Column(
                         children: [
-                          // Flexible calendar section
-                          Expanded(
-                            flex: 2,
-                            child: _buildCalendarSection(context),
+                          // Calendar Display Widget with responsive height
+                          SizedBox(
+                            height: ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar),
+                            child: const CalendarDisplayWidget(),
                           ),
 
-                          const SizedBox(height: 8),
+                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context)),
 
-                          // Flexible cards row
-                          Expanded(
-                            flex: 1,
-                            child: _buildCardsAndNotesRow(context),
+                          // Progress Graph Widget with responsive height
+                          SizedBox(
+                            height: ResponsiveSpacing.getComponentHeight(context, ComponentType.graph),
+                            child: const ProgressGraphWidget(),
                           ),
 
-                          const SizedBox(height: 8),
+                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context)),
 
-                          // Flexible AI assistant section
-                          Expanded(
-                            flex: 2,
-                            child: Container(
-                              margin: const EdgeInsets.only(top: 32, left: 20, right: 20),
-                              child: const AIAssistantWidget(),
-                            ),
+                          // Calendar and Progress buttons row with responsive spacing
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildActionButton(
+                                  context,
+                                  label: 'Calendar',
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const UnifiedPlannerScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: ResponsiveSpacing.getButtonSpacing(context)),
+                              Expanded(
+                                child: _buildActionButton(
+                                  context,
+                                  label: 'Progress',
+                                  onTap: () {
+                                    _tabController.animateTo(
+                                        2); // Navigate to AI Tutor tab
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
 
-                          const SizedBox(height: 8),
+                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context)),
+
+                          // Pet Display Widget with responsive height
+                          SizedBox(
+                            height: ResponsiveSpacing.getComponentHeight(context, ComponentType.pet),
+                            child: const PetDisplayWidget(),
+                          ),
+
+                          // Extra bottom spacing to account for floating navigation
+                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 1.5),
                         ],
                       ),
                     ),
@@ -1071,87 +1171,491 @@ class _DashboardHomeState extends State<DashboardHome>
                 ],
               ),
             ),
-            // Tasks tab
-            _buildTasksTab(),
-            // Stats tab
-            _buildStatsTab(),
-            // Pet tab
-            _buildPetTab(),
+                      // Notification panel overlay within home tab
+                      _buildNotificationPanelOverlay(context),
+                      // Hamburger menu overlay within home tab
+                      _buildHamburgerMenuOverlay(context),
+                    ],
+                  ),
+                ),
+            // Tab 1: Learn tab (Flashcards/Decks) - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(1, child!),
+              child: _buildLearnTab(),
+            ),
+            // Tab 2: AI Tutor tab - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(2, child!),
+              child: _buildAITutorTab(),
+            ),
+            // Tab 3: Social tab - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(3, child!),
+              child: _buildSocialTab(),
+            ),
+            // Tab 4: Pet tab - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(4, child!),
+              child: _buildPetTab(),
+            ),
           ],
         ),
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Horizontal divider line
-          Container(
-            height: 1,
-            color: const Color(0xFFF8B67F),
-          ),
-          // Navigation bar container
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF2A3050),
-              border: Border(
-                top: BorderSide(color: const Color(0xFFF8B67F), width: 1),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                  offset: const Offset(0, -4),
+        ],
+      ),
+      bottomNavigationBar: Container(
+        padding: EdgeInsets.fromLTRB(
+          ResponsiveSpacing.getHorizontalPadding(context), // Left padding matching dashboard containers
+          0, // No top padding
+          ResponsiveSpacing.getHorizontalPadding(context), // Right padding matching dashboard containers  
+          ResponsiveSpacing.getHorizontalPadding(context), // Bottom padding matching horizontal container spacing
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Floating navigation toolbar with rounded corners
+            Container(
+              height: 68, // Adjusted to fit content with exact AI Tutor spacing
+              decoration: BoxDecoration(
+                color: const Color(0xFF242628), // Dark background color
+                borderRadius: BorderRadius.circular(34), // Rounded corners (half of height for pill shape)
+                border: Border.all(
+                  color: const Color(0xFF6FB8E9), // Blue border
+                  width: 1,
                 ),
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.12),
-                  blurRadius: 5,
-                  spreadRadius: 0,
-                  offset: const Offset(0, -2),
-                ), 
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildNavButton(
-                    context,
-                    index: 0,
-                    icon: Icons.home,
-                    label: 'Home',
-                    isSelected: _selectedTabIndex == 0,
-                    onTap: () => _tabController.animateTo(0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -4),
                   ),
-                  _buildNavButton(
-                    context,
-                    index: 1,
-                    icon: _selectedTabIndex == 1 ? Icons.assignment : Icons.assignment_outlined,
-                    label: 'Tasks',
-                    isSelected: _selectedTabIndex == 1,
-                    onTap: () => _tabController.animateTo(1),
-                  ),
-                  _buildNavButton(
-                    context,
-                    index: 2,
-                    icon: Icons.bar_chart,
-                    label: 'Stats',
-                    isSelected: _selectedTabIndex == 2,
-                    onTap: () => _tabController.animateTo(2),
-                  ),
-                  _buildNavButton(
-                    context,
-                    index: 3,
-                    icon: Icons.pets,
-                    label: 'Pet',
-                    isSelected: _selectedTabIndex == 3,
-                    onTap: () => _tabController.animateTo(3),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.12),
+                    blurRadius: 5,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -2),
                   ),
                 ],
               ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24), // Internal padding
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildNavButton(
+                      context,
+                      index: 0,
+                      icon: Icons.home,
+                      label: 'Home',
+                      isSelected: _selectedTabIndex == 0,
+                      onTap: () => _tabController.animateTo(0),
+                    ),
+                    _buildNavButton(
+                      context,
+                      index: 1,
+                      icon: Icons.school,
+                      label: 'Learn',
+                      isSelected: _selectedTabIndex == 1,
+                      onTap: () => _tabController.animateTo(1),
+                    ),
+                    // Empty space for floating AI Tutor button
+                    const Expanded(child: SizedBox()),
+                    _buildNavButton(
+                      context,
+                      index: 3,
+                      icon: Icons.people,
+                      label: 'Social',
+                      isSelected: _selectedTabIndex == 3,
+                      onTap: () => _tabController.animateTo(3),
+                    ),
+                    _buildNavButton(
+                      context,
+                      index: 4,
+                      icon: Icons.pets,
+                      label: 'Pet',
+                      isSelected: _selectedTabIndex == 4,
+                      onTap: () => _tabController.animateTo(4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Floating AI Tutor button positioned above the toolbar
+            Positioned(
+              top: -31, // Moved down 4 pixels (from -35 to -31)
+              left: 0,
+              right: 0,
+              child: Center(
+                child: _buildFloatingAIButton(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build the status bar with time, connectivity, and notch spacing
+  Widget _buildStatusBar(BuildContext context) {
+    return StreamBuilder<DateTime>(
+      stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+      builder: (context, snapshot) {
+        final now = snapshot.data ?? DateTime.now();
+        final timeString = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+        
+        return Container(
+          height: 44, // Standard status bar height with notch consideration
+          color: const Color(0xFF242628), // Match header color
+          padding: EdgeInsets.symmetric(
+            horizontal: ResponsiveSpacing.getHorizontalPadding(context),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Time display
+              Text(
+                timeString,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              
+              // Connectivity indicators
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // WiFi signal icon
+                  Icon(
+                    Icons.wifi,
+                    size: 18,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                  const SizedBox(width: 8),
+                  // Battery icon (optional)
+                  Icon(
+                    Icons.battery_full,
+                    size: 18,
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Build slide-down notification panel overlay
+  Widget _buildNotificationPanelOverlay(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _notificationPanelAnimation,
+      builder: (context, child) {
+        // Don't show anything when closed or animation value is 0
+        if (_notificationPanelAnimation.value == 0.0) {
+          return const SizedBox.shrink();
+        }
+        
+        // Now that we're inside the SafeArea, we can position relative to the content
+        // Calculate the position after status bar + header + blue divider
+        final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
+        final statusBarHeight = MediaQuery.of(context).padding.top;
+        final dividerHeight = 3.0;
+        
+        // Position right after the blue divider line within the SafeArea + 43px offset (42 + 1)
+        final topPosition = statusBarHeight + headerHeight + dividerHeight + 43.0;
+        
+        // Calculate height to cover calendar and progress containers
+        final calendarHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar);
+        final progressHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
+        final verticalSpacing = ResponsiveSpacing.getVerticalSpacing(context);
+        final panelHeight = calendarHeight + progressHeight + (verticalSpacing * 3) + 100 - 65; // Reduced by 65px (66 - 1)
+        
+        return Positioned(
+          top: topPosition, // Position right after the blue divider
+          left: 0,
+          right: 0,
+          child: ClipRect(
+            child: SizedBox(
+              height: panelHeight * _notificationPanelAnimation.value, // Animate height from 0 to full
+              child: Container(
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveSpacing.getHorizontalPadding(context),
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF242628), // Match header color
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  border: Border.all(
+                    color: const Color(0xFF6FB8E9),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  child: NotificationPanel(
+                    onClose: _toggleNotificationPanel,
+                    isBottomSheet: false,
+                  ),
+                ),
+              ),
             ),
           ),
-        ],
+        );
+      },
+    );
+  }
+
+  /// Build hamburger menu dropdown overlay with animation
+  Widget _buildHamburgerMenuOverlay(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _hamburgerMenuAnimation,
+      builder: (context, child) {
+        // Don't show anything when closed or animation value is 0
+        if (_hamburgerMenuAnimation.value == 0.0) {
+          return const SizedBox.shrink();
+        }
+        
+        // Calculate position - menu appears from top on the left side
+        final statusBarHeight = 44.0; // Custom status bar height
+        final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
+        final systemStatusBar = MediaQuery.of(context).padding.top; // System notch/status bar
+        final dividerHeight = 3.0;
+        
+        // Position right after: system status bar + custom status bar + header + divider
+        final topPosition = systemStatusBar + statusBarHeight + headerHeight + dividerHeight;
+        
+        // Menu takes partial width from the left side
+        final screenWidth = MediaQuery.of(context).size.width;
+        final menuWidth = screenWidth * 0.42; // 42% of screen width - wider to fit "Flash Cards"
+        
+        // Calculate height to fit content (9 menu items)
+        // Each item: 14px top + 14px bottom padding = 28px per item + ListView padding
+        const menuItemHeight = 50.0; // Approximate height per item with padding
+        const numberOfItems = 9;
+        const listPadding = 24.0; // Top and bottom padding
+        final menuHeight = (menuItemHeight * numberOfItems) + listPadding;
+        
+        return Positioned(
+          top: topPosition,
+          left: 0,
+          width: menuWidth * _hamburgerMenuAnimation.value, // Animate width from 0 to full
+          height: menuHeight * _hamburgerMenuAnimation.value, // Also animate height for smoother effect
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomRight: Radius.circular(20), // Rounded bottom-right corner
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF242628), // Same as header background
+                border: Border(
+                  right: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 15,
+                    offset: const Offset(2, 0),
+                  ),
+                ],
+              ),
+              child: _buildHamburgerMenuContent(context),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Build hamburger menu content
+  Widget _buildHamburgerMenuContent(BuildContext context) {
+    return Container(
+      color: const Color(0xFF242628), // Same as header background
+      child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+        children: [
+
+        // Menu items
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.note,
+          title: 'Notes',
+          color: Colors.amber,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotesScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.style,
+          title: 'Flash Cards',
+          color: Colors.blue,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DecksScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.emoji_events,
+          title: 'Badges',
+          color: Colors.orange,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AchievementScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.timer,
+          title: 'Timer',
+          color: Colors.red,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Timer feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.shopping_bag,
+          title: 'Shop',
+          color: Colors.green,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Shop feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.music_note,
+          title: 'Music',
+          color: Colors.purple,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Music feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.feedback,
+          title: 'Feedback',
+          color: Colors.teal,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Feedback feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.settings,
+          title: 'Settings',
+          color: Colors.grey,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.help,
+          title: 'Help',
+          color: Colors.blueGrey,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Help feature coming soon!')),
+            );
+          },
+        ),
+      ],
+      ),
+    );
+  }
+
+  /// Build a menu item for the hamburger menu - styled like the image
+  Widget _buildHamburgerMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        child: Row(
+          children: [
+            // Icon on the left
+            Icon(
+              icon,
+              color: color,
+              size: 22,
+            ),
+            const SizedBox(width: 16), // Space between icon and text
+            // Text on the right - wrapped in Expanded to prevent overflow
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFFCCCCCC), // Light gray text like in the image
+                  letterSpacing: 0.3,
+                ),
+                overflow: TextOverflow.ellipsis, // Handle overflow gracefully
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1159,10 +1663,29 @@ class _DashboardHomeState extends State<DashboardHome>
   /// Build the header section with greeting and action buttons
   Widget _buildHeader(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center, // Ensure all elements are centered vertically
       children: [
-        // Hamburger menu at the top left
-        const ModernHamburgerMenu(),
-        const SizedBox(width: 12),
+        // Simple hamburger menu icon at the top left with functionality
+        SizedBox(
+          width: 48, // Standard IconButton width for consistency
+          height: 48, // Standard IconButton height for consistency
+          child: Center(
+            child: GestureDetector(
+              onTap: _toggleHamburgerMenu,
+              child: AnimatedRotation(
+                turns: _isHamburgerMenuOpen ? 0.125 : 0.0, // Rotate 45 degrees when open
+                duration: const Duration(milliseconds: 300),
+                child: Icon(
+                  _isHamburgerMenuOpen ? Icons.close : Icons.menu,
+                  color: _isHamburgerMenuOpen 
+                    ? const Color(0xFF6FB8E9)
+                    : Theme.of(context).colorScheme.primary,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+        ),
 
         // Main content
         Expanded(
@@ -1179,231 +1702,56 @@ class _DashboardHomeState extends State<DashboardHome>
         // Action buttons on the right
         Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center, // Ensure right icons are centered too
           children: _buildAppBarActions(context),
         ),
       ],
     );
   }
 
-  /// Build the calendar section matching the attached image layout
-  Widget _buildCalendarSection(BuildContext context) {
+  /// Build action button for Calendar and Progress
+  Widget _buildActionButton(
+    BuildContext context, {
+    required String label,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
-      onTap: () {
-        // Navigate to enhanced calendar when calendar section is tapped
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const UnifiedPlannerScreen(),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20),
+        height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton),
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveSpacing.getHorizontalPadding(context) * 0.75,
+          vertical: ResponsiveSpacing.getSmallSpacing(context) * 0.75,
+        ),
         decoration: BoxDecoration(
-          color: const Color(0xFF2A3050),
-          borderRadius: Theme.of(context).cardTheme.shape
-                  is RoundedRectangleBorder
-              ? (Theme.of(context).cardTheme.shape as RoundedRectangleBorder)
-                  .borderRadius
-              : BorderRadius.circular(16),
+          color: const Color(0xFF16181A), // Hollow - match background color
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: const Color(0xFFF8B67F),
+            color: const Color(0xFF6FB8E9), // New blue color - solid border
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 8,
-              spreadRadius: 0,
-              offset: const Offset(0, 3),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
-              spreadRadius: 0,
-              offset: const Offset(0, 1),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Month navigation header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(
-                    Icons.chevron_left,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-                    size: 20,
-                  ),
-                  Text(
-                    'SEPTEMBER',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.0,
-                        ),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-                    size: 20,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Calendar grid
-              Expanded(
-                child: SingleChildScrollView(
-                  child: _buildCalendarGrid(context),
+        child: Center(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
-              ),
-            ],
           ),
         ),
       ),
     );
   }
 
-  /// Build the calendar grid matching the image
-  Widget _buildCalendarGrid(BuildContext context) {
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
-    final daysInMonth = lastDayOfMonth.day;
-    final startWeekday = firstDayOfMonth.weekday % 7; // Sunday = 0
-
-    // Week day headers
-    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-    return Column(
-      children: [
-        // Week day headers
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: weekDays
-              .map(
-                (day) => Expanded(
-                  child: Text(
-                    day,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: const Color(
-                              0xFFF8B67F), // Match Flash Cards border color
-                          fontWeight: FontWeight
-                              .w600, // Slightly bolder to match button styling
-                        ),
-                  ),
-                ),
-              )
-              .toList(),
-        ),
-        const SizedBox(height: 4),
-
-        // Calendar days grid
-        ...List.generate((daysInMonth + startWeekday + 6) ~/ 7, (weekIndex) {
-          final isLastWeek =
-              weekIndex == ((daysInMonth + startWeekday + 6) ~/ 7) - 1;
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(7, (dayIndex) {
-                    final dayNumber =
-                        weekIndex * 7 + dayIndex - startWeekday + 1;
-                    final isCurrentMonth =
-                        dayNumber > 0 && dayNumber <= daysInMonth;
-                    final isToday = isCurrentMonth && dayNumber == now.day;
-
-                    return Expanded(
-                      child: SizedBox(
-                        height: 28,
-                        child: isCurrentMonth
-                            ? InkWell(
-                                onTap: () {
-                                  // Navigate to enhanced calendar when day is tapped
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const UnifiedPlannerScreen(),
-                                    ),
-                                  );
-                                },
-                                borderRadius: BorderRadius.circular(6),
-                                child: Container(
-                                  margin:
-                                      const EdgeInsets.symmetric(horizontal: 2),
-                                  decoration: BoxDecoration(
-                                    color: isToday
-                                        ? const Color(0xFFF8B67F)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      dayNumber.toString(),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelMedium
-                                          ?.copyWith(
-                                            color: isToday
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .onPrimary
-                                                : Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface,
-                                            fontWeight: isToday
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : const SizedBox(),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-              // Add horizontal line after each row except the last one
-              if (!isLastWeek)
-                Container(
-                  height: 1,
-                  margin: const EdgeInsets.symmetric(vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withValues(alpha: 0.3),
-                  ),
-                ),
-            ],
-          );
-        }),
-      ],
-    );
-  }
-
+  /* Removed unused method _buildCardsAndNotesRow
   /// Build flash cards and notes row with login screen styling
   Widget _buildCardsAndNotesRow(BuildContext context) {
     return Container(
@@ -1424,7 +1772,7 @@ class _DashboardHomeState extends State<DashboardHome>
                           .borderRadius
                       : BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFF8B67F),
+                color: const Color(0xFF6FB8E9),
                 width: 2,
               ),
               boxShadow: [
@@ -1470,11 +1818,11 @@ class _DashboardHomeState extends State<DashboardHome>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8B67F),
+                          color: const Color(0xFF6FB8E9),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFF8B67F)
+                              color: const Color(0xFF6FB8E9)
                                   .withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
@@ -1511,7 +1859,7 @@ class _DashboardHomeState extends State<DashboardHome>
                           .borderRadius
                       : BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFF8B67F),
+                color: const Color(0xFF6FB8E9),
                 width: 2,
               ),
               boxShadow: [
@@ -1557,11 +1905,11 @@ class _DashboardHomeState extends State<DashboardHome>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8B67F),
+                          color: const Color(0xFF6FB8E9),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFF8B67F)
+                              color: const Color(0xFF6FB8E9)
                                   .withValues(alpha: 0.3),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
@@ -1583,138 +1931,22 @@ class _DashboardHomeState extends State<DashboardHome>
         ),
       ]),
     );
+  } */
+
+  /// Build Learn tab content (Flashcards/Decks)
+  Widget _buildLearnTab() {
+    // Use the new Learning Screen with all learning features
+    return const LearningScreen();
   }
 
-  /// Build Tasks tab content
-  Widget _buildTasksTab() {
-    return SafeArea(
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text(
-                  'Tasks',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () => _showCreateTaskDialog(context),
-                ),
-              ],
-            ),
-          ),
-          // Tasks list
-          Expanded(
-            child: Consumer<TaskProvider>(
-              builder: (context, taskProvider, child) {
-                if (taskProvider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final tasks = taskProvider.tasks;
-                if (tasks.isEmpty) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.task_alt, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text('No tasks yet'),
-                        Text('Create your first task!'),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return _buildSimpleTaskCard(task);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+  /// Build AI Tutor tab content
+  Widget _buildAITutorTab() {
+    return const AITutorChat(); // Use the actual AI Tutor chat interface
   }
 
-  /// Build Stats tab content
-  Widget _buildStatsTab() {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Statistics',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 20),
-            // Study stats cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Cards Studied',
-                    '150',
-                    Icons.style,
-                    Colors.blue,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Study Streak',
-                    '7 days',
-                    Icons.local_fire_department,
-                    Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Tasks Done',
-                    '23',
-                    Icons.task_alt,
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildStatCard(
-                    context,
-                    'Notes Created',
-                    '45',
-                    Icons.note,
-                    Colors.purple,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+  /// Build Social tab content - Navigate to SocialScreen
+  Widget _buildSocialTab() {
+    return const SocialScreen();
   }
 
   /// Build Pet tab content
@@ -1723,7 +1955,7 @@ class _DashboardHomeState extends State<DashboardHome>
       child: Consumer<PetProvider>(
         builder: (context, petProvider, child) {
           final pet = petProvider.currentPet;
-          
+
           if (pet == null) {
             return const Center(
               child: Column(
@@ -1736,7 +1968,7 @@ class _DashboardHomeState extends State<DashboardHome>
               ),
             );
           }
-          
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -1798,109 +2030,6 @@ class _DashboardHomeState extends State<DashboardHome>
     );
   }
 
-  /// Build stat card widget
-  Widget _buildStatCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Show create task dialog
-  void _showCreateTaskDialog(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Create task dialog - Coming soon!')),
-    );
-  }
-
-  /// Build simple task card for dashboard
-  Widget _buildSimpleTaskCard(Task task) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: task.status == TaskStatus.completed
-              ? Colors.green.withValues(alpha: 0.2)
-              : Colors.blue.withValues(alpha: 0.2),
-          child: Icon(
-            task.status == TaskStatus.completed ? Icons.check : Icons.task_alt,
-            color: task.status == TaskStatus.completed
-                ? Colors.green
-                : Colors.blue,
-          ),
-        ),
-        title: Text(
-          task.title,
-          style: TextStyle(
-            decoration: task.status == TaskStatus.completed
-                ? TextDecoration.lineThrough
-                : null,
-          ),
-        ),
-        subtitle: Text('${task.estMinutes} min'),
-        trailing: task.dueAt != null
-            ? Text(
-                _formatDate(task.dueAt!),
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              )
-            : null,
-      ),
-    );
-  }
-
-  /// Format date for display
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return 'Today';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inDays == -1) {
-      return 'Tomorrow';
-    } else if (difference.inDays > 0) {
-      return '${difference.inDays} days ago';
-    } else {
-      return '${-difference.inDays} days';
-    }
-  }
-
   /// Build individual navigation button matching the image layout with animations
   Widget _buildNavButton(
     BuildContext context, {
@@ -1918,62 +2047,74 @@ class _DashboardHomeState extends State<DashboardHome>
         ]),
         builder: (context, child) {
           return Transform.translate(
-            offset: Offset(0, _bounceAnimations[index].value), // Vertical bounce
+            offset:
+                Offset(0, _bounceAnimations[index].value), // Vertical bounce
             child: Transform.scale(
               scale: _scaleAnimations[index].value,
-              alignment: Alignment.bottomCenter, // Scale from bottom center to keep bottom anchored
+              alignment: Alignment
+                  .bottomCenter, // Scale from bottom center to keep bottom anchored
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onTap,
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Icon container with selection styling and animations
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeInOut,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2A3050),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFFF8B67F),
-                              width: isSelected ? 2 : 1,
-                            ),
-                            boxShadow: isSelected ? [
-                              BoxShadow(
-                                color: const Color(0xFFF8B67F).withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                spreadRadius: 2,
+                        // Icon container with consistent height for alignment
+                        SizedBox(
+                          height: 40, // Fixed height to ensure all icons align horizontally
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              padding: EdgeInsets.all(label == 'AI Tutor' && isSelected ? 
+                                2.0 : // Minimal padding for AI Tutor when selected
+                                1.0), // Minimal padding for all other icons
+                              decoration: BoxDecoration(
+                                color: (label == 'AI Tutor' && isSelected) 
+                                    ? const Color(0xFF6FB8E9) // Blue background for selected AI Tutor
+                                    : Colors.transparent, // Transparent for others
+                                borderRadius: BorderRadius.circular(label == 'AI Tutor' && isSelected ? 24 : 16),
+                                border: (label != 'AI Tutor' || !isSelected) ? Border.all(
+                                  color: Colors.transparent,
+                                  width: 0,
+                                ) : null,
                               ),
-                            ] : null,
+                              child: _buildIconWithHollowEffect(
+                                  icon, isSelected, label),
+                            ),
                           ),
-                          child: _buildIconWithHollowEffect(icon, isSelected, label),
                         ),
-                        const SizedBox(height: 4),
-                        // Label text with animation
-                        AnimatedDefaultTextStyle(
-                          duration: const Duration(milliseconds: 200),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: isSelected
-                                    ? const Color(0xFFF8B67F)
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.7),
-                                fontWeight:
-                                    isSelected ? FontWeight.w600 : FontWeight.w500,
-                                fontSize: 11,
-                              ) ?? const TextStyle(),
-                          child: Text(
-                            label,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                        // No spacing - text immediately under icon
+                        // Label text with consistent baseline alignment
+                        SizedBox(
+                          height: 14, // Fixed height to ensure all text aligns horizontally
+                          child: Center(
+                            child: AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 200),
+                              style:
+                                  Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            color: (label == 'AI Tutor' && isSelected)
+                                                ? Colors.white // White text for selected AI Tutor
+                                                : (label == 'AI Tutor')
+                                                    ? const Color(0xFF6FB8E9) // Blue for unselected AI Tutor
+                                                    : const Color(0xFFCFCFCF), // Gray for all others
+                                            fontWeight: isSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.w500,
+                                            fontSize: 10, // Reduced from 11 to fit better
+                                          ) ??
+                                      const TextStyle(),
+                              child: Text(
+                                label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -1988,8 +2129,73 @@ class _DashboardHomeState extends State<DashboardHome>
     );
   }
 
+  /// Build floating AI Tutor button with hollow circle design
+  Widget _buildFloatingAIButton(BuildContext context) {
+    final isSelected = _selectedTabIndex == 2;
+    
+    return AnimatedBuilder(
+      animation: _scaleAnimations[2], // Use existing animation for AI Tutor
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimations[2].value,
+          child: GestureDetector(
+            onTap: () => _tabController.animateTo(2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: isSelected 
+                      ? const Color(0xFF6FB8E9) 
+                      : const Color(0xFF242628), // Match footer background when not selected
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFF6FB8E9),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.psychology,
+                    color: isSelected 
+                      ? Colors.white 
+                      : const Color(0xFF6FB8E9),
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'AI Tutor',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: isSelected
+                      ? const Color(0xFF6FB8E9)
+                      : const Color(0xFFCFCFCF),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    fontSize: 11,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   /// Build icon with hollow effect for Stats and Pet buttons when not selected
-  Widget _buildIconWithHollowEffect(IconData icon, bool isSelected, String label) {
+  Widget _buildIconWithHollowEffect(
+      IconData icon, bool isSelected, String label) {
     // For Home button, use animated custom SVG painter
     if (label == 'Home') {
       return AnimatedBuilder(
@@ -1998,7 +2204,9 @@ class _DashboardHomeState extends State<DashboardHome>
           return CustomPaint(
             size: const Size(28, 28),
             painter: AnimatedHomeIconPainter(
-              color: const Color(0xFFF8B67F),
+              color: isSelected 
+                ? const Color(0xFF6FB8E9) // Blue when selected
+                : const Color(0xFFCFCFCF), // Gray when not selected
               isFilled: isSelected,
               animationProgress: isSelected ? _homeIconAnimation.value : 0.0,
             ),
@@ -2006,7 +2214,7 @@ class _DashboardHomeState extends State<DashboardHome>
         },
       );
     }
-    
+
     if (label == 'Tasks') {
       return AnimatedBuilder(
         animation: _tasksAnimation,
@@ -2014,17 +2222,20 @@ class _DashboardHomeState extends State<DashboardHome>
           return CustomPaint(
             size: const Size(28, 28),
             painter: TasksIconPainter(
-              color: const Color(0xFFF8B67F),
+              color: const Color(0xFF6FB8E9),
               isFilled: isSelected, // Filled when selected, outlined when not
               strokeWidth: 1.5,
-              backgroundColor: const Color(0xFF1C1F35), // Purple background for transparent effect
-              animationProgress: isSelected ? _tasksAnimation.value : 0.0, // Only animate when selected
+              backgroundColor: const Color(
+                  0xFF1C1F35), // Purple background for transparent effect
+              animationProgress: isSelected
+                  ? _tasksAnimation.value
+                  : 0.0, // Only animate when selected
             ),
           );
         },
       );
     }
-    
+
     // For Stats button, use animated bar chart with smooth transition
     if (label == 'Stats') {
       return AnimatedBuilder(
@@ -2033,7 +2244,7 @@ class _DashboardHomeState extends State<DashboardHome>
           return CustomPaint(
             size: const Size(28, 28),
             painter: AnimatedBarChartPainter(
-              color: const Color(0xFFF8B67F),
+              color: const Color(0xFF6FB8E9),
               animationProgress: isSelected ? _statsIconAnimation.value : 0.0,
               strokeWidth: 1.5,
               isFilled: isSelected, // Filled when selected, outlined when not
@@ -2042,7 +2253,62 @@ class _DashboardHomeState extends State<DashboardHome>
         },
       );
     }
-    
+
+    // For Learn button, use custom graduation cap icon with tassel sway animation
+    if (label == 'Learn') {
+      // Check if animation is initialized
+      if (_learnIconAnimation == null) {
+        return CustomPaint(
+          size: const Size(28, 28),
+          painter: GraduationCapPainter(
+            color: isSelected 
+              ? const Color(0xFF6FB8E9)
+              : const Color(0xFFCFCFCF),
+            isFilled: isSelected,
+            strokeWidth: 1.5,
+            animationValue: 0.0,
+          ),
+        );
+      }
+      
+      return AnimatedBuilder(
+        animation: _learnIconAnimation!,
+        builder: (context, child) {
+          return CustomPaint(
+            size: const Size(28, 28),
+            painter: GraduationCapPainter(
+              color: isSelected 
+                ? const Color(0xFF6FB8E9) // Blue when selected
+                : const Color(0xFFCFCFCF), // Gray when not selected
+              isFilled: isSelected, // Filled when selected, outlined when not
+              strokeWidth: 1.5,
+              animationValue: isSelected ? _learnIconAnimation!.value : 0.0, // Only animate when selected
+            ),
+          );
+        },
+      );
+    }
+
+    // For Social button, use custom users/people icon with hugging animation
+    if (label == 'Social') {
+      return AnimatedBuilder(
+        animation: _socialIconAnimation,
+        builder: (context, child) {
+          return CustomPaint(
+            size: const Size(28, 28),
+            painter: SocialIconPainter(
+              color: isSelected 
+                ? const Color(0xFF6FB8E9) // Blue when selected
+                : const Color(0xFFCFCFCF), // Gray when not selected
+              isFilled: isSelected, // Filled when selected, outlined when not
+              strokeWidth: 1.5,
+              animationValue: _socialIconAnimation.value, // Add hugging animation
+            ),
+          );
+        },
+      );
+    }
+
     // For Pet button, use custom paw icon with animated overlay
     if (label == 'Pet') {
       return AnimatedBuilder(
@@ -2055,9 +2321,12 @@ class _DashboardHomeState extends State<DashboardHome>
               CustomPaint(
                 size: const Size(32, 32),
                 painter: AnimatedPawsPainter(
-                  color: const Color(0xFFF8B67F),
+                  color: isSelected 
+                    ? const Color(0xFF6FB8E9) // Blue when selected
+                    : const Color(0xFFCFCFCF), // Gray when not selected
                   animationProgress: 0.0, // No animation for base icon
-                  isFilled: isSelected, // Filled when selected, outlined when not
+                  isFilled:
+                      isSelected, // Filled when selected, outlined when not
                   strokeWidth: 1.5,
                 ),
               ),
@@ -2066,7 +2335,7 @@ class _DashboardHomeState extends State<DashboardHome>
                 CustomPaint(
                   size: const Size(32, 32),
                   painter: AnimatedPawsPainter(
-                    color: const Color(0xFFF8B67F), // Use current pet color
+                    color: const Color(0xFF6FB8E9), // Blue for animation overlay
                     animationProgress: _petIconAnimation.value,
                     isFilled: true, // Filled when selected
                     strokeWidth: 1.5,
@@ -2077,35 +2346,24 @@ class _DashboardHomeState extends State<DashboardHome>
         },
       );
     }
-    
-    // For other buttons, create hollow effect when not selected
-    if (isSelected) {
-      // When selected, show normal filled icon
-      return Icon(
-        icon,
-        size: 28,
-        color: const Color(0xFFF8B67F),
-      );
+
+    // For other buttons, use blue for selected and gray for non-selected
+    Color iconColor;
+    if (label == 'AI Tutor' && isSelected) {
+      iconColor = Colors.white; // White icon on blue background
+    } else if (label == 'AI Tutor') {
+      iconColor = const Color(0xFF6FB8E9); // Blue when not selected
+    } else if (isSelected) {
+      iconColor = const Color(0xFF6FB8E9); // Blue when selected
     } else {
-      // When not selected, create hollow effect using Stack
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          // Outer border (larger icon in accent color)
-          Icon(
-            icon,
-            size: 28,
-            color: const Color(0xFFF8B67F),
-          ),
-          // Inner fill (smaller icon in background color to create hollow effect)
-          Icon(
-            icon,
-            size: 22, // Smaller size to create border effect
-            color: const Color(0xFF2A3050), // Background color
-          ),
-        ],
-      );
+      iconColor = const Color(0xFFCFCFCF); // Gray when not selected
     }
+
+    return Icon(
+      icon,
+      size: label == 'AI Tutor' && isSelected ? 32 : 28, // Larger size for selected AI Tutor
+      color: iconColor,
+    );
   }
 }
 
@@ -2616,10 +2874,7 @@ class _NotesScreenState extends State<NotesScreen>
                         const SizedBox(height: 4),
                         Text(
                           quest.description,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ],
                     ),
@@ -3238,17 +3493,13 @@ class _NotesScreenState extends State<NotesScreen>
                           child: Row(
                             children: [
                               Icon(Icons.calendar_today,
-                                  color: Colors.grey[600]),
+                                  color: Theme.of(context).iconTheme.color),
                               const SizedBox(width: 8),
                               Text(
                                 selectedDueDate != null
                                     ? 'Due: ${_formatDate(selectedDueDate!)}'
                                     : 'Set due date (optional)',
-                                style: TextStyle(
-                                  color: selectedDueDate != null
-                                      ? Colors.black
-                                      : Colors.grey[600],
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               const Spacer(),
                               if (selectedDueDate != null)
@@ -3633,239 +3884,335 @@ class SettingsGearPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
 
     final path = Path();
-    
+
     // Convert SVG path to Flutter coordinates
     // SVG viewBox is 0 0 24 24, so we scale to our size
     final scaleX = size.width / 24;
     final scaleY = size.height / 24;
-    
+
     // Outer gear path: M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894...
     path.moveTo(10.343 * scaleX, 3.94 * scaleY);
-    
+
     // Top gear tooth
     path.cubicTo(
-      10.433 * scaleX, 3.398 * scaleY,
-      10.903 * scaleX, 3.0 * scaleY,
-      11.453 * scaleX, 3.0 * scaleY,
+      10.433 * scaleX,
+      3.398 * scaleY,
+      10.903 * scaleX,
+      3.0 * scaleY,
+      11.453 * scaleX,
+      3.0 * scaleY,
     );
     path.lineTo(12.546 * scaleX, 3.0 * scaleY);
     path.cubicTo(
-      13.096 * scaleX, 3.0 * scaleY,
-      13.566 * scaleX, 3.398 * scaleY,
-      13.656 * scaleX, 3.94 * scaleY,
+      13.096 * scaleX,
+      3.0 * scaleY,
+      13.566 * scaleX,
+      3.398 * scaleY,
+      13.656 * scaleX,
+      3.94 * scaleY,
     );
-    
+
     // Top right curve
     path.lineTo(13.805 * scaleX, 4.834 * scaleY);
     path.cubicTo(
-      13.875 * scaleX, 5.258 * scaleY,
-      14.189 * scaleX, 5.598 * scaleY,
-      14.585 * scaleX, 5.764 * scaleY,
+      13.875 * scaleX,
+      5.258 * scaleY,
+      14.189 * scaleX,
+      5.598 * scaleY,
+      14.585 * scaleX,
+      5.764 * scaleY,
     );
     path.cubicTo(
-      14.983 * scaleX, 5.928 * scaleY,
-      15.44 * scaleX, 5.906 * scaleY,
-      15.79 * scaleX, 5.656 * scaleY,
+      14.983 * scaleX,
+      5.928 * scaleY,
+      15.44 * scaleX,
+      5.906 * scaleY,
+      15.79 * scaleX,
+      5.656 * scaleY,
     );
-    
+
     // Right gear tooth
     path.lineTo(16.527 * scaleX, 5.129 * scaleY);
     path.cubicTo(
-      16.977 * scaleX, 4.449 * scaleY,
-      17.587 * scaleX, 4.499 * scaleY,
-      17.977 * scaleX, 4.579 * scaleY,
+      16.977 * scaleX,
+      4.449 * scaleY,
+      17.587 * scaleX,
+      4.499 * scaleY,
+      17.977 * scaleX,
+      4.579 * scaleY,
     );
     path.lineTo(18.75 * scaleX, 5.353 * scaleY);
     path.cubicTo(
-      19.14 * scaleX, 5.742 * scaleY,
-      19.19 * scaleX, 6.355 * scaleY,
-      18.87 * scaleX, 6.803 * scaleY,
+      19.14 * scaleX,
+      5.742 * scaleY,
+      19.19 * scaleX,
+      6.355 * scaleY,
+      18.87 * scaleX,
+      6.803 * scaleY,
     );
-    
+
     // Continue the gear outline...
     // Right side continuing clockwise
     path.lineTo(18.343 * scaleX, 7.54 * scaleY);
     path.cubicTo(
-      18.093 * scaleX, 7.89 * scaleY,
-      18.071 * scaleX, 8.346 * scaleY,
-      18.236 * scaleX, 8.744 * scaleY,
+      18.093 * scaleX,
+      7.89 * scaleY,
+      18.071 * scaleX,
+      8.346 * scaleY,
+      18.236 * scaleX,
+      8.744 * scaleY,
     );
     path.cubicTo(
-      18.401 * scaleX, 9.141 * scaleY,
-      18.741 * scaleX, 9.454 * scaleY,
-      19.166 * scaleX, 9.524 * scaleY,
+      18.401 * scaleX,
+      9.141 * scaleY,
+      18.741 * scaleX,
+      9.454 * scaleY,
+      19.166 * scaleX,
+      9.524 * scaleY,
     );
-    
+
     // Right gear extension
     path.lineTo(20.059 * scaleX, 9.673 * scaleY);
     path.cubicTo(
-      20.601 * scaleX, 9.763 * scaleY,
-      20.999 * scaleX, 10.232 * scaleY,
-      20.999 * scaleX, 10.782 * scaleY,
+      20.601 * scaleX,
+      9.763 * scaleY,
+      20.999 * scaleX,
+      10.232 * scaleY,
+      20.999 * scaleX,
+      10.782 * scaleY,
     );
     path.lineTo(20.999 * scaleX, 11.876 * scaleY);
     path.cubicTo(
-      20.999 * scaleX, 12.426 * scaleY,
-      20.601 * scaleX, 12.896 * scaleY,
-      20.059 * scaleX, 12.986 * scaleY,
+      20.999 * scaleX,
+      12.426 * scaleY,
+      20.601 * scaleX,
+      12.896 * scaleY,
+      20.059 * scaleX,
+      12.986 * scaleY,
     );
-    
+
     // Bottom right
     path.lineTo(19.165 * scaleX, 13.135 * scaleY);
     path.cubicTo(
-      18.741 * scaleX, 13.205 * scaleY,
-      18.401 * scaleX, 13.518 * scaleY,
-      18.236 * scaleX, 13.915 * scaleY,
+      18.741 * scaleX,
+      13.205 * scaleY,
+      18.401 * scaleX,
+      13.518 * scaleY,
+      18.236 * scaleX,
+      13.915 * scaleY,
     );
     path.cubicTo(
-      18.071 * scaleX, 14.313 * scaleY,
-      18.093 * scaleX, 14.769 * scaleY,
-      18.343 * scaleX, 15.119 * scaleY,
+      18.071 * scaleX,
+      14.313 * scaleY,
+      18.093 * scaleX,
+      14.769 * scaleY,
+      18.343 * scaleX,
+      15.119 * scaleY,
     );
-    
+
     // Bottom gear tooth
     path.lineTo(18.87 * scaleX, 15.857 * scaleY);
     path.cubicTo(
-      19.19 * scaleX, 16.304 * scaleY,
-      19.14 * scaleX, 16.917 * scaleY,
-      18.75 * scaleX, 17.307 * scaleY,
+      19.19 * scaleX,
+      16.304 * scaleY,
+      19.14 * scaleX,
+      16.917 * scaleY,
+      18.75 * scaleX,
+      17.307 * scaleY,
     );
     path.lineTo(17.977 * scaleX, 18.08 * scaleY);
     path.cubicTo(
-      17.587 * scaleX, 18.469 * scaleY,
-      16.977 * scaleX, 18.519 * scaleY,
-      16.527 * scaleX, 18.199 * scaleY,
+      17.587 * scaleX,
+      18.469 * scaleY,
+      16.977 * scaleX,
+      18.519 * scaleY,
+      16.527 * scaleX,
+      18.199 * scaleY,
     );
-    
+
     // Continue back to starting point (simplified for brevity)
     path.lineTo(15.79 * scaleX, 17.672 * scaleY);
     path.cubicTo(
-      15.44 * scaleX, 17.422 * scaleY,
-      14.983 * scaleX, 17.4 * scaleY,
-      14.585 * scaleX, 17.564 * scaleY,
+      15.44 * scaleX,
+      17.422 * scaleY,
+      14.983 * scaleX,
+      17.4 * scaleY,
+      14.585 * scaleX,
+      17.564 * scaleY,
     );
     path.cubicTo(
-      14.189 * scaleX, 17.73 * scaleY,
-      13.875 * scaleX, 18.07 * scaleY,
-      13.805 * scaleX, 18.494 * scaleY,
+      14.189 * scaleX,
+      17.73 * scaleY,
+      13.875 * scaleX,
+      18.07 * scaleY,
+      13.805 * scaleX,
+      18.494 * scaleY,
     );
-    
+
     // Bottom
     path.lineTo(13.656 * scaleX, 19.388 * scaleY);
     path.cubicTo(
-      13.566 * scaleX, 19.93 * scaleY,
-      13.096 * scaleX, 20.328 * scaleY,
-      12.546 * scaleX, 20.328 * scaleY,
+      13.566 * scaleX,
+      19.93 * scaleY,
+      13.096 * scaleX,
+      20.328 * scaleY,
+      12.546 * scaleX,
+      20.328 * scaleY,
     );
     path.lineTo(11.453 * scaleX, 20.328 * scaleY);
     path.cubicTo(
-      10.903 * scaleX, 20.328 * scaleY,
-      10.433 * scaleX, 19.93 * scaleY,
-      10.343 * scaleX, 19.388 * scaleY,
+      10.903 * scaleX,
+      20.328 * scaleY,
+      10.433 * scaleX,
+      19.93 * scaleY,
+      10.343 * scaleX,
+      19.388 * scaleY,
     );
-    
+
     // Continue back up left side
     path.lineTo(10.194 * scaleX, 18.494 * scaleY);
     path.cubicTo(
-      10.124 * scaleX, 18.07 * scaleY,
-      9.81 * scaleX, 17.73 * scaleY,
-      9.413 * scaleX, 17.564 * scaleY,
+      10.124 * scaleX,
+      18.07 * scaleY,
+      9.81 * scaleX,
+      17.73 * scaleY,
+      9.413 * scaleX,
+      17.564 * scaleY,
     );
     path.cubicTo(
-      9.015 * scaleX, 17.4 * scaleY,
-      8.559 * scaleX, 17.422 * scaleY,
-      8.209 * scaleX, 17.672 * scaleY,
+      9.015 * scaleX,
+      17.4 * scaleY,
+      8.559 * scaleX,
+      17.422 * scaleY,
+      8.209 * scaleX,
+      17.672 * scaleY,
     );
-    
+
     // Left gear tooth
     path.lineTo(7.472 * scaleX, 18.199 * scaleY);
     path.cubicTo(
-      7.025 * scaleX, 18.519 * scaleY,
-      6.412 * scaleX, 18.469 * scaleY,
-      6.023 * scaleX, 18.08 * scaleY,
+      7.025 * scaleX,
+      18.519 * scaleY,
+      6.412 * scaleX,
+      18.469 * scaleY,
+      6.023 * scaleX,
+      18.08 * scaleY,
     );
     path.lineTo(5.25 * scaleX, 17.307 * scaleY);
     path.cubicTo(
-      4.86 * scaleX, 16.917 * scaleY,
-      4.81 * scaleX, 16.304 * scaleY,
-      5.13 * scaleX, 15.857 * scaleY,
+      4.86 * scaleX,
+      16.917 * scaleY,
+      4.81 * scaleX,
+      16.304 * scaleY,
+      5.13 * scaleX,
+      15.857 * scaleY,
     );
-    
+
     // Complete the path back to start
     path.lineTo(5.657 * scaleX, 15.119 * scaleY);
     path.cubicTo(
-      5.907 * scaleX, 14.769 * scaleY,
-      5.929 * scaleX, 14.313 * scaleY,
-      5.764 * scaleX, 13.915 * scaleY,
+      5.907 * scaleX,
+      14.769 * scaleY,
+      5.929 * scaleX,
+      14.313 * scaleY,
+      5.764 * scaleX,
+      13.915 * scaleY,
     );
     path.cubicTo(
-      5.599 * scaleX, 13.518 * scaleY,
-      5.259 * scaleX, 13.205 * scaleY,
-      4.834 * scaleX, 13.135 * scaleY,
+      5.599 * scaleX,
+      13.518 * scaleY,
+      5.259 * scaleX,
+      13.205 * scaleY,
+      4.834 * scaleX,
+      13.135 * scaleY,
     );
-    
+
     // Left extension
     path.lineTo(3.94 * scaleX, 12.986 * scaleY);
     path.cubicTo(
-      3.398 * scaleX, 12.896 * scaleY,
-      3.0 * scaleX, 12.426 * scaleY,
-      3.0 * scaleX, 11.876 * scaleY,
+      3.398 * scaleX,
+      12.896 * scaleY,
+      3.0 * scaleX,
+      12.426 * scaleY,
+      3.0 * scaleX,
+      11.876 * scaleY,
     );
     path.lineTo(3.0 * scaleX, 10.782 * scaleY);
     path.cubicTo(
-      3.0 * scaleX, 10.232 * scaleY,
-      3.398 * scaleX, 9.763 * scaleY,
-      3.94 * scaleX, 9.673 * scaleY,
+      3.0 * scaleX,
+      10.232 * scaleY,
+      3.398 * scaleX,
+      9.763 * scaleY,
+      3.94 * scaleX,
+      9.673 * scaleY,
     );
-    
+
     // Back up left side
     path.lineTo(4.834 * scaleX, 9.524 * scaleY);
     path.cubicTo(
-      5.259 * scaleX, 9.454 * scaleY,
-      5.599 * scaleX, 9.141 * scaleY,
-      5.764 * scaleX, 8.744 * scaleY,
+      5.259 * scaleX,
+      9.454 * scaleY,
+      5.599 * scaleX,
+      9.141 * scaleY,
+      5.764 * scaleX,
+      8.744 * scaleY,
     );
     path.cubicTo(
-      5.929 * scaleX, 8.346 * scaleY,
-      5.907 * scaleX, 7.89 * scaleY,
-      5.657 * scaleX, 7.54 * scaleY,
+      5.929 * scaleX,
+      8.346 * scaleY,
+      5.907 * scaleX,
+      7.89 * scaleY,
+      5.657 * scaleX,
+      7.54 * scaleY,
     );
-    
+
     path.lineTo(5.13 * scaleX, 6.803 * scaleY);
     path.cubicTo(
-      4.81 * scaleX, 6.355 * scaleY,
-      4.86 * scaleX, 5.742 * scaleY,
-      5.25 * scaleX, 5.353 * scaleY,
+      4.81 * scaleX,
+      6.355 * scaleY,
+      4.86 * scaleX,
+      5.742 * scaleY,
+      5.25 * scaleX,
+      5.353 * scaleY,
     );
     path.lineTo(6.023 * scaleX, 4.579 * scaleY);
     path.cubicTo(
-      6.412 * scaleX, 4.19 * scaleY,
-      7.025 * scaleX, 4.14 * scaleY,
-      7.472 * scaleX, 4.46 * scaleY,
+      6.412 * scaleX,
+      4.19 * scaleY,
+      7.025 * scaleX,
+      4.14 * scaleY,
+      7.472 * scaleX,
+      4.46 * scaleY,
     );
-    
+
     path.lineTo(8.209 * scaleX, 4.987 * scaleY);
     path.cubicTo(
-      8.559 * scaleX, 5.237 * scaleY,
-      9.015 * scaleX, 5.259 * scaleY,
-      9.413 * scaleX, 5.094 * scaleY,
+      8.559 * scaleX,
+      5.237 * scaleY,
+      9.015 * scaleX,
+      5.259 * scaleY,
+      9.413 * scaleX,
+      5.094 * scaleY,
     );
     path.cubicTo(
-      9.81 * scaleX, 4.929 * scaleY,
-      10.124 * scaleX, 4.589 * scaleY,
-      10.194 * scaleX, 4.165 * scaleY,
+      9.81 * scaleX,
+      4.929 * scaleY,
+      10.124 * scaleX,
+      4.589 * scaleY,
+      10.194 * scaleX,
+      4.165 * scaleY,
     );
-    
+
     path.close();
 
     canvas.drawPath(path, paint);
-    
+
     // Draw the inner circle: M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z
     final innerPath = Path();
     final centerX = 12 * scaleX;
     final centerY = 12 * scaleY;
     final radius = 3 * scaleX;
-    
+
     innerPath.addOval(Rect.fromCircle(
       center: Offset(centerX, centerY),
       radius: radius,
@@ -3907,8 +4254,9 @@ class AnimatedHomeIconPainter extends CustomPainter {
 
     // Apply hover-pinch animation to the entire house
     final center = Offset(size.width / 2, size.height / 2);
-    final pinchScale = 1.0 - (animationProgress * 0.05); // Subtle 5% pinch effect
-    
+    final pinchScale =
+        1.0 - (animationProgress * 0.05); // Subtle 5% pinch effect
+
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.scale(pinchScale);
@@ -3917,7 +4265,7 @@ class AnimatedHomeIconPainter extends CustomPainter {
     if (isFilled) {
       // Filled version using exact SVG paths with door animation
       paint.style = PaintingStyle.fill;
-      
+
       // Door animation progress - starts open, closes in middle, opens again
       double doorProgress;
       if (animationProgress <= 0.33) {
@@ -3933,178 +4281,207 @@ class AnimatedHomeIconPainter extends CustomPainter {
 
       // First SVG path: d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z"
       final roofPath = Path();
-      
+
       // Starting point M11.47 3.841
       roofPath.moveTo(11.47 * scaleX, 3.841 * scaleY);
-      
+
       // Arc curve a.75.75 0 0 1 1.06 0 - simplified as line to end point
       roofPath.lineTo(12.53 * scaleX, 3.841 * scaleY); // 11.47 + 1.06 = 12.53
-      
+
       // Line l8.69 8.69
-      roofPath.lineTo(21.22 * scaleX, 12.531 * scaleY); // 12.53 + 8.69 = 21.22, 3.841 + 8.69 = 12.531
-      
+      roofPath.lineTo(21.22 * scaleX,
+          12.531 * scaleY); // 12.53 + 8.69 = 21.22, 3.841 + 8.69 = 12.531
+
       // Arc a.75.75 0 1 0 1.06-1.061 - simplified as line
-      roofPath.lineTo(22.28 * scaleX, 11.47 * scaleY); // 21.22 + 1.06 = 22.28, 12.531 - 1.061 = 11.47
-      
+      roofPath.lineTo(22.28 * scaleX,
+          11.47 * scaleY); // 21.22 + 1.06 = 22.28, 12.531 - 1.061 = 11.47
+
       // Line l-8.689-8.69
-      roofPath.lineTo(13.591 * scaleX, 2.78 * scaleY); // 22.28 - 8.689 = 13.591, 11.47 - 8.69 = 2.78
-      
+      roofPath.lineTo(13.591 * scaleX,
+          2.78 * scaleY); // 22.28 - 8.689 = 13.591, 11.47 - 8.69 = 2.78
+
       // Arc a2.25 2.25 0 0 0-3.182 0 - simplified as line
-      roofPath.lineTo(10.409 * scaleX, 2.78 * scaleY); // 13.591 - 3.182 = 10.409
-      
+      roofPath.lineTo(
+          10.409 * scaleX, 2.78 * scaleY); // 13.591 - 3.182 = 10.409
+
       // Line l-8.69 8.69
-      roofPath.lineTo(1.719 * scaleX, 11.47 * scaleY); // 10.409 - 8.69 = 1.719, 2.78 + 8.69 = 11.47
-      
+      roofPath.lineTo(1.719 * scaleX,
+          11.47 * scaleY); // 10.409 - 8.69 = 1.719, 2.78 + 8.69 = 11.47
+
       // Arc a.75.75 0 1 0 1.061 1.06 - simplified as line
-      roofPath.lineTo(2.78 * scaleX, 12.531 * scaleY); // 1.719 + 1.061 = 2.78, 11.47 + 1.06 = 12.531
-      
+      roofPath.lineTo(2.78 * scaleX,
+          12.531 * scaleY); // 1.719 + 1.061 = 2.78, 11.47 + 1.06 = 12.531
+
       // Line l8.69-8.689 back to start - Z closes the path
-      roofPath.lineTo(11.47 * scaleX, 3.841 * scaleY); // 2.78 + 8.69 = 11.47, 12.531 - 8.689 = 3.842 ≈ 3.841
-      
+      roofPath.lineTo(
+          11.47 * scaleX,
+          3.841 *
+              scaleY); // 2.78 + 8.69 = 11.47, 12.531 - 8.689 = 3.842 ≈ 3.841
+
       roofPath.close();
       canvas.drawPath(roofPath, paint);
-      
+
       // Second SVG path: d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z"
       final housePath = Path();
-      
+
       // Starting point m12 5.432
       housePath.moveTo(12 * scaleX, 5.432 * scaleY);
-      
+
       // Line l8.159 8.159
-      housePath.lineTo(20.159 * scaleX, 13.591 * scaleY); // 12 + 8.159 = 20.159, 5.432 + 8.159 = 13.591
-      
+      housePath.lineTo(20.159 * scaleX,
+          13.591 * scaleY); // 12 + 8.159 = 20.159, 5.432 + 8.159 = 13.591
+
       // Curve c.03.03.06.058.091.086 - simplified as small offset
-      housePath.lineTo(20.25 * scaleX, 13.677 * scaleY); // 20.159 + 0.091 = 20.25, 13.591 + 0.086 = 13.677
-      
+      housePath.lineTo(20.25 * scaleX,
+          13.677 * scaleY); // 20.159 + 0.091 = 20.25, 13.591 + 0.086 = 13.677
+
       // Vertical line v6.198
-      housePath.lineTo(20.25 * scaleX, 19.875 * scaleY); // 13.677 + 6.198 = 19.875
-      
+      housePath.lineTo(
+          20.25 * scaleX, 19.875 * scaleY); // 13.677 + 6.198 = 19.875
+
       // House right side with rounded corner - c0 1.035-.84 1.875-1.875 1.875
-      housePath.lineTo(18.375 * scaleX, 21.75 * scaleY); // 20.25 - 1.875 = 18.375, 19.875 + 1.875 = 21.75
+      housePath.lineTo(18.375 * scaleX,
+          21.75 * scaleY); // 20.25 - 1.875 = 18.375, 19.875 + 1.875 = 21.75
       housePath.lineTo(15 * scaleX, 21.75 * scaleY); // H15
-      
+
       // Right door frame - a.75.75 0 0 1-.75-.75
-      housePath.lineTo(14.25 * scaleX, 21 * scaleY); // 15 - 0.75 = 14.25, 21.75 - 0.75 = 21
-      
+      housePath.lineTo(
+          14.25 * scaleX, 21 * scaleY); // 15 - 0.75 = 14.25, 21.75 - 0.75 = 21
+
       // Create animated door opening by modifying the path
       final doorTopY = 21 - (4.5 * doorProgress); // Animate door from bottom up
       housePath.lineTo(14.25 * scaleX, doorTopY * scaleY); // v-4.5 animated
-      
+
       // Door top - a.75.75 0 0 0-.75-.75
-      housePath.lineTo(13.5 * scaleX, doorTopY * scaleY - 0.75 * scaleY); // 14.25 - 0.75 = 13.5
-      
+      housePath.lineTo(13.5 * scaleX,
+          doorTopY * scaleY - 0.75 * scaleY); // 14.25 - 0.75 = 13.5
+
       // Door top edge - h-3
-      housePath.lineTo(10.5 * scaleX, doorTopY * scaleY - 0.75 * scaleY); // 13.5 - 3 = 10.5
-      
+      housePath.lineTo(
+          10.5 * scaleX, doorTopY * scaleY - 0.75 * scaleY); // 13.5 - 3 = 10.5
+
       // Left door frame - a.75.75 0 0 0-.75.75
       housePath.lineTo(9.75 * scaleX, doorTopY * scaleY); // 10.5 - 0.75 = 9.75
-      
+
       // Left door side animated
       housePath.lineTo(9.75 * scaleX, 21 * scaleY); // Back down to V21
-      
+
       // Left side of house - a.75.75 0 0 1-.75.75
-      housePath.lineTo(9 * scaleX, 21.75 * scaleY); // 9.75 - 0.75 = 9, 21 + 0.75 = 21.75
-      
+      housePath.lineTo(
+          9 * scaleX, 21.75 * scaleY); // 9.75 - 0.75 = 9, 21 + 0.75 = 21.75
+
       // House left side - H5.625
       housePath.lineTo(5.625 * scaleX, 21.75 * scaleY);
-      
+
       // Left wall with rounded corner - a1.875 1.875 0 0 1-1.875-1.875
-      housePath.lineTo(3.75 * scaleX, 19.875 * scaleY); // 5.625 - 1.875 = 3.75, 21.75 - 1.875 = 19.875
-      
+      housePath.lineTo(3.75 * scaleX,
+          19.875 * scaleY); // 5.625 - 1.875 = 3.75, 21.75 - 1.875 = 19.875
+
       // Left wall up - v-6.198
-      housePath.lineTo(3.75 * scaleX, 13.677 * scaleY); // 19.875 - 6.198 = 13.677
-      
+      housePath.lineTo(
+          3.75 * scaleX, 13.677 * scaleY); // 19.875 - 6.198 = 13.677
+
       // Small curve back to start - a2.29 2.29 0 0 0 .091-.086
-      housePath.lineTo(3.841 * scaleX, 13.591 * scaleY); // 3.75 + 0.091 = 3.841, 13.677 - 0.086 = 13.591
-      
+      housePath.lineTo(3.841 * scaleX,
+          13.591 * scaleY); // 3.75 + 0.091 = 3.841, 13.677 - 0.086 = 13.591
+
       // Line back to start - L12 5.432
       housePath.lineTo(12 * scaleX, 5.432 * scaleY);
-      
+
       housePath.close();
       canvas.drawPath(housePath, paint);
-      
     } else {
       // Outlined version: draw stroke paths with perfect connectivity
       paint.style = PaintingStyle.stroke;
-      
+
       // First draw the roof outline above the house (matching selected version)
       final roofOutlinePath = Path();
       roofOutlinePath.moveTo(2.25 * scaleX, 12 * scaleY); // Start from far left
-      roofOutlinePath.lineTo(11.204 * scaleX, 3.045 * scaleY); // Left roof line up to peak
-      
+      roofOutlinePath.lineTo(
+          11.204 * scaleX, 3.045 * scaleY); // Left roof line up to peak
+
       // Curved peak section
       roofOutlinePath.cubicTo(
-        11.644 * scaleX, 2.606 * scaleY,
-        12.356 * scaleX, 2.606 * scaleY,
-        12.795 * scaleX, 3.045 * scaleY,
+        11.644 * scaleX,
+        2.606 * scaleY,
+        12.356 * scaleX,
+        2.606 * scaleY,
+        12.795 * scaleX,
+        3.045 * scaleY,
       );
-      
-      roofOutlinePath.lineTo(21.75 * scaleX, 12 * scaleY); // Right roof line down to far right
+
+      roofOutlinePath.lineTo(
+          21.75 * scaleX, 12 * scaleY); // Right roof line down to far right
       canvas.drawPath(roofOutlinePath, paint);
-      
+
       // Main house body with perfect connectivity
       final housePath = Path();
-      
+
       // Start from bottom left corner
       housePath.moveTo(4.5 * scaleX, 19.875 * scaleY);
-      
-      // Left wall up 
+
+      // Left wall up
       housePath.lineTo(4.5 * scaleX, 9.75 * scaleY);
-      
+
       // Left roof line to peak (ensuring perfect connection)
       housePath.lineTo(11.204 * scaleX, 3.045 * scaleY);
-      
+
       // Curved peak section - ensuring smooth connection
       housePath.cubicTo(
-        11.644 * scaleX, 2.606 * scaleY,
-        12.356 * scaleX, 2.606 * scaleY,
-        12.795 * scaleX, 3.045 * scaleY,
+        11.644 * scaleX,
+        2.606 * scaleY,
+        12.356 * scaleX,
+        2.606 * scaleY,
+        12.795 * scaleX,
+        3.045 * scaleY,
       );
-      
+
       // Right roof line down (perfectly connected)
       housePath.lineTo(19.5 * scaleX, 9.75 * scaleY);
-      
+
       // Right wall down
       housePath.lineTo(19.5 * scaleX, 19.875 * scaleY);
-      
+
       // Right side of house with rounded corner
-      housePath.lineTo(18.375 * scaleX, 21 * scaleY); // c.621 0 1.125-.504 1.125-1.125 approximation
-      
+      housePath.lineTo(18.375 * scaleX,
+          21 * scaleY); // c.621 0 1.125-.504 1.125-1.125 approximation
+
       // Right door frame
       housePath.lineTo(14.25 * scaleX, 21 * scaleY);
       housePath.lineTo(14.25 * scaleX, 15 * scaleY); // v-4.875 door frame up
-      
+
       // Door top with rounded corners
-      housePath.lineTo(13.125 * scaleX, 15 * scaleY); // h-1.125 
+      housePath.lineTo(13.125 * scaleX, 15 * scaleY); // h-1.125
       housePath.lineTo(10.875 * scaleX, 15 * scaleY); // h-2.25 door width
       housePath.lineTo(9.75 * scaleX, 15 * scaleY); // h-1.125
-      
+
       // Left door frame down
       housePath.lineTo(9.75 * scaleX, 21 * scaleY); // V21
-      
+
       // Left side of house
       housePath.lineTo(5.625 * scaleX, 21 * scaleY); // H5.625
-      housePath.lineTo(4.5 * scaleX, 19.875 * scaleY); // rounded corner back to start
-      
+      housePath.lineTo(
+          4.5 * scaleX, 19.875 * scaleY); // rounded corner back to start
+
       // Close the path for perfect connectivity
       housePath.close();
-      
+
       canvas.drawPath(housePath, paint);
-      
+
       // Draw the door bottom line separately to complete the door frame
       final doorBottomPath = Path();
       doorBottomPath.moveTo(9.75 * scaleX, 21 * scaleY);
       doorBottomPath.lineTo(14.25 * scaleX, 21 * scaleY);
       canvas.drawPath(doorBottomPath, paint);
     }
-    
+
     canvas.restore(); // Restore canvas transformation
   }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
-    return oldDelegate is AnimatedHomeIconPainter && 
-           (oldDelegate.isFilled != isFilled || 
+    return oldDelegate is AnimatedHomeIconPainter &&
+        (oldDelegate.isFilled != isFilled ||
             oldDelegate.color != color ||
             oldDelegate.animationProgress != animationProgress);
   }
@@ -4139,8 +4516,9 @@ class AnimatedPawsPainter extends CustomPainter {
 
     // Apply hover-pinch animation to the entire paw
     final center = Offset(size.width / 2, size.height / 2);
-    final pinchScale = 1.0 - (animationProgress * 0.05); // Subtle 5% pinch effect
-    
+    final pinchScale =
+        1.0 - (animationProgress * 0.05); // Subtle 5% pinch effect
+
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.scale(pinchScale);
@@ -4148,29 +4526,41 @@ class AnimatedPawsPainter extends CustomPainter {
 
     if (isFilled) {
       paint.style = PaintingStyle.fill;
-      
+
       // MAIN PAW PAD - same as outline version but filled
       final mainPadPath = Path();
       mainPadPath.moveTo((109.109 + 215) * scaleX, (130.262 + 215) * scaleY);
       mainPadPath.cubicTo(
-        (109.109 + 215) * scaleX, (130.262 + 215 + 75.942) * scaleY,
-        (109.109 + 215 - 69.674) * scaleX, (130.262 + 215 + 13.936) * scaleY,
-        (109.109 + 215 - 101.565) * scaleX, (130.262 + 215 + 13.936) * scaleY,
+        (109.109 + 215) * scaleX,
+        (130.262 + 215 + 75.942) * scaleY,
+        (109.109 + 215 - 69.674) * scaleX,
+        (130.262 + 215 + 13.936) * scaleY,
+        (109.109 + 215 - 101.565) * scaleX,
+        (130.262 + 215 + 13.936) * scaleY,
       );
       mainPadPath.cubicTo(
-        (109.109 + 215 - 101.565 - 33.341) * scaleX, (130.262 + 215 + 13.936) * scaleY,
-        (109.109 + 215 - 101.565 - 101.565) * scaleX, (130.262 + 215 + 59.64) * scaleY,
-        (109.109 + 215 - 101.565 - 101.565) * scaleX, (130.262 + 215 - 13.936) * scaleY,
+        (109.109 + 215 - 101.565 - 33.341) * scaleX,
+        (130.262 + 215 + 13.936) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565) * scaleX,
+        (130.262 + 215 + 59.64) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565) * scaleX,
+        (130.262 + 215 - 13.936) * scaleY,
       );
       mainPadPath.cubicTo(
-        (109.109 + 215 - 101.565 - 101.565) * scaleX, (130.262 + 215 - 56.093) * scaleY,
-        (109.109 + 215 - 101.565 - 101.565 + 45.472) * scaleX, (130.262 + 215 - 137.038) * scaleY,
-        (109.109 + 215 - 101.565) * scaleX, (130.262 + 215 - 137.038) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565) * scaleX,
+        (130.262 + 215 - 56.093) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565 + 45.472) * scaleX,
+        (130.262 + 215 - 137.038) * scaleY,
+        (109.109 + 215 - 101.565) * scaleX,
+        (130.262 + 215 - 137.038) * scaleY,
       );
       mainPadPath.cubicTo(
-        (109.109 + 215 - 101.565 + 101.565) * scaleX, (130.262 + 215 - 137.038 + 80.945) * scaleY,
-        (109.109 + 215) * scaleX, (130.262 + 215) * scaleY,
-        (109.109 + 215) * scaleX, (130.262 + 215) * scaleY,
+        (109.109 + 215 - 101.565 + 101.565) * scaleX,
+        (130.262 + 215 - 137.038 + 80.945) * scaleY,
+        (109.109 + 215) * scaleX,
+        (130.262 + 215) * scaleY,
+        (109.109 + 215) * scaleX,
+        (130.262 + 215) * scaleY,
       );
       mainPadPath.close();
       canvas.drawPath(mainPadPath, paint);
@@ -4180,7 +4570,7 @@ class AnimatedPawsPainter extends CustomPainter {
       canvas.translate((215 - 120.015) * scaleX, (215 - 34.427) * scaleY);
       canvas.rotate(-20 * 3.14159 / 180);
       final pad1Path = Path();
-      
+
       if (animationProgress > 0.0) {
         // Animated claw extending and retracting - creates a scratch motion
         // Progress: 0 → 0.5 (extend) → 1.0 (retract back)
@@ -4192,23 +4582,30 @@ class AnimatedPawsPainter extends CustomPainter {
           // Second half: retract claws (1 back to 0)
           clawProgress = (1.0 - animationProgress) * 2;
         }
-        
-        final clawExtension = clawProgress * 82; // Scale the claw extension
+
+        final clawExtension = clawProgress * 18; // Scale the claw extension (reduced from 30 for much smaller, subtle claws)
         pad1Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad1Path.cubicTo(
-          (32.645 - 0.736) * scaleX * 0.6, (-109.234 + 32.507) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
+          (32.645 - 0.736) * scaleX * 0.6,
+          (-109.234 + 32.507) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
         );
         pad1Path.cubicTo(
           (-32.979) * scaleX * 0.6, (-110.72) * scaleY * 0.6,
           (-4.422) * scaleX * 0.6, (-168.263 - clawExtension) * scaleY * 0.6,
-          (1.981) * scaleX * 0.6, (-191.461 * clawProgress) * scaleY * 0.6, // Extended claw tip
+          (1.981) * scaleX * 0.6,
+          (-191.461 * clawProgress) * scaleY * 0.6, // Extended claw tip
         );
         pad1Path.cubicTo(
-          (6.739) * scaleX * 0.6, (-168.037) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
+          (6.739) * scaleX * 0.6,
+          (-168.037) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
         );
         pad1Path.close();
       } else {
@@ -4227,7 +4624,7 @@ class AnimatedPawsPainter extends CustomPainter {
       canvas.translate((215 - 46.985) * scaleX, (215 - 106.927) * scaleY);
       canvas.rotate(-14 * 3.14159 / 180);
       final pad2Path = Path();
-      
+
       if (animationProgress > 0.0) {
         // Animated claw extending and retracting
         double clawProgress;
@@ -4236,23 +4633,32 @@ class AnimatedPawsPainter extends CustomPainter {
         } else {
           clawProgress = (1.0 - animationProgress) * 2;
         }
-        
-        final clawExtension = clawProgress * 82;
+
+        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad2Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad2Path.cubicTo(
-          (32.645 - 0.736) * scaleX * 0.6, (-109.234 + 32.507) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
+          (32.645 - 0.736) * scaleX * 0.6,
+          (-109.234 + 32.507) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
         );
         pad2Path.cubicTo(
-          (-32.979) * scaleX * 0.6, (-110.72) * scaleY * 0.6,
-          (-4.422) * scaleX * 0.6, (-168.263 - clawExtension) * scaleY * 0.6,
-          (1.981) * scaleX * 0.6, (-191.461 * clawProgress) * scaleY * 0.6,
+          (-32.979) * scaleX * 0.6,
+          (-110.72) * scaleY * 0.6,
+          (-4.422) * scaleX * 0.6,
+          (-168.263 - clawExtension) * scaleY * 0.6,
+          (1.981) * scaleX * 0.6,
+          (-191.461 * clawProgress) * scaleY * 0.6,
         );
         pad2Path.cubicTo(
-          (6.739) * scaleX * 0.6, (-168.037) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
+          (6.739) * scaleX * 0.6,
+          (-168.037) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
         );
         pad2Path.close();
       } else {
@@ -4270,7 +4676,7 @@ class AnimatedPawsPainter extends CustomPainter {
       canvas.translate((215 + 56.015) * scaleX, (215 - 112.427) * scaleY);
       canvas.rotate(6 * 3.14159 / 180);
       final pad3Path = Path();
-      
+
       if (animationProgress > 0.0) {
         // Animated claw extending and retracting
         double clawProgress;
@@ -4279,23 +4685,32 @@ class AnimatedPawsPainter extends CustomPainter {
         } else {
           clawProgress = (1.0 - animationProgress) * 2;
         }
-        
-        final clawExtension = clawProgress * 82;
+
+        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad3Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad3Path.cubicTo(
-          (32.645 - 0.736) * scaleX * 0.6, (-109.234 + 32.507) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
+          (32.645 - 0.736) * scaleX * 0.6,
+          (-109.234 + 32.507) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
         );
         pad3Path.cubicTo(
-          (-32.979) * scaleX * 0.6, (-110.72) * scaleY * 0.6,
-          (-4.422) * scaleX * 0.6, (-168.263 - clawExtension) * scaleY * 0.6,
-          (1.981) * scaleX * 0.6, (-191.461 * clawProgress) * scaleY * 0.6,
+          (-32.979) * scaleX * 0.6,
+          (-110.72) * scaleY * 0.6,
+          (-4.422) * scaleX * 0.6,
+          (-168.263 - clawExtension) * scaleY * 0.6,
+          (1.981) * scaleX * 0.6,
+          (-191.461 * clawProgress) * scaleY * 0.6,
         );
         pad3Path.cubicTo(
-          (6.739) * scaleX * 0.6, (-168.037) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
+          (6.739) * scaleX * 0.6,
+          (-168.037) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
         );
         pad3Path.close();
       } else {
@@ -4313,7 +4728,7 @@ class AnimatedPawsPainter extends CustomPainter {
       canvas.translate((215 + 120.015) * scaleX, (215 - 34.427) * scaleY);
       canvas.rotate(20 * 3.14159 / 180);
       final pad4Path = Path();
-      
+
       if (animationProgress > 0.0) {
         // Animated claw extending and retracting
         double clawProgress;
@@ -4322,23 +4737,32 @@ class AnimatedPawsPainter extends CustomPainter {
         } else {
           clawProgress = (1.0 - animationProgress) * 2;
         }
-        
-        final clawExtension = clawProgress * 82;
+
+        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad4Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad4Path.cubicTo(
-          (32.645 - 0.736) * scaleX * 0.6, (-109.234 + 32.507) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
-          (-1.499) * scaleX * 0.6, (-51.118) * scaleY * 0.6,
+          (32.645 - 0.736) * scaleX * 0.6,
+          (-109.234 + 32.507) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
+          (-1.499) * scaleX * 0.6,
+          (-51.118) * scaleY * 0.6,
         );
         pad4Path.cubicTo(
-          (-32.979) * scaleX * 0.6, (-110.72) * scaleY * 0.6,
-          (-4.422) * scaleX * 0.6, (-168.263 - clawExtension) * scaleY * 0.6,
-          (1.981) * scaleX * 0.6, (-191.461 * clawProgress) * scaleY * 0.6,
+          (-32.979) * scaleX * 0.6,
+          (-110.72) * scaleY * 0.6,
+          (-4.422) * scaleX * 0.6,
+          (-168.263 - clawExtension) * scaleY * 0.6,
+          (1.981) * scaleX * 0.6,
+          (-191.461 * clawProgress) * scaleY * 0.6,
         );
         pad4Path.cubicTo(
-          (6.739) * scaleX * 0.6, (-168.037) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
-          (32.645) * scaleX * 0.6, (-109.234) * scaleY * 0.6,
+          (6.739) * scaleX * 0.6,
+          (-168.037) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
+          (32.645) * scaleX * 0.6,
+          (-109.234) * scaleY * 0.6,
         );
         pad4Path.close();
       } else {
@@ -4350,44 +4774,58 @@ class AnimatedPawsPainter extends CustomPainter {
       }
       canvas.drawPath(pad4Path, paint);
       canvas.restore();
-      
     } else {
       // OUTLINED STYLE - exact SVG stroke coordinates
       paint.style = PaintingStyle.stroke;
       paint.strokeWidth = 12.6 * scaleX; // SVG specifies stroke-width="12.6"
-      
+
       // MAIN PAW PAD - exact outline SVG path coordinates
       // SVG: "M109.109 130.262c0 75.942-69.674 13.936-101.565 13.936-33.341 0-101.565 59.64-101.565-13.936 0-56.093 45.472-137.038 101.565-137.038s101.565 80.945 101.565 137.038"
       // with transform="translate(215 215)"
       final mainPadPath = Path();
       mainPadPath.moveTo((109.109 + 215) * scaleX, (130.262 + 215) * scaleY);
       mainPadPath.cubicTo(
-        (109.109 + 215) * scaleX, (130.262 + 215 + 75.942) * scaleY,
-        (109.109 + 215 - 69.674) * scaleX, (130.262 + 215 + 13.936) * scaleY,
-        (109.109 + 215 - 101.565) * scaleX, (130.262 + 215 + 13.936) * scaleY,
+        (109.109 + 215) * scaleX,
+        (130.262 + 215 + 75.942) * scaleY,
+        (109.109 + 215 - 69.674) * scaleX,
+        (130.262 + 215 + 13.936) * scaleY,
+        (109.109 + 215 - 101.565) * scaleX,
+        (130.262 + 215 + 13.936) * scaleY,
       );
       mainPadPath.cubicTo(
-        (109.109 + 215 - 101.565 - 33.341) * scaleX, (130.262 + 215 + 13.936) * scaleY,
-        (109.109 + 215 - 101.565 - 101.565) * scaleX, (130.262 + 215 + 59.64) * scaleY,
-        (109.109 + 215 - 101.565 - 101.565) * scaleX, (130.262 + 215 - 13.936) * scaleY,
+        (109.109 + 215 - 101.565 - 33.341) * scaleX,
+        (130.262 + 215 + 13.936) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565) * scaleX,
+        (130.262 + 215 + 59.64) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565) * scaleX,
+        (130.262 + 215 - 13.936) * scaleY,
       );
       mainPadPath.cubicTo(
-        (109.109 + 215 - 101.565 - 101.565) * scaleX, (130.262 + 215 - 56.093) * scaleY,
-        (109.109 + 215 - 101.565 - 101.565 + 45.472) * scaleX, (130.262 + 215 - 137.038) * scaleY,
-        (109.109 + 215 - 101.565) * scaleX, (130.262 + 215 - 137.038) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565) * scaleX,
+        (130.262 + 215 - 56.093) * scaleY,
+        (109.109 + 215 - 101.565 - 101.565 + 45.472) * scaleX,
+        (130.262 + 215 - 137.038) * scaleY,
+        (109.109 + 215 - 101.565) * scaleX,
+        (130.262 + 215 - 137.038) * scaleY,
       );
       mainPadPath.cubicTo(
-        (109.109 + 215 - 101.565 + 101.565) * scaleX, (130.262 + 215 - 137.038 + 80.945) * scaleY,
-        (109.109 + 215) * scaleX, (130.262 + 215) * scaleY,
-        (109.109 + 215) * scaleX, (130.262 + 215) * scaleY,
+        (109.109 + 215 - 101.565 + 101.565) * scaleX,
+        (130.262 + 215 - 137.038 + 80.945) * scaleY,
+        (109.109 + 215) * scaleX,
+        (130.262 + 215) * scaleY,
+        (109.109 + 215) * scaleX,
+        (130.262 + 215) * scaleY,
       );
       mainPadPath.close();
       canvas.drawPath(mainPadPath, paint);
 
-      // FINGER PAD 1 - top left, mirroring the right side positioning  
+      // FINGER PAD 1 - top left, mirroring the right side positioning
       canvas.save();
-      canvas.translate((215 - 120.015) * scaleX, (215 - 34.427) * scaleY); // Mirror of FINGER PAD 4
-      canvas.rotate(-20 * 3.14159 / 180); // Mirror rotation: -20 degrees (opposite of +20)
+      canvas.translate((215 - 120.015) * scaleX,
+          (215 - 34.427) * scaleY); // Mirror of FINGER PAD 4
+      canvas.rotate(-20 *
+          3.14159 /
+          180); // Mirror rotation: -20 degrees (opposite of +20)
       final pad1Path = Path();
       pad1Path.addOval(Rect.fromCenter(
         center: const Offset(0, 0),
@@ -4397,7 +4835,7 @@ class AnimatedPawsPainter extends CustomPainter {
       canvas.drawPath(pad1Path, paint);
       canvas.restore();
 
-      // FINGER PAD 2 - top center-left, repositioned 
+      // FINGER PAD 2 - top center-left, repositioned
       canvas.save();
       canvas.translate((215 - 46.985) * scaleX, (215 - 106.927) * scaleY);
       canvas.rotate(-14 * 3.14159 / 180);
@@ -4436,18 +4874,19 @@ class AnimatedPawsPainter extends CustomPainter {
       canvas.drawPath(pad4Path, paint);
       canvas.restore();
     }
-    
+
     canvas.restore(); // Restore canvas transformation
   }
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
-    return oldDelegate is AnimatedPawsPainter && 
-           (oldDelegate.animationProgress != animationProgress ||
+    return oldDelegate is AnimatedPawsPainter &&
+        (oldDelegate.animationProgress != animationProgress ||
             oldDelegate.isFilled != isFilled ||
             oldDelegate.color != color);
   }
 }
+
 class HomeIconPainter extends CustomPainter {
   final Color color;
   final bool isFilled;
@@ -4474,98 +4913,118 @@ class HomeIconPainter extends CustomPainter {
     if (isFilled) {
       // Filled version: use the new solid SVG design
       paint.style = PaintingStyle.fill;
-      
+
       // First path: d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z"
       final roofPath = Path();
-      
+
       // Starting point M11.47 3.841
       roofPath.moveTo(11.47 * scaleX, 3.841 * scaleY);
-      
+
       // Arc curve a.75.75 0 0 1 1.06 0 - simplified as straight line to end point
       roofPath.lineTo(12.53 * scaleX, 3.841 * scaleY); // 11.47 + 1.06 = 12.53
-      
+
       // Line l8.69 8.69
-      roofPath.lineTo(21.22 * scaleX, 12.531 * scaleY); // 12.53 + 8.69 = 21.22, 3.841 + 8.69 = 12.531
-      
+      roofPath.lineTo(21.22 * scaleX,
+          12.531 * scaleY); // 12.53 + 8.69 = 21.22, 3.841 + 8.69 = 12.531
+
       // Arc a.75.75 0 1 0 1.06-1.061 - simplified as curve
-      roofPath.lineTo(22.28 * scaleX, 11.47 * scaleY); // 21.22 + 1.06 = 22.28, 12.531 - 1.061 = 11.47
-      
+      roofPath.lineTo(22.28 * scaleX,
+          11.47 * scaleY); // 21.22 + 1.06 = 22.28, 12.531 - 1.061 = 11.47
+
       // Line l-8.689-8.69
-      roofPath.lineTo(13.591 * scaleX, 2.78 * scaleY); // 22.28 - 8.689 = 13.591, 11.47 - 8.69 = 2.78
-      
+      roofPath.lineTo(13.591 * scaleX,
+          2.78 * scaleY); // 22.28 - 8.689 = 13.591, 11.47 - 8.69 = 2.78
+
       // Arc a2.25 2.25 0 0 0-3.182 0 - simplified
-      roofPath.lineTo(10.409 * scaleX, 2.78 * scaleY); // 13.591 - 3.182 = 10.409
-      
+      roofPath.lineTo(
+          10.409 * scaleX, 2.78 * scaleY); // 13.591 - 3.182 = 10.409
+
       // Line l-8.69 8.69
-      roofPath.lineTo(1.719 * scaleX, 11.47 * scaleY); // 10.409 - 8.69 = 1.719, 2.78 + 8.69 = 11.47
-      
+      roofPath.lineTo(1.719 * scaleX,
+          11.47 * scaleY); // 10.409 - 8.69 = 1.719, 2.78 + 8.69 = 11.47
+
       // Arc a.75.75 0 1 0 1.061 1.06 - simplified
-      roofPath.lineTo(2.78 * scaleX, 12.531 * scaleY); // 1.719 + 1.061 = 2.78, 11.47 + 1.06 = 12.531
-      
+      roofPath.lineTo(2.78 * scaleX,
+          12.531 * scaleY); // 1.719 + 1.061 = 2.78, 11.47 + 1.06 = 12.531
+
       // Line l8.69-8.689 back to start
-      roofPath.lineTo(11.47 * scaleX, 3.841 * scaleY); // 2.78 + 8.69 = 11.47, 12.531 - 8.689 = 3.842 ≈ 3.841
-      
+      roofPath.lineTo(
+          11.47 * scaleX,
+          3.841 *
+              scaleY); // 2.78 + 8.69 = 11.47, 12.531 - 8.689 = 3.842 ≈ 3.841
+
       roofPath.close();
       canvas.drawPath(roofPath, paint);
-      
+
       // Second path: d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z"
       final housePath = Path();
-      
+
       // Starting point m12 5.432
       housePath.moveTo(12 * scaleX, 5.432 * scaleY);
-      
+
       // Line l8.159 8.159
-      housePath.lineTo(20.159 * scaleX, 13.591 * scaleY); // 12 + 8.159 = 20.159, 5.432 + 8.159 = 13.591
-      
+      housePath.lineTo(20.159 * scaleX,
+          13.591 * scaleY); // 12 + 8.159 = 20.159, 5.432 + 8.159 = 13.591
+
       // Curve c.03.03.06.058.091.086 - simplified as small offset
-      housePath.lineTo(20.25 * scaleX, 13.677 * scaleY); // 20.159 + 0.091 = 20.25, 13.591 + 0.086 = 13.677
-      
+      housePath.lineTo(20.25 * scaleX,
+          13.677 * scaleY); // 20.159 + 0.091 = 20.25, 13.591 + 0.086 = 13.677
+
       // Vertical line v6.198
-      housePath.lineTo(20.25 * scaleX, 19.875 * scaleY); // 13.677 + 6.198 = 19.875
-      
+      housePath.lineTo(
+          20.25 * scaleX, 19.875 * scaleY); // 13.677 + 6.198 = 19.875
+
       // House right side with rounded corner - simplified
-      housePath.lineTo(18.375 * scaleX, 19.875 * scaleY); // 20.25 - 1.875 = 18.375
+      housePath.lineTo(
+          18.375 * scaleX, 19.875 * scaleY); // 20.25 - 1.875 = 18.375
       housePath.lineTo(15 * scaleX, 19.875 * scaleY); // H15
-      
+
       // Door frame right side
       housePath.lineTo(14.25 * scaleX, 19.875 * scaleY); // 15 - 0.75 = 14.25
-      housePath.lineTo(14.25 * scaleX, 15.375 * scaleY); // v-4.5, 19.875 - 4.5 = 15.375
+      housePath.lineTo(
+          14.25 * scaleX, 15.375 * scaleY); // v-4.5, 19.875 - 4.5 = 15.375
       housePath.lineTo(13.5 * scaleX, 15.375 * scaleY); // 14.25 - 0.75 = 13.5
-      
+
       // Door top
       housePath.lineTo(10.5 * scaleX, 15.375 * scaleY); // h-3, 13.5 - 3 = 10.5
-      
-      // Door frame left side  
+
+      // Door frame left side
       housePath.lineTo(9.75 * scaleX, 15.375 * scaleY); // 10.5 - 0.75 = 9.75
-      housePath.lineTo(9.75 * scaleX, 19.875 * scaleY); // V21, but adjusted to 19.875 to match
+      housePath.lineTo(9.75 * scaleX,
+          19.875 * scaleY); // V21, but adjusted to 19.875 to match
       housePath.lineTo(9 * scaleX, 19.875 * scaleY); // 9.75 - 0.75 = 9
-      
+
       // House left side
       housePath.lineTo(5.625 * scaleX, 19.875 * scaleY); // H5.625
       housePath.lineTo(3.75 * scaleX, 19.875 * scaleY); // 5.625 - 1.875 = 3.75
-      
+
       // Left wall up
-      housePath.lineTo(3.75 * scaleX, 13.677 * scaleY); // v-6.198, 19.875 - 6.198 = 13.677
-      
+      housePath.lineTo(
+          3.75 * scaleX, 13.677 * scaleY); // v-6.198, 19.875 - 6.198 = 13.677
+
       // Small curve back to start
-      housePath.lineTo(3.841 * scaleX, 13.591 * scaleY); // c.091-.086 simplified
+      housePath.lineTo(
+          3.841 * scaleX, 13.591 * scaleY); // c.091-.086 simplified
       housePath.lineTo(12 * scaleX, 5.432 * scaleY); // Back to start
-      
+
       housePath.close();
       canvas.drawPath(housePath, paint);
     } else {
       // Outlined version: draw stroke paths
       paint.style = PaintingStyle.stroke;
-      
+
       // Roof line: m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12
       final roofPath = Path();
       roofPath.moveTo(2.25 * scaleX, 12 * scaleY);
       roofPath.lineTo(11.204 * scaleX, 3.045 * scaleY);
       // Curved section approximated as smooth connection
       roofPath.cubicTo(
-        11.644 * scaleX, 2.606 * scaleY,
-        12.356 * scaleX, 2.606 * scaleY,
-        12.795 * scaleX, 3.045 * scaleY,
+        11.644 * scaleX,
+        2.606 * scaleY,
+        12.356 * scaleX,
+        2.606 * scaleY,
+        12.795 * scaleX,
+        3.045 * scaleY,
       );
       roofPath.lineTo(21.75 * scaleX, 12 * scaleY);
       canvas.drawPath(roofPath, paint);
@@ -4597,7 +5056,545 @@ class HomeIconPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
-    return oldDelegate is HomeIconPainter && 
-           (oldDelegate.isFilled != isFilled || oldDelegate.color != color);
+    return oldDelegate is HomeIconPainter &&
+        (oldDelegate.isFilled != isFilled || oldDelegate.color != color);
+  }
+}
+
+/// Custom painter for graduation cap icon (Learn tab)
+class GraduationCapPainter extends CustomPainter {
+  final Color color;
+  final bool isFilled;
+  final double strokeWidth;
+  final double animationValue;
+
+  GraduationCapPainter({
+    required this.color,
+    required this.isFilled,
+    this.strokeWidth = 1.5,
+    this.animationValue = 0.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = isFilled ? PaintingStyle.fill : PaintingStyle.stroke;
+
+    final scaleX = size.width / 24;
+    final scaleY = size.height / 24;
+    
+    // Calculate tassel sway animation
+    // animationValue goes from 0.0 to 1.0, create gentle sway from -1 to +1
+    final swayProgress = (animationValue * 2.0) - 1.0; // Convert 0-1 to -1 to +1  
+    final maxSwayDistance = 1.5 * scaleX; // Maximum sway distance
+    final tasselSwayOffset = maxSwayDistance * sin(swayProgress * pi); // Smooth sine wave motion
+
+    if (isFilled) {
+      // Filled version using exact SVG paths from reference
+      paint.style = PaintingStyle.fill;
+
+      // First path: d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.067-.248.172-.311a54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z"
+      final path1 = Path();
+      path1.moveTo(11.7 * scaleX, 2.805 * scaleY);
+      path1.cubicTo(11.85 * scaleX, 2.73 * scaleY, 12.15 * scaleX, 2.73 * scaleY, 12.3 * scaleX, 2.805 * scaleY);
+      path1.cubicTo(16.2 * scaleX, 4.5 * scaleY, 20.1 * scaleX, 6.5 * scaleY, 22.83 * scaleX, 8.72 * scaleY);
+      path1.cubicTo(22.91 * scaleX, 8.82 * scaleY, 22.91 * scaleX, 9.02 * scaleY, 22.599 * scaleX, 10.057 * scaleY);
+      path1.cubicTo(19.8 * scaleX, 11.2 * scaleY, 16.2 * scaleX, 12.8 * scaleY, 12.697 * scaleX, 13.969 * scaleY);
+      path1.lineTo(12.694 * scaleX, 13.971 * scaleY);
+      path1.cubicTo(12.58 * scaleX, 14.031 * scaleY, 12.467 * scaleX, 14.09 * scaleY, 12.354 * scaleX, 14.151 * scaleY);
+      path1.cubicTo(12.12 * scaleX, 14.28 * scaleY, 11.88 * scaleX, 14.28 * scaleY, 11.647 * scaleX, 14.151 * scaleY);
+      path1.cubicTo(10.2 * scaleX, 13.5 * scaleY, 8.8 * scaleX, 12.9 * scaleY, 7.5 * scaleX, 12.173 * scaleY);
+      path1.lineTo(7.5 * scaleX, 11.949 * scaleY);
+      path1.cubicTo(7.567 * scaleX, 11.818 * scaleY, 7.634 * scaleX, 11.701 * scaleY, 7.672 * scaleX, 11.638 * scaleY);
+      path1.cubicTo(9.2 * scaleX, 10.5 * scaleY, 10.9 * scaleX, 9.6 * scaleY, 12.325 * scaleX, 9.118 * scaleY);
+      path1.cubicTo(12.45 * scaleX, 9.068 * scaleY, 12.52 * scaleX, 8.918 * scaleY, 11.675 * scaleX, 7.766 * scaleY);
+      path1.cubicTo(10.1 * scaleX, 8.4 * scaleY, 8.7 * scaleX, 9.3 * scaleY, 6.895 * scaleX, 10.355 * scaleY);
+      path1.cubicTo(6.56 * scaleX, 10.55 * scaleY, 6.3 * scaleX, 10.9 * scaleY, 6.036 * scaleX, 11.583 * scaleY);
+      path1.cubicTo(4.5 * scaleX, 11.2 * scaleY, 2.9 * scaleX, 10.7 * scaleY, 1.402 * scaleX, 10.056 * scaleY);
+      path1.cubicTo(1.31 * scaleX, 10.02 * scaleY, 1.25 * scaleX, 9.86 * scaleY, 1.171 * scaleX, 8.719 * scaleY);
+      path1.cubicTo(4.2 * scaleX, 6.4 * scaleY, 7.8 * scaleX, 4.2 * scaleY, 11.7 * scaleX, 2.805 * scaleY);
+      path1.close();
+      canvas.drawPath(path1, paint);
+
+      // Second path: d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.284a.75.75 0 0 1-.46.711 47.87 47.87 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.87 47.87 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.442.121-2.87.255-4.286.921.304 1.83.634 2.726.99v1.27a1.5 1.5 0 0 0-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.66a6.727 6.727 0 0 0 .551-1.607 1.5 1.5 0 0 0 .14-2.67v-.645a48.549 48.549 0 0 1 3.44 1.667 2.25 2.25 0 0 0 2.12 0Z"
+      final path2 = Path();
+      path2.moveTo(13.06 * scaleX, 15.473 * scaleY);
+      path2.cubicTo(16.2 * scaleX, 14.1 * scaleY, 18.8 * scaleX, 13.0 * scaleY, 20.726 * scaleX, 12.191 * scaleY);
+      path2.cubicTo(20.86 * scaleX, 13.605 * scaleY, 20.946 * scaleX, 15.034 * scaleY, 20.981 * scaleX, 16.475 * scaleY);
+      path2.cubicTo(20.981 * scaleX, 16.725 * scaleY, 20.85 * scaleX, 16.95 * scaleY, 20.521 * scaleX, 17.186 * scaleY);
+      path2.cubicTo(18.2 * scaleX, 18.8 * scaleY, 15.4 * scaleX, 20.4 * scaleY, 12.416 * scaleX, 21.528 * scaleY);
+      path2.cubicTo(12.28 * scaleX, 21.59 * scaleY, 12.14 * scaleX, 21.59 * scaleY, 11.584 * scaleX, 21.528 * scaleY);
+      path2.cubicTo(8.6 * scaleX, 20.4 * scaleY, 5.8 * scaleX, 18.8 * scaleY, 3.48 * scaleX, 17.186 * scaleY);
+      path2.cubicTo(3.15 * scaleX, 16.95 * scaleY, 3.019 * scaleX, 16.725 * scaleY, 3.019 * scaleX, 16.476 * scaleY);
+      path2.cubicTo(3.054 * scaleX, 15.034 * scaleY, 3.14 * scaleX, 13.606 * scaleY, 3.274 * scaleX, 12.19 * scaleY);
+      path2.cubicTo(4.195 * scaleX, 12.494 * scaleY, 5.104 * scaleX, 12.824 * scaleY, 6.0 * scaleX, 13.18 * scaleY);
+      path2.lineTo(6.0 * scaleX, 14.45 * scaleY);
+      path2.cubicTo(5.86 * scaleX, 15.95 * scaleY, 6.86 * scaleX, 16.458 * scaleY, 7.0 * scaleX, 16.958 * scaleY);
+      path2.cubicTo(6.91 * scaleX, 17.338 * scaleY, 6.778 * scaleX, 17.711 * scaleY, 6.603 * scaleX, 18.068 * scaleY);
+      path2.cubicTo(7.055 * scaleX, 18.281 * scaleY, 7.504 * scaleX, 18.502 * scaleY, 7.949 * scaleX, 18.728 * scaleY);
+      path2.cubicTo(8.5 * scaleX, 17.121 * scaleY, 8.5 * scaleX, 17.058 * scaleY, 8.089 * scaleX, 16.058 * scaleY);
+      path2.lineTo(8.089 * scaleX, 15.413 * scaleY);
+      path2.cubicTo(9.72 * scaleX, 16.08 * scaleY, 11.209 * scaleX, 16.747 * scaleY, 12.529 * scaleX, 17.08 * scaleY);
+      path2.cubicTo(13.279 * scaleX, 17.21 * scaleY, 13.649 * scaleX, 16.88 * scaleY, 13.649 * scaleX, 16.38 * scaleY);
+      path2.lineTo(13.06 * scaleX, 15.473 * scaleY);
+      path2.close();
+      canvas.drawPath(path2, paint);
+
+      // Third path: d="M4.462 19.462c.42-.419.753-.89 1-1.395.453.214.902.435 1.347.662a6.742 6.742 0 0 1-1.286 1.794.75.75 0 0 1-1.06-1.06Z"  
+      // This is the tassel that should hang straight down - now with sway animation
+      final path3 = Path();
+      path3.moveTo((4.462 * scaleX) + tasselSwayOffset, 19.462 * scaleY);
+      path3.lineTo((5.462 * scaleX) + tasselSwayOffset, 18.067 * scaleY); // Straight up first
+      path3.lineTo((6.809 * scaleX) + tasselSwayOffset, 18.729 * scaleY); // Then right and slightly down
+      path3.lineTo((5.523 * scaleX) + tasselSwayOffset, 20.523 * scaleY); // Straight down to bottom
+      path3.lineTo((4.462 * scaleX) + tasselSwayOffset, 19.462 * scaleY); // Back to start
+      path3.close();
+      canvas.drawPath(path3, paint);
+
+    } else {
+      // Outlined version - keep existing complex implementation
+      paint.style = PaintingStyle.stroke;
+      
+      // Exact SVG path implementation
+      // Path 1: M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347
+      final mainCapPath = Path();
+      mainCapPath.moveTo(4.26 * scaleX, 10.147 * scaleY);
+      
+      // Create the curved bottom part of the graduation cap
+      mainCapPath.cubicTo(
+        4.1 * scaleX, 13.0 * scaleY,    // Control point 1
+        3.9 * scaleX, 15.5 * scaleY,    // Control point 2  
+        3.769 * scaleX, 16.494 * scaleY // End point (10.147 + 6.347)
+      );
+      
+      mainCapPath.cubicTo(
+        6.0 * scaleX, 19.0 * scaleY,    // Control point 1
+        9.0 * scaleX, 20.5 * scaleY,    // Control point 2
+        12 * scaleX, 20.904 * scaleY    // Center bottom point
+      );
+      
+      mainCapPath.cubicTo(
+        15.0 * scaleX, 20.5 * scaleY,    // Control point 1
+        18.0 * scaleX, 19.0 * scaleY,    // Control point 2
+        20.232 * scaleX, 16.494 * scaleY // Right side point (12 + 8.232, same as left)
+      );
+      
+      mainCapPath.cubicTo(
+        20.1 * scaleX, 15.5 * scaleY,     // Control point 1
+        19.9 * scaleX, 13.0 * scaleY,     // Control point 2
+        19.741 * scaleX, 10.147 * scaleY  // Back to right edge
+      );
+
+      canvas.drawPath(mainCapPath, paint);
+
+      // Path 2: The top ridge/fold of the graduation cap going upward
+      // m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814
+      final topRidgePath = Path();
+      topRidgePath.moveTo(4.259 * scaleX, 10.147 * scaleY); // 19.741 - 15.482
+      
+      topRidgePath.cubicTo(
+        3.5 * scaleX, 9.8 * scaleY,     // Control point 1
+        2.8 * scaleX, 9.5 * scaleY,     // Control point 2  
+        1.601 * scaleX, 9.334 * scaleY  // Left edge point (4.259 - 2.658, 10.147 - 0.813)
+      );
+      
+      topRidgePath.cubicTo(
+        5.0 * scaleX, 6.0 * scaleY,     // Control point 1
+        8.5 * scaleX, 4.0 * scaleY,     // Control point 2
+        12 * scaleX, 3.493 * scaleY     // Top center point
+      );
+      
+      topRidgePath.cubicTo(
+        15.5 * scaleX, 4.0 * scaleY,     // Control point 1
+        19.0 * scaleX, 6.0 * scaleY,     // Control point 2
+        22.399 * scaleX, 9.333 * scaleY  // Right edge point (12 + 10.399)
+      );
+      
+      topRidgePath.cubicTo(
+        21.5 * scaleX, 9.6 * scaleY,     // Control point 1
+        20.6 * scaleX, 9.8 * scaleY,     // Control point 2
+        19.741 * scaleX, 10.147 * scaleY // Back to right edge
+      );
+
+      canvas.drawPath(topRidgePath, paint);
+
+      // Path 3: Center connecting lines
+      // m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342
+      final centerLines = Path();
+      centerLines.moveTo(4.259 * scaleX, 10.147 * scaleY);
+      centerLines.cubicTo(
+        7.0 * scaleX, 11.5 * scaleY,     // Control point 1
+        9.5 * scaleX, 12.8 * scaleY,     // Control point 2
+        12 * scaleX, 13.489 * scaleY     // Center point
+      );
+      centerLines.cubicTo(
+        15.0 * scaleX, 12.2 * scaleY,     // Control point 1
+        17.5 * scaleX, 11.0 * scaleY,     // Control point 2
+        19.74 * scaleX, 10.147 * scaleY   // Right edge point (12 + 7.74)
+      );
+
+      canvas.drawPath(centerLines, paint);
+
+      // Tassel circle: M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5 - with sway animation
+      final tasselPaint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth;
+
+      canvas.drawCircle(
+        Offset((6.75 * scaleX) + tasselSwayOffset, 15 * scaleY),
+        0.75 * scaleX,
+        tasselPaint,
+      );
+
+      // Tassel string connections - with sway animation
+      // Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443
+      canvas.drawLine(
+        Offset((6.75 * scaleX) + tasselSwayOffset, 15 * scaleY),
+        Offset((6.75 * scaleX) + (tasselSwayOffset * 0.3), 11.325 * scaleY), // Less sway at top connection point
+        paint,
+      );
+
+      // Curved line to center - with sway animation
+      final tasselCurve = Path();
+      tasselCurve.moveTo((6.75 * scaleX) + (tasselSwayOffset * 0.3), 11.325 * scaleY);
+      tasselCurve.cubicTo(
+        8.5 * scaleX, 10.0 * scaleY,     // Control point 1 - no sway, connected to cap
+        10.0 * scaleX, 9.0 * scaleY,     // Control point 2 - no sway, connected to cap
+        12 * scaleX, 8.443 * scaleY      // Connect to cap center - no sway
+      );
+      canvas.drawPath(tasselCurve, paint);
+
+      // Additional tassel detail - with sway animation
+      // m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5
+      final tasselDetail = Path();
+      tasselDetail.moveTo((4.993 * scaleX) + tasselSwayOffset, 19.993 * scaleY); // 12 - 7.007, 8.443 + 11.55
+      tasselDetail.cubicTo(
+        5.5 * scaleX, 18.0 * scaleY,     // Control point 1
+        6.0 * scaleX, 16.8 * scaleY,     // Control point 2
+        (6.75 * scaleX) + tasselSwayOffset, 15.75 * scaleY    // End point with sway
+      );
+      tasselDetail.lineTo((6.75 * scaleX) + tasselSwayOffset, 14.25 * scaleY); // 15.75 - 1.5 with sway
+      
+      canvas.drawPath(tasselDetail, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return oldDelegate is GraduationCapPainter &&
+        (oldDelegate.isFilled != isFilled || 
+         oldDelegate.color != color ||
+         oldDelegate.strokeWidth != strokeWidth ||
+         oldDelegate.animationValue != animationValue);
+  }
+}
+
+/// Custom painter for social/people icon (Social tab)
+class SocialIconPainter extends CustomPainter {
+  final Color color;
+  final bool isFilled;
+  final double strokeWidth;
+  final double animationValue; // Animation progress from 0.0 to 1.0
+
+  SocialIconPainter({
+    required this.color,
+    required this.isFilled,
+    this.strokeWidth = 1.5,
+    this.animationValue = 0.0, // Default to no animation
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = isFilled ? PaintingStyle.fill : PaintingStyle.stroke;
+
+    final scaleX = size.width / 24;
+    final scaleY = size.height / 24;
+
+    // Calculate hugging animation offsets - side figures move closer to center and back
+    // Animation goes: 0.0 → 0.5 (max hug) → 1.0 (back to normal)
+    final hugProgress = animationValue <= 0.5 
+        ? animationValue * 2.0  // 0.0 to 1.0 in first half
+        : (1.0 - animationValue) * 2.0; // 1.0 to 0.0 in second half
+    final hugOffset = hugProgress * 1.5; // Maximum 1.5 units closer to center
+    final leftHugX = 5.25 + hugOffset; // Left figure moves right
+    final rightHugX = 18.75 - hugOffset; // Right figure moves left
+
+    if (isFilled) {
+      // Filled version using the provided filled SVG paths
+      paint.style = PaintingStyle.fill;
+
+      // First path: d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z"
+      final mainPath = Path();
+      
+      // Center head: M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0Z
+      mainPath.addOval(Rect.fromCenter(
+        center: Offset(12 * scaleX, 6.75 * scaleY), // 8.25 + 3.75 = 12
+        width: 7.5 * scaleX,
+        height: 7.5 * scaleY,
+      ));
+      
+      // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (moves left during animation)
+      mainPath.addOval(Rect.fromCenter(
+        center: Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
+        width: 6 * scaleX,
+        height: 6 * scaleY,
+      ));
+      
+      // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (moves right during animation)
+      mainPath.addOval(Rect.fromCenter(
+        center: Offset(leftHugX * scaleX, 9.75 * scaleY), // Animated X position
+        width: 6 * scaleX,
+        height: 6 * scaleY,
+      ));
+      
+      // Main body: M6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z
+      final bodyLeftX = 6.31 + hugOffset * 0.5; // Body sides also move but less dramatically
+      final bodyRightX = 18.709 - hugOffset * 0.5;
+      
+      mainPath.moveTo(bodyLeftX * scaleX, 15.117 * scaleY);
+      mainPath.cubicTo(
+        8.0 * scaleX, 13.5 * scaleY,
+        10.0 * scaleX, 12.0 * scaleY,
+        12 * scaleX, 12 * scaleY
+      );
+      mainPath.cubicTo(
+        14.0 * scaleX, 12.0 * scaleY,
+        16.0 * scaleX, 13.5 * scaleY,
+        bodyRightX * scaleX, 19.498 * scaleY
+      );
+      mainPath.cubicTo(
+        (bodyRightX - 0.122) * scaleX, 19.69 * scaleY,
+        (bodyRightX - 0.272) * scaleX, 19.82 * scaleY,
+        (bodyRightX - 0.372) * scaleX, 20.066 * scaleY
+      );
+      mainPath.cubicTo(
+        16.5 * scaleX, 21.2 * scaleY,
+        14.3 * scaleX, 21.75 * scaleY,
+        12 * scaleX, 21.75 * scaleY
+      );
+      mainPath.cubicTo(
+        9.695 * scaleX, 21.75 * scaleY,
+        7.53 * scaleX, 21.138 * scaleY,
+        (bodyLeftX - 0.647) * scaleX, 20.066 * scaleY
+      );
+      mainPath.cubicTo(
+        (bodyLeftX - 0.747) * scaleX, 19.82 * scaleY,
+        (bodyLeftX - 0.897) * scaleX, 19.69 * scaleY,
+        (bodyLeftX - 1.019) * scaleX, 19.498 * scaleY
+      );
+      mainPath.cubicTo(
+        (bodyLeftX - 0.51) * scaleX, 17.8 * scaleY,
+        (bodyLeftX - 0.26) * scaleX, 16.5 * scaleY,
+        bodyLeftX * scaleX, 15.117 * scaleY
+      );
+      mainPath.close();
+      canvas.drawPath(mainPath, paint);
+
+      // Second path: d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z"
+      final sidePath = Path();
+      
+      // Animated side body positions for hugging effect
+      final leftSideX = 5.082 + hugOffset * 0.3; // Left side moves right slightly
+      final rightSideX = 20.226 - hugOffset * 0.3; // Right side moves left slightly
+      final leftSideBodyX = 18.918 - hugOffset * 0.3; // Right side body moves left
+      
+      // Left side body: M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047Z
+      sidePath.moveTo(leftSideX * scaleX, 14.254 * scaleY);
+      sidePath.cubicTo(
+        (leftSideX - 0.582) * scaleX, 16.8 * scaleY,
+        (leftSideX - 0.882) * scaleX, 18.5 * scaleY,
+        (leftSideX - 1.308) * scaleX, 19.389 * scaleY
+      );
+      sidePath.cubicTo(
+        2.8 * scaleX, 19.2 * scaleY,
+        2.0 * scaleX, 19.0 * scaleY,
+        2.01 * scaleX, 18.949 * scaleY
+      );
+      sidePath.lineTo(1.895 * scaleX, 18.909 * scaleY);
+      sidePath.cubicTo(
+        1.7 * scaleX, 18.8 * scaleY,
+        1.6 * scaleX, 18.6 * scaleY,
+        1.522 * scaleX, 18.422 * scaleY
+      );
+      sidePath.lineTo(1.512 * scaleX, 18.301 * scaleY);
+      sidePath.cubicTo(
+        1.8 * scaleX, 16.5 * scaleY,
+        3.2 * scaleX, 14.8 * scaleY,
+        leftSideX * scaleX, 14.254 * scaleY
+      );
+      sidePath.close();
+      
+      // Right side body: M20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z
+      sidePath.moveTo(rightSideX * scaleX, 19.389 * scaleY);
+      sidePath.cubicTo(
+        (rightSideX - 0.626) * scaleX, 16.8 * scaleY,
+        (rightSideX - 0.926) * scaleX, 15.0 * scaleY,
+        leftSideBodyX * scaleX, 14.254 * scaleY
+      );
+      sidePath.cubicTo(
+        (leftSideBodyX + 1.882) * scaleX, 14.8 * scaleY,
+        (leftSideBodyX + 3.282) * scaleX, 16.5 * scaleY,
+        22.488 * scaleX, 18.301 * scaleY
+      );
+      sidePath.lineTo(22.478 * scaleX, 18.422 * scaleY);
+      sidePath.cubicTo(
+        22.4 * scaleX, 18.6 * scaleY,
+        22.3 * scaleX, 18.8 * scaleY,
+        22.105 * scaleX, 18.908 * scaleY
+      );
+      sidePath.lineTo(21.99 * scaleX, 18.948 * scaleY);
+      sidePath.cubicTo(
+        21.2 * scaleX, 19.15 * scaleY,
+        20.8 * scaleX, 19.3 * scaleY,
+        rightSideX * scaleX, 19.389 * scaleY
+      );
+      sidePath.close();
+      
+      canvas.drawPath(sidePath, paint);
+
+    } else {
+      // Outlined version - use the same shape as filled but as stroke
+      paint.style = PaintingStyle.stroke;
+
+      // Use the exact same paths as the filled version but draw them as outlines
+      final mainPath = Path();
+      
+      // Center head: M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0Z
+      mainPath.addOval(Rect.fromCenter(
+        center: Offset(12 * scaleX, 6.75 * scaleY), // 8.25 + 3.75 = 12
+        width: 7.5 * scaleX,
+        height: 7.5 * scaleY,
+      ));
+      
+      // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (animated)
+      mainPath.addOval(Rect.fromCenter(
+        center: Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
+        width: 6 * scaleX,
+        height: 6 * scaleY,
+      ));
+      
+      // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (animated)
+      mainPath.addOval(Rect.fromCenter(
+        center: Offset(leftHugX * scaleX, 9.75 * scaleY), // Animated X position
+        width: 6 * scaleX,
+        height: 6 * scaleY,
+      ));
+      
+      // Main body: M6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z
+      mainPath.moveTo(6.31 * scaleX, 15.117 * scaleY);
+      mainPath.cubicTo(
+        8.0 * scaleX, 13.5 * scaleY,
+        10.0 * scaleX, 12.0 * scaleY,
+        12 * scaleX, 12 * scaleY
+      );
+      mainPath.cubicTo(
+        14.0 * scaleX, 12.0 * scaleY,
+        16.0 * scaleX, 13.5 * scaleY,
+        18.709 * scaleX, 19.498 * scaleY
+      );
+      mainPath.cubicTo(
+        18.587 * scaleX, 19.69 * scaleY,
+        18.437 * scaleX, 19.82 * scaleY,
+        18.337 * scaleX, 20.066 * scaleY
+      );
+      mainPath.cubicTo(
+        16.5 * scaleX, 21.2 * scaleY,
+        14.3 * scaleX, 21.75 * scaleY,
+        12 * scaleX, 21.75 * scaleY
+      );
+      mainPath.cubicTo(
+        9.695 * scaleX, 21.75 * scaleY,
+        7.53 * scaleX, 21.138 * scaleY,
+        5.663 * scaleX, 20.066 * scaleY
+      );
+      mainPath.cubicTo(
+        5.563 * scaleX, 19.82 * scaleY,
+        5.413 * scaleX, 19.69 * scaleY,
+        5.291 * scaleX, 19.498 * scaleY
+      );
+      mainPath.cubicTo(
+        5.8 * scaleX, 17.8 * scaleY,
+        6.05 * scaleX, 16.5 * scaleY,
+        6.31 * scaleX, 15.117 * scaleY
+      );
+      mainPath.close();
+      canvas.drawPath(mainPath, paint);
+
+      // Side body paths as outlines
+      final sidePath = Path();
+      
+      // Left side body: M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047Z
+      sidePath.moveTo(5.082 * scaleX, 14.254 * scaleY);
+      sidePath.cubicTo(
+        4.5 * scaleX, 16.8 * scaleY,
+        4.2 * scaleX, 18.5 * scaleY,
+        3.774 * scaleX, 19.389 * scaleY
+      );
+      sidePath.cubicTo(
+        2.8 * scaleX, 19.2 * scaleY,
+        2.0 * scaleX, 19.0 * scaleY,
+        2.01 * scaleX, 18.949 * scaleY
+      );
+      sidePath.lineTo(1.895 * scaleX, 18.909 * scaleY);
+      sidePath.cubicTo(
+        1.7 * scaleX, 18.8 * scaleY,
+        1.6 * scaleX, 18.6 * scaleY,
+        1.522 * scaleX, 18.422 * scaleY
+      );
+      sidePath.lineTo(1.512 * scaleX, 18.301 * scaleY);
+      sidePath.cubicTo(
+        1.8 * scaleX, 16.5 * scaleY,
+        3.2 * scaleX, 14.8 * scaleY,
+        5.082 * scaleX, 14.254 * scaleY
+      );
+      sidePath.close();
+      
+      // Right side body: M20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z
+      sidePath.moveTo(20.226 * scaleX, 19.389 * scaleY);
+      sidePath.cubicTo(
+        19.6 * scaleX, 16.8 * scaleY,
+        19.3 * scaleX, 15.0 * scaleY,
+        18.918 * scaleX, 14.254 * scaleY
+      );
+      sidePath.cubicTo(
+        20.8 * scaleX, 14.8 * scaleY,
+        22.2 * scaleX, 16.5 * scaleY,
+        22.488 * scaleX, 18.301 * scaleY
+      );
+      sidePath.lineTo(22.478 * scaleX, 18.422 * scaleY);
+      sidePath.cubicTo(
+        22.4 * scaleX, 18.6 * scaleY,
+        22.3 * scaleX, 18.8 * scaleY,
+        22.105 * scaleX, 18.908 * scaleY
+      );
+      sidePath.lineTo(21.99 * scaleX, 18.948 * scaleY);
+      sidePath.cubicTo(
+        21.2 * scaleX, 19.15 * scaleY,
+        20.8 * scaleX, 19.3 * scaleY,
+        20.226 * scaleX, 19.389 * scaleY
+      );
+      sidePath.close();
+      
+      canvas.drawPath(sidePath, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return oldDelegate is SocialIconPainter &&
+        (oldDelegate.isFilled != isFilled || 
+         oldDelegate.color != color ||
+         oldDelegate.strokeWidth != strokeWidth ||
+         oldDelegate.animationValue != animationValue);
   }
 }

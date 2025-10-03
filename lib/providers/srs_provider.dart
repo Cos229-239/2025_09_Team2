@@ -36,7 +36,9 @@ class SRSProvider extends ChangeNotifier {
   List<Review> get dueReviews {
     final now = DateTime.now(); // Get current timestamp
     // Filter reviews where due date has passed (is before now or equal)
-    return _reviews.where((r) => r.dueAt.isBefore(now) || r.dueAt.isAtSameMomentAs(now)).toList();
+    return _reviews
+        .where((r) => r.dueAt.isBefore(now) || r.dueAt.isAtSameMomentAs(now))
+        .toList();
   }
 
   /// Getter for count of reviews currently due for study
@@ -58,7 +60,8 @@ class SRSProvider extends ChangeNotifier {
 
     try {
       _reviews = await _firestoreService.getUserReviews();
-      developer.log('Loaded ${_reviews.length} reviews from Firestore', name: 'SRSProvider');
+      developer.log('Loaded ${_reviews.length} reviews from Firestore',
+          name: 'SRSProvider');
     } catch (e) {
       // Log any errors that occur during review loading for debugging
       developer.log('Error loading reviews: $e', name: 'SRSProvider');
@@ -77,8 +80,9 @@ class SRSProvider extends ChangeNotifier {
   Future<void> recordReview(FlashCard card, ReviewGrade grade) async {
     try {
       // Update review with grade using Firestore service (handles SM-2 algorithm)
-      final updatedReview = await _firestoreService.updateReviewWithGrade(card.id, grade);
-      
+      final updatedReview =
+          await _firestoreService.updateReviewWithGrade(card.id, grade);
+
       if (updatedReview != null) {
         // Update local cache
         final existingIndex = _reviews.indexWhere((r) => r.cardId == card.id);
@@ -89,14 +93,14 @@ class SRSProvider extends ChangeNotifier {
         }
 
         developer.log(
-          'Review recorded for card ${card.id}: Grade=$grade, Next due=${updatedReview.dueAt}',
-          name: 'SRSProvider'
-        );
+            'Review recorded for card ${card.id}: Grade=$grade, Next due=${updatedReview.dueAt}',
+            name: 'SRSProvider');
 
         // Notify UI that review data has changed
         notifyListeners();
       } else {
-        developer.log('Failed to record review for card ${card.id}', name: 'SRSProvider');
+        developer.log('Failed to record review for card ${card.id}',
+            name: 'SRSProvider');
       }
     } catch (e) {
       developer.log('Error recording review: $e', name: 'SRSProvider');
@@ -127,7 +131,8 @@ class SRSProvider extends ChangeNotifier {
         notifyListeners(); // Notify UI of the change
         developer.log('Review reset for card: $cardId', name: 'SRSProvider');
       } else {
-        developer.log('Failed to reset review for card: $cardId', name: 'SRSProvider');
+        developer.log('Failed to reset review for card: $cardId',
+            name: 'SRSProvider');
       }
     } catch (e) {
       developer.log('Error resetting review: $e', name: 'SRSProvider');
@@ -136,7 +141,7 @@ class SRSProvider extends ChangeNotifier {
 
   /// Generates statistics about review activity and card progress
   /// Used for displaying progress analytics and study insights
-  /// @return Map containing various review statistics  
+  /// @return Map containing various review statistics
   Future<Map<String, int>> getReviewStats() async {
     try {
       // Calculate local stats for current state
@@ -190,7 +195,8 @@ class SRSProvider extends ChangeNotifier {
       if (newReview != null) {
         _reviews.add(newReview);
         notifyListeners();
-        developer.log('New review created for card: $cardId', name: 'SRSProvider');
+        developer.log('New review created for card: $cardId',
+            name: 'SRSProvider');
       }
       return newReview;
     } catch (e) {

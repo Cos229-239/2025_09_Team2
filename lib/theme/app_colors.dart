@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 /// Application color constants
 class AppColors {
   // Primary colors
-  static const primaryAccent = Color(0xFFF8B67F); // Flash Cards border color
+  static const primaryAccent = Color(0xFF6FB8E9); // New blue border color from Figma
   static const primaryBackground = Color(0xFF2A3050); // Dark background color
 
   // Text colors
-  static const textPrimary = Colors.white;
-  static const textSecondary = Color(0xB3FFFFFF); // 70% white
-  static const textMuted = Color(0x80FFFFFF); // 50% white
+  static const textPrimary = Color(0xFFD9D9D9);
+  static const textSecondary = Color(0xFFD9D9D9); // Same as primary for consistency
+  static const textMuted = Color(0xFFD9D9D9); // Same as primary for consistency
 
   // Status colors
   static const success = Color(0xFF4CAF50);

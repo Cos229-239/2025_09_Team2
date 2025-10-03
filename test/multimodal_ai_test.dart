@@ -62,14 +62,16 @@ void main() {
           'imageUrl': 'https://example.com/image.jpg',
           'visualMetadata': {'concept': 'test'}
         };
-        expect(MultiModalErrorHandler.validateVisualContent(validContent), isTrue);
+        expect(
+            MultiModalErrorHandler.validateVisualContent(validContent), isTrue);
 
         // Test invalid content
         final invalidContent = {
           'imageUrl': 'invalid_url',
           'visualMetadata': {'concept': 'test'}
         };
-        expect(MultiModalErrorHandler.validateVisualContent(invalidContent), isFalse);
+        expect(MultiModalErrorHandler.validateVisualContent(invalidContent),
+            isFalse);
 
         // Test null content
         expect(MultiModalErrorHandler.validateVisualContent(null), isFalse);
@@ -79,7 +81,8 @@ void main() {
     group('Audio Content Generation Tests', () {
       test('should generate audio content successfully', () async {
         final audioUrl = await aiService.generateAudioContent(
-          text: 'Photosynthesis is the process by which plants convert sunlight into energy',
+          text:
+              'Photosynthesis is the process by which plants convert sunlight into energy',
           subject: 'biology',
           user: testUser,
         );
@@ -105,11 +108,16 @@ void main() {
 
       test('should validate audio content correctly', () {
         // Test valid URLs
-        expect(MultiModalErrorHandler.validateAudioContent('https://example.com/audio.mp3'), isTrue);
-        expect(MultiModalErrorHandler.validateAudioContent(null), isTrue); // null is acceptable
+        expect(
+            MultiModalErrorHandler.validateAudioContent(
+                'https://example.com/audio.mp3'),
+            isTrue);
+        expect(MultiModalErrorHandler.validateAudioContent(null),
+            isTrue); // null is acceptable
 
         // Test invalid URLs
-        expect(MultiModalErrorHandler.validateAudioContent('invalid_url'), isFalse);
+        expect(MultiModalErrorHandler.validateAudioContent('invalid_url'),
+            isFalse);
       });
     });
 
@@ -141,14 +149,18 @@ void main() {
 
       test('should validate diagram content correctly', () {
         // Test valid JSON
-        const validDiagram = '{"elements": [{"id": "1", "type": "node", "label": "Test"}]}';
-        expect(MultiModalErrorHandler.validateDiagramContent(validDiagram), isTrue);
+        const validDiagram =
+            '{"elements": [{"id": "1", "type": "node", "label": "Test"}]}';
+        expect(MultiModalErrorHandler.validateDiagramContent(validDiagram),
+            isTrue);
 
         // Test null content
-        expect(MultiModalErrorHandler.validateDiagramContent(null), isTrue); // null is acceptable
+        expect(MultiModalErrorHandler.validateDiagramContent(null),
+            isTrue); // null is acceptable
 
         // Test invalid JSON
-        expect(MultiModalErrorHandler.validateDiagramContent('invalid_json'), isFalse);
+        expect(MultiModalErrorHandler.validateDiagramContent('invalid_json'),
+            isFalse);
       });
     });
 
@@ -238,7 +250,8 @@ void main() {
 
       test('should generate proper fallback content', () {
         // Test visual fallback
-        final visualFallback = MultiModalErrorHandler.generateFallbackVisualContent(
+        final visualFallback =
+            MultiModalErrorHandler.generateFallbackVisualContent(
           concept: 'test concept',
           subject: 'test subject',
           user: testUser,
@@ -247,7 +260,8 @@ void main() {
         expect(visualFallback['visualMetadata'], isNotNull);
 
         // Test audio fallback (should return null)
-        final audioFallback = MultiModalErrorHandler.generateFallbackAudioContent(
+        final audioFallback =
+            MultiModalErrorHandler.generateFallbackAudioContent(
           text: 'test text',
           subject: 'test subject',
           user: testUser,
@@ -255,7 +269,8 @@ void main() {
         expect(audioFallback, isNull);
 
         // Test diagram fallback
-        final diagramFallback = MultiModalErrorHandler.generateFallbackDiagramContent(
+        final diagramFallback =
+            MultiModalErrorHandler.generateFallbackDiagramContent(
           concept: 'test concept',
           subject: 'test subject',
           user: testUser,
@@ -266,7 +281,8 @@ void main() {
     });
 
     group('FlashCard Model Multi-Modal Tests', () {
-      test('should serialize and deserialize multi-modal content correctly', () {
+      test('should serialize and deserialize multi-modal content correctly',
+          () {
         final cardWithMultiModal = FlashCard(
           id: 'test_123',
           deckId: 'deck_123',
@@ -290,8 +306,10 @@ void main() {
         final deserializedCard = FlashCard.fromJson(json);
         expect(deserializedCard.imageUrl, equals(cardWithMultiModal.imageUrl));
         expect(deserializedCard.audioUrl, equals(cardWithMultiModal.audioUrl));
-        expect(deserializedCard.diagramData, equals(cardWithMultiModal.diagramData));
-        expect(deserializedCard.visualMetadata, equals(cardWithMultiModal.visualMetadata));
+        expect(deserializedCard.diagramData,
+            equals(cardWithMultiModal.diagramData));
+        expect(deserializedCard.visualMetadata,
+            equals(cardWithMultiModal.visualMetadata));
       });
 
       test('should handle quiz attempts with multi-modal content', () {
@@ -358,8 +376,9 @@ void main() {
 
     group('Performance and Reliability Tests', () {
       test('should handle concurrent multi-modal generation', () async {
-        final futures = List.generate(3, (index) =>
-          aiService.generateFlashcardsFromText(
+        final futures = List.generate(
+          3,
+          (index) => aiService.generateFlashcardsFromText(
             'Test content $index',
             'test_subject',
             testUser,
@@ -368,7 +387,7 @@ void main() {
         );
 
         final results = await Future.wait(futures);
-        
+
         // All operations should complete without errors
         expect(results.length, equals(3));
         for (final cards in results) {
@@ -378,16 +397,16 @@ void main() {
 
       test('should maintain performance under load', () async {
         final stopwatch = Stopwatch()..start();
-        
+
         await aiService.generateFlashcardsFromText(
           'Performance test content with detailed information about complex topics',
           'performance_test',
           testUser,
           count: 2,
         );
-        
+
         stopwatch.stop();
-        
+
         // Generation should complete within reasonable time (2 minutes max)
         expect(stopwatch.elapsed.inMinutes, lessThan(2));
       });
@@ -399,7 +418,8 @@ void main() {
         final result = await MultiModalErrorHandler.executeWithFallback<String>(
           operationName: 'timeout_test',
           operation: () async {
-            await Future.delayed(const Duration(milliseconds: 100)); // Short delay for test
+            await Future.delayed(
+                const Duration(milliseconds: 100)); // Short delay for test
             throw Exception('Simulated timeout');
           },
           fallback: () => 'timeout_fallback',
@@ -411,9 +431,9 @@ void main() {
       test('should provide comprehensive error reporting', () {
         // Trigger some failures first
         MultiModalErrorHandler.resetErrorTracking();
-        
+
         final report = MultiModalErrorHandler.getErrorReport();
-        
+
         expect(report, isA<Map<String, dynamic>>());
         expect(report['failureCounts'], isA<Map>());
         expect(report['circuitBreakerStates'], isA<List>());
