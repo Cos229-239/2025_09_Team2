@@ -451,7 +451,7 @@ class SettingsScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'StudyPals v1.0.0',
+                      'StudyPals v2.3.5',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.grey[500],
                           ),

@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:image/image.dart' as img;
 import '../services/social_learning_service.dart';
+import '../services/activity_service.dart';
+import '../models/activity.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -20,6 +29,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   PrivacyLevel _progressPrivacy = PrivacyLevel.friends;
   PrivacyLevel _friendsPrivacy = PrivacyLevel.friends;
   bool _isLoading = false;
+  String? _avatarUrl;
+  final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
@@ -35,19 +46,75 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     super.dispose();
   }
 
-  void _loadCurrentProfile() {
-    final service = context.read<SocialLearningService>();
-    final profile = service.currentUserProfile;
+  Future<void> _loadCurrentProfile() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (profile != null) {
-      _displayNameController.text = profile.displayName;
-      _usernameController.text = profile.username;
-      _bioController.text = profile.bio ?? '';
-      _interests = List<String>.from(profile.interests);
-      _profilePrivacy = profile.profilePrivacy;
-      _progressPrivacy = profile.progressPrivacy;
-      _friendsPrivacy = profile.friendsPrivacy;
+    try {
+      // First, try to load from SocialLearningService
+      final service = context.read<SocialLearningService>();
+      final profile = service.currentUserProfile;
+
+      if (profile != null) {
+        setState(() {
+          _displayNameController.text = profile.displayName;
+          _usernameController.text = profile.username;
+          _bioController.text = profile.bio ?? '';
+          _interests = List<String>.from(profile.interests);
+          _profilePrivacy = profile.profilePrivacy;
+          _progressPrivacy = profile.progressPrivacy;
+          _friendsPrivacy = profile.friendsPrivacy;
+          _avatarUrl = profile.avatar;
+        });
+      } else {
+        // If not in service, load directly from Firestore
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .get();
+
+          if (userDoc.exists) {
+            final data = userDoc.data()!;
+            setState(() {
+              _displayNameController.text = data['displayName'] ?? '';
+              _usernameController.text = data['username'] ?? '';
+              _bioController.text = data['bio'] ?? '';
+              _avatarUrl = data['profilePicture'];
+              
+              // Load interests
+              if (data['interests'] != null) {
+                _interests = List<String>.from(data['interests']);
+              }
+              
+              // Load privacy settings
+              final privacy = data['privacySettings'] as Map<String, dynamic>?;
+              if (privacy != null) {
+                _profilePrivacy = _parsePrivacyLevel(privacy['profileVisibility']);
+                _progressPrivacy = _parsePrivacyLevel(privacy['progressVisibility']);
+                _friendsPrivacy = _parsePrivacyLevel(privacy['friendsVisibility']);
+              }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
+  }
+
+  PrivacyLevel _parsePrivacyLevel(String? value) {
+    if (value == null) return PrivacyLevel.public;
+    return PrivacyLevel.values.firstWhere(
+      (e) => e.name == value,
+      orElse: () => PrivacyLevel.public,
+    );
   }
 
   @override
@@ -226,18 +293,24 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         children: [
           Stack(
             children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.1),
-                child: Icon(
-                  Icons.person,
-                  size: 50,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+              _avatarUrl != null && _avatarUrl!.isNotEmpty
+                  ? CircleAvatar(
+                      radius: 50,
+                      backgroundImage: CachedNetworkImageProvider(_avatarUrl!),
+                      backgroundColor: Colors.grey.shade200,
+                    )
+                  : CircleAvatar(
+                      radius: 50,
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.1),
+                      child: Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -416,12 +489,138 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     });
   }
 
-  void _changeProfilePicture() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Profile picture change - Coming soon!'),
-      ),
-    );
+  Future<void> _changeProfilePicture() async {
+    try {
+      debugPrint('📸 Starting profile picture change...');
+      
+      setState(() {
+        _isLoading = true;
+      });
+
+      // Get current user ID from Firebase Auth
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        throw Exception('User not authenticated');
+      }
+      
+      debugPrint('✅ User authenticated: ${user.uid}');
+
+      // Pick image with minimal compression first
+      debugPrint('📸 Picking image...');
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) {
+        debugPrint('⚠️ No image selected');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      debugPrint('✅ Image selected: ${pickedFile.name}');
+      
+      // Read image as bytes
+      Uint8List bytes = Uint8List.fromList(await pickedFile.readAsBytes());
+      debugPrint('📦 Initial image size: ${bytes.length} bytes (${(bytes.length / 1024).toStringAsFixed(1)} KB)');
+      
+      // If image is too large, compress it further using the image package
+      if (bytes.length > 300 * 1024) {
+        debugPrint('🔄 Image too large, applying additional compression...');
+        
+        // Decode the image
+        img.Image? image = img.decodeImage(bytes);
+        if (image == null) {
+          throw Exception('Failed to decode image');
+        }
+        
+        // Resize to max 400x400 to ensure it fits
+        img.Image resized = img.copyResize(image, width: 400, height: 400);
+        
+        // Encode with quality adjustment to hit target size
+        int quality = 75;
+        do {
+          bytes = Uint8List.fromList(img.encodeJpg(resized, quality: quality));
+          debugPrint('🔄 Compressed to ${bytes.length} bytes (${(bytes.length / 1024).toStringAsFixed(1)} KB) at quality $quality%');
+          quality -= 10;
+        } while (bytes.length > 300 * 1024 && quality > 20);
+        
+        if (bytes.length > 300 * 1024) {
+          throw Exception('Could not compress image to under 300 KB. Please select a smaller image.');
+        }
+        
+        debugPrint('✅ Successfully compressed to ${(bytes.length / 1024).toStringAsFixed(1)} KB');
+      }
+      
+      // Convert to Base64
+      final base64Image = base64Encode(bytes);
+      final dataUrl = 'data:image/jpeg;base64,$base64Image';
+      
+      debugPrint('✅ Converted to Base64 (${dataUrl.length} characters)');
+
+      // Save directly to Firestore
+      debugPrint('📝 Updating Firestore with Base64 image...');
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
+        'profilePicture': dataUrl,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      });
+      
+      debugPrint('✅ Firestore updated successfully');
+
+      // Update avatar URL in state
+      setState(() {
+        _avatarUrl = dataUrl;
+        _isLoading = false;
+      });
+      
+      debugPrint('✅ UI state updated');
+
+      // Update SocialLearningService if it has a profile
+      try {
+        final service = context.read<SocialLearningService>();
+        if (service.currentUserProfile != null) {
+          await service.updateUserProfile(avatar: dataUrl);
+          debugPrint('✅ SocialLearningService updated');
+        } else {
+          debugPrint('⚠️ SocialLearningService has no profile, skipping');
+        }
+      } catch (e) {
+        debugPrint('⚠️ Could not update SocialLearningService: $e');
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error updating profile picture: $e');
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile picture: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
   }
 
   void _changePassword() {
@@ -475,39 +674,97 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
+    debugPrint('📝 Starting profile save...');
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final service = context.read<SocialLearningService>();
-      final currentProfile = service.currentUserProfile;
+      // Get current user
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      debugPrint('✅ User authenticated: ${user.uid}');
 
-      if (currentProfile != null) {
-        // Update profile with new data
+      // Prepare the data to save
+      final updateData = {
+        'displayName': _displayNameController.text.trim(),
+        'username': _usernameController.text.trim(),
+        'bio': _bioController.text.trim().isEmpty
+            ? null
+            : _bioController.text.trim(),
+        'interests': _interests, // Add interests to Firestore save
+        'privacySettings': {
+          'profileVisibility': _profilePrivacy.name,
+          'progressVisibility': _progressPrivacy.name,
+          'friendsVisibility': _friendsPrivacy.name,
+        },
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      };
+
+      // Only add avatar if it's been set
+      if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
+        updateData['profilePicture'] = _avatarUrl;
+      }
+
+      debugPrint('📦 Saving data: $updateData');
+
+      // Save to Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update(updateData);
+      
+      debugPrint('✅ Firestore update successful');
+
+      // Log activity
+      try {
+        final activityService = ActivityService();
+        await activityService.logActivity(
+          type: ActivityType.profileUpdated,
+          description: 'Updated profile information',
+          metadata: {
+            'displayName': _displayNameController.text.trim(),
+            'username': _usernameController.text.trim(),
+          },
+        );
+      } catch (e) {
+        debugPrint('Failed to log profile update activity: $e');
+      }
+
+      // Also update the SocialLearningService if it has a profile
+      final service = context.read<SocialLearningService>();
+      if (service.currentUserProfile != null) {
         await service.updateUserProfile(
           displayName: _displayNameController.text.trim(),
           username: _usernameController.text.trim(),
           bio: _bioController.text.trim().isEmpty
               ? null
               : _bioController.text.trim(),
+          avatar: _avatarUrl,
           interests: _interests,
           profilePrivacy: _profilePrivacy,
           progressPrivacy: _progressPrivacy,
           friendsPrivacy: _friendsPrivacy,
         );
+        debugPrint('✅ SocialLearningService update successful');
+      } else {
+        debugPrint('⚠️ SocialLearningService has no profile, skipping');
+      }
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.of(context).pop();
-        }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).pop();
       }
     } catch (e) {
+      debugPrint('❌ Error saving profile: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
