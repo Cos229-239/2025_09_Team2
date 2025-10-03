@@ -463,7 +463,7 @@ class AITutorMiddleware {
     // If there are memory issues, prepend corrections
     if (memoryIssues.isNotEmpty) {
       final corrections = memoryIssues
-          .map((issue) => '${issue.honestAlternative}')
+          .map((issue) => issue.honestAlternative)
           .join('\n\n');
       finalResponse = '$corrections\n\n$aiResponse';
       developer.log('🔧 Prepended memory corrections to response',

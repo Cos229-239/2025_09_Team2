@@ -373,7 +373,7 @@ class CompetitiveLearningService {
   Map<String, List<LeaderboardEntry>> _leaderboards = {};
   List<Competition> _competitions = [];
   CompetitiveStats? _userStats;
-  List<PeerComparison> _peerComparisons = [];
+  final List<PeerComparison> _peerComparisons = [];
   
   // Stream subscriptions for real-time updates
   final Map<String, StreamSubscription> _subscriptions = {};

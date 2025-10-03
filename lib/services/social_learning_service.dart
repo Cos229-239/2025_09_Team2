@@ -479,12 +479,69 @@ class SocialLearningService {
         debugPrint('✅ User profile loaded from SharedPreferences');
       }
 
-      // Load friendships
-      final friendshipsData = _prefs?.getString(_friendshipsKey);
-      if (friendshipsData != null) {
-        final List<dynamic> friendshipsList = jsonDecode(friendshipsData);
-        _friendships =
-            friendshipsList.map((f) => Friendship.fromJson(f)).toList();
+      // Load friendships from Firestore if authenticated
+      if (user != null) {
+        try {
+          debugPrint('📥 Loading friendships from Firestore...');
+          
+          // Load sent requests (where current user is the sender)
+          final sentRequests = await _firestoreService.friendshipsCollection
+              .where('userId', isEqualTo: user.uid)
+              .get();
+          
+          // Load received requests (where current user is the receiver)
+          final receivedRequests = await _firestoreService.friendshipsCollection
+              .where('friendId', isEqualTo: user.uid)
+              .get();
+          
+          _friendships.clear();
+          
+          // Process sent requests
+          for (final doc in sentRequests.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            _friendships.add(Friendship(
+              id: data['id'],
+              userId: data['userId'],
+              friendId: data['friendId'],
+              requestDate: (data['requestDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+              acceptDate: (data['acceptDate'] as Timestamp?)?.toDate(),
+              isAccepted: data['isAccepted'] ?? false,
+              requestMessage: data['requestMessage'],
+            ));
+          }
+          
+          // Process received requests
+          for (final doc in receivedRequests.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            _friendships.add(Friendship(
+              id: data['id'],
+              userId: data['userId'],
+              friendId: data['friendId'],
+              requestDate: (data['requestDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+              acceptDate: (data['acceptDate'] as Timestamp?)?.toDate(),
+              isAccepted: data['isAccepted'] ?? false,
+              requestMessage: data['requestMessage'],
+            ));
+          }
+          
+          debugPrint('✅ Loaded ${_friendships.length} friendships from Firestore');
+        } catch (e) {
+          debugPrint('⚠️ Error loading friendships from Firestore: $e');
+          
+          // Fallback to local storage
+          final friendshipsData = _prefs?.getString(_friendshipsKey);
+          if (friendshipsData != null) {
+            final List<dynamic> friendshipsList = jsonDecode(friendshipsData);
+            _friendships = friendshipsList.map((f) => Friendship.fromJson(f)).toList();
+          }
+        }
+      } else {
+        // Load friendships from local storage if not authenticated
+        final friendshipsData = _prefs?.getString(_friendshipsKey);
+        if (friendshipsData != null) {
+          final List<dynamic> friendshipsList = jsonDecode(friendshipsData);
+          _friendships = friendshipsList.map((f) => Friendship.fromJson(f)).toList();
+        }
       }
 
       // Load study groups
@@ -629,49 +686,107 @@ class SocialLearningService {
     required String friendId,
     String? message,
   }) async {
-    if (_currentUserProfile == null) return false;
+    if (_currentUserProfile == null) {
+      debugPrint('❌ Cannot send friend request: No user profile');
+      return false;
+    }
 
-    // Check if friendship already exists
-    final existingFriendship = _friendships
-        .where((f) =>
-            (f.userId == _currentUserProfile!.id && f.friendId == friendId) ||
-            (f.userId == friendId && f.friendId == _currentUserProfile!.id))
-        .firstOrNull;
+    final user = _auth.currentUser;
+    if (user == null) {
+      debugPrint('❌ Cannot send friend request: Not authenticated');
+      return false;
+    }
 
-    if (existingFriendship != null) return false;
+    try {
+      // Check if friendship already exists in Firestore
+      final existingFriendships = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: user.uid)
+          .where('friendId', isEqualTo: friendId)
+          .get();
+      
+      final reverseExistingFriendships = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: friendId)
+          .where('friendId', isEqualTo: user.uid)
+          .get();
 
-    final friendship = Friendship(
-      id: _generateId(),
-      userId: _currentUserProfile!.id,
-      friendId: friendId,
-      requestDate: DateTime.now(),
-      requestMessage: message,
-    );
+      if (existingFriendships.docs.isNotEmpty || reverseExistingFriendships.docs.isNotEmpty) {
+        debugPrint('❌ Friendship already exists');
+        return false;
+      }
 
-    _friendships.add(friendship);
-    await _saveUserData();
-    return true;
+      // Create friendship document in Firestore
+      final friendshipId = _generateId();
+      final friendshipData = {
+        'id': friendshipId,
+        'userId': user.uid,
+        'friendId': friendId,
+        'status': 'pending',
+        'isAccepted': false,
+        'requestDate': FieldValue.serverTimestamp(),
+        'requestMessage': message,
+        'acceptDate': null,
+      };
+
+      await _firestoreService.friendshipsCollection.doc(friendshipId).set(friendshipData);
+      
+      // Also save locally
+      final friendship = Friendship(
+        id: friendshipId,
+        userId: user.uid,
+        friendId: friendId,
+        requestDate: DateTime.now(),
+        requestMessage: message,
+      );
+
+      _friendships.add(friendship);
+      await _saveUserData();
+      
+      debugPrint('✅ Friend request sent successfully to $friendId');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error sending friend request: $e');
+      return false;
+    }
   }
 
   /// Accept friend request
   Future<bool> acceptFriendRequest(String friendshipId) async {
-    final friendshipIndex =
-        _friendships.indexWhere((f) => f.id == friendshipId);
-    if (friendshipIndex == -1) return false;
+    final user = _auth.currentUser;
+    if (user == null) {
+      debugPrint('❌ Cannot accept friend request: Not authenticated');
+      return false;
+    }
 
-    final friendship = _friendships[friendshipIndex];
-    _friendships[friendshipIndex] = Friendship(
-      id: friendship.id,
-      userId: friendship.userId,
-      friendId: friendship.friendId,
-      requestDate: friendship.requestDate,
-      acceptDate: DateTime.now(),
-      isAccepted: true,
-      requestMessage: friendship.requestMessage,
-    );
+    try {
+      // Update in Firestore
+      await _firestoreService.friendshipsCollection.doc(friendshipId).update({
+        'isAccepted': true,
+        'status': 'accepted',
+        'acceptDate': FieldValue.serverTimestamp(),
+      });
 
-    await _saveUserData();
-    return true;
+      // Update locally
+      final friendshipIndex = _friendships.indexWhere((f) => f.id == friendshipId);
+      if (friendshipIndex != -1) {
+        final friendship = _friendships[friendshipIndex];
+        _friendships[friendshipIndex] = Friendship(
+          id: friendship.id,
+          userId: friendship.userId,
+          friendId: friendship.friendId,
+          requestDate: friendship.requestDate,
+          acceptDate: DateTime.now(),
+          isAccepted: true,
+          requestMessage: friendship.requestMessage,
+        );
+      }
+
+      await _saveUserData();
+      debugPrint('✅ Friend request accepted successfully');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error accepting friend request: $e');
+      return false;
+    }
   }
 
   /// Create study group
@@ -1259,14 +1374,22 @@ class SocialLearningService {
 
   /// Decline a friend request
   Future<bool> declineFriendRequest(String friendshipId) async {
-    final friendshipIndex =
-        _friendships.indexWhere((f) => f.id == friendshipId);
-    if (friendshipIndex == -1) return false;
+    try {
+      // Delete from Firestore
+      await _firestoreService.friendshipsCollection.doc(friendshipId).delete();
+      
+      // Remove locally
+      final friendshipIndex = _friendships.indexWhere((f) => f.id == friendshipId);
+      if (friendshipIndex != -1) {
+        _friendships.removeAt(friendshipIndex);
+      }
 
-    // Remove the friendship request
-    _friendships.removeAt(friendshipIndex);
-
-    await _saveUserData();
-    return true;
+      await _saveUserData();
+      debugPrint('✅ Friend request declined successfully');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error declining friend request: $e');
+      return false;
+    }
   }
 }
