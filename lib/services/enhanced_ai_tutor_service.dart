@@ -1,5 +1,6 @@
 // enhanced_ai_tutor_service.dart
 
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -1508,8 +1509,9 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
     );
 
     _sessionMessages[sessionId]?.add(chatMessage);
-    await _saveChatMessage(chatMessage);
-    await _saveUserProfile(profile);
+    // Save operations are non-blocking to avoid delays
+    unawaited(_saveChatMessage(chatMessage));
+    unawaited(_saveUserProfile(profile));
 
     return chatMessage;
   }
@@ -1589,20 +1591,20 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
     ));
     debugPrint('🔧 Service: Welcome message added to session');
 
-    // Save to Firestore
+    // Save to Firestore (non-blocking - runs in background)
     debugPrint('🔧 Service: Saving to Firestore...');
-    await _saveTutorSession(session);
-    debugPrint('🔧 Service: Session saved to Firestore');
+    unawaited(_saveTutorSession(session));
+    debugPrint('🔧 Service: Session save initiated (background)');
 
-    // Award points for starting session
-    await _awardPoints(userId, 10, 'session_started');
+    // Award points for starting session (non-blocking)
+    unawaited(_awardPoints(userId, 10, 'session_started'));
 
     // Check if first session badge should be awarded
     if (!profile.unlockedBadges.contains('first_session')) {
       profile.unlockedBadges.add('first_session');
       debugPrint('🔧 Service: Saving user profile with first session badge...');
-      await _saveUserProfile(profile);
-      debugPrint('🔧 Service: User profile saved');
+      unawaited(_saveUserProfile(profile));
+      debugPrint('🔧 Service: User profile save initiated (background)');
     }
 
     debugPrint('🎉 Service: Session creation completed successfully!');
@@ -1702,8 +1704,9 @@ How can I help you today?
       isActive: false,
     );
 
-    await _saveTutorSession(endedSession);
-    await _saveUserProfile(profile);
+    // Save session and profile updates (non-blocking)
+    unawaited(_saveTutorSession(endedSession));
+    unawaited(_saveUserProfile(profile));
 
     _activeSessions.remove(sessionId);
     _sessionContext.remove(sessionId);

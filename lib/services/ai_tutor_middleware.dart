@@ -382,31 +382,40 @@ class AITutorMiddleware {
           name: 'AITutorMiddleware', error: e);
     }
     
-    // 2. Validate memory claims
+    // 2. Validate memory claims - ONLY if user asked about past conversations
     final memoryIssues = <MemoryIssue>[];
+    final userAskedAboutPast = _userAskedAboutPastConversation(userQuery);
+    
     try {
-      final memoryResult = MemoryClaimValidator.validate(
-        response: aiResponse,
-        sessionContext: sessionContext,
-      );
-      
-      if (!memoryResult.valid && memoryResult.claims.isNotEmpty) {
-        for (final claim in memoryResult.claims.where((c) => !c.isValid)) {
-          // Generate honest alternative for each false claim
-          final honestAlt = MemoryClaimValidator.generateHonestAlternative(
-            sessionContext.getRecentTopics(topK: 3)
-                .map((t) => t.topic)
-                .join(', '),
-          );
-          memoryIssues.add(MemoryIssue(
-            claim: claim.claimText,
-            honestAlternative: honestAlt,
-          ));
+      // CRITICAL FIX: Only validate memory claims if user explicitly references past conversations
+      // This prevents false "I don't have a record" warnings on normal teaching responses
+      if (userAskedAboutPast) {
+        final memoryResult = MemoryClaimValidator.validate(
+          response: aiResponse,
+          sessionContext: sessionContext,
+        );
+        
+        if (!memoryResult.valid && memoryResult.claims.isNotEmpty) {
+          for (final claim in memoryResult.claims.where((c) => !c.isValid)) {
+            // Generate honest alternative for each false claim
+            final honestAlt = MemoryClaimValidator.generateHonestAlternative(
+              sessionContext.getRecentTopics(topK: 3)
+                  .map((t) => t.topic)
+                  .join(', '),
+            );
+            memoryIssues.add(MemoryIssue(
+              claim: claim.claimText,
+              honestAlternative: honestAlt,
+            ));
+          }
+          developer.log('⚠️ Found ${memoryIssues.length} false memory claims',
+              name: 'AITutorMiddleware');
+        } else {
+          developer.log('✅ No false memory claims detected',
+              name: 'AITutorMiddleware');
         }
-        developer.log('⚠️ Found ${memoryIssues.length} false memory claims',
-            name: 'AITutorMiddleware');
       } else {
-        developer.log('✅ No false memory claims detected',
+        developer.log('ℹ️ Skipping memory validation (user didn\'t ask about past)',
             name: 'AITutorMiddleware');
       }
     } catch (e) {
@@ -480,6 +489,55 @@ class AITutorMiddleware {
       memoryIssues: memoryIssues,
       mathIssues: mathIssues,
       mathValidations: mathValidations,
+    );
+  }
+  
+  /// Check if user's query is asking about past conversations
+  /// This prevents false memory warnings on normal teaching questions
+  static bool _userAskedAboutPastConversation(String userQuery) {
+    final lowerQuery = userQuery.toLowerCase();
+    
+    // Patterns that indicate user is asking about past conversations
+    final pastConversationIndicators = [
+      // Direct memory queries
+      'remember',
+      'recall',
+      'do you remember',
+      'did we',
+      'did i',
+      
+      // Temporal references
+      'yesterday',
+      'last time',
+      'earlier',
+      'before',
+      'previously',
+      'last session',
+      'last week',
+      'last class',
+      
+      // Continuation phrases
+      'we discussed',
+      'we talked about',
+      'we covered',
+      'we went over',
+      'you told me',
+      'you said',
+      'you mentioned',
+      'i told you',
+      'i said',
+      'i mentioned',
+      
+      // Context references
+      'from before',
+      'from earlier',
+      'from last time',
+      'that we talked about',
+      'what we discussed',
+    ];
+    
+    return pastConversationIndicators.any((indicator) => 
+      lowerQuery.contains(indicator)
     );
   }
 }

@@ -872,9 +872,10 @@ class FirestoreService {
     try {
       final user = _auth.currentUser;
       if (user != null) {
-        await usersCollection.doc(user.uid).update({
+        // Use set with merge to create document if it doesn't exist
+        await usersCollection.doc(user.uid).set({
           'lastActiveAt': FieldValue.serverTimestamp(),
-        });
+        }, SetOptions(merge: true));
       }
     } catch (e) {
       if (kDebugMode) {
