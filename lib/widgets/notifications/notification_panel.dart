@@ -694,9 +694,10 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
                   angle: hasUnread
                       ? _ringAnimation.value * (3.14159 / 180)
                       : 0, // Only animate rotation when there are unread notifications
-                  child: IconButton(
-                    icon: CustomPaint(
-                      size: const Size(24, 24),
+                  child: GestureDetector(
+                    onTap: widget.onTap ?? () => _showNotificationPanel(context),
+                    child: CustomPaint(
+                      size: const Size(28, 28),
                       painter: _getNotificationPainter(
                         hasUnread: hasUnread,
                         isSelected: isSelected,
@@ -704,15 +705,13 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
                             0, // Always 0 to keep consistent visual style
                       ),
                     ),
-                    onPressed:
-                        widget.onTap ?? () => _showNotificationPanel(context),
                   ),
                 ),
                 // Red notification dot (matching Lottie animation)
                 if (hasUnread)
                   Positioned(
-                    right: 8,
-                    top: 8,
+                    right: 0,
+                    top: 0,
                     child: Transform.scale(
                       scale: _dotScaleAnimation.value,
                       child: Opacity(

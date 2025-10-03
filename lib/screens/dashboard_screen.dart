@@ -14,6 +14,7 @@
 
 // Import Flutter's material design components for UI elements
 import 'package:flutter/material.dart';
+import 'dart:math';
 // Import Provider package for accessing state management across widgets
 import 'package:provider/provider.dart';
 // Import screen for flashcard study interface
@@ -22,6 +23,7 @@ import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard stu
 import 'package:studypals/screens/achievement_screen.dart'; // Achievement and rewards screen
 import 'package:studypals/screens/social_screen.dart'; // Social learning screen
 import 'package:studypals/screens/profile_settings_screen.dart'; // Profile settings screen
+import 'package:studypals/screens/settings_screen.dart'; // Main settings screen
 import 'package:studypals/screens/competitive_screen.dart'; // Competitive mode screen
 // Import planner screen
 import 'package:studypals/screens/planner_page.dart';
@@ -33,6 +35,8 @@ import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcard
 import 'package:studypals/widgets/dashboard/progress_graph_widget.dart'; // Progress graph widget
 import 'package:studypals/widgets/dashboard/pet_display_widget.dart'; // Pet display widget
 import 'package:studypals/widgets/dashboard/calendar_display_widget.dart'; // Calendar display widget
+// Import custom icon widgets
+import 'package:studypals/widgets/icons/profile_icon.dart'; // Custom profile icon
 // Import AI widgets for intelligent study features
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
 import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
@@ -676,6 +680,14 @@ class _DashboardHomeState extends State<DashboardHome>
   late AnimationController _petIconController;
   late Animation<double> _petIconAnimation;
 
+  // Animation controller for Social button hugging effect
+  late AnimationController _socialIconController;
+  late Animation<double> _socialIconAnimation;
+
+  // Animation controller for Learn button tassel sway effect
+  late AnimationController _learnIconController;
+  Animation<double>? _learnIconAnimation;
+
   // Animation controller for Tasks button clipboard animation
   late AnimationController _tasksAnimationController;
   late Animation<double> _tasksAnimation;
@@ -746,6 +758,32 @@ class _DashboardHomeState extends State<DashboardHome>
     ).animate(CurvedAnimation(
       parent: _petIconController,
       curve: Curves.easeInOut,
+    ));
+
+    // Initialize Social icon hugging animation controller  
+    _socialIconController = AnimationController(
+      duration: const Duration(milliseconds: 1600), // Longer duration for full hug-and-release cycle
+      vsync: this,
+    );
+    _socialIconAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _socialIconController,
+      curve: Curves.easeInOutBack, // Smooth back-and-forth curve for hug-release effect
+    ));
+
+    // Initialize Learn icon tassel sway animation controller
+    _learnIconController = AnimationController(
+      duration: const Duration(milliseconds: 2000), // Gentle 2-second sway cycle
+      vsync: this,
+    );
+    _learnIconAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _learnIconController,
+      curve: Curves.easeInOut, // Smooth sway motion
     ));
 
     // Initialize Tasks icon clipboard animation controller
@@ -822,7 +860,16 @@ class _DashboardHomeState extends State<DashboardHome>
     }
 
     // Special handling for Learn button (index 1)
-    // Add animation logic here if needed in the future
+    if (newIndex == 1) {
+      if (_learnIconAnimation != null) {
+        _learnIconController.repeat(reverse: true); // Start gentle tassel sway animation
+      }
+    } else if (oldIndex == 1) {
+      if (_learnIconAnimation != null) {
+        _learnIconController.stop(); // Stop the sway animation
+        _learnIconController.reset(); // Reset to normal position
+      }
+    }
 
     // Special handling for AI Tutor button (index 2)
     if (newIndex == 2) {
@@ -832,7 +879,12 @@ class _DashboardHomeState extends State<DashboardHome>
     }
 
     // Special handling for Social button (index 3)
-    // Add animation logic here if needed in the future
+    if (newIndex == 3) {
+      _socialIconController.forward(); // Play hug-and-release animation once
+    } else if (oldIndex == 3) {
+      _socialIconController.stop(); // Stop the animation
+      _socialIconController.reset(); // Reset to normal position
+    }
 
     // Special handling for Pet button (index 4)
     if (newIndex == 4) {
@@ -852,6 +904,8 @@ class _DashboardHomeState extends State<DashboardHome>
     _statsIconController.dispose();
     _homeIconController.dispose();
     _petIconController.dispose();
+    _socialIconController.dispose();
+    _learnIconController.dispose();
     _tasksAnimationController.dispose();
     _notificationPanelController.dispose();
     super.dispose();
@@ -867,9 +921,11 @@ class _DashboardHomeState extends State<DashboardHome>
       SizedBox(
         width: 48, // Standard IconButton width for consistency
         height: 48, // Standard IconButton height for consistency
-        child: NotificationBellIcon(
-          onTap: _toggleNotificationPanel,
-          isSelected: _isNotificationPanelOpen,
+        child: Center(
+          child: NotificationBellIcon(
+            onTap: _toggleNotificationPanel,
+            isSelected: _isNotificationPanelOpen,
+          ),
         ),
       ),
 
@@ -877,17 +933,18 @@ class _DashboardHomeState extends State<DashboardHome>
       SizedBox(
         width: 48, // Standard IconButton width for consistency
         height: 48, // Standard IconButton height for consistency
-        child: IconButton(
-          icon: const Icon(Icons.account_circle, size: 28),
-          onPressed: () {
-            // Navigate to profile settings screen
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const ProfileSettingsScreen(),
-              ),
-            );
-          },
-          tooltip: 'Profile Settings',
+        child: Center(
+          child: GestureDetector(
+            onTap: () {
+              // Navigate to profile settings screen
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ProfileSettingsScreen(),
+                ),
+              );
+            },
+            child: const ProfileIcon(size: 28),
+          ),
         ),
       ),
     ];
@@ -1265,7 +1322,7 @@ class _DashboardHomeState extends State<DashboardHome>
               child: Icon(
                 Icons.menu,
                 color: Theme.of(context).colorScheme.primary,
-                size: 24,
+                size: 28,
               ),
             ),
           ),
@@ -1599,8 +1656,11 @@ class _DashboardHomeState extends State<DashboardHome>
           label: 'Settings',
           onTap: () {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Settings - Coming soon!')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
             );
           },
         ),
@@ -2383,31 +2443,58 @@ class _DashboardHomeState extends State<DashboardHome>
       );
     }
 
-    // For Learn button, use custom graduation cap icon
+    // For Learn button, use custom graduation cap icon with tassel sway animation
     if (label == 'Learn') {
-      return CustomPaint(
-        size: const Size(28, 28),
-        painter: GraduationCapPainter(
-          color: isSelected 
-            ? const Color(0xFF6FB8E9) // Blue when selected
-            : const Color(0xFFCFCFCF), // Gray when not selected
-          isFilled: isSelected, // Filled when selected, outlined when not
-          strokeWidth: 1.5,
-        ),
+      // Check if animation is initialized
+      if (_learnIconAnimation == null) {
+        return CustomPaint(
+          size: const Size(28, 28),
+          painter: GraduationCapPainter(
+            color: isSelected 
+              ? const Color(0xFF6FB8E9)
+              : const Color(0xFFCFCFCF),
+            isFilled: isSelected,
+            strokeWidth: 1.5,
+            animationValue: 0.0,
+          ),
+        );
+      }
+      
+      return AnimatedBuilder(
+        animation: _learnIconAnimation!,
+        builder: (context, child) {
+          return CustomPaint(
+            size: const Size(28, 28),
+            painter: GraduationCapPainter(
+              color: isSelected 
+                ? const Color(0xFF6FB8E9) // Blue when selected
+                : const Color(0xFFCFCFCF), // Gray when not selected
+              isFilled: isSelected, // Filled when selected, outlined when not
+              strokeWidth: 1.5,
+              animationValue: isSelected ? _learnIconAnimation!.value : 0.0, // Only animate when selected
+            ),
+          );
+        },
       );
     }
 
-    // For Social button, use custom users/people icon
+    // For Social button, use custom users/people icon with hugging animation
     if (label == 'Social') {
-      return CustomPaint(
-        size: const Size(28, 28),
-        painter: SocialIconPainter(
-          color: isSelected 
-            ? const Color(0xFF6FB8E9) // Blue when selected
-            : const Color(0xFFCFCFCF), // Gray when not selected
-          isFilled: isSelected, // Filled when selected, outlined when not
-          strokeWidth: 1.5,
-        ),
+      return AnimatedBuilder(
+        animation: _socialIconAnimation,
+        builder: (context, child) {
+          return CustomPaint(
+            size: const Size(28, 28),
+            painter: SocialIconPainter(
+              color: isSelected 
+                ? const Color(0xFF6FB8E9) // Blue when selected
+                : const Color(0xFFCFCFCF), // Gray when not selected
+              isFilled: isSelected, // Filled when selected, outlined when not
+              strokeWidth: 1.5,
+              animationValue: _socialIconAnimation.value, // Add hugging animation
+            ),
+          );
+        },
       );
     }
 
@@ -4685,7 +4772,7 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 82; // Scale the claw extension
+        final clawExtension = clawProgress * 18; // Scale the claw extension (reduced from 30 for much smaller, subtle claws)
         pad1Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad1Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -4736,7 +4823,7 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 82;
+        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad2Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad2Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -4788,7 +4875,7 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 82;
+        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad3Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad3Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -4840,7 +4927,7 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 82;
+        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad4Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad4Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -5168,11 +5255,13 @@ class GraduationCapPainter extends CustomPainter {
   final Color color;
   final bool isFilled;
   final double strokeWidth;
+  final double animationValue;
 
   GraduationCapPainter({
     required this.color,
     required this.isFilled,
     this.strokeWidth = 1.5,
+    this.animationValue = 0.0,
   });
 
   @override
@@ -5186,6 +5275,12 @@ class GraduationCapPainter extends CustomPainter {
 
     final scaleX = size.width / 24;
     final scaleY = size.height / 24;
+    
+    // Calculate tassel sway animation
+    // animationValue goes from 0.0 to 1.0, create gentle sway from -1 to +1
+    final swayProgress = (animationValue * 2.0) - 1.0; // Convert 0-1 to -1 to +1  
+    final maxSwayDistance = 1.5 * scaleX; // Maximum sway distance
+    final tasselSwayOffset = maxSwayDistance * sin(swayProgress * pi); // Smooth sine wave motion
 
     if (isFilled) {
       // Filled version using exact SVG paths from reference
@@ -5239,13 +5334,13 @@ class GraduationCapPainter extends CustomPainter {
       canvas.drawPath(path2, paint);
 
       // Third path: d="M4.462 19.462c.42-.419.753-.89 1-1.395.453.214.902.435 1.347.662a6.742 6.742 0 0 1-1.286 1.794.75.75 0 0 1-1.06-1.06Z"  
-      // This is the tassel that should hang straight down
+      // This is the tassel that should hang straight down - now with sway animation
       final path3 = Path();
-      path3.moveTo(4.462 * scaleX, 19.462 * scaleY);
-      path3.lineTo(5.462 * scaleX, 18.067 * scaleY); // Straight up first
-      path3.lineTo(6.809 * scaleX, 18.729 * scaleY); // Then right and slightly down
-      path3.lineTo(5.523 * scaleX, 20.523 * scaleY); // Straight down to bottom
-      path3.lineTo(4.462 * scaleX, 19.462 * scaleY); // Back to start
+      path3.moveTo((4.462 * scaleX) + tasselSwayOffset, 19.462 * scaleY);
+      path3.lineTo((5.462 * scaleX) + tasselSwayOffset, 18.067 * scaleY); // Straight up first
+      path3.lineTo((6.809 * scaleX) + tasselSwayOffset, 18.729 * scaleY); // Then right and slightly down
+      path3.lineTo((5.523 * scaleX) + tasselSwayOffset, 20.523 * scaleY); // Straight down to bottom
+      path3.lineTo((4.462 * scaleX) + tasselSwayOffset, 19.462 * scaleY); // Back to start
       path3.close();
       canvas.drawPath(path3, paint);
 
@@ -5333,46 +5428,46 @@ class GraduationCapPainter extends CustomPainter {
 
       canvas.drawPath(centerLines, paint);
 
-      // Tassel circle: M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5
+      // Tassel circle: M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5 - with sway animation
       final tasselPaint = Paint()
         ..color = color
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth;
 
       canvas.drawCircle(
-        Offset(6.75 * scaleX, 15 * scaleY),
+        Offset((6.75 * scaleX) + tasselSwayOffset, 15 * scaleY),
         0.75 * scaleX,
         tasselPaint,
       );
 
-      // Tassel string connections
+      // Tassel string connections - with sway animation
       // Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443
       canvas.drawLine(
-        Offset(6.75 * scaleX, 15 * scaleY),
-        Offset(6.75 * scaleX, 11.325 * scaleY), // 15 - 3.675
+        Offset((6.75 * scaleX) + tasselSwayOffset, 15 * scaleY),
+        Offset((6.75 * scaleX) + (tasselSwayOffset * 0.3), 11.325 * scaleY), // Less sway at top connection point
         paint,
       );
 
-      // Curved line to center
+      // Curved line to center - with sway animation
       final tasselCurve = Path();
-      tasselCurve.moveTo(6.75 * scaleX, 11.325 * scaleY);
+      tasselCurve.moveTo((6.75 * scaleX) + (tasselSwayOffset * 0.3), 11.325 * scaleY);
       tasselCurve.cubicTo(
-        8.5 * scaleX, 10.0 * scaleY,     // Control point 1
-        10.0 * scaleX, 9.0 * scaleY,     // Control point 2
-        12 * scaleX, 8.443 * scaleY      // Connect to cap center
+        8.5 * scaleX, 10.0 * scaleY,     // Control point 1 - no sway, connected to cap
+        10.0 * scaleX, 9.0 * scaleY,     // Control point 2 - no sway, connected to cap
+        12 * scaleX, 8.443 * scaleY      // Connect to cap center - no sway
       );
       canvas.drawPath(tasselCurve, paint);
 
-      // Additional tassel detail
+      // Additional tassel detail - with sway animation
       // m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5
       final tasselDetail = Path();
-      tasselDetail.moveTo(4.993 * scaleX, 19.993 * scaleY); // 12 - 7.007, 8.443 + 11.55
+      tasselDetail.moveTo((4.993 * scaleX) + tasselSwayOffset, 19.993 * scaleY); // 12 - 7.007, 8.443 + 11.55
       tasselDetail.cubicTo(
         5.5 * scaleX, 18.0 * scaleY,     // Control point 1
         6.0 * scaleX, 16.8 * scaleY,     // Control point 2
-        6.75 * scaleX, 15.75 * scaleY    // End point
+        (6.75 * scaleX) + tasselSwayOffset, 15.75 * scaleY    // End point with sway
       );
-      tasselDetail.lineTo(6.75 * scaleX, 14.25 * scaleY); // 15.75 - 1.5
+      tasselDetail.lineTo((6.75 * scaleX) + tasselSwayOffset, 14.25 * scaleY); // 15.75 - 1.5 with sway
       
       canvas.drawPath(tasselDetail, paint);
     }
@@ -5383,7 +5478,8 @@ class GraduationCapPainter extends CustomPainter {
     return oldDelegate is GraduationCapPainter &&
         (oldDelegate.isFilled != isFilled || 
          oldDelegate.color != color ||
-         oldDelegate.strokeWidth != strokeWidth);
+         oldDelegate.strokeWidth != strokeWidth ||
+         oldDelegate.animationValue != animationValue);
   }
 }
 
@@ -5392,11 +5488,13 @@ class SocialIconPainter extends CustomPainter {
   final Color color;
   final bool isFilled;
   final double strokeWidth;
+  final double animationValue; // Animation progress from 0.0 to 1.0
 
   SocialIconPainter({
     required this.color,
     required this.isFilled,
     this.strokeWidth = 1.5,
+    this.animationValue = 0.0, // Default to no animation
   });
 
   @override
@@ -5410,6 +5508,15 @@ class SocialIconPainter extends CustomPainter {
 
     final scaleX = size.width / 24;
     final scaleY = size.height / 24;
+
+    // Calculate hugging animation offsets - side figures move closer to center and back
+    // Animation goes: 0.0 → 0.5 (max hug) → 1.0 (back to normal)
+    final hugProgress = animationValue <= 0.5 
+        ? animationValue * 2.0  // 0.0 to 1.0 in first half
+        : (1.0 - animationValue) * 2.0; // 1.0 to 0.0 in second half
+    final hugOffset = hugProgress * 1.5; // Maximum 1.5 units closer to center
+    final leftHugX = 5.25 + hugOffset; // Left figure moves right
+    final rightHugX = 18.75 - hugOffset; // Right figure moves left
 
     if (isFilled) {
       // Filled version using the provided filled SVG paths
@@ -5425,22 +5532,25 @@ class SocialIconPainter extends CustomPainter {
         height: 7.5 * scaleY,
       ));
       
-      // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z
+      // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (moves left during animation)
       mainPath.addOval(Rect.fromCenter(
-        center: Offset(18.75 * scaleX, 9.75 * scaleY), // 15.75 + 3 = 18.75
+        center: Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
       
-      // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z
+      // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (moves right during animation)
       mainPath.addOval(Rect.fromCenter(
-        center: Offset(5.25 * scaleX, 9.75 * scaleY), // 2.25 + 3 = 5.25 
+        center: Offset(leftHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
       
       // Main body: M6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z
-      mainPath.moveTo(6.31 * scaleX, 15.117 * scaleY);
+      final bodyLeftX = 6.31 + hugOffset * 0.5; // Body sides also move but less dramatically
+      final bodyRightX = 18.709 - hugOffset * 0.5;
+      
+      mainPath.moveTo(bodyLeftX * scaleX, 15.117 * scaleY);
       mainPath.cubicTo(
         8.0 * scaleX, 13.5 * scaleY,
         10.0 * scaleX, 12.0 * scaleY,
@@ -5449,12 +5559,12 @@ class SocialIconPainter extends CustomPainter {
       mainPath.cubicTo(
         14.0 * scaleX, 12.0 * scaleY,
         16.0 * scaleX, 13.5 * scaleY,
-        18.709 * scaleX, 19.498 * scaleY
+        bodyRightX * scaleX, 19.498 * scaleY
       );
       mainPath.cubicTo(
-        18.587 * scaleX, 19.69 * scaleY,
-        18.437 * scaleX, 19.82 * scaleY,
-        18.337 * scaleX, 20.066 * scaleY
+        (bodyRightX - 0.122) * scaleX, 19.69 * scaleY,
+        (bodyRightX - 0.272) * scaleX, 19.82 * scaleY,
+        (bodyRightX - 0.372) * scaleX, 20.066 * scaleY
       );
       mainPath.cubicTo(
         16.5 * scaleX, 21.2 * scaleY,
@@ -5464,17 +5574,17 @@ class SocialIconPainter extends CustomPainter {
       mainPath.cubicTo(
         9.695 * scaleX, 21.75 * scaleY,
         7.53 * scaleX, 21.138 * scaleY,
-        5.663 * scaleX, 20.066 * scaleY
+        (bodyLeftX - 0.647) * scaleX, 20.066 * scaleY
       );
       mainPath.cubicTo(
-        5.563 * scaleX, 19.82 * scaleY,
-        5.413 * scaleX, 19.69 * scaleY,
-        5.291 * scaleX, 19.498 * scaleY
+        (bodyLeftX - 0.747) * scaleX, 19.82 * scaleY,
+        (bodyLeftX - 0.897) * scaleX, 19.69 * scaleY,
+        (bodyLeftX - 1.019) * scaleX, 19.498 * scaleY
       );
       mainPath.cubicTo(
-        5.8 * scaleX, 17.8 * scaleY,
-        6.05 * scaleX, 16.5 * scaleY,
-        6.31 * scaleX, 15.117 * scaleY
+        (bodyLeftX - 0.51) * scaleX, 17.8 * scaleY,
+        (bodyLeftX - 0.26) * scaleX, 16.5 * scaleY,
+        bodyLeftX * scaleX, 15.117 * scaleY
       );
       mainPath.close();
       canvas.drawPath(mainPath, paint);
@@ -5482,12 +5592,17 @@ class SocialIconPainter extends CustomPainter {
       // Second path: d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z"
       final sidePath = Path();
       
+      // Animated side body positions for hugging effect
+      final leftSideX = 5.082 + hugOffset * 0.3; // Left side moves right slightly
+      final rightSideX = 20.226 - hugOffset * 0.3; // Right side moves left slightly
+      final leftSideBodyX = 18.918 - hugOffset * 0.3; // Right side body moves left
+      
       // Left side body: M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047Z
-      sidePath.moveTo(5.082 * scaleX, 14.254 * scaleY);
+      sidePath.moveTo(leftSideX * scaleX, 14.254 * scaleY);
       sidePath.cubicTo(
-        4.5 * scaleX, 16.8 * scaleY,
-        4.2 * scaleX, 18.5 * scaleY,
-        3.774 * scaleX, 19.389 * scaleY
+        (leftSideX - 0.582) * scaleX, 16.8 * scaleY,
+        (leftSideX - 0.882) * scaleX, 18.5 * scaleY,
+        (leftSideX - 1.308) * scaleX, 19.389 * scaleY
       );
       sidePath.cubicTo(
         2.8 * scaleX, 19.2 * scaleY,
@@ -5504,20 +5619,20 @@ class SocialIconPainter extends CustomPainter {
       sidePath.cubicTo(
         1.8 * scaleX, 16.5 * scaleY,
         3.2 * scaleX, 14.8 * scaleY,
-        5.082 * scaleX, 14.254 * scaleY
+        leftSideX * scaleX, 14.254 * scaleY
       );
       sidePath.close();
       
       // Right side body: M20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z
-      sidePath.moveTo(20.226 * scaleX, 19.389 * scaleY);
+      sidePath.moveTo(rightSideX * scaleX, 19.389 * scaleY);
       sidePath.cubicTo(
-        19.6 * scaleX, 16.8 * scaleY,
-        19.3 * scaleX, 15.0 * scaleY,
-        18.918 * scaleX, 14.254 * scaleY
+        (rightSideX - 0.626) * scaleX, 16.8 * scaleY,
+        (rightSideX - 0.926) * scaleX, 15.0 * scaleY,
+        leftSideBodyX * scaleX, 14.254 * scaleY
       );
       sidePath.cubicTo(
-        20.8 * scaleX, 14.8 * scaleY,
-        22.2 * scaleX, 16.5 * scaleY,
+        (leftSideBodyX + 1.882) * scaleX, 14.8 * scaleY,
+        (leftSideBodyX + 3.282) * scaleX, 16.5 * scaleY,
         22.488 * scaleX, 18.301 * scaleY
       );
       sidePath.lineTo(22.478 * scaleX, 18.422 * scaleY);
@@ -5530,7 +5645,7 @@ class SocialIconPainter extends CustomPainter {
       sidePath.cubicTo(
         21.2 * scaleX, 19.15 * scaleY,
         20.8 * scaleX, 19.3 * scaleY,
-        20.226 * scaleX, 19.389 * scaleY
+        rightSideX * scaleX, 19.389 * scaleY
       );
       sidePath.close();
       
@@ -5550,16 +5665,16 @@ class SocialIconPainter extends CustomPainter {
         height: 7.5 * scaleY,
       ));
       
-      // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z
+      // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (animated)
       mainPath.addOval(Rect.fromCenter(
-        center: Offset(18.75 * scaleX, 9.75 * scaleY), // 15.75 + 3 = 18.75
+        center: Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
       
-      // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z
+      // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (animated)
       mainPath.addOval(Rect.fromCenter(
-        center: Offset(5.25 * scaleX, 9.75 * scaleY), // 2.25 + 3 = 5.25 
+        center: Offset(leftHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
@@ -5668,6 +5783,7 @@ class SocialIconPainter extends CustomPainter {
     return oldDelegate is SocialIconPainter &&
         (oldDelegate.isFilled != isFilled || 
          oldDelegate.color != color ||
-         oldDelegate.strokeWidth != strokeWidth);
+         oldDelegate.strokeWidth != strokeWidth ||
+         oldDelegate.animationValue != animationValue);
   }
 }
