@@ -352,7 +352,6 @@ class AchievementGamificationService {
   // Firestore collections
   static const String _achievementsCollection = 'achievements';
   static const String _userDataCollection = 'user_gamification';
-  static const String _leaderboardCollection = 'leaderboards';
   static const String _achievementSharesCollection = 'achievement_shares';
   static const String _seasonalEventsCollection = 'seasonal_events';
   static const String _analyticsCollection = 'gamification_analytics';
