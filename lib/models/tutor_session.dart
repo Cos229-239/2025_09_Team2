@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Represents a tutoring session with the AI tutor
 class TutorSession {
   final String id;
@@ -31,8 +33,8 @@ class TutorSession {
     'subject': subject,
     'difficulty': difficulty,
     'messageIds': messageIds,
-    'startTime': startTime.toIso8601String(),
-    'endTime': endTime?.toIso8601String(),
+    'startTime': Timestamp.fromDate(startTime), // 🔥 FIX: Save as Timestamp, not String
+    'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null, // 🔥 FIX: Save as Timestamp
     'sessionMetrics': sessionMetrics,
     'isActive': isActive,
   };
@@ -45,9 +47,13 @@ class TutorSession {
       subject: json['subject'] as String,
       difficulty: json['difficulty'] as String,
       messageIds: (json['messageIds'] as List?)?.cast<String>() ?? [],
-      startTime: DateTime.parse(json['startTime'] as String),
+      startTime: json['startTime'] is Timestamp 
+        ? (json['startTime'] as Timestamp).toDate()
+        : DateTime.parse(json['startTime'] as String), // Support both formats
       endTime: json['endTime'] != null 
-        ? DateTime.parse(json['endTime'] as String) 
+        ? (json['endTime'] is Timestamp
+            ? (json['endTime'] as Timestamp).toDate()
+            : DateTime.parse(json['endTime'] as String))
         : null,
       sessionMetrics: json['sessionMetrics'] as Map<String, dynamic>? ?? {},
       isActive: json['isActive'] as bool? ?? true,
