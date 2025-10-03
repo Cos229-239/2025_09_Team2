@@ -155,7 +155,7 @@ class EnhancedAITutorProvider extends ChangeNotifier {
     // Initialize web search service
     _webSearchService = WebSearchService();
     _webSearchService.initialize();
-    print('🌐 DEBUG: WebSearchService initialized. isAvailable=${_webSearchService.isAvailable}, enableWebSearch=${GeminiConfig.enableWebSearch}');
+    debugPrint('🌐 DEBUG: WebSearchService initialized. isAvailable=${_webSearchService.isAvailable}, enableWebSearch=${GeminiConfig.enableWebSearch}');
     _log('WebSearchService initialized (enabled: ${GeminiConfig.enableWebSearch})', level: LogLevel.debug);
   }
 
@@ -366,13 +366,19 @@ Ask me anything - all responses will be validated!
         userId: user?.id ?? _tutorService.auth.currentUser?.uid,
       );
       
-      _messages.add(userMessage);
-      _log('Added user message to list. Total messages: ${_messages.length}', level: LogLevel.debug, context: 'sendMessage');
+      // 🔥 REMOVED DUPLICATE: _messages.add(userMessage)
+      // Don't add here - addUserMessage() already adds to _sessionMessages, which _messages references
       
       // ========== CRITICAL: Add to SessionContext for memory tracking ==========
       if (_sessionContext != null) {
         _sessionContext!.addMessage(userMessage);
         _log('📝 Added user message to SessionContext', level: LogLevel.info, context: 'sendMessage');
+      }
+      
+      // 🔥 Add user message to service for Firestore tracking (this also adds to _sessionMessages)
+      if (_currentSession != null) {
+        _tutorService.addUserMessage(_currentSession!.id, userMessage);
+        _log('Added user message via service. Total messages: ${_messages.length}', level: LogLevel.debug, context: 'sendMessage');
       }
       
       _isGenerating = true;
@@ -385,13 +391,13 @@ Ask me anything - all responses will be validated!
       // ========== 🌐 WEB SEARCH INTEGRATION ==========
       // Check if this query needs web search
       final needsWebSearch = _needsWebSearch(content.trim());
-      print('🔍 DEBUG: needsWebSearch=$needsWebSearch, isAvailable=${_webSearchService.isAvailable}, query="${content.trim()}"');
+      debugPrint('🔍 DEBUG: needsWebSearch=$needsWebSearch, isAvailable=${_webSearchService.isAvailable}, query="${content.trim()}"');
       _log('needsWebSearch: $needsWebSearch, isAvailable: ${_webSearchService.isAvailable}', level: LogLevel.info, context: 'sendMessage');
       
       // Generate AI response using the working AI provider or web search
       String rawResponseContent;
       if (needsWebSearch && _webSearchService.isAvailable) {
-        print('🌐 DEBUG: Web search TRIGGERED!');
+        debugPrint('🌐 DEBUG: Web search TRIGGERED!');
         _log('🔍 Web search triggered for query: "$content"', level: LogLevel.info, context: 'sendMessage');
         
         try {
@@ -406,7 +412,7 @@ Ask me anything - all responses will be validated!
             _log('⚠️ Web search failed: ${searchResult.error}', level: LogLevel.warning, context: 'sendMessage');
             // Fallback to local AI
             if (_aiProvider != null && _aiProvider!.isAIEnabled) {
-              final prompt = _buildPromptForContent(content.trim());
+              final prompt = await _buildPromptForContent(content.trim());
               rawResponseContent = await _aiProvider!.aiService.callGoogleAIWithRetry(prompt, 0);
             } else {
               rawResponseContent = searchResult.answer; // Use error message
@@ -436,7 +442,7 @@ Ask me anything - all responses will be validated!
           _log('❌ Web search error: $e', level: LogLevel.error, context: 'sendMessage');
           // Fallback to local AI
           if (_aiProvider != null && _aiProvider!.isAIEnabled) {
-            final prompt = _buildPromptForContent(content.trim());
+            final prompt = await _buildPromptForContent(content.trim());
             rawResponseContent = await _aiProvider!.aiService.callGoogleAIWithRetry(prompt, 0);
           } else {
             rawResponseContent = 'I apologize, but I encountered an error. Please try again!';
@@ -444,7 +450,7 @@ Ask me anything - all responses will be validated!
         }
       } else if (_aiProvider != null && _aiProvider!.isAIEnabled) {
         // Use the working AI service that handles flashcards
-        final prompt = _buildPromptForContent(content.trim());
+        final prompt = await _buildPromptForContent(content.trim());
         
         rawResponseContent = await _aiProvider!.aiService.callGoogleAIWithRetry(prompt, 0);
         _log('🤖 Raw AI response received (${rawResponseContent.length} chars)', level: LogLevel.info, context: 'sendMessage');
@@ -600,7 +606,7 @@ Ask me anything - all responses will be validated!
   }
 
   /// Build an appropriate prompt based on comprehensive content analysis
-  String _buildPromptForContent(String content) {
+  Future<String> _buildPromptForContent(String content) async {
     // Perform comprehensive query analysis
     final analysis = _performQueryAnalysis(content);
     _log('Query Analysis: ${analysis.toString()}', level: LogLevel.debug, context: 'sendMessage');
@@ -612,7 +618,7 @@ Ask me anything - all responses will be validated!
     }
     
     // Build sophisticated prompt based on analysis
-    return _buildAdaptivePrompt(content, analysis);
+    return await _buildAdaptivePrompt(content, analysis);
   }
   
   /// Perform comprehensive query analysis
@@ -938,7 +944,7 @@ Be concise, direct, and encouraging.''';
   }
 
   /// Build adaptive prompt based on comprehensive analysis
-  String _buildAdaptivePrompt(String content, QueryAnalysis analysis) {
+  Future<String> _buildAdaptivePrompt(String content, QueryAnalysis analysis) async {
     // Update conversation context
     _updateConversationContext(analysis);
     
@@ -950,7 +956,7 @@ Be concise, direct, and encouraging.''';
     final pedagogicalTechniques = _getPedagogicalTechniques(analysis.intent, analysis.complexity);
     
     // 🔥 CHATGPT-LEVEL CONTEXT AWARENESS: Include full conversation history
-    final conversationHistory = _buildConversationHistory();
+    final conversationHistory = await _buildConversationHistoryAsync();
     
     // 🎯 SEMANTIC SEARCH: Find relevant past discussions for memory/recall queries
     final relevantContext = _buildRelevantContext(content, analysis);
@@ -1075,14 +1081,30 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
   }
 
   /// 🚀 Build ChatGPT-style conversation history for context
-  String _buildConversationHistory() {
+  Future<String> _buildConversationHistoryAsync() async {
     if (_sessionContext == null) {
       return 'CONVERSATION HISTORY:\n(No prior messages in this session)';
     }
     
     final messages = _sessionContext!.getAllMessages();
     
-    if (messages.isEmpty) {
+    // 🔥 NEW: Check for recent session history (loaded at session start)
+    final recentSessionsData = _currentSession != null 
+        ? _tutorService.getRecentSessionsData(_currentSession!.id)
+        : null;
+    final hasPastSessions = recentSessionsData != null && recentSessionsData.isNotEmpty;
+    
+    // 🔥 NEW: Load actual past session messages
+    List<ChatMessage> pastMessages = [];
+    if (hasPastSessions && _currentSession != null) {
+      try {
+        pastMessages = await _tutorService.getPastSessionMessages(_currentSession!.id);
+      } catch (e) {
+        _log('⚠️ Could not load past messages: $e', level: LogLevel.warning, context: '_buildConversationHistory');
+      }
+    }
+    
+    if (messages.isEmpty && pastMessages.isEmpty && !hasPastSessions) {
       return 'CONVERSATION HISTORY:\n(No prior messages in this session)';
     }
     
@@ -1094,7 +1116,44 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
     final historyBuilder = StringBuffer('═══════════════════════════════════════════════════════\n');
     historyBuilder.writeln('📋 CONVERSATION HISTORY (READ THIS CAREFULLY!)');
     historyBuilder.writeln('═══════════════════════════════════════════════════════');
-    historyBuilder.writeln('Showing ${recentMessages.length} most recent messages from ${messages.length} total');
+    
+    // 🔥 NEW: Add cross-session context if available
+    if (hasPastSessions) {
+      final lastSession = recentSessionsData.first;
+      final daysSinceLastSession = DateTime.now().difference(lastSession['startTime'] as DateTime).inDays;
+      
+      historyBuilder.writeln('🕐 PAST SESSIONS AVAILABLE:');
+      historyBuilder.writeln('   Last session: ${lastSession['subject']} - $daysSinceLastSession day(s) ago');
+      historyBuilder.writeln('   Total recent sessions: ${recentSessionsData.length}');
+      historyBuilder.writeln('   Past messages loaded: ${pastMessages.length}');
+      historyBuilder.writeln();
+      historyBuilder.writeln('⚠️ IMPORTANT: When user asks about "yesterday" or past discussions,');
+      historyBuilder.writeln('   reference these past sessions with actual message history below!');
+      historyBuilder.writeln();
+    }
+    
+    // 🔥 NEW: Include past session messages if available
+    if (pastMessages.isNotEmpty) {
+      historyBuilder.writeln('════════════ PAST SESSION MESSAGES (LAST 7 DAYS) ════════════');
+      historyBuilder.writeln('⚠️ READ THESE CAREFULLY - They contain context from previous days!');
+      historyBuilder.writeln();
+      
+      for (var i = 0; i < pastMessages.length; i++) {
+        final msg = pastMessages[i];
+        final role = msg.type == MessageType.user ? '👤 STUDENT' : '🤖 AI';
+        final timestamp = _formatTimestamp(msg.timestamp);
+        
+        historyBuilder.write('[PAST - $role${timestamp.isNotEmpty ? " - $timestamp" : ""}]: ');
+        historyBuilder.writeln(msg.content);
+        historyBuilder.writeln();
+      }
+      
+      historyBuilder.writeln('════════════ END OF PAST SESSION MESSAGES ════════════');
+      historyBuilder.writeln();
+    }
+    
+    historyBuilder.writeln('════════════ CURRENT SESSION MESSAGES ════════════');
+    historyBuilder.writeln('Showing ${recentMessages.length} most recent messages from ${messages.length} total in current session');
     historyBuilder.writeln();
     
     for (var i = 0; i < recentMessages.length; i++) {
@@ -1108,10 +1167,12 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
     }
     
     // 🔥 EXTRACT KEY FACTS - Make them impossible to miss!
-    final keyFacts = _extractKeyFacts(messages);
+    // Combine current + past messages for fact extraction
+    final allMessagesForFacts = [...pastMessages, ...messages];
+    final keyFacts = _extractKeyFacts(allMessagesForFacts);
     if (keyFacts.isNotEmpty) {
       historyBuilder.writeln('═══════════════════════════════════════════════════════');
-      historyBuilder.writeln('🔑 KEY FACTS FROM CONVERSATION (MEMORIZE THESE!):');
+      historyBuilder.writeln('🔑 KEY FACTS FROM ALL CONVERSATIONS (MEMORIZE THESE!):');
       historyBuilder.writeln('═══════════════════════════════════════════════════════');
       for (var i = 0; i < keyFacts.length; i++) {
         historyBuilder.writeln('${i + 1}. ${keyFacts[i]}');
@@ -1135,20 +1196,32 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
   List<String> _extractKeyFacts(List<ChatMessage> messages) {
     final facts = <String>[];
     
-    // Patterns that indicate important facts
+    // Patterns that indicate important facts (focusing on proper nouns and specific information)
     final factPatterns = [
-      // "X is Y" statements
-      RegExp(r'(.+?)\s+is\s+(.+?)(?:\.|$)', caseSensitive: false),
-      // "My X is Y" statements  
-      RegExp(r'my\s+(.+?)\s+(?:is|are)\s+(.+?)(?:\.|$)', caseSensitive: false),
-      // "X name is Y" or "name of X is Y" statements
-      RegExp(r'(.+?)\s+name\s+(?:is|was)\s+(.+?)(?:\.|$)', caseSensitive: false),
-      RegExp(r'name\s+of\s+(.+?)\s+(?:is|was)\s+(.+?)(?:\.|$)', caseSensitive: false),
-      // "I am X" statements
-      RegExp(r'i\s+am\s+(.+?)(?:\.|$)', caseSensitive: false),
-      // "I like/prefer/love X" statements
-      RegExp(r'i\s+(?:like|prefer|love|enjoy|want)\s+(.+?)(?:\.|$)', caseSensitive: false),
+      // "X is Y" statements (but require capitalized X for proper nouns)
+      RegExp(r'([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)\s+is\s+(.+?)(?:\.|,|;|$)', caseSensitive: true),
+      
+      // "My name is Y" or "I'm studying X" - user preferences
+      RegExp(r'my\s+name\s+(?:is|was)\s+([A-Z][a-zA-Z]+)', caseSensitive: true),
+      RegExp(r"i(?:'m|\s+am)\s+studying\s+([a-z][a-zA-Z\s]+?)(?:\.|,|;|$)", caseSensitive: false),
+      RegExp(r"i(?:'m|\s+am)\s+interested\s+in\s+([a-z][a-zA-Z\s]+?)(?:\.|,|;|$)", caseSensitive: false),
+      
+      // Subject/Topic mentions (multi-word topics like "quadratic equations")
+      RegExp(r'(?:about|studying|learning|topic|subject)\s+(?:is\s+)?([a-z][a-zA-Z\s]{3,30}?)(?:\.|,|;|$)', caseSensitive: false),
+      
+      // Numerical facts (e.g., "speed of light is 3x10^8")
+      RegExp(r'([a-z][a-zA-Z\s]+?)\s+(?:is|equals?|=)\s+([0-9][0-9\.\^\*\+\-\/x×÷±√∞πe\s]+)(?:\.|,|;|$)', caseSensitive: false),
+      
+      // Institution/Organization names (capitalize first letter)
+      RegExp(r'(?:at|from|university|college|school)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)*)', caseSensitive: true),
     ];
+    
+    // Exclude common words that shouldn't be facts
+    final excludeWords = {
+      'help', 'check', 'learning', 'confidence', 'validation', 'memory',
+      'mathematics', 'math', 'studying', 'hello', 'good', 'great', 'sure',
+      'okay', 'thanks', 'please', 'question', 'answer', 'example',
+    };
     
     for (final msg in messages) {
       if (msg.type != MessageType.user) continue;
@@ -1162,8 +1235,13 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
           if (match.groupCount >= 1) {
             // Clean and add the fact
             final fact = match.group(0)?.trim();
-            if (fact != null && fact.length > 10 && fact.length < 200) {
-              facts.add(fact);
+            if (fact != null && fact.length > 5 && fact.length < 150) {
+              // Skip if it's just a common word
+              final factLower = fact.toLowerCase();
+              final shouldExclude = excludeWords.any((word) => factLower.contains(word));
+              if (!shouldExclude) {
+                facts.add(fact);
+              }
             }
           }
         }
@@ -1275,18 +1353,39 @@ Deliver a response that rivals the best AI tutors like ChatGPT, Claude, and Gemi
   /// Extract meaningful keywords for semantic search
   List<String> _extractRelevantKeywords(String text) {
     final stopWords = {
+      // Basic stop words
       'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
       'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be',
       'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
       'would', 'should', 'could', 'may', 'might', 'must', 'can', 'what',
       'which', 'who', 'when', 'where', 'why', 'how', 'this', 'that',
+      
+      // 🔥 NEW: Exclude generic teaching/help words (prevent "check", "help", "learning" extraction)
+      'help', 'check', 'learning', 'study', 'understand', 'explain', 'show',
+      'tell', 'give', 'make', 'get', 'see', 'know', 'think', 'want', 'need',
+      'like', 'use', 'work', 'try', 'ask', 'answer', 'question', 'problem',
+      'example', 'practice', 'test', 'quiz', 'lesson', 'topic', 'subject',
+      
+      // Exclude middleware/validation terms
+      'confidence', 'validation', 'badge', 'memory', 'passed', 'failed',
+      'detected', 'style', 'mode', 'level', 'score', 'result', 'status',
+      
+      // Exclude generic words that appear in every conversation
+      'please', 'thanks', 'okay', 'yes', 'yeah', 'sure', 'right', 'well',
+      'just', 'also', 'even', 'still', 'now', 'then', 'here', 'there',
+      'some', 'any', 'all', 'both', 'each', 'every', 'other', 'such',
     };
     
     final words = text
         .toLowerCase()
         .replaceAll(RegExp(r'[^\w\s]'), ' ')
         .split(RegExp(r'\s+'))
-        .where((word) => word.length > 2 && !stopWords.contains(word))
+        .where((word) => 
+            word.length > 2 && 
+            !stopWords.contains(word) &&
+            // 🔥 NEW: Only keep words with meaningful characters (exclude pure numbers unless part of expression)
+            RegExp(r'[a-z]').hasMatch(word)
+        )
         .toList();
     
     return words.toSet().toList();
@@ -1676,7 +1775,11 @@ RULES:
         metadata: {'type': 'quiz_answer'},
       );
       
-      _messages.add(userMessage);
+      // 🔥 REMOVED DUPLICATE: _messages.add(userMessage)
+      // Don't add here - addUserMessage() already adds to _sessionMessages, which _messages references
+      
+      // 🔥 Add user message to service for Firestore tracking (this also adds to _sessionMessages)
+      _tutorService.addUserMessage(_currentSession!.id, userMessage);
       
       // Process answer and get result
       final resultMessage = await _tutorService.processQuizAnswer(

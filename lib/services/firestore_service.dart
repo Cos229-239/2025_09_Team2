@@ -2010,11 +2010,20 @@ class FirestoreService {
         'createdAt': FieldValue.serverTimestamp(),
       };
 
-      final docRef = await chatMessagesCollection.add(messageWithMeta);
-      if (kDebugMode) {
-        print('✅ Created chat message: ${docRef.id}');
+      // 🔥 FIX: Use the message's ID instead of auto-generating one
+      final messageId = messageData['id'] as String?;
+      if (messageId == null) {
+        if (kDebugMode) {
+          print('❌ Error: Message data missing "id" field');
+        }
+        return null;
       }
-      return docRef.id;
+
+      await chatMessagesCollection.doc(messageId).set(messageWithMeta);
+      if (kDebugMode) {
+        print('✅ Created chat message: $messageId');
+      }
+      return messageId;
     } catch (e) {
       if (kDebugMode) {
         print('❌ Error creating chat message: $e');

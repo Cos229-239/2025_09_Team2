@@ -342,6 +342,14 @@ class EnhancedAITutorService {
       _sessionMessages[sessionId] ??= [];
       _sessionMessages[sessionId]!.add(chatMessage);
 
+      // 🔥 ADD: Track message ID in session
+      final session = _activeSessions[sessionId];
+      if (session != null) {
+        session.messageIds.add(chatMessage.id);
+        // 🔥 FIX: Update session in Firestore with new messageIds
+        unawaited(_saveTutorSession(session));
+      }
+
       // Save to Firestore
       _saveChatMessage(chatMessage);
       _saveUserProfile(profile);
@@ -1509,6 +1517,15 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
     );
 
     _sessionMessages[sessionId]?.add(chatMessage);
+    
+    // 🔥 ADD: Track message ID in session
+    final session = _activeSessions[sessionId];
+    if (session != null) {
+      session.messageIds.add(chatMessage.id);
+      // 🔥 FIX: Update session in Firestore with new messageIds
+      unawaited(_saveTutorSession(session));
+    }
+    
     // Save operations are non-blocking to avoid delays
     unawaited(_saveChatMessage(chatMessage));
     unawaited(_saveUserProfile(profile));
@@ -1544,6 +1561,11 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
         user?.uid ?? 'anonymous_${DateTime.now().millisecondsSinceEpoch}';
     debugPrint('🔧 Service: User ID: $userId, Session ID: $sessionId');
 
+    // 🔥 NEW: Load recent session history for cross-session memory
+    debugPrint('🔧 Service: Loading recent session history...');
+    final recentSessions = await _loadRecentSessions(userId, days: 7);
+    debugPrint('🔧 Service: Loaded ${recentSessions.length} recent sessions');
+
     // Update streak
     debugPrint('🔧 Service: Updating streak...');
     await updateStreak(userId);
@@ -1559,12 +1581,16 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
       sessionMetrics: {
         'learningGoals': learningGoals ?? [],
         'startMastery': _getUserProfile(userId).subjectMastery[subject] ?? 0,
+        'recentSessionsCount': recentSessions.length, // Track loaded history
       },
     );
     debugPrint('🔧 Service: Session object created');
+    debugPrint('📍 Session will be saved with userId: "$userId"'); // 🔥 ADD: Log userId being saved
 
     _activeSessions[sessionId] = session;
     _sessionMessages[sessionId] = [];
+    
+    // 🔥 NEW: Add recent session history to context
     _sessionContext[sessionId] = {
       'subject': subject,
       'difficulty': difficulty,
@@ -1575,20 +1601,27 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
       'difficulty_progression': <String>[difficulty],
       'learning_path_progress': 0.0,
       'adaptive_adjustments': 0,
+      'recent_sessions': recentSessions, // Store for cross-session recall
     };
 
     // Generate welcome message based on profile
     debugPrint('🔧 Service: Generating welcome message...');
     final profile = _getUserProfile(userId);
-    final welcomeMessage = _generatePersonalizedWelcome(profile, subject);
+    final welcomeMessage = _generatePersonalizedWelcome(profile, subject, recentSessions);
     debugPrint('🔧 Service: Welcome message generated');
 
-    _sessionMessages[sessionId]!.add(ChatMessage(
+    final welcomeMsg = ChatMessage(
       id: 'welcome_${DateTime.now().millisecondsSinceEpoch}',
       content: welcomeMessage,
       type: MessageType.assistant,
       format: MessageFormat.structured,
-    ));
+    );
+    
+    _sessionMessages[sessionId]!.add(welcomeMsg);
+    
+    // 🔥 ADD: Track message ID in session
+    session.messageIds.add(welcomeMsg.id);
+    
     debugPrint('🔧 Service: Welcome message added to session');
 
     // Save to Firestore (non-blocking - runs in background)
@@ -1612,7 +1645,7 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
   }
 
   /// Generate personalized welcome message
-  String _generatePersonalizedWelcome(LearningProfile profile, String subject) {
+  String _generatePersonalizedWelcome(LearningProfile profile, String subject, [List<Map<String, dynamic>>? recentSessions]) {
     final mastery = profile.subjectMastery[subject] ?? 0;
     final hasReturned =
         profile.lastActivity.difference(DateTime.now()).abs().inDays < 1;
@@ -1620,6 +1653,21 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
     String greeting = hasReturned
         ? "Welcome back! Great to see you again!"
         : "Hello! I'm your AI tutor, ready to help you learn!";
+
+    // 🔥 NEW: Add session history context
+    String historyContext = '';
+    if (recentSessions != null && recentSessions.isNotEmpty) {
+      final lastSession = recentSessions.first;
+      final daysSinceLastSession = DateTime.now().difference(lastSession['startTime'] as DateTime).inDays;
+      
+      if (daysSinceLastSession == 0) {
+        historyContext = "\n\n📚 Continuing from earlier today...";
+      } else if (daysSinceLastSession == 1) {
+        historyContext = "\n\n📚 Welcome back! I remember our ${lastSession['subject']} discussion from yesterday.";
+      } else if (daysSinceLastSession < 7) {
+        historyContext = "\n\n📚 Welcome back! We last discussed ${lastSession['subject']} $daysSinceLastSession days ago.";
+      }
+    }
 
     String streakMessage = profile.currentStreak > 1
         ? "\n\n🔥 You're on a ${profile.currentStreak} day streak! Amazing!"
@@ -1634,7 +1682,7 @@ Remember: Making mistakes is part of learning! You still earned **5 points** for
         : "";
 
     return '''
-$greeting$streakMessage$masteryMessage$badges
+$greeting$historyContext$streakMessage$masteryMessage$badges
 
 What would you like to learn about today? You can:
 • Ask me any $subject question
@@ -1892,6 +1940,120 @@ How can I help you today?
     }
   }
 
+  /// 🔥 NEW: Load recent tutor sessions from Firestore for cross-session memory
+  Future<List<Map<String, dynamic>>> _loadRecentSessions(String userId, {int days = 7}) async {
+    try {
+      final cutoffDate = DateTime.now().subtract(Duration(days: days));
+      
+      debugPrint('🔍 Querying tutorSessions: userId="$userId", startTime>=${cutoffDate.toIso8601String()}');
+      
+      // Query recent sessions from Firestore
+      final sessionsSnapshot = await _firestore
+          .collection('tutorSessions')
+          .where('userId', isEqualTo: userId)
+          .where('startTime', isGreaterThanOrEqualTo: Timestamp.fromDate(cutoffDate))
+          .orderBy('startTime', descending: true)
+          .limit(10) // Load last 10 sessions max
+          .get()
+          .timeout(const Duration(seconds: 5));
+      
+      final sessions = <Map<String, dynamic>>[];
+      
+      for (final doc in sessionsSnapshot.docs) {
+        final data = doc.data();
+        final sessionData = {
+          'id': doc.id,
+          'subject': data['subject'] ?? 'Unknown',
+          'startTime': (data['startTime'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          'endTime': (data['endTime'] as Timestamp?)?.toDate(),
+          'messageCount': (data['messageIds'] as List?)?.length ?? 0,
+          'messageIds': data['messageIds'] ?? [],
+        };
+        
+        // Log each session found
+        debugPrint('   📍 Found session: ${doc.id}, subject=${sessionData['subject']}, messageCount=${sessionData['messageCount']}, endTime=${sessionData['endTime']}');
+        
+        sessions.add(sessionData);
+      }
+      
+      debugPrint('✅ Loaded ${sessions.length} recent sessions from Firestore (including current session if active)');
+      if (sessions.isEmpty) {
+        debugPrint('   ℹ️ No sessions found. This is expected for first-time users or if all sessions are older than $days days.');
+      }
+      return sessions;
+    } catch (e) {
+      // Check if it's an index-building error
+      final errorStr = e.toString();
+      if (errorStr.contains('failed-precondition') || errorStr.contains('index')) {
+        debugPrint('⏳ FIRESTORE INDEX STILL BUILDING - Cross-session memory will work once index is ready!');
+        debugPrint('   Check status: https://console.firebase.google.com/project/studypals-9f7e1/firestore/indexes');
+      } else {
+        debugPrint('⚠️ Could not load recent sessions: $e');
+      }
+      return []; // Return empty list on error
+    }
+  }
+
+  /// 🔥 NEW: Load chat messages from past sessions for cross-session memory
+  Future<List<ChatMessage>> _loadPastSessionMessages(List<Map<String, dynamic>> sessions, {int maxMessages = 20}) async {
+    try {
+      final allMessages = <ChatMessage>[];
+      
+      // Process sessions in chronological order (oldest first)
+      final sortedSessions = List<Map<String, dynamic>>.from(sessions)
+        ..sort((a, b) => (a['startTime'] as DateTime).compareTo(b['startTime'] as DateTime));
+      
+      for (final session in sortedSessions) {
+        final messageIds = session['messageIds'] as List<dynamic>?;
+        debugPrint('   🔍 Session ${session['id']}: messageIds = $messageIds (length: ${messageIds?.length ?? 0})');
+        
+        if (messageIds == null || messageIds.isEmpty) {
+          debugPrint('   ⚠️ Skipping session ${session['id']} - no message IDs');
+          continue;
+        }
+        
+        // Load messages for this session
+        debugPrint('   📥 Loading ${messageIds.length} messages from session ${session['id']}...');
+        for (final messageId in messageIds) {
+          try {
+            final messageDoc = await _firestore
+                .collection('chatMessages')
+                .doc(messageId.toString())
+                .get()
+                .timeout(const Duration(seconds: 2));
+            
+            if (messageDoc.exists) {
+              final data = messageDoc.data();
+              if (data != null) {
+                allMessages.add(ChatMessage.fromJson(data));
+                debugPrint('      ✅ Loaded message: $messageId');
+              }
+            } else {
+              debugPrint('      ⚠️ Message $messageId not found in Firestore');
+            }
+          } catch (e) {
+            debugPrint('⚠️ Could not load message $messageId: $e');
+            // Continue loading other messages
+          }
+        }
+        
+        // Stop if we've collected enough messages
+        if (allMessages.length >= maxMessages) break;
+      }
+      
+      // Return most recent messages, limited to maxMessages
+      final messagesToReturn = allMessages.length > maxMessages
+          ? allMessages.sublist(allMessages.length - maxMessages)
+          : allMessages;
+      
+      debugPrint('✅ Loaded ${messagesToReturn.length} messages from ${sessions.length} past sessions');
+      return messagesToReturn;
+    } catch (e) {
+      debugPrint('⚠️ Could not load past session messages: $e');
+      return []; // Return empty list on error
+    }
+  }
+
   /// Create error message
   ChatMessage _createErrorMessage() {
     return ChatMessage(
@@ -1921,6 +2083,42 @@ How can I help you today?
   /// Get session messages
   List<ChatMessage> getSessionMessages(String sessionId) {
     return _sessionMessages[sessionId] ?? [];
+  }
+
+  /// 🔥 NEW: Add user message to session and track its ID
+  void addUserMessage(String sessionId, ChatMessage message) {
+    _sessionMessages[sessionId] ??= [];
+    _sessionMessages[sessionId]!.add(message);
+    
+    // Track message ID in session
+    final session = _activeSessions[sessionId];
+    if (session != null) {
+      session.messageIds.add(message.id);
+      // 🔥 FIX: Update session in Firestore with new messageIds
+      unawaited(_saveTutorSession(session));
+    }
+    
+    // Save to Firestore (non-blocking)
+    unawaited(_saveChatMessage(message));
+  }
+
+  /// Get recent sessions data for cross-session memory
+  List<Map<String, dynamic>>? getRecentSessionsData(String sessionId) {
+    final context = _sessionContext[sessionId];
+    if (context == null) return null;
+    
+    final recentSessions = context['recent_sessions'] as List<Map<String, dynamic>>?;
+    return recentSessions;
+  }
+
+  /// 🔥 NEW: Get past session messages for cross-session memory
+  Future<List<ChatMessage>> getPastSessionMessages(String sessionId) async {
+    final recentSessions = getRecentSessionsData(sessionId);
+    if (recentSessions == null || recentSessions.isEmpty) {
+      return [];
+    }
+    
+    return await _loadPastSessionMessages(recentSessions, maxMessages: 15);
   }
 
   /// Get user's learning profile

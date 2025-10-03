@@ -28,9 +28,9 @@ class _FirebaseTestScreenState extends State<FirebaseTestScreen> {
       // Test 1: Check if Firebase Auth is initialized
       final app = _auth.app;
       if (kDebugMode) {
-        print('✅ Firebase app name: ${app.name}');
-        print('✅ Firebase project ID: ${app.options.projectId}');
-        print('✅ Firebase API key: ${app.options.apiKey}');
+        debugPrint('✅ Firebase app name: ${app.name}');
+        debugPrint('✅ Firebase project ID: ${app.options.projectId}');
+        debugPrint('✅ Firebase API key: ${app.options.apiKey}');
       }
 
       setState(() {
@@ -42,7 +42,7 @@ class _FirebaseTestScreenState extends State<FirebaseTestScreen> {
       await _testUserCreation();
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Firebase test error: $e');
+        debugPrint('❌ Firebase test error: $e');
       }
       setState(() {
         _status = 'Firebase Error ❌\n$e';
