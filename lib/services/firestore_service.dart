@@ -46,6 +46,8 @@ class FirestoreService {
   CollectionReference get tasksCollection => _firestore.collection('tasks');
   CollectionReference get notesCollection => _firestore.collection('notes');
   CollectionReference get activitiesCollection => _firestore.collection('activities');
+  CollectionReference get friendshipsCollection => _firestore.collection('friendships');
+  CollectionReference get studyGroupsCollection => _firestore.collection('study_groups');
 
   /// Create or update user profile in Firestore with comprehensive data
   Future<bool> createUserProfile({

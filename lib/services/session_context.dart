@@ -50,7 +50,7 @@ class SessionContext {
   final List<ChatMessage> _messages = [];
   final Map<String, ConversationTopic> _topics = {};
   final DateTime _sessionStart;
-  int _maxMessages;
+  final int _maxMessages;
 
   SessionContext({
     required this.userId,

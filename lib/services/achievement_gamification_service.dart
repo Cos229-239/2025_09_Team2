@@ -534,7 +534,7 @@ class AchievementGamificationService {
       
     } catch (e) {
       debugPrint('AchievementService: Error loading Firebase data: $e');
-      throw e;
+      rethrow;
     }
   }
   
