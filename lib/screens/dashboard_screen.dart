@@ -30,6 +30,8 @@ import 'package:studypals/screens/planner_page.dart';
 // Import creation screens for notes and tasks
 import 'package:studypals/screens/create_note_screen.dart'; // Note creation screen
 import 'package:studypals/screens/create_task_screen.dart'; // Task creation screen
+// Import learning screen
+import 'package:studypals/screens/learning_screen.dart'; // Learning hub screen
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
 import 'package:studypals/widgets/dashboard/progress_graph_widget.dart'; // Progress graph widget
@@ -697,6 +699,11 @@ class _DashboardHomeState extends State<DashboardHome>
   late AnimationController _notificationPanelController;
   late Animation<double> _notificationPanelAnimation;
 
+  // Hamburger menu state and animation
+  bool _isHamburgerMenuOpen = false;
+  late AnimationController _hamburgerMenuController;
+  late Animation<double> _hamburgerMenuAnimation;
+
   @override
   void initState() {
     super.initState();
@@ -813,6 +820,19 @@ class _DashboardHomeState extends State<DashboardHome>
       curve: Curves.easeInOut,
     ));
 
+    // Initialize hamburger menu animation controller
+    _hamburgerMenuController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _hamburgerMenuAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _hamburgerMenuController,
+      curve: Curves.easeInOut,
+    ));
+
     // Create subtle scale animations (very light growth)
     _scaleAnimations = _iconAnimationControllers
         .map(
@@ -894,6 +914,50 @@ class _DashboardHomeState extends State<DashboardHome>
     }
   }
 
+  /// Build expand-from-bottom transition animation for tabs
+  /// Creates an effect where pages appear to expand from the toolbar button
+  Widget _buildExpandTransition(int tabIndex, Widget child) {
+    // Calculate animation progress for this specific tab
+    final animation = _tabController.animation!;
+    final value = (animation.value - tabIndex).abs();
+    
+    // Only animate when transitioning to/from this tab
+    if (value > 1.0) {
+      return const SizedBox.shrink(); // Hide completely when far from active
+    }
+    
+    // Calculate progress (1.0 when fully visible, 0.0 when hidden)
+    final progress = (1.0 - value).clamp(0.0, 1.0);
+    
+    // Scale animation: starts small (from button) and grows to full screen
+    final scale = 0.2 + (progress * 0.8); // Start at 20% scale
+    
+    // Vertical translation: starts from bottom toolbar position
+    final screenHeight = MediaQuery.of(context).size.height;
+    final verticalOffset = (screenHeight * 0.4) * (1.0 - progress); // Start from 40% down
+    
+    // Opacity for smooth fade-in effect
+    final opacity = Curves.easeIn.transform(progress);
+    
+    // Apply transforms: translate, scale, and fade
+    return Transform.translate(
+      offset: Offset(0, verticalOffset),
+      child: Transform.scale(
+        scale: scale,
+        alignment: Alignment.bottomCenter, // Anchor scaling to bottom
+        child: Opacity(
+          opacity: opacity,
+          child: ClipRRect(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(30 * (1.0 - progress)), // Round corners during transition
+            ),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -908,6 +972,7 @@ class _DashboardHomeState extends State<DashboardHome>
     _learnIconController.dispose();
     _tasksAnimationController.dispose();
     _notificationPanelController.dispose();
+    _hamburgerMenuController.dispose();
     super.dispose();
   }
 
@@ -956,8 +1021,30 @@ class _DashboardHomeState extends State<DashboardHome>
       _isNotificationPanelOpen = !_isNotificationPanelOpen;
       if (_isNotificationPanelOpen) {
         _notificationPanelController.forward();
+        // Close hamburger menu if open
+        if (_isHamburgerMenuOpen) {
+          _isHamburgerMenuOpen = false;
+          _hamburgerMenuController.reverse();
+        }
       } else {
         _notificationPanelController.reverse();
+      }
+    });
+  }
+
+  /// Toggle hamburger menu dropdown animation
+  void _toggleHamburgerMenu() {
+    setState(() {
+      _isHamburgerMenuOpen = !_isHamburgerMenuOpen;
+      if (_isHamburgerMenuOpen) {
+        _hamburgerMenuController.forward();
+        // Close notification panel if open
+        if (_isNotificationPanelOpen) {
+          _isNotificationPanelOpen = false;
+          _notificationPanelController.reverse();
+        }
+      } else {
+        _hamburgerMenuController.reverse();
       }
     });
   }
@@ -975,12 +1062,16 @@ class _DashboardHomeState extends State<DashboardHome>
             color: const Color(0xFF16181A), // Solid background color from Figma
             child: TabBarView(
               controller: _tabController,
+              physics: const NeverScrollableScrollPhysics(), // Disable swipe to control animation
               children: [
-                // Tab 0: Home tab - responsive dashboard content
-                Stack(
-                  children: [
-                    // Main home tab content
-                    SafeArea(
+                // Tab 0: Home tab - responsive dashboard content - Wrapped with animation
+                AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) => _buildExpandTransition(0, child!),
+                  child: Stack(
+                    children: [
+                      // Main home tab content
+                      SafeArea(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -1081,18 +1172,37 @@ class _DashboardHomeState extends State<DashboardHome>
                 ],
               ),
             ),
-                    // Notification panel overlay within home tab
-                    _buildNotificationPanelOverlay(context),
-                  ],
+                      // Notification panel overlay within home tab
+                      _buildNotificationPanelOverlay(context),
+                      // Hamburger menu overlay within home tab
+                      _buildHamburgerMenuOverlay(context),
+                    ],
+                  ),
                 ),
-            // Tab 1: Learn tab (Flashcards/Decks)
-            _buildLearnTab(),
-            // Tab 2: AI Tutor tab
-            _buildAITutorTab(),
-            // Tab 3: Social tab
-            _buildSocialTab(),
-            // Tab 4: Pet tab
-            _buildPetTab(),
+            // Tab 1: Learn tab (Flashcards/Decks) - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(1, child!),
+              child: _buildLearnTab(),
+            ),
+            // Tab 2: AI Tutor tab - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(2, child!),
+              child: _buildAITutorTab(),
+            ),
+            // Tab 3: Social tab - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(3, child!),
+              child: _buildSocialTab(),
+            ),
+            // Tab 4: Pet tab - Wrapped with animation
+            AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) => _buildExpandTransition(4, child!),
+              child: _buildPetTab(),
+            ),
           ],
         ),
       ),
@@ -1247,8 +1357,9 @@ class _DashboardHomeState extends State<DashboardHome>
     return AnimatedBuilder(
       animation: _notificationPanelAnimation,
       builder: (context, child) {
+        // Don't show anything when closed or animation value is 0
         if (_notificationPanelAnimation.value == 0.0) {
-          return const SizedBox.shrink(); // Don't show anything when closed
+          return const SizedBox.shrink();
         }
         
         // Now that we're inside the SafeArea, we can position relative to the content
@@ -1307,6 +1418,245 @@ class _DashboardHomeState extends State<DashboardHome>
     );
   }
 
+  /// Build hamburger menu dropdown overlay with animation
+  Widget _buildHamburgerMenuOverlay(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _hamburgerMenuAnimation,
+      builder: (context, child) {
+        // Don't show anything when closed or animation value is 0
+        if (_hamburgerMenuAnimation.value == 0.0) {
+          return const SizedBox.shrink();
+        }
+        
+        // Calculate position - menu appears from top on the left side
+        final statusBarHeight = 44.0; // Custom status bar height
+        final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
+        final systemStatusBar = MediaQuery.of(context).padding.top; // System notch/status bar
+        final dividerHeight = 3.0;
+        
+        // Position right after: system status bar + custom status bar + header + divider
+        final topPosition = systemStatusBar + statusBarHeight + headerHeight + dividerHeight;
+        
+        // Menu takes partial width from the left side
+        final screenWidth = MediaQuery.of(context).size.width;
+        final menuWidth = screenWidth * 0.42; // 42% of screen width - wider to fit "Flash Cards"
+        
+        // Calculate height to fit content (9 menu items)
+        // Each item: 14px top + 14px bottom padding = 28px per item + ListView padding
+        const menuItemHeight = 50.0; // Approximate height per item with padding
+        const numberOfItems = 9;
+        const listPadding = 24.0; // Top and bottom padding
+        final menuHeight = (menuItemHeight * numberOfItems) + listPadding;
+        
+        return Positioned(
+          top: topPosition,
+          left: 0,
+          width: menuWidth * _hamburgerMenuAnimation.value, // Animate width from 0 to full
+          height: menuHeight * _hamburgerMenuAnimation.value, // Also animate height for smoother effect
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomRight: Radius.circular(20), // Rounded bottom-right corner
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF242628), // Same as header background
+                border: Border(
+                  right: BorderSide(
+                    color: const Color(0xFF6FB8E9).withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.5),
+                    blurRadius: 15,
+                    offset: const Offset(2, 0),
+                  ),
+                ],
+              ),
+              child: _buildHamburgerMenuContent(context),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Build hamburger menu content
+  Widget _buildHamburgerMenuContent(BuildContext context) {
+    return Container(
+      color: const Color(0xFF242628), // Same as header background
+      child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+        children: [
+
+        // Menu items
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.note,
+          title: 'Notes',
+          color: Colors.amber,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotesScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.style,
+          title: 'Flash Cards',
+          color: Colors.blue,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const DecksScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.emoji_events,
+          title: 'Badges',
+          color: Colors.orange,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AchievementScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.timer,
+          title: 'Timer',
+          color: Colors.red,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Timer feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.shopping_bag,
+          title: 'Shop',
+          color: Colors.green,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Shop feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.music_note,
+          title: 'Music',
+          color: Colors.purple,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Music feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.feedback,
+          title: 'Feedback',
+          color: Colors.teal,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Feedback feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.settings,
+          title: 'Settings',
+          color: Colors.grey,
+          onTap: () {
+            _toggleHamburgerMenu();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.help,
+          title: 'Help',
+          color: Colors.blueGrey,
+          onTap: () {
+            _toggleHamburgerMenu();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Help feature coming soon!')),
+            );
+          },
+        ),
+      ],
+      ),
+    );
+  }
+
+  /// Build a menu item for the hamburger menu - styled like the image
+  Widget _buildHamburgerMenuItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        child: Row(
+          children: [
+            // Icon on the left
+            Icon(
+              icon,
+              color: color,
+              size: 22,
+            ),
+            const SizedBox(width: 16), // Space between icon and text
+            // Text on the right - wrapped in Expanded to prevent overflow
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFFCCCCCC), // Light gray text like in the image
+                  letterSpacing: 0.3,
+                ),
+                overflow: TextOverflow.ellipsis, // Handle overflow gracefully
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Build the header section with greeting and action buttons
   Widget _buildHeader(BuildContext context) {
     return Row(
@@ -1318,11 +1668,17 @@ class _DashboardHomeState extends State<DashboardHome>
           height: 48, // Standard IconButton height for consistency
           child: Center(
             child: GestureDetector(
-              onTap: () => _showModernMenu(context),
-              child: Icon(
-                Icons.menu,
-                color: Theme.of(context).colorScheme.primary,
-                size: 28,
+              onTap: _toggleHamburgerMenu,
+              child: AnimatedRotation(
+                turns: _isHamburgerMenuOpen ? 0.125 : 0.0, // Rotate 45 degrees when open
+                duration: const Duration(milliseconds: 300),
+                child: Icon(
+                  _isHamburgerMenuOpen ? Icons.close : Icons.menu,
+                  color: _isHamburgerMenuOpen 
+                    ? const Color(0xFF6FB8E9)
+                    : Theme.of(context).colorScheme.primary,
+                  size: 28,
+                ),
               ),
             ),
           ),
@@ -1911,68 +2267,8 @@ class _DashboardHomeState extends State<DashboardHome>
 
   /// Build Learn tab content (Flashcards/Decks)
   Widget _buildLearnTab() {
-    return SafeArea(
-      child: Column(
-        children: [
-          // Status bar area for consistency
-          _buildStatusBar(context),
-          
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Text(
-                  'Tasks',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () => _showCreateTaskDialog(context),
-                ),
-              ],
-            ),
-          ),
-          // Tasks list
-          Expanded(
-            child: Consumer<TaskProvider>(
-              builder: (context, taskProvider, child) {
-                if (taskProvider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                final tasks = taskProvider.tasks;
-                if (tasks.isEmpty) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.task_alt, size: 64, color: Colors.grey),
-                        SizedBox(height: 16),
-                        Text('No tasks yet'),
-                        Text('Create your first task!'),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return _buildSimpleTaskCard(task);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+    // Use the new Learning Screen with all learning features
+    return const LearningScreen();
   }
 
   /// Build AI Tutor tab content
@@ -1980,62 +2276,9 @@ class _DashboardHomeState extends State<DashboardHome>
     return const AITutorChat(); // Use the actual AI Tutor chat interface
   }
 
-  /// Build Social tab content
+  /// Build Social tab content - Navigate to SocialScreen
   Widget _buildSocialTab() {
-    return SafeArea(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.people,
-              size: 80,
-              color: const Color(0xFF6FB8E9),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Social Features',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text(
-                'Connect with study buddies, share progress, and collaborate on study goals.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to social screen or show coming soon message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Social features coming soon!'),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6FB8E9),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 16,
-                ),
-              ),
-              child: Text(
-                'Explore Social',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const SocialScreen();
   }
 
   /// Build Pet tab content
