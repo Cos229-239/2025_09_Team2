@@ -155,7 +155,7 @@ class EnhancedAITutorProvider extends ChangeNotifier {
     // Initialize web search service
     _webSearchService = WebSearchService();
     _webSearchService.initialize();
-    print('🌐 DEBUG: WebSearchService initialized. isAvailable=${_webSearchService.isAvailable}, enableWebSearch=${GeminiConfig.enableWebSearch}');
+    debugPrint('🌐 DEBUG: WebSearchService initialized. isAvailable=${_webSearchService.isAvailable}, enableWebSearch=${GeminiConfig.enableWebSearch}');
     _log('WebSearchService initialized (enabled: ${GeminiConfig.enableWebSearch})', level: LogLevel.debug);
   }
 
@@ -391,13 +391,13 @@ Ask me anything - all responses will be validated!
       // ========== 🌐 WEB SEARCH INTEGRATION ==========
       // Check if this query needs web search
       final needsWebSearch = _needsWebSearch(content.trim());
-      print('🔍 DEBUG: needsWebSearch=$needsWebSearch, isAvailable=${_webSearchService.isAvailable}, query="${content.trim()}"');
+      debugPrint('🔍 DEBUG: needsWebSearch=$needsWebSearch, isAvailable=${_webSearchService.isAvailable}, query="${content.trim()}"');
       _log('needsWebSearch: $needsWebSearch, isAvailable: ${_webSearchService.isAvailable}', level: LogLevel.info, context: 'sendMessage');
       
       // Generate AI response using the working AI provider or web search
       String rawResponseContent;
       if (needsWebSearch && _webSearchService.isAvailable) {
-        print('🌐 DEBUG: Web search TRIGGERED!');
+        debugPrint('🌐 DEBUG: Web search TRIGGERED!');
         _log('🔍 Web search triggered for query: "$content"', level: LogLevel.info, context: 'sendMessage');
         
         try {

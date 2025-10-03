@@ -1,6 +1,7 @@
 // web_search_service.dart
 // Service for performing web searches using Google Gemini AI
 
+import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../config/gemini_config.dart';
 import 'dart:developer' as developer;
@@ -40,13 +41,13 @@ class WebSearchService {
   
   /// Initialize the Gemini model
   void initialize() {
-    print('🌐 DEBUG: WebSearchService.initialize() called');
-    print('🌐 DEBUG: enableWebSearch=${GeminiConfig.enableWebSearch}');
-    print('🌐 DEBUG: apiKey length=${GeminiConfig.apiKey.length}');
+    debugPrint('🌐 DEBUG: WebSearchService.initialize() called');
+    debugPrint('🌐 DEBUG: enableWebSearch=${GeminiConfig.enableWebSearch}');
+    debugPrint('🌐 DEBUG: apiKey length=${GeminiConfig.apiKey.length}');
     
     if (!GeminiConfig.enableWebSearch) {
       developer.log('Web search is disabled in config', name: 'WebSearchService');
-      print('🌐 DEBUG: Web search DISABLED in config');
+      debugPrint('🌐 DEBUG: Web search DISABLED in config');
       return;
     }
     
@@ -57,11 +58,11 @@ class WebSearchService {
         'WARNING: Gemini API key not configured. Web search will not work.',
         name: 'WebSearchService',
       );
-      print('🌐 DEBUG: API key INVALID');
+      debugPrint('🌐 DEBUG: API key INVALID');
       return;
     }
     
-    print('🌐 DEBUG: Attempting to create GenerativeModel...');
+    debugPrint('🌐 DEBUG: Attempting to create GenerativeModel...');
     try {
       _model = GenerativeModel(
         model: GeminiConfig.model,
@@ -82,10 +83,10 @@ class WebSearchService {
         ],
       );
       
-      print('🌐 DEBUG: GenerativeModel created! _model != null? ${_model != null}');
+      debugPrint('🌐 DEBUG: GenerativeModel created! _model != null? ${_model != null}');
       developer.log('✅ Gemini model initialized successfully! Model is ${_model != null ? "available" : "NULL"}', name: 'WebSearchService');
     } catch (e) {
-      print('🌐 DEBUG: EXCEPTION during model creation: $e');
+      debugPrint('🌐 DEBUG: EXCEPTION during model creation: $e');
       developer.log('❌ Failed to initialize Gemini: $e', name: 'WebSearchService');
     }
   }
@@ -99,12 +100,12 @@ class WebSearchService {
     String? conversationContext,
     String? userId,
   }) async {
-    print('🌐 DEBUG: search() method called. query="$query"');
+    debugPrint('🌐 DEBUG: search() method called. query="$query"');
     final startTime = DateTime.now();
     
     // Check if web search is available
     if (!isAvailable) {
-      print('🌐 DEBUG: search() - NOT AVAILABLE! _model=${_model != null}, enableWebSearch=${GeminiConfig.enableWebSearch}');
+      debugPrint('🌐 DEBUG: search() - NOT AVAILABLE! _model=${_model != null}, enableWebSearch=${GeminiConfig.enableWebSearch}');
       return SearchResult(
         answer: 'Web search is not available. Please check your API configuration.',
         timestamp: startTime,
@@ -113,7 +114,7 @@ class WebSearchService {
       );
     }
     
-    print('🌐 DEBUG: search() - Service is available, proceeding...');
+    debugPrint('🌐 DEBUG: search() - Service is available, proceeding...');
     try {
       // Rate limiting
       if (userId != null) {
@@ -126,7 +127,7 @@ class WebSearchService {
         final cached = _cache[cacheKey]!;
         final age = startTime.difference(cached.timestamp);
         if (age.inMinutes < 5) {
-          print('🌐 DEBUG: Returning CACHED result');
+          debugPrint('🌐 DEBUG: Returning CACHED result');
           developer.log('Returning cached result for: $query', name: 'WebSearchService');
           return SearchResult(
             answer: cached.answer,
@@ -140,7 +141,7 @@ class WebSearchService {
       // Build search prompt
       final prompt = _buildSearchPrompt(query, conversationContext);
       
-      print('🌐 DEBUG: Calling Gemini API with prompt length=${prompt.length}');
+      debugPrint('🌐 DEBUG: Calling Gemini API with prompt length=${prompt.length}');
       developer.log('Performing web search for: $query', name: 'WebSearchService');
       
       // Perform search with timeout
@@ -148,9 +149,9 @@ class WebSearchService {
           .generateContent([Content.text(prompt)])
           .timeout(GeminiConfig.searchTimeout);
       
-      print('🌐 DEBUG: Gemini API responded!');
+      debugPrint('🌐 DEBUG: Gemini API responded!');
       final answer = response.text ?? 'No results found.';
-      print('🌐 DEBUG: Answer length=${answer.length}');
+      debugPrint('🌐 DEBUG: Answer length=${answer.length}');
       
       final result = SearchResult(
         answer: answer,
@@ -176,8 +177,8 @@ class WebSearchService {
       return result;
       
     } catch (e) {
-      print('🌐 DEBUG: EXCEPTION in search(): $e');
-      print('🌐 DEBUG: Exception type: ${e.runtimeType}');
+      debugPrint('🌐 DEBUG: EXCEPTION in search(): $e');
+      debugPrint('🌐 DEBUG: Exception type: ${e.runtimeType}');
       developer.log('Web search error: $e', name: 'WebSearchService');
       
       return SearchResult(

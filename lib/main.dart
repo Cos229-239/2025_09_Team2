@@ -110,7 +110,7 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     if (kDebugMode) {
-      print('✅ Firebase initialized successfully');
+      debugPrint('✅ Firebase initialized successfully');
     }
     
     // Enable Firestore offline persistence for better connectivity
@@ -122,12 +122,12 @@ void main() async {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('⚠️ Firestore offline persistence setup issue: $e');
+        debugPrint('⚠️ Firestore offline persistence setup issue: $e');
       }
     }
   } catch (e) {
     if (kDebugMode) {
-      print('❌ Firebase initialization error: $e');
+      debugPrint('❌ Firebase initialization error: $e');
     }
     rethrow;
   }
