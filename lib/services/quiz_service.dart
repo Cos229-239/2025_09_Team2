@@ -3,8 +3,10 @@ import 'dart:math';
 import '../models/card.dart';
 import '../models/deck.dart';
 import '../models/quiz_session.dart';
+import '../models/activity.dart';
 import '../providers/pet_provider.dart';
 import 'firestore_service.dart';
+import 'activity_service.dart';
 
 /// Service for managing deck-based quiz sessions and scoring
 /// Integrates with Firestore for persistent storage and cross-device sync
@@ -194,6 +196,23 @@ class QuizService {
 
     // Save completed session
     await _saveQuizSession(completedSession);
+
+    // Log activity
+    try {
+      final activityService = ActivityService();
+      await activityService.logActivity(
+        type: ActivityType.quizCompleted,
+        description: 'Completed quiz with ${(finalScore * 100).round()}% score',
+        metadata: {
+          'quizId': session.id,
+          'score': finalScore,
+          'expEarned': totalExpEarned,
+          'cardsStudied': session.cardIds.length,
+        },
+      );
+    } catch (e) {
+      debugPrint('Failed to log quiz completion activity: $e');
+    }
 
     debugPrint(
         'Quiz completed: ${(finalScore * 100).round()}% score, +$totalExpEarned total EXP');

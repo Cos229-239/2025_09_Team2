@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/social_learning_service.dart' as service;
+import '../services/activity_service.dart';
+import '../models/activity.dart';
 import '../widgets/social/social_widgets.dart';
 import '../widgets/sessions_tab.dart';
 import '../providers/social_session_provider.dart';
@@ -36,6 +38,7 @@ class _SocialScreenState extends State<SocialScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   service.SocialLearningService? _socialService;
+  final ActivityService _activityService = ActivityService();
   bool _isLoading = true;
 
   @override
@@ -263,86 +266,97 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Widget _buildRecentActivity() {
-    // Mock recent activity - in a real app, this would come from a service
-    final activities = [
-      {'type': 'friend_joined', 'user': 'Alex Chen', 'time': '2 hours ago'},
-      {
-        'type': 'group_created',
-        'group': 'Mathematics Study Group',
-        'time': '1 day ago'
-      },
-      {
-        'type': 'session_completed',
-        'session': 'Physics Review',
-        'time': '2 days ago'
-      },
-    ];
-
-    if (activities.isEmpty) {
-      return const SizedBox(
-        height: 100,
-        child: Center(
-          child: Text('No recent activity'),
-        ),
-      );
-    }
-
-    return Column(
-      children: activities.map((activity) {
-        IconData icon;
-        String description;
-        Color color;
-
-        switch (activity['type']) {
-          case 'friend_joined':
-            icon = Icons.person_add;
-            description = '${activity['user']} joined your friends';
-            color = Colors.green;
-            break;
-          case 'group_created':
-            icon = Icons.group_add;
-            description = 'You created "${activity['group']}"';
-            color = Colors.blue;
-            break;
-          case 'session_completed':
-            icon = Icons.check_circle;
-            description = 'Completed study session "${activity['session']}"';
-            color = Colors.purple;
-            break;
-          default:
-            icon = Icons.info;
-            description = 'Unknown activity';
-            color = Colors.grey;
+    return StreamBuilder<List<Activity>>(
+      stream: _activityService.watchRecentActivities(limit: 5),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 100,
+            child: Center(child: CircularProgressIndicator()),
+          );
         }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: color.withValues(alpha: 0.2),
-                child: Icon(icon, color: color, size: 16),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(description),
-                    Text(
-                      activity['time']!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const SizedBox(
+            height: 100,
+            child: Center(
+              child: Text('No recent activity'),
+            ),
+          );
+        }
+
+        final activities = snapshot.data!;
+
+        return Column(
+          children: activities.map((activity) {
+            IconData icon;
+            Color color;
+
+            switch (activity.type) {
+              case ActivityType.friendAdded:
+                icon = Icons.person_add;
+                color = Colors.green;
+                break;
+              case ActivityType.groupCreated:
+              case ActivityType.groupJoined:
+                icon = Icons.group_add;
+                color = Colors.blue;
+                break;
+              case ActivityType.studySessionCompleted:
+                icon = Icons.check_circle;
+                color = Colors.purple;
+                break;
+              case ActivityType.quizCompleted:
+                icon = Icons.quiz;
+                color = Colors.orange;
+                break;
+              case ActivityType.achievementUnlocked:
+                icon = Icons.emoji_events;
+                color = Colors.amber;
+                break;
+              case ActivityType.levelUp:
+                icon = Icons.trending_up;
+                color = Colors.teal;
+                break;
+              case ActivityType.taskCompleted:
+                icon = Icons.task_alt;
+                color = Colors.indigo;
+                break;
+              default:
+                icon = Icons.info;
+                color = Colors.grey;
+            }
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: color.withValues(alpha: 0.2),
+                    child: Icon(icon, color: color, size: 16),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(activity.description),
+                        Text(
+                          activity.getTimeAgo(),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 

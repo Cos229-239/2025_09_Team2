@@ -8,6 +8,9 @@ import 'package:studypals/models/task.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // Import Firestore service for database operations
 import 'package:studypals/services/firestore_service.dart';
+// Import Activity service for tracking user activities
+import 'package:studypals/services/activity_service.dart';
+import 'package:studypals/models/activity.dart';
 
 /// Task management provider handling all task-related state and operations
 /// This class manages the list of tasks, loading states, and provides filtered views
@@ -270,6 +273,18 @@ class TaskProvider extends ChangeNotifier {
 
     // Use the existing updateTask method to save the status change
     await updateTask(completedTask);
+    
+    // Log activity
+    try {
+      final activityService = ActivityService();
+      await activityService.logActivity(
+        type: ActivityType.taskCompleted,
+        description: 'Completed task: ${task.title}',
+        metadata: {'taskId': taskId, 'taskTitle': task.title},
+      );
+    } catch (e) {
+      debugPrint('Failed to log task completion activity: $e');
+    }
   }
 
   /// Searches tasks by title, tags, or linked content using case-insensitive matching

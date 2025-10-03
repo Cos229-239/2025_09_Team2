@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firestore_service.dart';
 
 /// TODO: CRITICAL SOCIAL LEARNING SERVICE IMPLEMENTATION GAPS
@@ -428,10 +429,54 @@ class SocialLearningService {
   /// Load user data from storage
   Future<void> _loadUserData() async {
     try {
-      // Load user profile
+      // First try to load from Firestore if user is authenticated
+      final user = _auth.currentUser;
+      if (user != null) {
+        debugPrint('📥 Loading user profile from Firestore for user: ${user.uid}');
+        try {
+          final userDoc = await _firestoreService.usersCollection.doc(user.uid).get();
+          if (userDoc.exists) {
+            final data = userDoc.data() as Map<String, dynamic>?;
+            if (data != null) {
+              debugPrint('✅ Firestore data found: ${data.keys.join(', ')}');
+              
+              // Convert Firestore data to UserProfile
+              _currentUserProfile = UserProfile(
+                id: user.uid,
+                username: data['username'] ?? 'user_${user.uid.substring(0, 8)}',
+                displayName: data['displayName'] ?? 'User',
+                bio: data['bio'],
+                avatar: data['profilePicture'],
+                joinDate: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+                level: data['level'] ?? 1,
+                totalXP: data['totalXP'] ?? 0,
+                title: data['title'] ?? 'Beginner',
+                interests: List<String>.from(data['interests'] ?? []),
+                profilePrivacy: _parsePrivacyLevel(data['privacySettings']?['profileVisibility']),
+                progressPrivacy: _parsePrivacyLevel(data['privacySettings']?['progressVisibility']),
+                friendsPrivacy: _parsePrivacyLevel(data['privacySettings']?['friendsVisibility']),
+                isOnline: true,
+                lastActive: DateTime.now(),
+              );
+              
+              // Save to local storage for offline access
+              await _prefs?.setString(_userProfileKey, jsonEncode(_currentUserProfile!.toJson()));
+              debugPrint('✅ User profile loaded from Firestore successfully');
+              return;
+            }
+          } else {
+            debugPrint('⚠️ No Firestore document found for user');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Error loading from Firestore: $e');
+        }
+      }
+      
+      // Fallback to SharedPreferences
       final profileData = _prefs?.getString(_userProfileKey);
       if (profileData != null) {
         _currentUserProfile = UserProfile.fromJson(jsonDecode(profileData));
+        debugPrint('✅ User profile loaded from SharedPreferences');
       }
 
       // Load friendships
@@ -460,14 +505,46 @@ class SocialLearningService {
       debugPrint('Error loading social learning data: $e');
     }
   }
+  
+  /// Parse privacy level from string
+  PrivacyLevel _parsePrivacyLevel(String? value) {
+    switch (value) {
+      case 'public':
+        return PrivacyLevel.public;
+      case 'friends':
+        return PrivacyLevel.friends;
+      case 'private':
+        return PrivacyLevel.private;
+      default:
+        return PrivacyLevel.public;
+    }
+  }
 
   /// Save user data to storage
   Future<void> _saveUserData() async {
     try {
-      // Save user profile
+      // Save user profile to local storage
       if (_currentUserProfile != null) {
         await _prefs?.setString(
             _userProfileKey, jsonEncode(_currentUserProfile!.toJson()));
+        
+        // Also save to Firestore if user is authenticated
+        final user = _auth.currentUser;
+        if (user != null) {
+          await _firestoreService.usersCollection.doc(user.uid).update({
+            'displayName': _currentUserProfile!.displayName,
+            'username': _currentUserProfile!.username,
+            'bio': _currentUserProfile!.bio,
+            'profilePicture': _currentUserProfile!.avatar,
+            'privacySettings': {
+              'profileVisibility': _currentUserProfile!.profilePrivacy.name,
+              'progressVisibility': _currentUserProfile!.progressPrivacy.name,
+              'friendsVisibility': _currentUserProfile!.friendsPrivacy.name,
+            },
+            'lastActiveAt': FieldValue.serverTimestamp(),
+          });
+          debugPrint('✅ User profile saved to Firestore successfully');
+        }
       }
 
       // Save friendships
