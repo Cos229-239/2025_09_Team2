@@ -7,10 +7,10 @@ class ProfileIcon extends StatelessWidget {
   final Color? color;
 
   const ProfileIcon({
-    Key? key,
+    super.key,
     this.size = 24.0,
     this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

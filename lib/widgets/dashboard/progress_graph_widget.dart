@@ -24,13 +24,13 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 8,
             spreadRadius: 0,
             offset: const Offset(0, 3),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 4,
             spreadRadius: 0,
             offset: const Offset(0, 1),
@@ -79,7 +79,7 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
           horizontalInterval: 1,
           getDrawingHorizontalLine: (value) {
             return FlLine(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               strokeWidth: 1,
             );
           },
@@ -118,8 +118,8 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFF64B5F6).withOpacity(0.3),
-                  const Color(0xFF64B5F6).withOpacity(0.05),
+                  const Color(0xFF64B5F6).withValues(alpha: 0.3),
+                  const Color(0xFF64B5F6).withValues(alpha: 0.05),
                   Colors.transparent,
                 ],
               ),
@@ -148,8 +148,8 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFF4DD0E1).withOpacity(0.2),
-                  const Color(0xFF4DD0E1).withOpacity(0.05),
+                  const Color(0xFF4DD0E1).withValues(alpha: 0.2),
+                  const Color(0xFF4DD0E1).withValues(alpha: 0.05),
                   Colors.transparent,
                 ],
               ),

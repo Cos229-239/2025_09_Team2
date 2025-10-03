@@ -52,35 +52,44 @@ class NotificationPanel extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: ClipRect(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // If height is very small during animation, show minimal content
-                if (constraints.maxHeight < 100) {
-                  return Container(
-                    height: constraints.maxHeight,
-                    width: double.infinity,
-                    color: Colors.transparent,
-                  );
-                }
-                
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Header with title and controls
-                    _buildHeader(context, notificationProvider),
-
-                    // Filter bar
-                    _buildFilterBar(context, notificationProvider),
-
-                    // Notification list - takes remaining space
-                    Expanded(
-                      child: _buildNotificationList(context, notificationProvider),
-                    ),
-                  ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // If height is very small during animation, show minimal content
+              if (constraints.maxHeight < 100) {
+                return SizedBox(
+                  height: constraints.maxHeight,
+                  width: double.infinity,
                 );
-              },
-            ),
+              }
+              
+              return ClipRect(
+                clipBehavior: Clip.hardEdge,
+                child: SizedBox(
+                  height: constraints.maxHeight,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Header with title and controls
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: _buildHeader(context, notificationProvider),
+                      ),
+
+                      // Filter bar
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: _buildFilterBar(context, notificationProvider),
+                      ),
+
+                      // Notification list - takes remaining space
+                      Expanded(
+                        child: _buildNotificationList(context, notificationProvider),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -146,7 +155,7 @@ class NotificationPanel extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: provider.unreadCount > 0 
                         ? const Color(0xFF6FB8E9) 
-                        : const Color(0xFF6FB8E9).withOpacity(0.5), // Dimmed when no unread
+                        : const Color(0xFF6FB8E9).withValues(alpha: 0.5), // Dimmed when no unread
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -278,6 +287,7 @@ class NotificationPanel extends StatelessWidget {
     }
 
     return ListView.builder(
+      padding: EdgeInsets.zero,
       itemCount: notifications.length,
       itemBuilder: (context, index) {
         final notification = notifications[index];
@@ -475,14 +485,6 @@ class NotificationPanel extends StatelessWidget {
         );
         break;
     }
-  }
-
-  /// Show notification settings dialog
-  void _showNotificationSettings(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const NotificationSettingsDialog(),
-    );
   }
 }
 
