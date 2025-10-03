@@ -140,7 +140,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
     // Get the current display month using the same logic as the header
     final displayMonth = _getDisplayMonth(weekDays);
 
-    return Container(
+    return SizedBox(
       width: double.infinity,
       key: ValueKey('week_$pageIndex'), // Unique key for each week
       child: Row(
@@ -183,14 +183,12 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   /// Handle mouse enter for hover detection
   void _handleMouseEnter(PointerEvent event) {
     _isHovering = true;
-    print('Mouse entered calendar area');
   }
 
   /// Handle mouse exit for hover detection
   void _handleMouseExit(PointerEvent event) {
     _isHovering = false;
     _lastPointerX = null;
-    print('Mouse exited calendar area');
   }
 
   /// Handle pointer movement for swipe detection while hovering
@@ -210,8 +208,6 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
         // Throttle swipes to prevent multiple rapid triggers
         if (_lastSwipeTime == null || 
             now.difference(_lastSwipeTime!).inMilliseconds > 300) {
-          
-          print('Hover swipe detected - Delta: $deltaX');
           
           if (deltaX > 0) {
             // Moving right - go to previous week
@@ -233,19 +229,16 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   /// Handle pointer down
   void _handlePointerDown(PointerDownEvent event) {
     _lastPointerX = event.localPosition.dx;
-    print('Pointer down at: ${_lastPointerX}');
   }
 
   /// Handle pointer up
   void _handlePointerUp(PointerUpEvent event) {
     // Keep the existing pan gesture logic for click-and-drag
-    print('Pointer up');
   }
 
   /// Handle pan start to capture initial position
   void _handlePanStart(DragStartDetails details) {
     _panStartX = details.localPosition.dx;
-    print('Pan started at: $_panStartX'); // Debug
   }
 
   /// Handle pan update for gesture tracking
@@ -280,12 +273,9 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
     // Check both velocity types for better swipe detection
     final effectiveVelocity = velocity.abs() > primaryVelocity.abs() ? velocity : primaryVelocity;
     
-    print('Swipe detected - Velocity: $effectiveVelocity, PrimaryVelocity: $primaryVelocity'); // Debug
-    
     bool swipeDetected = false;
     
     if (effectiveVelocity.abs() > minSwipeVelocity) {
-      print('Velocity-based swipe: ${effectiveVelocity > 0 ? 'right' : 'left'}'); // Debug
       if (effectiveVelocity > 0) {
         // Swipe right - go to previous week
         _moveToWeek(-1);
@@ -300,10 +290,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
       final panDistance = details.localPosition.dx - _panStartX;
       const minSwipeDistance = 20.0; // Lower minimum distance for swipe recognition
       
-      print('Distance-based check - Distance: $panDistance'); // Debug
-      
       if (panDistance.abs() > minSwipeDistance) {
-        print('Distance-based swipe: ${panDistance > 0 ? 'right' : 'left'}'); // Debug
         if (panDistance > 0) {
           // Swipe right - go to previous week
           _moveToWeek(-1);

@@ -24,7 +24,6 @@ import 'package:studypals/screens/achievement_screen.dart'; // Achievement and r
 import 'package:studypals/screens/social_screen.dart'; // Social learning screen
 import 'package:studypals/screens/profile_settings_screen.dart'; // Profile settings screen
 import 'package:studypals/screens/settings_screen.dart'; // Main settings screen
-import 'package:studypals/screens/competitive_screen.dart'; // Competitive mode screen
 // Import planner screen
 import 'package:studypals/screens/planner_page.dart';
 // Import creation screens for notes and tasks
@@ -1230,13 +1229,13 @@ class _DashboardHomeState extends State<DashboardHome>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withValues(alpha: 0.25),
                     blurRadius: 10,
                     spreadRadius: 0,
                     offset: const Offset(0, -4),
                   ),
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     blurRadius: 5,
                     spreadRadius: 0,
                     offset: const Offset(0, -2),
@@ -1381,35 +1380,39 @@ class _DashboardHomeState extends State<DashboardHome>
           top: topPosition, // Position right after the blue divider
           left: 0,
           right: 0,
-          height: panelHeight * _notificationPanelAnimation.value, // Animate height from 0 to full
-          child: Container(
-            margin: EdgeInsets.symmetric(
-              horizontal: ResponsiveSpacing.getHorizontalPadding(context),
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFF242628), // Match header color
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(20),
-              ),
-              border: Border.all(
-                color: const Color(0xFF6FB8E9),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          child: ClipRect(
+            child: SizedBox(
+              height: panelHeight * _notificationPanelAnimation.value, // Animate height from 0 to full
+              child: Container(
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveSpacing.getHorizontalPadding(context),
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(20),
-              ),
-              child: NotificationPanel(
-                onClose: _toggleNotificationPanel,
-                isBottomSheet: false,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF242628), // Match header color
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  border: Border.all(
+                    color: const Color(0xFF6FB8E9),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  child: NotificationPanel(
+                    onClose: _toggleNotificationPanel,
+                    isBottomSheet: false,
+                  ),
+                ),
               ),
             ),
           ),
@@ -1462,13 +1465,13 @@ class _DashboardHomeState extends State<DashboardHome>
                 color: const Color(0xFF242628), // Same as header background
                 border: Border(
                   right: BorderSide(
-                    color: const Color(0xFF6FB8E9).withOpacity(0.3),
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 15,
                     offset: const Offset(2, 0),
                   ),
@@ -1730,7 +1733,7 @@ class _DashboardHomeState extends State<DashboardHome>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -1743,341 +1746,6 @@ class _DashboardHomeState extends State<DashboardHome>
                   fontWeight: FontWeight.w600,
                 ),
           ),
-        ),
-      ),
-    );
-  }
-
-  /// Show modern hamburger menu with navigation options
-  void _showModernMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.6,
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Handle bar
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.secondary,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.dashboard,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'StudyPals',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                      ),
-                      Text(
-                        'Navigate to features',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Icon(
-                      Icons.close,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Menu items
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _buildModernMenuItem(
-                    context,
-                    icon: Icons.emoji_events,
-                    title: 'Achievements',
-                    subtitle: 'View your progress and rewards',
-                    color: Colors.amber,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AchievementScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildModernMenuItem(
-                    context,
-                    icon: Icons.people,
-                    title: 'Social Learning',
-                    subtitle: 'Connect with study partners',
-                    color: Colors.blue,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SocialScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildModernMenuItem(
-                    context,
-                    icon: Icons.sports_esports,
-                    title: 'Competitive Mode',
-                    subtitle: 'Challenge others and compete',
-                    color: Colors.red,
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CompetitiveScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Divider
-                  Divider(
-                    color: Colors.grey[300],
-                    thickness: 1,
-                    height: 32,
-                  ),
-
-                  // Additional quick actions
-                  _buildQuickActionRow(context),
-
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Build a modern menu item with icon, title, and subtitle
-  Widget _buildModernMenuItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                // Icon container
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                // Content
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Arrow
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: Theme.of(context).iconTheme.color,
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Build quick action row with settings, help, and feedback
-  Widget _buildQuickActionRow(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _buildQuickAction(
-          context,
-          icon: Icons.settings,
-          label: 'Settings',
-          onTap: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
-            );
-          },
-        ),
-        _buildQuickAction(
-          context,
-          icon: Icons.help_outline,
-          label: 'Help',
-          onTap: () {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Help - Coming soon!')),
-            );
-          },
-        ),
-        _buildQuickAction(
-          context,
-          icon: Icons.feedback,
-          label: 'Feedback',
-          onTap: () {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Feedback - Coming soon!')),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  /// Build a quick action button with icon and label
-  Widget _buildQuickAction(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: Theme.of(context).iconTheme.color,
-                size: 20,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
         ),
       ),
     );
@@ -2362,106 +2030,6 @@ class _DashboardHomeState extends State<DashboardHome>
     );
   }
 
-  /// Build stat card widget
-  Widget _buildStatCard(
-    BuildContext context,
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Show create task dialog
-  void _showCreateTaskDialog(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Create task dialog - Coming soon!')),
-    );
-  }
-
-  /// Build simple task card for dashboard
-  Widget _buildSimpleTaskCard(Task task) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: task.status == TaskStatus.completed
-              ? Colors.green.withValues(alpha: 0.2)
-              : Colors.blue.withValues(alpha: 0.2),
-          child: Icon(
-            task.status == TaskStatus.completed ? Icons.check : Icons.task_alt,
-            color: task.status == TaskStatus.completed
-                ? Colors.green
-                : Colors.blue,
-          ),
-        ),
-        title: Text(
-          task.title,
-          style: TextStyle(
-            decoration: task.status == TaskStatus.completed
-                ? TextDecoration.lineThrough
-                : null,
-          ),
-        ),
-        subtitle: Text('${task.estMinutes} min'),
-        trailing: task.dueAt != null
-            ? Text(
-                _formatDate(task.dueAt!),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: 12,
-                ),
-              )
-            : null,
-      ),
-    );
-  }
-
-  /// Format date for display
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return 'Today';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inDays == -1) {
-      return 'Tomorrow';
-    } else if (difference.inDays > 0) {
-      return '${difference.inDays} days ago';
-    } else {
-      return '${-difference.inDays} days';
-    }
-  }
-
   /// Build individual navigation button matching the image layout with animations
   Widget _buildNavButton(
     BuildContext context, {
@@ -2590,7 +2158,7 @@ class _DashboardHomeState extends State<DashboardHome>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 8,
                         spreadRadius: 0,
                         offset: const Offset(0, 4),

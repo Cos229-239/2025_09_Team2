@@ -58,13 +58,13 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 8,
                 spreadRadius: 0,
                 offset: const Offset(0, 3),
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 4,
                 spreadRadius: 0,
                 offset: const Offset(0, 1),
@@ -84,7 +84,7 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
                       colors: [
                         const Color(0xFF2A3050),
                         const Color(0xFF1C1F35),
-                        const Color(0xFF2A3050).withOpacity(0.8),
+                        const Color(0xFF2A3050).withValues(alpha: 0.8),
                       ],
                     ),
                   ),
@@ -95,25 +95,25 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
                   top: 20,
                   left: 20,
                   child: _buildDecorativeCircle(
-                      30, Colors.white.withOpacity(0.05)),
+                      30, Colors.white.withValues(alpha: 0.05)),
                 ),
                 Positioned(
                   top: 40,
                   right: 60,
                   child: _buildDecorativeCircle(
-                      20, Colors.white.withOpacity(0.03)),
+                      20, Colors.white.withValues(alpha: 0.03)),
                 ),
                 Positioned(
                   bottom: 50,
                   left: 80,
                   child: _buildDecorativeCircle(
-                      25, Colors.white.withOpacity(0.04)),
+                      25, Colors.white.withValues(alpha: 0.04)),
                 ),
                 Positioned(
                   bottom: 30,
                   right: 40,
                   child: _buildDecorativeCircle(
-                      35, Colors.white.withOpacity(0.05)),
+                      35, Colors.white.withValues(alpha: 0.05)),
                 ),
 
                 // Main content - pet display expanded
@@ -182,8 +182,8 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF6FB8E9).withOpacity(0.3), // New blue color
-                  const Color(0xFF6FB8E9).withOpacity(0.1), // New blue color
+                  const Color(0xFF6FB8E9).withValues(alpha: 0.3), // New blue color
+                  const Color(0xFF6FB8E9).withValues(alpha: 0.1), // New blue color
                   Colors.transparent,
                 ],
               ),
@@ -200,13 +200,13 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF6FB8E9).withOpacity(0.6), // New blue color
-                  const Color(0xFF6FB8E9).withOpacity(0.4), // New blue color
+                  const Color(0xFF6FB8E9).withValues(alpha: 0.6), // New blue color
+                  const Color(0xFF6FB8E9).withValues(alpha: 0.4), // New blue color
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF6FB8E9).withOpacity(0.3), // New blue color
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // New blue color
                   blurRadius: 15,
                   spreadRadius: 5,
                 ),
@@ -216,7 +216,7 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
               child: Icon(
                 Icons.pets,
                 size: 40,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ),
@@ -247,7 +247,7 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
     return Icon(
       Icons.star,
       size: size,
-      color: Colors.white.withOpacity(0.6),
+      color: Colors.white.withValues(alpha: 0.6),
     );
   }
 
@@ -259,10 +259,10 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1F35).withOpacity(0.6),
+        color: const Color(0xFF1C1F35).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF6FB8E9).withOpacity(0.2), // New blue color
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // New blue color
           width: 1,
         ),
       ),
@@ -327,7 +327,7 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
         Icon(
           icon,
           size: 24,
-          color: color.withOpacity(0.8),
+          color: color.withValues(alpha: 0.8),
         ),
         const SizedBox(height: 4),
         Text(
