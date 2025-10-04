@@ -22,7 +22,8 @@ import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard stu
 // Import additional screens for hamburger menu navigation
 import 'package:studypals/screens/achievement_screen.dart'; // Achievement and rewards screen
 import 'package:studypals/screens/social_screen.dart'; // Social learning screen
-import 'package:studypals/screens/profile_settings_screen.dart'; // Profile settings screen
+import 'package:studypals/widgets/profile/profile_panel.dart'; // Profile panel widget
+import 'package:studypals/widgets/profile/profile_settings_panel.dart'; // Profile settings panel widget
 import 'package:studypals/screens/settings_screen.dart'; // Main settings screen
 // Import planner screen
 import 'package:studypals/screens/planner_page.dart';
@@ -699,6 +700,16 @@ class _DashboardHomeState extends State<DashboardHome>
   late AnimationController _notificationPanelController;
   late Animation<double> _notificationPanelAnimation;
 
+  // Profile panel state and animation
+  bool _isProfilePanelOpen = false;
+  late AnimationController _profilePanelController;
+  late Animation<double> _profilePanelAnimation;
+
+  // Profile settings panel state and animation
+  bool _isProfileSettingsPanelOpen = false;
+  late AnimationController _profileSettingsPanelController;
+  late Animation<double> _profileSettingsPanelAnimation;
+
   // Hamburger menu state and animation
   bool _isHamburgerMenuOpen = false;
   late AnimationController _hamburgerMenuController;
@@ -817,6 +828,32 @@ class _DashboardHomeState extends State<DashboardHome>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _notificationPanelController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Initialize profile panel animation controller
+    _profilePanelController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _profilePanelAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _profilePanelController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Initialize profile settings panel animation controller
+    _profileSettingsPanelController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _profileSettingsPanelAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _profileSettingsPanelController,
       curve: Curves.easeInOut,
     ));
 
@@ -972,6 +1009,8 @@ class _DashboardHomeState extends State<DashboardHome>
     _learnIconController.dispose();
     _tasksAnimationController.dispose();
     _notificationPanelController.dispose();
+    _profilePanelController.dispose();
+    _profileSettingsPanelController.dispose();
     _hamburgerMenuController.dispose();
     super.dispose();
   }
@@ -994,21 +1033,21 @@ class _DashboardHomeState extends State<DashboardHome>
         ),
       ),
 
-      // Profile button - navigates to profile settings screen
+      // Profile button - shows profile panel dropdown
       SizedBox(
         width: 48, // Standard IconButton width for consistency
         height: 48, // Standard IconButton height for consistency
         child: Center(
           child: GestureDetector(
-            onTap: () {
-              // Navigate to profile settings screen
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ProfileSettingsScreen(),
-                ),
-              );
-            },
-            child: const ProfileIcon(size: 28),
+            onTap: _toggleProfilePanel,
+            child: (_isProfilePanelOpen || _isProfileSettingsPanelOpen)
+                ? CustomPaint(
+                    size: const Size(28, 28),
+                    painter: NotificationCloseIconPainter(
+                      iconColor: const Color(0xFF6FB8E9),
+                    ),
+                  )
+                : const ProfileIcon(size: 28),
           ),
         ),
       ),
@@ -1026,9 +1065,81 @@ class _DashboardHomeState extends State<DashboardHome>
           _isHamburgerMenuOpen = false;
           _hamburgerMenuController.reverse();
         }
+        // Close profile panel if open
+        if (_isProfilePanelOpen) {
+          _isProfilePanelOpen = false;
+          _profilePanelController.reverse();
+        }
       } else {
         _notificationPanelController.reverse();
       }
+    });
+  }
+
+  /// Toggle profile panel slide animation
+  void _toggleProfilePanel() {
+    setState(() {
+      // If settings panel is open, close it instead
+      if (_isProfileSettingsPanelOpen) {
+        _isProfileSettingsPanelOpen = false;
+        _profileSettingsPanelController.reverse();
+        return;
+      }
+      
+      _isProfilePanelOpen = !_isProfilePanelOpen;
+      if (_isProfilePanelOpen) {
+        _profilePanelController.forward();
+        // Close hamburger menu if open
+        if (_isHamburgerMenuOpen) {
+          _isHamburgerMenuOpen = false;
+          _hamburgerMenuController.reverse();
+        }
+        // Close notification panel if open
+        if (_isNotificationPanelOpen) {
+          _isNotificationPanelOpen = false;
+          _notificationPanelController.reverse();
+        }
+      } else {
+        _profilePanelController.reverse();
+      }
+    });
+  }
+
+  /// Toggle profile settings panel slide animation
+  void _toggleProfileSettingsPanel() {
+    setState(() {
+      _isProfileSettingsPanelOpen = !_isProfileSettingsPanelOpen;
+      if (_isProfileSettingsPanelOpen) {
+        _profileSettingsPanelController.forward();
+        // Close all other panels if open
+        if (_isProfilePanelOpen) {
+          _isProfilePanelOpen = false;
+          _profilePanelController.reverse();
+        }
+        if (_isHamburgerMenuOpen) {
+          _isHamburgerMenuOpen = false;
+          _hamburgerMenuController.reverse();
+        }
+        if (_isNotificationPanelOpen) {
+          _isNotificationPanelOpen = false;
+          _notificationPanelController.reverse();
+        }
+      } else {
+        _profileSettingsPanelController.reverse();
+      }
+    });
+  }
+
+  /// Go back from settings to profile panel
+  void _backToProfileFromSettings() {
+    setState(() {
+      // Close settings panel
+      _isProfileSettingsPanelOpen = false;
+      _profileSettingsPanelController.reverse();
+      
+      // Open profile panel
+      _isProfilePanelOpen = true;
+      _profilePanelController.forward();
     });
   }
 
@@ -1179,6 +1290,10 @@ class _DashboardHomeState extends State<DashboardHome>
             ),
                       // Notification panel overlay within home tab
                       _buildNotificationPanelOverlay(context),
+                      // Profile panel overlay within home tab
+                      _buildProfilePanelOverlay(context),
+                      // Profile settings panel overlay within home tab
+                      _buildProfileSettingsPanelOverlay(context),
                       // Hamburger menu overlay within home tab
                       _buildHamburgerMenuOverlay(context),
                     ],
@@ -1416,6 +1531,144 @@ class _DashboardHomeState extends State<DashboardHome>
                   ),
                   child: NotificationPanel(
                     onClose: _toggleNotificationPanel,
+                    isBottomSheet: false,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Build slide-down profile panel overlay
+  Widget _buildProfilePanelOverlay(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _profilePanelAnimation,
+      builder: (context, child) {
+        // Don't show anything when closed or animation value is 0
+        if (_profilePanelAnimation.value == 0.0) {
+          return const SizedBox.shrink();
+        }
+        
+        // Position the profile panel on the right side under the profile icon
+        final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
+        final statusBarHeight = MediaQuery.of(context).padding.top;
+        final dividerHeight = 3.0;
+        
+        // Position right after the blue divider line within the SafeArea + 43px offset (42 + 1)
+        final topPosition = statusBarHeight + headerHeight + dividerHeight + 43.0;
+        
+        // Calculate height to cover calendar and progress containers
+        final calendarHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar);
+        final progressHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
+        final verticalSpacing = ResponsiveSpacing.getVerticalSpacing(context);
+        final panelHeight = calendarHeight + progressHeight + (verticalSpacing * 3) + 307 - 65; // Extended by 207px total (100 + 40 + 70 - 10 + 5 + 2 = 307)
+        
+        return Positioned(
+          top: topPosition, // Position right after the blue divider
+          left: 0,
+          right: 0,
+          child: ClipRect(
+            child: SizedBox(
+              height: panelHeight * _profilePanelAnimation.value, // Animate height from 0 to full
+              child: Container(
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveSpacing.getHorizontalPadding(context),
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF242628), // Match header color
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  border: Border.all(
+                    color: const Color(0xFF6FB8E9),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  child: ProfilePanel(
+                    onClose: _toggleProfilePanel,
+                    isBottomSheet: false,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProfileSettingsPanelOverlay(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _profileSettingsPanelAnimation,
+      builder: (context, child) {
+        // Don't show anything when closed or animation value is 0
+        if (_profileSettingsPanelAnimation.value == 0.0) {
+          return const SizedBox.shrink();
+        }
+        
+        // Position the settings panel on the right side under the profile icon
+        final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
+        final statusBarHeight = MediaQuery.of(context).padding.top;
+        final dividerHeight = 3.0;
+        
+        // Position right after the blue divider line within the SafeArea + 43px offset (42 + 1)
+        final topPosition = statusBarHeight + headerHeight + dividerHeight + 43.0;
+        
+        // Calculate height to cover calendar and progress containers
+        final calendarHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar);
+        final progressHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
+        final verticalSpacing = ResponsiveSpacing.getVerticalSpacing(context);
+        final panelHeight = calendarHeight + progressHeight + (verticalSpacing * 3) + 307 - 65; // Match profile panel height (207px extension)
+        
+        return Positioned(
+          top: topPosition, // Position right after the blue divider
+          left: 0,
+          right: 0,
+          child: ClipRect(
+            child: SizedBox(
+              height: panelHeight * _profileSettingsPanelAnimation.value, // Animate height from 0 to full
+              child: Container(
+                margin: EdgeInsets.symmetric(
+                  horizontal: ResponsiveSpacing.getHorizontalPadding(context),
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF242628), // Match header color
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  border: Border.all(
+                    color: const Color(0xFF6FB8E9),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(20),
+                  ),
+                  child: ProfileSettingsPanel(
+                    onClose: _toggleProfileSettingsPanel,
+                    onBack: _backToProfileFromSettings,
                     isBottomSheet: false,
                   ),
                 ),
