@@ -137,36 +137,16 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
       builder: (context, provider, child) {
         return RefreshIndicator(
           onRefresh: provider.refreshAllEvents,
-<<<<<<< Updated upstream
-          child: EnhancedCalendarWidget(
-            onDaySelected: (date, events) {
-              // Optional: Navigate to day detail view
-            },
-            onEventTapped: _showEventDetails,
-            enableQuickCreate: true,
-            showFilters: true,
-            showEventList: true,
-=======
           child: SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 80),
             child: EnhancedCalendarWidget(
               onDaySelected: (date, events) {
-                // Navigate to day detail view
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DayItineraryScreen(
-                      selectedDate: date,
-                    ),
-                  ),
-                );
               },
               onEventTapped: _showEventDetails,
               enableQuickCreate: true,
               showFilters: true,
               showEventList: true,
             ),
->>>>>>> Stashed changes
           ),
         );
       },
@@ -183,7 +163,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
         return RefreshIndicator(
           onRefresh: provider.refreshAllEvents,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -278,7 +258,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
         return RefreshIndicator(
           onRefresh: provider.refreshAllEvents,
           child: ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
             itemCount: sortedEvents.length,
             itemBuilder: (context, index) {
               final event = sortedEvents[index];
