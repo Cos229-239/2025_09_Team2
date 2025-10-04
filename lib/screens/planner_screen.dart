@@ -5,6 +5,7 @@ import '../../providers/planner_provider.dart';
 import '../../models/task.dart';
 import '../../widgets/planner/enhanced_calendar_widget.dart';
 import '../../widgets/planner/planner_item_widget.dart';
+import 'day_itinerary_screen.dart';
 
 class PlannerPage extends StatefulWidget {
   const PlannerPage({super.key});
@@ -28,7 +29,18 @@ class _PlannerPageState extends State<PlannerPage> {
           body: Column(
             children: [
               EnhancedCalendarWidget(
-                onDaySelected: (date, events) => provider.setSelectedDay(date),
+                onDaySelected: (date, events) {
+                  provider.setSelectedDay(date);
+                  // Navigate to day detail view
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DayItineraryScreen(
+                        selectedDate: date,
+                      ),
+                    ),
+                  );
+                },
                 showFilters: false,
                 showEventList: false,
               ),

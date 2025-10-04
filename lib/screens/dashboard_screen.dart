@@ -1143,6 +1143,35 @@ class _DashboardHomeState extends State<DashboardHome>
     });
   }
 
+  /// Close all open panels (hamburger menu, notification panel, profile panels)
+  void _closeAllPanels() {
+    setState(() {
+      // Close hamburger menu if open
+      if (_isHamburgerMenuOpen) {
+        _isHamburgerMenuOpen = false;
+        _hamburgerMenuController.reverse();
+      }
+      
+      // Close notification panel if open
+      if (_isNotificationPanelOpen) {
+        _isNotificationPanelOpen = false;
+        _notificationPanelController.reverse();
+      }
+      
+      // Close profile panel if open
+      if (_isProfilePanelOpen) {
+        _isProfilePanelOpen = false;
+        _profilePanelController.reverse();
+      }
+      
+      // Close profile settings panel if open
+      if (_isProfileSettingsPanelOpen) {
+        _isProfileSettingsPanelOpen = false;
+        _profileSettingsPanelController.reverse();
+      }
+    });
+  }
+
   /// Toggle hamburger menu dropdown animation
   void _toggleHamburgerMenu() {
     setState(() {
@@ -1242,6 +1271,7 @@ class _DashboardHomeState extends State<DashboardHome>
                                   context,
                                   label: 'Calendar',
                                   onTap: () {
+                                    _closeAllPanels();
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -1265,6 +1295,7 @@ class _DashboardHomeState extends State<DashboardHome>
                                             const ProgressScreen(),
                                       ),
                                     );
+
                                   },
                                 ),
                               ),
@@ -1374,7 +1405,10 @@ class _DashboardHomeState extends State<DashboardHome>
                       icon: Icons.home,
                       label: 'Home',
                       isSelected: _selectedTabIndex == 0,
-                      onTap: () => _tabController.animateTo(0),
+                      onTap: () {
+                        _closeAllPanels();
+                        _tabController.animateTo(0);
+                      },
                     ),
                     _buildNavButton(
                       context,
@@ -1382,7 +1416,10 @@ class _DashboardHomeState extends State<DashboardHome>
                       icon: Icons.school,
                       label: 'Learn',
                       isSelected: _selectedTabIndex == 1,
-                      onTap: () => _tabController.animateTo(1),
+                      onTap: () {
+                        _closeAllPanels();
+                        _tabController.animateTo(1);
+                      },
                     ),
                     // Empty space for floating AI Tutor button
                     const Expanded(child: SizedBox()),
@@ -1392,7 +1429,10 @@ class _DashboardHomeState extends State<DashboardHome>
                       icon: Icons.people,
                       label: 'Social',
                       isSelected: _selectedTabIndex == 3,
-                      onTap: () => _tabController.animateTo(3),
+                      onTap: () {
+                        _closeAllPanels();
+                        _tabController.animateTo(3);
+                      },
                     ),
                     _buildNavButton(
                       context,
@@ -1400,7 +1440,10 @@ class _DashboardHomeState extends State<DashboardHome>
                       icon: Icons.pets,
                       label: 'Pet',
                       isSelected: _selectedTabIndex == 4,
-                      onTap: () => _tabController.animateTo(4),
+                      onTap: () {
+                        _closeAllPanels();
+                        _tabController.animateTo(4);
+                      },
                     ),
                   ],
                 ),
@@ -1685,8 +1728,8 @@ class _DashboardHomeState extends State<DashboardHome>
     return AnimatedBuilder(
       animation: _hamburgerMenuAnimation,
       builder: (context, child) {
-        // Don't show anything when closed or animation value is 0
-        if (_hamburgerMenuAnimation.value == 0.0) {
+        // Show the menu only when it should be open
+        if (!_isHamburgerMenuOpen) {
           return const SizedBox.shrink();
         }
         
@@ -1701,12 +1744,12 @@ class _DashboardHomeState extends State<DashboardHome>
         
         // Menu takes partial width from the left side
         final screenWidth = MediaQuery.of(context).size.width;
-        final menuWidth = screenWidth * 0.42; // 42% of screen width - wider to fit "Flash Cards"
+        final menuWidth = screenWidth * 0.38; // Reduced from 42% to 38% to prevent overflow
         
-        // Calculate height to fit content (9 menu items)
+        // Calculate height to fit content (11 menu items)
         // Each item: 14px top + 14px bottom padding = 28px per item + ListView padding
         const menuItemHeight = 50.0; // Approximate height per item with padding
-        const numberOfItems = 9;
+        const numberOfItems = 11;
         const listPadding = 24.0; // Top and bottom padding
         final menuHeight = (menuItemHeight * numberOfItems) + listPadding;
         
@@ -1714,29 +1757,32 @@ class _DashboardHomeState extends State<DashboardHome>
           top: topPosition,
           left: 0,
           width: menuWidth * _hamburgerMenuAnimation.value, // Animate width from 0 to full
-          height: menuHeight * _hamburgerMenuAnimation.value, // Also animate height for smoother effect
-          child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(20), // Rounded bottom-right corner
-            ),
-            child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFF242628), // Same as header background
-                border: Border(
-                  right: BorderSide(
-                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    blurRadius: 15,
-                    offset: const Offset(2, 0),
-                  ),
-                ],
+          height: menuHeight, // Keep fixed height to prevent layout issues
+          child: Opacity(
+            opacity: _hamburgerMenuAnimation.value,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                bottomRight: Radius.circular(20), // Rounded bottom-right corner
               ),
-              child: _buildHamburgerMenuContent(context),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF242628), // Same as header background
+                  border: Border(
+                    right: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 15,
+                      offset: const Offset(2, 0),
+                    ),
+                  ],
+                ),
+                child: _buildHamburgerMenuContent(context),
+              ),
             ),
           ),
         );
@@ -1755,11 +1801,41 @@ class _DashboardHomeState extends State<DashboardHome>
         // Menu items
         _buildHamburgerMenuItem(
           context,
+          icon: Icons.calendar_today,
+          title: 'Calendar',
+          color: Colors.blue,
+          onTap: () {
+            _closeAllPanels();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const UnifiedPlannerScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.analytics,
+          title: 'Progress',
+          color: Colors.green,
+          onTap: () {
+            _closeAllPanels();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProgressScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
           icon: Icons.note,
           title: 'Notes',
           color: Colors.amber,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1774,7 +1850,7 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Flash Cards',
           color: Colors.blue,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1789,7 +1865,7 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Badges',
           color: Colors.orange,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1804,7 +1880,7 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Timer',
           color: Colors.red,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Timer feature coming soon!')),
             );
@@ -1816,7 +1892,7 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Shop',
           color: Colors.green,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Shop feature coming soon!')),
             );
@@ -1828,7 +1904,7 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Music',
           color: Colors.purple,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Music feature coming soon!')),
             );
@@ -1840,7 +1916,7 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Feedback',
           color: Colors.teal,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Feedback feature coming soon!')),
             );
@@ -1852,7 +1928,7 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Settings',
           color: Colors.grey,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1867,13 +1943,13 @@ class _DashboardHomeState extends State<DashboardHome>
           title: 'Help',
           color: Colors.blueGrey,
           onTap: () {
-            _toggleHamburgerMenu();
+            _closeAllPanels();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Help feature coming soon!')),
             );
           },
         ),
-      ],
+        ],
       ),
     );
   }
@@ -1889,25 +1965,26 @@ class _DashboardHomeState extends State<DashboardHome>
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), // Reduced horizontal padding
         child: Row(
+          mainAxisSize: MainAxisSize.min, // Use minimum space needed
           children: [
             // Icon on the left
             Icon(
               icon,
               color: color,
-              size: 22,
+              size: 20, // Slightly smaller icon
             ),
-            const SizedBox(width: 16), // Space between icon and text
+            const SizedBox(width: 12), // Reduced space between icon and text
             // Text on the right - wrapped in Expanded to prevent overflow
             Expanded(
               child: Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 15, // Slightly smaller font
                   fontWeight: FontWeight.w400,
                   color: Color(0xFFCCCCCC), // Light gray text like in the image
-                  letterSpacing: 0.3,
+                  letterSpacing: 0.2, // Reduced letter spacing
                 ),
                 overflow: TextOverflow.ellipsis, // Handle overflow gracefully
                 maxLines: 1,
@@ -2404,7 +2481,10 @@ class _DashboardHomeState extends State<DashboardHome>
         return Transform.scale(
           scale: _scaleAnimations[2].value,
           child: GestureDetector(
-            onTap: () => _tabController.animateTo(2),
+            onTap: () {
+              _closeAllPanels();
+              _tabController.animateTo(2);
+            },
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
