@@ -146,23 +146,29 @@ class PetProvider extends ChangeNotifier {
 
   /// Loads pet data from Firestore
   /// Called during app initialization to restore pet state
+  /// If no pet exists, creates a default one automatically
   Future<void> loadPet() async {
     _isLoading = true;
     notifyListeners();
 
     try {
       final pet = await _firestoreService.getUserPet();
-      _currentPet = pet;
-
+      
       if (pet != null) {
+        _currentPet = pet;
         developer.log(
             'Pet loaded successfully: Level ${pet.level}, XP ${pet.xp}',
             name: 'PetProvider');
       } else {
-        developer.log('No pet found for user', name: 'PetProvider');
+        developer.log('No pet found for user, user can create one from UI', 
+            name: 'PetProvider');
+        // Don't auto-create here - let the UI handle it
+        // This gives users the choice of which pet species to start with
+        _currentPet = null;
       }
     } catch (e) {
       developer.log('Error loading pet: $e', name: 'PetProvider');
+      _currentPet = null;
     } finally {
       _isLoading = false;
       notifyListeners();
