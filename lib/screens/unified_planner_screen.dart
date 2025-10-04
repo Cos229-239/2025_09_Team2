@@ -5,6 +5,7 @@ import '../providers/calendar_provider.dart';
 import '../models/calendar_event.dart';
 import '../widgets/planner/enhanced_calendar_widget.dart';
 import '../widgets/planner/calendar_stats_widget.dart';
+import 'day_itinerary_screen.dart';
 
 /// Enhanced planner screen with unified calendar system
 class UnifiedPlannerScreen extends StatefulWidget {
@@ -136,6 +137,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
       builder: (context, provider, child) {
         return RefreshIndicator(
           onRefresh: provider.refreshAllEvents,
+<<<<<<< Updated upstream
           child: EnhancedCalendarWidget(
             onDaySelected: (date, events) {
               // Optional: Navigate to day detail view
@@ -144,6 +146,27 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
             enableQuickCreate: true,
             showFilters: true,
             showEventList: true,
+=======
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: EnhancedCalendarWidget(
+              onDaySelected: (date, events) {
+                // Navigate to day detail view
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DayItineraryScreen(
+                      selectedDate: date,
+                    ),
+                  ),
+                );
+              },
+              onEventTapped: _showEventDetails,
+              enableQuickCreate: true,
+              showFilters: true,
+              showEventList: true,
+            ),
+>>>>>>> Stashed changes
           ),
         );
       },
