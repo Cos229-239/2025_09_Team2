@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/social_learning_service.dart' as service;
 import '../services/activity_service.dart';
+import '../services/competitive_learning_service.dart';
+import '../services/analytics_service.dart';
 import '../models/activity.dart';
 import '../widgets/social/social_widgets.dart';
 import '../widgets/sessions_tab.dart';
+import '../widgets/competitive/competitive_widgets.dart';
 import '../providers/social_session_provider.dart';
 import 'profile_settings_screen.dart';
 import 'user_profile_screen.dart';
 import 'chat_screen.dart';
 import 'group_details_screen.dart';
+import 'competitive_screen.dart';
 import '../widgets/common/themed_background_wrapper.dart';
 
 // TODO: Social Screen - Major Social Feature Implementation Gaps
@@ -38,8 +43,13 @@ class _SocialScreenState extends State<SocialScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   service.SocialLearningService? _socialService;
+  CompetitiveLearningService? _competitiveService;
   final ActivityService _activityService = ActivityService();
+  final AnalyticsService _analyticsService = AnalyticsService();
   bool _isLoading = true;
+  String _currentUserId = '';
+  String _currentUsername = 'User';
+  String _currentDisplayName = 'User';
 
   @override
   void initState() {
@@ -64,14 +74,95 @@ class _SocialScreenState extends State<SocialScreen>
       await _showProfileSetup();
     }
 
+    // Initialize competitive service
+    await _initializeCompetitiveService();
+
     setState(() {
       _isLoading = false;
     });
   }
 
+  Future<void> _initializeCompetitiveService() async {
+    try {
+      // Get current user from Firebase Auth
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        _currentUserId = user.uid;
+        _currentUsername = user.email?.split('@').first ?? 'user';
+        _currentDisplayName = user.displayName ?? 'User';
+
+        // Initialize competitive service
+        _competitiveService = CompetitiveLearningService();
+        await _competitiveService!.initialize(_currentUserId);
+
+        // Load and update user performance from analytics
+        await _updateUserPerformanceFromAnalytics();
+
+        // Load friend comparisons
+        await _loadFriendComparisons();
+      }
+    } catch (e) {
+      debugPrint('Error initializing competitive service: $e');
+    }
+  }
+
+  Future<void> _updateUserPerformanceFromAnalytics() async {
+    try {
+      // Get user analytics from Firebase
+      final analytics = await _analyticsService.getUserAnalytics(_currentUserId);
+      
+      if (analytics != null && _competitiveService != null) {
+        // Convert analytics data to competitive scores
+        final analyticsData = {
+          'totalStudyTimeMinutes': analytics.totalStudyTime.toDouble(),
+          'averageAccuracy': analytics.overallAccuracy,
+          'currentStreak': analytics.currentStreak.toDouble(),
+          'totalXp': (analytics.totalCardsStudied * 10).toDouble(), // Estimate XP
+          'sessionsCompleted': analytics.totalQuizzesTaken.toDouble(),
+          'questionsAnswered': analytics.totalCardsStudied.toDouble(),
+          'subjectsMastered': analytics.subjectPerformance.length.toDouble(),
+          'overallProgress': (analytics.overallAccuracy * 100),
+        };
+
+        await _competitiveService!.updateScoresFromAnalytics(
+          userId: _currentUserId,
+          username: _currentUsername,
+          displayName: _currentDisplayName,
+          analyticsData: analyticsData,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error updating user performance: $e');
+    }
+  }
+
+  Future<void> _loadFriendComparisons() async {
+    try {
+      if (_competitiveService == null) return;
+      
+      // Get friend IDs from Firebase
+      final friendIds = await _competitiveService!.getFriendIds(_currentUserId);
+
+      if (friendIds.isNotEmpty) {
+        // Get current user stats
+        final userStats = _competitiveService!.userCompetitiveStats;
+        if (userStats != null) {
+          await _competitiveService!.generatePeerComparisons(
+            userId: _currentUserId,
+            friendIds: friendIds,
+            userScores: userStats.categoryScores,
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading friend comparisons: $e');
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
+    _competitiveService?.dispose();
     super.dispose();
   }
 
@@ -105,11 +196,12 @@ class _SocialScreenState extends State<SocialScreen>
           bottom: TabBar(
             controller: _tabController,
             tabs: [
+              const Tab(icon: Icon(Icons.emoji_events), text: 'compete'),
               Tab(
                 icon: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    const Icon(Icons.dashboard),
+                    const Icon(Icons.people),
                     if (_socialService!.pendingFriendRequests.isNotEmpty)
                       Positioned(
                         right: -6,
@@ -137,9 +229,8 @@ class _SocialScreenState extends State<SocialScreen>
                       ),
                   ],
                 ),
-                text: 'Overview',
+                text: 'Friends',
               ),
-              const Tab(icon: Icon(Icons.people), text: 'Friends'),
               const Tab(icon: Icon(Icons.groups), text: 'Groups'),
               const Tab(icon: Icon(Icons.video_call), text: 'Sessions'),
             ],
@@ -148,7 +239,7 @@ class _SocialScreenState extends State<SocialScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildOverviewTab(),
+            _buildCompeteTab(),
             _buildFriendsTab(),
             _buildGroupsTab(),
             _buildSessionsTab(),
@@ -159,109 +250,227 @@ class _SocialScreenState extends State<SocialScreen>
     );
   }
 
-  Widget _buildOverviewTab() {
-    final profile = _socialService!.currentUserProfile!;
-    final stats = _socialService!.getSocialStats();
+  Widget _buildCompeteTab() {
+    // Show loading or error state if competitive service is not ready
+    if (_competitiveService == null) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading competitive features...'),
+          ],
+        ),
+      );
+    }
+
+    final stats = _competitiveService!.getCompetitiveOverview(_currentUserId);
+    final leaderboardSummary =
+        _competitiveService!.getLeaderboardSummary(_currentUserId);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // User Profile Card
-          UserProfileCard(
-            profile: profile,
-            isCurrentUser: true,
-            onTap: _showProfileSettings,
-          ),
+          // Competitive Stats
+          CompetitiveStatsWidget(stats: stats),
           const SizedBox(height: 16),
 
-          // Social Stats
-          SocialStatsWidget(stats: stats),
-          const SizedBox(height: 16),
-
-          // Friend Requests Section
-          if (_socialService!.pendingFriendRequests.isNotEmpty) ...[
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Friend Requests',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const Spacer(),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${_socialService!.pendingFriendRequests.length}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    ...(_socialService!.pendingFriendRequests.take(3).map(
-                          (request) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: FriendRequestCard(
-                              friendship: request,
-                              onAccept: () => _acceptFriendRequest(request.id),
-                              onDecline: () =>
-                                  _declineFriendRequest(request.id),
-                            ),
-                          ),
-                        )),
-                    if (_socialService!.pendingFriendRequests.length > 3)
-                      TextButton(
-                        onPressed: () => _tabController.animateTo(1),
-                        child: Text(
-                            'View all ${_socialService!.pendingFriendRequests.length} requests'),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Recent Activity
+          // Quick Rankings
           Card(
+            color: const Color(0xFF21262D),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Recent Activity',
+                    'Your Rankings',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildRecentActivity(),
+                  _buildQuickRankings(leaderboardSummary),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Active Competitions
+          Card(
+            color: const Color(0xFF21262D),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Active Competitions',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          // Navigate to full competitive screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CompetitiveScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'View All',
+                          style: TextStyle(color: Color(0xFF58A6FF)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActiveCompetitionsPreview(),
                 ],
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuickRankings(Map<String, dynamic> leaderboardSummary) {
+    final weeklyRankings =
+        leaderboardSummary['weekly'] as Map<String, dynamic>? ?? {};
+
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 2.5,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
+      children: [
+        _buildRankCard('XP Gained', weeklyRankings['xpGained'] ?? 'N/A',
+            Icons.star, Colors.amber),
+        _buildRankCard('Study Time', weeklyRankings['studyTime'] ?? 'N/A',
+            Icons.access_time, Colors.blue),
+        _buildRankCard('Accuracy', weeklyRankings['accuracy'] ?? 'N/A',
+            Icons.gps_fixed, Colors.green),
+        _buildRankCard('Streaks', weeklyRankings['streaks'] ?? 'N/A',
+            Icons.local_fire_department, Colors.red),
+      ],
+    );
+  }
+
+  Widget _buildRankCard(
+      String title, dynamic rank, IconData icon, Color color) {
+    final rankText = rank is int ? '#$rank' : rank.toString();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  rankText,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white70,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveCompetitionsPreview() {
+    if (_competitiveService == null) {
+      return const Center(child: Text('Loading competitions...'));
+    }
+
+    final competitions = _competitiveService!.getActiveCompetitions();
+
+    if (competitions.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              Icon(Icons.emoji_events, size: 48, color: Colors.grey[600]),
+              const SizedBox(height: 12),
+              Text(
+                'No active competitions',
+                style: TextStyle(color: Colors.grey[400]),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Check back later for new challenges!',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: competitions.take(3).map((competition) {
+        return CompetitionCard(
+          competition: competition,
+          isParticipating: competition.participants.contains(_currentUserId),
+          onViewDetails: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CompetitiveScreen(),
+              ),
+            );
+          },
+        );
+      }).toList(),
     );
   }
 
