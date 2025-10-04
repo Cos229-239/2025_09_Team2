@@ -60,11 +60,6 @@ class _ProfilePanelState extends State<ProfilePanel> {
   // Settings view state
   bool _isShowingSettings = false;
   
-  // Privacy settings state (for settings view)
-  PrivacyLevel _profilePrivacy = PrivacyLevel.public;
-  PrivacyLevel _progressPrivacy = PrivacyLevel.friends;
-  PrivacyLevel _friendsPrivacy = PrivacyLevel.friends;
-  
   // Additional privacy settings for settings view
   bool _profileVisibility = true;
   bool _onlineStatus = true;
