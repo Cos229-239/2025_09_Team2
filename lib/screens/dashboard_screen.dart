@@ -42,6 +42,7 @@ import 'package:studypals/widgets/icons/profile_icon.dart'; // Custom profile ic
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
 import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
 import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
+import 'package:studypals/screens/progress_screen.dart'; // Progress screen
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/task_provider.dart'; // Task management state
 import 'package:studypals/providers/note_provider.dart'; // Notes management state
@@ -1146,8 +1147,13 @@ class _DashboardHomeState extends State<DashboardHome>
                                   context,
                                   label: 'Progress',
                                   onTap: () {
-                                    _tabController.animateTo(
-                                        2); // Navigate to AI Tutor tab
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ProgressScreen(),
+                                      ),
+                                    );
                                   },
                                 ),
                               ),
@@ -1672,11 +1678,17 @@ class _DashboardHomeState extends State<DashboardHome>
           child: Center(
             child: GestureDetector(
               onTap: _toggleHamburgerMenu,
-              child: AnimatedRotation(
-                turns: _isHamburgerMenuOpen ? 0.125 : 0.0, // Rotate 45 degrees when open
+              child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: child,
+                  );
+                },
                 child: Icon(
                   _isHamburgerMenuOpen ? Icons.close : Icons.menu,
+                  key: ValueKey<bool>(_isHamburgerMenuOpen),
                   color: _isHamburgerMenuOpen 
                     ? const Color(0xFF6FB8E9)
                     : Theme.of(context).colorScheme.primary,
