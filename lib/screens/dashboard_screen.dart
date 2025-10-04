@@ -32,6 +32,8 @@ import 'package:studypals/screens/create_note_screen.dart'; // Note creation scr
 import 'package:studypals/screens/create_task_screen.dart'; // Task creation screen
 // Import learning screen
 import 'package:studypals/screens/learning_screen.dart'; // Learning hub screen
+// Import pet system screen
+import 'package:studypals/screens/pet_system_screen.dart'; // Complete pet interaction system
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
 import 'package:studypals/widgets/dashboard/progress_graph_widget.dart'; // Progress graph widget
@@ -2291,85 +2293,9 @@ class _DashboardHomeState extends State<DashboardHome>
     return const SocialScreen();
   }
 
-  /// Build Pet tab content
+  /// Build Pet tab content - Navigate to PetSystemScreen
   Widget _buildPetTab() {
-    return SafeArea(
-      child: Consumer<PetProvider>(
-        builder: (context, petProvider, child) {
-          final pet = petProvider.currentPet;
-
-          if (pet == null) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Loading your Study Pal...'),
-                ],
-              ),
-            );
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Your Study Pal',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 20),
-                // Pet avatar
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(60),
-                  ),
-                  child: const Icon(
-                    Icons.pets,
-                    size: 60,
-                    color: Colors.orange,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Level ${pet.level}',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${pet.xp}/${pet.xpForNextLevel} XP',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 16),
-                // XP Progress bar
-                LinearProgressIndicator(
-                  value: pet.xp / pet.xpForNextLevel,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Keep studying to level up your pet!',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+    return const PetSystemScreen();
   }
 
   /// Build individual navigation button matching the image layout with animations
