@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 import 'package:studypals/utils/responsive_spacing.dart';
+import 'package:studypals/screens/day_itinerary_screen.dart';
+import 'package:studypals/providers/calendar_provider.dart';
 
 /// Widget that displays a compact calendar view with current date highlighted
 /// Shows scrollable weeks with the current date highlighted in blue
@@ -147,25 +150,59 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: weekDays
             .map((date) => Expanded(
-                  child: Container(
-                    height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.8,
-                    decoration: BoxDecoration(
-                      color: _isToday(date)
-                          ? const Color(0xFF6FB8E9)
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${date.day}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: _getDayTextColor(date, displayMonth),
-                              fontWeight: _isToday(date)
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                      ),
-                    ),
+                  child: Consumer<CalendarProvider>(
+                    builder: (context, provider, child) {
+                      final events = provider.getEventsForDay(date);
+                      return GestureDetector(
+                        onTap: () => _onDayTapped(context, date),
+                        child: Container(
+                          height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.8,
+                          decoration: BoxDecoration(
+                            color: _isToday(date)
+                                ? const Color(0xFF6FB8E9)
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Text(
+                                  '${date.day}',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: _getDayTextColor(date, displayMonth),
+                                        fontWeight: _isToday(date)
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                      ),
+                                ),
+                              ),
+                              // Event indicator dots
+                              if (events.isNotEmpty)
+                                Positioned(
+                                  bottom: 4,
+                                  left: 0,
+                                  right: 0,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: BoxDecoration(
+                                          color: _isToday(date) 
+                                              ? Colors.white 
+                                              : const Color(0xFF6FB8E9),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ))
             .toList(),
@@ -417,5 +454,17 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
     
     // Days from current month get default text color
     return const Color(0xFFFFFFFF); // White for dark theme
+  }
+
+  /// Handle day tap to navigate to day itinerary
+  void _onDayTapped(BuildContext context, DateTime date) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DayItineraryScreen(
+          selectedDate: date,
+        ),
+      ),
+    );
   }
 }
