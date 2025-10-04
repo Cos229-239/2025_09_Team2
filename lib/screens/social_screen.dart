@@ -59,27 +59,36 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Future<void> _initializeSocialService() async {
-    _socialService = service.SocialLearningService();
-    await _socialService!.initialize();
+    try {
+      _socialService = service.SocialLearningService();
+      await _socialService!.initialize();
 
-    // Initialize social session provider if available
-    if (mounted) {
-      final socialSessionProvider =
-          Provider.of<SocialSessionProvider>(context, listen: false);
-      await socialSessionProvider.initialize();
+      // Initialize social session provider if available
+      if (mounted) {
+        final socialSessionProvider =
+            Provider.of<SocialSessionProvider>(context, listen: false);
+        await socialSessionProvider.initialize();
+      }
+
+      // Create default profile if none exists AND user is authenticated
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && _socialService!.currentUserProfile == null) {
+        await _showProfileSetup();
+      }
+
+      // Initialize competitive service only if user is authenticated
+      if (user != null) {
+        await _initializeCompetitiveService();
+      }
+    } catch (e) {
+      debugPrint('Error initializing social service: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-    // Create default profile if none exists
-    if (_socialService!.currentUserProfile == null) {
-      await _showProfileSetup();
-    }
-
-    // Initialize competitive service
-    await _initializeCompetitiveService();
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Future<void> _initializeCompetitiveService() async {
@@ -172,6 +181,49 @@ class _SocialScreenState extends State<SocialScreen>
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Check if user is authenticated
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Social Learning'),
+          elevation: 0,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.people_outline,
+                  size: 100,
+                  color: Color(0xFF6FB8E9),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Login Required',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Please log in to access social learning features and connect with other students.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
         ),
       );
     }
