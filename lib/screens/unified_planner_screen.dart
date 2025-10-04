@@ -5,7 +5,6 @@ import '../providers/calendar_provider.dart';
 import '../models/calendar_event.dart';
 import '../widgets/planner/enhanced_calendar_widget.dart';
 import '../widgets/planner/calendar_stats_widget.dart';
-import 'day_itinerary_screen.dart';
 
 /// Enhanced planner screen with unified calendar system
 class UnifiedPlannerScreen extends StatefulWidget {

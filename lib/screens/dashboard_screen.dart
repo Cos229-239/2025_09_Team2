@@ -45,7 +45,7 @@ import 'package:studypals/widgets/icons/profile_icon.dart'; // Custom profile ic
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
 import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
 import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
-import 'package:studypals/screens/progress_screen.dart'; // Progress screen
+
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/task_provider.dart'; // Task management state
 import 'package:studypals/providers/note_provider.dart'; // Notes management state
@@ -720,7 +720,11 @@ class _DashboardHomeState extends State<DashboardHome>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(
+      length: 5, 
+      vsync: this,
+      animationDuration: const Duration(milliseconds: 400), // Faster animation for bottom-up slide
+    );
     _tabController.addListener(() {
       // Animate icons when tab changes
       _animateTabChange(_selectedTabIndex, _tabController.index);
@@ -956,29 +960,41 @@ class _DashboardHomeState extends State<DashboardHome>
   /// Build expand-from-bottom transition animation for tabs
   /// Creates an effect where pages appear to expand from the toolbar button
   Widget _buildExpandTransition(int tabIndex, Widget child) {
-    // Calculate animation progress for this specific tab
-    final animation = _tabController.animation!;
-    final value = (animation.value - tabIndex).abs();
-    
-    // Only animate when transitioning to/from this tab
-    if (value > 1.0) {
-      return const SizedBox.shrink(); // Hide completely when far from active
+    // Check if this is the currently selected tab
+    if (tabIndex != _selectedTabIndex) {
+      return const SizedBox.shrink(); // Hide non-selected tabs
     }
     
-    // Calculate progress (1.0 when fully visible, 0.0 when hidden)
-    final progress = (1.0 - value).clamp(0.0, 1.0);
+    // Get animation progress from TabController
+    final animation = _tabController.animation!;
+    final animationValue = animation.value;
     
-    // Scale animation: starts small (from button) and grows to full screen
-    final scale = 0.2 + (progress * 0.8); // Start at 20% scale
+    // Calculate progress for transition animation
+    // When animating TO this tab: progress goes from 0.0 to 1.0
+    // When this tab is fully active: progress stays at 1.0
+    double progress = 1.0;
     
-    // Vertical translation: starts from bottom toolbar position
+    // Check if we're currently animating
+    if (animation.isAnimating) {
+      // Calculate how close the animation is to our tab index
+      final distance = (animationValue - tabIndex).abs();
+      progress = (1.0 - distance).clamp(0.0, 1.0);
+    }
+    
+    // Enhanced bottom-up slide animation
     final screenHeight = MediaQuery.of(context).size.height;
-    final verticalOffset = (screenHeight * 0.4) * (1.0 - progress); // Start from 40% down
     
-    // Opacity for smooth fade-in effect
-    final opacity = Curves.easeIn.transform(progress);
+    // Vertical translation: slides from bottom toolbar to full screen
+    // Start from the bottom (beyond screen) and slide up
+    final verticalOffset = screenHeight * (1.0 - Curves.easeOutCubic.transform(progress));
     
-    // Apply transforms: translate, scale, and fade
+    // Opacity with faster fade-in for smoother appearance
+    final opacity = Curves.easeOutQuart.transform(progress);
+    
+    // Optional: Slight scale effect for depth (less dramatic than before)
+    final scale = 0.95 + (progress * 0.05); // Subtle scale from 95% to 100%
+    
+    // Apply transforms: translate from bottom up with smooth curves
     return Transform.translate(
       offset: Offset(0, verticalOffset),
       child: Transform.scale(
@@ -988,7 +1004,7 @@ class _DashboardHomeState extends State<DashboardHome>
           opacity: opacity,
           child: ClipRRect(
             borderRadius: BorderRadius.vertical(
-              top: Radius.circular(30 * (1.0 - progress)), // Round corners during transition
+              top: Radius.circular(20 * (1.0 - progress)), // Subtle corner rounding during transition
             ),
             child: child,
           ),
@@ -1178,6 +1194,12 @@ class _DashboardHomeState extends State<DashboardHome>
   void _toggleHamburgerMenu() {
     setState(() {
       _isHamburgerMenuOpen = !_isHamburgerMenuOpen;
+      
+      // Stop any ongoing animation to prevent conflicts during rapid toggling
+      if (_hamburgerMenuController.isAnimating) {
+        _hamburgerMenuController.stop();
+      }
+      
       if (_isHamburgerMenuOpen) {
         _hamburgerMenuController.forward();
         // Close notification panel if open
@@ -1202,15 +1224,15 @@ class _DashboardHomeState extends State<DashboardHome>
           // Main dashboard content
           Container(
             color: const Color(0xFF16181A), // Solid background color from Figma
-            child: TabBarView(
-              controller: _tabController,
-              physics: const NeverScrollableScrollPhysics(), // Disable swipe to control animation
+            child: IndexedStack(
+              index: _selectedTabIndex,
               children: [
                 // Tab 0: Home tab - responsive dashboard content - Wrapped with animation
                 AnimatedBuilder(
                   animation: _tabController.animation!,
                   builder: (context, child) => _buildExpandTransition(0, child!),
                   child: Stack(
+                    clipBehavior: Clip.hardEdge, // Prevent overflow from Stack children
                     children: [
                       // Main home tab content
                       SafeArea(
@@ -1357,8 +1379,8 @@ class _DashboardHomeState extends State<DashboardHome>
               child: _buildPetTab(),
             ),
           ],
-        ),
-      ),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: Container(
@@ -1730,8 +1752,8 @@ class _DashboardHomeState extends State<DashboardHome>
     return AnimatedBuilder(
       animation: _hamburgerMenuAnimation,
       builder: (context, child) {
-        // Show the menu only when it should be open
-        if (!_isHamburgerMenuOpen) {
+        // Hide menu completely when not open OR when animation value is too small
+        if (!_isHamburgerMenuOpen || _hamburgerMenuAnimation.value < 0.01) {
           return const SizedBox.shrink();
         }
         
@@ -1746,44 +1768,48 @@ class _DashboardHomeState extends State<DashboardHome>
         
         // Menu takes partial width from the left side
         final screenWidth = MediaQuery.of(context).size.width;
-        final menuWidth = screenWidth * 0.38; // Reduced from 42% to 38% to prevent overflow
+        final baseMenuWidth = screenWidth * 0.45; // Increased to 45% to accommodate menu item content
+        final animatedWidth = baseMenuWidth * _hamburgerMenuAnimation.value;
         
-        // Calculate height to fit content (11 menu items)
-        // Each item: 14px top + 14px bottom padding = 28px per item + ListView padding
-        const menuItemHeight = 50.0; // Approximate height per item with padding
-        const numberOfItems = 11;
-        const listPadding = 24.0; // Top and bottom padding
-        final menuHeight = (menuItemHeight * numberOfItems) + listPadding;
+        // Ensure minimum width to prevent overflow issues during animation
+        final menuWidth = animatedWidth.clamp(0.0, baseMenuWidth.clamp(0.0, screenWidth * 0.45));
+        
+        // Calculate height to extend all the way to the bottom of the screen
+        final screenHeight = MediaQuery.of(context).size.height;
+        final menuHeight = screenHeight - topPosition; // Extend from topPosition to bottom of screen
         
         return Positioned(
           top: topPosition,
           left: 0,
-          width: menuWidth * _hamburgerMenuAnimation.value, // Animate width from 0 to full
-          height: menuHeight, // Keep fixed height to prevent layout issues
-          child: Opacity(
-            opacity: _hamburgerMenuAnimation.value,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomRight: Radius.circular(20), // Rounded bottom-right corner
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF242628), // Same as header background
-                  border: Border(
-                    right: BorderSide(
-                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 15,
-                      offset: const Offset(2, 0),
-                    ),
-                  ],
+          child: SizedBox(
+            width: menuWidth, // Constrain width to prevent overflow
+            height: menuHeight, // Extend to bottom of screen
+            child: Opacity(
+              opacity: _hamburgerMenuAnimation.value * 0.95, // 95% opacity when fully visible
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomRight: Radius.circular(20), // Rounded bottom-right corner
                 ),
-                child: _buildHamburgerMenuContent(context),
+                clipBehavior: Clip.hardEdge, // Ensure proper clipping to prevent overflow
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF242628), // Same as header background
+                    border: Border(
+                      right: BorderSide(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 15,
+                        offset: const Offset(2, 0),
+                      ),
+                    ],
+                  ),
+                  child: _buildHamburgerMenuContent(context),
+                ),
               ),
             ),
           ),
@@ -1796,8 +1822,8 @@ class _DashboardHomeState extends State<DashboardHome>
   Widget _buildHamburgerMenuContent(BuildContext context) {
     return Container(
       color: const Color(0xFF242628), // Same as header background
-      child: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribute items evenly across full height
         children: [
 
         // Menu items
@@ -1967,7 +1993,7 @@ class _DashboardHomeState extends State<DashboardHome>
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16), // Reduced horizontal padding
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Reduced vertical padding for even spacing
         child: Row(
           mainAxisSize: MainAxisSize.min, // Use minimum space needed
           children: [

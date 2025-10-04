@@ -28,9 +28,8 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   @override
   void initState() {
     super.initState();
-    // Calculate the start of the current week
-    // Set to October 2, 2025 as specified
-    final now = DateTime(2025, 10, 2);
+    // Calculate the start of the current week using device's current date
+    final now = DateTime.now();
     _currentWeekStart = now.subtract(Duration(days: now.weekday % 7));
     _currentPageIndex = _centerPage;
     
@@ -367,8 +366,8 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   }
 
   bool _isToday(DateTime date) {
-    // Use the same fixed date as in initState - October 2, 2025
-    final now = DateTime(2025, 10, 2);
+    // Use device's current date
+    final now = DateTime.now();
     return date.year == now.year &&
         date.month == now.month &&
         date.day == now.day;
@@ -395,7 +394,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   /// Smart month detection for weeks spanning multiple months
   /// Priority: 1) Month containing today, 2) Month with most days, 3) Later month
   int _getDisplayMonth(List<DateTime> weekDays) {
-    final today = DateTime(2025, 10, 2); // Use same fixed date as _isToday
+    final today = DateTime.now(); // Use device's current date
     
     // Count days per month in this week
     final monthCounts = <int, int>{};
