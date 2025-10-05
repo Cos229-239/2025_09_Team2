@@ -37,6 +37,9 @@ dependencies:
   # Image and file handling
   image_picker: ^1.0.7
   image: ^4.0.17
+  file_picker: ^8.1.6
+  # UI components
+  emoji_picker_flutter: ^3.1.0
   # Animation dependencies
   lottie: ^3.1.2
   # AI and Web Search

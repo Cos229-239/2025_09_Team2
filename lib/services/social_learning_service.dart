@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'firestore_service.dart';
 
 /// TODO: CRITICAL SOCIAL LEARNING SERVICE IMPLEMENTATION GAPS
@@ -423,6 +425,9 @@ class SocialLearningService {
   
   // Cache for user profiles to avoid redundant Firestore calls
   final Map<String, UserProfile> _profileCache = {};
+  
+  /// Get current Firebase user ID
+  String? get currentUserId => _auth.currentUser?.uid;
 
   /// Initialize the service
   Future<void> initialize() async {
@@ -1649,6 +1654,12 @@ class SocialLearningService {
           'timestamp': (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
           'isRead': data['isRead'] ?? false,
           'isMe': data['senderId'] == currentUser.uid,
+          // Discord features: reactions and attachments
+          'reactions': data['reactions'] ?? {},
+          'attachmentUrl': data['attachmentUrl'],
+          'attachmentType': data['attachmentType'],
+          'attachmentName': data['attachmentName'],
+          'attachmentSize': data['attachmentSize'],
         };
       }).toList();
     });
@@ -1743,6 +1754,249 @@ class SocialLearningService {
       debugPrint('✅ Marked ${unreadMessages.docs.length} messages as read');
     } catch (e) {
       debugPrint('❌ Error marking messages as read: $e');
+    }
+  }
+
+  // ==================== ENHANCED MESSAGING (Discord Features) ====================
+  
+  /// Send message with optional attachment, GIF, or sticker
+  Future<void> sendEnhancedMessage({
+    required String recipientId,
+    String? messageText,
+    String? attachmentUrl,
+    String? attachmentType, // 'image', 'file', 'gif', 'sticker'
+    String? attachmentName,
+    int? attachmentSize,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot send message: Not authenticated');
+        return;
+      }
+      
+      // Must have either text or attachment
+      if ((messageText == null || messageText.trim().isEmpty) && 
+          attachmentUrl == null) {
+        debugPrint('❌ Cannot send empty message');
+        return;
+      }
+      
+      final chatId = getChatId(currentUser.uid, recipientId);
+      final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      debugPrint('💬 Sending enhanced message to chat: $chatId');
+      
+      // Create message data
+      final messageData = {
+        'id': messageId,
+        'chatId': chatId,
+        'senderId': currentUser.uid,
+        'recipientId': recipientId,
+        'message': messageText?.trim() ?? '',
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'reactions': {}, // Map of emoji -> List of user IDs
+        if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
+        if (attachmentType != null) 'attachmentType': attachmentType,
+        if (attachmentName != null) 'attachmentName': attachmentName,
+        if (attachmentSize != null) 'attachmentSize': attachmentSize,
+      };
+      
+      // Save message to Firestore
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(messageId)
+          .set(messageData);
+      
+      // Update chat metadata
+      final lastMessagePreview = attachmentType != null
+          ? _getAttachmentPreview(attachmentType)
+          : (messageText?.trim() ?? '');
+          
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .set({
+        'participants': [currentUser.uid, recipientId],
+        'lastMessage': lastMessagePreview,
+        'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastMessageSenderId': currentUser.uid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      // Clear typing indicator
+      await updateTypingStatus(recipientId: recipientId, isTyping: false);
+      
+      debugPrint('✅ Enhanced message sent successfully');
+    } catch (e) {
+      debugPrint('❌ Error sending enhanced message: $e');
+      rethrow;
+    }
+  }
+  
+  String _getAttachmentPreview(String type) {
+    switch (type) {
+      case 'image':
+        return '📷 Photo';
+      case 'gif':
+        return '🎬 GIF';
+      case 'sticker':
+        return '🎨 Sticker';
+      case 'file':
+        return '📎 File';
+      default:
+        return '📎 Attachment';
+    }
+  }
+  
+  /// Upload file/image to Firebase Storage
+  Future<Map<String, dynamic>> uploadAttachment({
+    required String filePath,
+    required String fileName,
+    required String fileType, // 'image', 'file'
+    required String recipientId,
+    Function(double)? onProgress,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('Not authenticated');
+      }
+      
+      debugPrint('📤 Uploading $fileType: $fileName');
+      
+      final chatId = getChatId(currentUser.uid, recipientId);
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('chats')
+          .child(chatId)
+          .child('$timestamp\_$fileName');
+      
+      // Read file
+      final file = File(filePath);
+      final fileSize = await file.length();
+      
+      // Upload with progress tracking
+      final uploadTask = storageRef.putFile(file);
+      
+      uploadTask.snapshotEvents.listen((snapshot) {
+        final progress = snapshot.bytesTransferred / snapshot.totalBytes;
+        onProgress?.call(progress);
+        debugPrint('Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
+      });
+      
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      
+      debugPrint('✅ Upload complete: $downloadUrl');
+      
+      return {
+        'url': downloadUrl,
+        'name': fileName,
+        'size': fileSize,
+        'type': fileType,
+      };
+    } catch (e) {
+      debugPrint('❌ Error uploading attachment: $e');
+      rethrow;
+    }
+  }
+  
+  /// Add reaction to a message
+  Future<void> addReaction({
+    required String otherUserId,
+    required String messageId,
+    required String emoji,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+      
+      final chatId = getChatId(currentUser.uid, otherUserId);
+      final messageRef = FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(messageId);
+      
+      debugPrint('👍 Adding reaction $emoji to message $messageId');
+      
+      // Use transaction to safely update reactions
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final messageDoc = await transaction.get(messageRef);
+        
+        if (!messageDoc.exists) {
+          throw Exception('Message not found');
+        }
+        
+        final data = messageDoc.data()!;
+        final reactions = Map<String, dynamic>.from(data['reactions'] ?? {});
+        
+        // Get existing users who reacted with this emoji
+        final List<String> users = List<String>.from(reactions[emoji] ?? []);
+        
+        if (!users.contains(currentUser.uid)) {
+          users.add(currentUser.uid);
+          reactions[emoji] = users;
+          
+          transaction.update(messageRef, {'reactions': reactions});
+          debugPrint('✅ Reaction added successfully');
+        } else {
+          debugPrint('⚠️ User already reacted with this emoji');
+        }
+      });
+    } catch (e) {
+      debugPrint('❌ Error adding reaction: $e');
+    }
+  }
+  
+  /// Remove reaction from a message
+  Future<void> removeReaction({
+    required String otherUserId,
+    required String messageId,
+    required String emoji,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+      
+      final chatId = getChatId(currentUser.uid, otherUserId);
+      final messageRef = FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(messageId);
+      
+      debugPrint('👎 Removing reaction $emoji from message $messageId');
+      
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final messageDoc = await transaction.get(messageRef);
+        
+        if (!messageDoc.exists) return;
+        
+        final data = messageDoc.data()!;
+        final reactions = Map<String, dynamic>.from(data['reactions'] ?? {});
+        
+        if (reactions.containsKey(emoji)) {
+          final List<String> users = List<String>.from(reactions[emoji] ?? []);
+          users.remove(currentUser.uid);
+          
+          if (users.isEmpty) {
+            reactions.remove(emoji);
+          } else {
+            reactions[emoji] = users;
+          }
+          
+          transaction.update(messageRef, {'reactions': reactions});
+          debugPrint('✅ Reaction removed successfully');
+        }
+      });
+    } catch (e) {
+      debugPrint('❌ Error removing reaction: $e');
     }
   }
 
