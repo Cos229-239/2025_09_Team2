@@ -425,6 +425,8 @@ class SocialLearningService {
   
   // Cache for user profiles to avoid redundant Firestore calls
   final Map<String, UserProfile> _profileCache = {};
+  final Map<String, DateTime> _profileCacheTimestamps = {};
+  static const Duration _cacheExpiration = Duration(minutes: 5);
   
   /// Get current Firebase user ID
   String? get currentUserId => _auth.currentUser?.uid;
@@ -843,18 +845,21 @@ class SocialLearningService {
     // Clear cache so friends see updated profile
     final userId = _currentUserProfile!.id;
     _profileCache.remove(userId);
+    _profileCacheTimestamps.remove(userId);
     debugPrint('🔄 Cleared profile cache for user: $userId');
   }
   
   /// Clear cached profile for a specific user (useful when profile is updated)
   void clearProfileCache(String userId) {
     _profileCache.remove(userId);
+    _profileCacheTimestamps.remove(userId);
     debugPrint('🔄 Cleared profile cache for user: $userId');
   }
   
   /// Clear all cached profiles
   void clearAllProfileCaches() {
     _profileCache.clear();
+    _profileCacheTimestamps.clear();
     debugPrint('🔄 Cleared all profile caches');
   }
 
@@ -1079,8 +1084,8 @@ class SocialLearningService {
 
     final group = _studyGroups[groupIndex];
 
-    // Check if group is private and password is required
-    if (group.isPrivate && group.password != password) {
+    // Check if group is private and password is required (for password-protected groups)
+    if (group.isPrivate && group.password != null && group.password != password) {
       return false;
     }
 
@@ -1092,8 +1097,231 @@ class SocialLearningService {
     // Check if group is full
     if (group.currentMembers >= group.maxMembers) return false;
 
+    // For private groups, set status to pending (requires owner approval)
+    // For public groups, set status to active (auto-approved)
+    final memberStatus = group.isPrivate ? MembershipStatus.pending : MembershipStatus.active;
+
     final newMember = StudyGroupMember(
       userId: _currentUserProfile!.id,
+      groupId: groupId,
+      role: StudyGroupRole.member,
+      status: memberStatus,
+      joinDate: DateTime.now(),
+      lastActive: DateTime.now(),
+    );
+
+    final updatedMembers = [...group.members, newMember];
+    
+    // Only increment currentMembers for active (approved) members, not pending
+    final newMemberCount = memberStatus == MembershipStatus.active 
+        ? group.currentMembers + 1 
+        : group.currentMembers;
+    
+    _studyGroups[groupIndex] = StudyGroup(
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      ownerId: group.ownerId,
+      createdDate: group.createdDate,
+      subjects: group.subjects,
+      maxMembers: group.maxMembers,
+      isPrivate: group.isPrivate,
+      password: group.password,
+      avatar: group.avatar,
+      settings: group.settings,
+      members: updatedMembers,
+      currentMembers: newMemberCount,
+    );
+
+    await _saveUserData();
+    
+    debugPrint(group.isPrivate 
+        ? '📋 Join request sent for private group: ${group.name} (status: pending approval)'
+        : '✅ Joined public group: ${group.name}');
+    
+    return true;
+  }
+
+  /// Approve a pending member (group owner/admin only)
+  Future<bool> approveMember({
+    required String groupId,
+    required String userId,
+  }) async {
+    if (_currentUserProfile == null) return false;
+
+    final groupIndex = _studyGroups.indexWhere((g) => g.id == groupId);
+    if (groupIndex == -1) return false;
+
+    final group = _studyGroups[groupIndex];
+
+    // Check if current user is owner or admin
+    final currentUserMember = group.members.firstWhere(
+      (m) => m.userId == _currentUserProfile!.id,
+      orElse: () => throw Exception('Not a member of this group'),
+    );
+
+    if (currentUserMember.role != StudyGroupRole.owner &&
+        currentUserMember.role != StudyGroupRole.moderator) {
+      debugPrint('❌ Only group owners and moderators can approve members');
+      return false;
+    }
+
+    // Find the pending member
+    final memberIndex = group.members.indexWhere(
+      (m) => m.userId == userId && m.status == MembershipStatus.pending,
+    );
+
+    if (memberIndex == -1) {
+      debugPrint('❌ No pending member found with userId: $userId');
+      return false;
+    }
+
+    // Update member status to active
+    final updatedMembers = [...group.members];
+    updatedMembers[memberIndex] = StudyGroupMember(
+      userId: updatedMembers[memberIndex].userId,
+      groupId: updatedMembers[memberIndex].groupId,
+      role: updatedMembers[memberIndex].role,
+      status: MembershipStatus.active,
+      joinDate: updatedMembers[memberIndex].joinDate,
+      lastActive: DateTime.now(),
+    );
+
+    _studyGroups[groupIndex] = StudyGroup(
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      ownerId: group.ownerId,
+      createdDate: group.createdDate,
+      subjects: group.subjects,
+      maxMembers: group.maxMembers,
+      isPrivate: group.isPrivate,
+      password: group.password,
+      avatar: group.avatar,
+      settings: group.settings,
+      members: updatedMembers,
+      currentMembers: group.currentMembers + 1, // Now count as active member
+    );
+
+    await _saveUserData();
+    debugPrint('✅ Approved member $userId for group: ${group.name}');
+    return true;
+  }
+
+  /// Deny a pending member (group owner/admin only)
+  Future<bool> denyMember({
+    required String groupId,
+    required String userId,
+  }) async {
+    if (_currentUserProfile == null) return false;
+
+    final groupIndex = _studyGroups.indexWhere((g) => g.id == groupId);
+    if (groupIndex == -1) return false;
+
+    final group = _studyGroups[groupIndex];
+
+    // Check if current user is owner or admin
+    final currentUserMember = group.members.firstWhere(
+      (m) => m.userId == _currentUserProfile!.id,
+      orElse: () => throw Exception('Not a member of this group'),
+    );
+
+    if (currentUserMember.role != StudyGroupRole.owner &&
+        currentUserMember.role != StudyGroupRole.moderator) {
+      debugPrint('❌ Only group owners and moderators can deny members');
+      return false;
+    }
+
+    // Find the pending member
+    final memberIndex = group.members.indexWhere(
+      (m) => m.userId == userId && m.status == MembershipStatus.pending,
+    );
+
+    if (memberIndex == -1) {
+      debugPrint('❌ No pending member found with userId: $userId');
+      return false;
+    }
+
+    // Remove the pending member
+    final updatedMembers = [...group.members];
+    updatedMembers.removeAt(memberIndex);
+
+    _studyGroups[groupIndex] = StudyGroup(
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      ownerId: group.ownerId,
+      createdDate: group.createdDate,
+      subjects: group.subjects,
+      maxMembers: group.maxMembers,
+      isPrivate: group.isPrivate,
+      password: group.password,
+      avatar: group.avatar,
+      settings: group.settings,
+      members: updatedMembers,
+      currentMembers: group.currentMembers, // No change to count
+    );
+
+    await _saveUserData();
+    debugPrint('❌ Denied member $userId for group: ${group.name}');
+    return true;
+  }
+
+  /// Get pending members for a group (owner/admin only)
+  List<StudyGroupMember> getPendingMembers(String groupId) {
+    final group = _studyGroups.firstWhere(
+      (g) => g.id == groupId,
+      orElse: () => throw Exception('Group not found'),
+    );
+
+    return group.members
+        .where((m) => m.status == MembershipStatus.pending)
+        .toList();
+  }
+
+  /// Invite a friend to a group (owner/moderator only)
+  Future<bool> inviteFriendToGroup({
+    required String groupId,
+    required String friendId,
+  }) async {
+    if (_currentUserProfile == null) return false;
+
+    final groupIndex = _studyGroups.indexWhere((g) => g.id == groupId);
+    if (groupIndex == -1) {
+      debugPrint('❌ Group not found');
+      return false;
+    }
+
+    final group = _studyGroups[groupIndex];
+
+    // Check if current user is owner or moderator
+    final currentUserMember = group.members.firstWhere(
+      (m) => m.userId == _currentUserProfile!.id,
+      orElse: () => throw Exception('Not a member of this group'),
+    );
+
+    if (currentUserMember.role != StudyGroupRole.owner &&
+        currentUserMember.role != StudyGroupRole.moderator) {
+      debugPrint('❌ Only group owners and moderators can invite friends');
+      return false;
+    }
+
+    // Check if friend is already a member
+    final isAlreadyMember = group.members.any((m) => m.userId == friendId);
+    if (isAlreadyMember) {
+      debugPrint('❌ User is already a member of this group');
+      return false;
+    }
+
+    // Check if group is full
+    if (group.currentMembers >= group.maxMembers) {
+      debugPrint('❌ Group is full');
+      return false;
+    }
+
+    // Add friend as active member (invites bypass the pending status)
+    final newMember = StudyGroupMember(
+      userId: friendId,
       groupId: groupId,
       role: StudyGroupRole.member,
       status: MembershipStatus.active,
@@ -1102,6 +1330,7 @@ class SocialLearningService {
     );
 
     final updatedMembers = [...group.members, newMember];
+    
     _studyGroups[groupIndex] = StudyGroup(
       id: group.id,
       name: group.name,
@@ -1119,6 +1348,7 @@ class SocialLearningService {
     );
 
     await _saveUserData();
+    debugPrint('✅ Invited friend $friendId to group: ${group.name}');
     return true;
   }
 
@@ -1226,15 +1456,20 @@ class SocialLearningService {
   }
 
   /// Get user profile by ID from Firestore
-  Future<UserProfile?> getUserProfile(String userId) async {
-    // Check cache first
-    if (_profileCache.containsKey(userId)) {
-      debugPrint('✅ Using cached profile for: $userId');
-      return _profileCache[userId];
+  Future<UserProfile?> getUserProfile(String userId, {bool forceRefresh = false}) async {
+    // Check cache first (if not forcing refresh and cache is valid)
+    if (!forceRefresh && _profileCache.containsKey(userId)) {
+      final cacheTime = _profileCacheTimestamps[userId];
+      if (cacheTime != null && DateTime.now().difference(cacheTime) < _cacheExpiration) {
+        debugPrint('✅ Using cached profile for: $userId (age: ${DateTime.now().difference(cacheTime).inMinutes}min)');
+        return _profileCache[userId];
+      } else {
+        debugPrint('⏰ Cache expired for: $userId, fetching fresh data');
+      }
     }
     
     try {
-      debugPrint('📥 Fetching user profile for: $userId');
+      debugPrint('📥 Fetching user profile for: $userId${forceRefresh ? ' (forced refresh)' : ''}');
       
       final doc = await _firestoreService.usersCollection.doc(userId).get();
       
@@ -1272,6 +1507,7 @@ class SocialLearningService {
           interests: [],
         );
         _profileCache[userId] = demoProfile;
+        _profileCacheTimestamps[userId] = DateTime.now();
         return demoProfile;
       }
       
@@ -1312,6 +1548,7 @@ class SocialLearningService {
           interests: [],
         );
         _profileCache[userId] = demoProfile;
+        _profileCacheTimestamps[userId] = DateTime.now();
         return demoProfile;
       }
       
@@ -1361,8 +1598,9 @@ class SocialLearningService {
         achievements: getMapSafely(data['achievements']) ?? {},
       );
       
-      // Cache the profile
+      // Cache the profile with timestamp
       _profileCache[userId] = profile;
+      _profileCacheTimestamps[userId] = DateTime.now();
       
       debugPrint('✅ Loaded profile: ${profile.displayName} (@${profile.username}) - Online: $isTrulyOnline');
       return profile;
@@ -2406,6 +2644,115 @@ class SocialLearningService {
       'collaborativeSessions': myCollaborativeSessions.length,
       'profileCompleteness': _calculateProfileCompleteness(),
     };
+  }
+  
+  /// Get friend count for a specific user
+  Future<int> getFriendCountForUser(String userId) async {
+    try {
+      debugPrint('🔍 Fetching friend count for user: $userId');
+      
+      // Query friendships where user is either sender or receiver AND friendship is accepted
+      final sentFriendships = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: userId)
+          .where('isAccepted', isEqualTo: true)
+          .get();
+      
+      final receivedFriendships = await _firestoreService.friendshipsCollection
+          .where('friendId', isEqualTo: userId)
+          .where('isAccepted', isEqualTo: true)
+          .get();
+      
+      final totalFriends = sentFriendships.docs.length + receivedFriendships.docs.length;
+      debugPrint('✅ User $userId has $totalFriends friends');
+      
+      return totalFriends;
+    } catch (e) {
+      debugPrint('❌ Error fetching friend count for user $userId: $e');
+      return 0;
+    }
+  }
+  
+  /// Get mutual friends count between current user and another user
+  Future<int> getMutualFriendsCount(String otherUserId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot get mutual friends: Not authenticated');
+        return 0;
+      }
+      
+      final currentUserId = currentUser.uid;
+      
+      // Don't calculate mutual friends with yourself
+      if (currentUserId == otherUserId) {
+        return 0;
+      }
+      
+      debugPrint('🔍 Calculating mutual friends between $currentUserId and $otherUserId');
+      
+      // Get current user's friends
+      final currentUserSentFriendships = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: currentUserId)
+          .where('isAccepted', isEqualTo: true)
+          .get();
+      
+      final currentUserReceivedFriendships = await _firestoreService.friendshipsCollection
+          .where('friendId', isEqualTo: currentUserId)
+          .where('isAccepted', isEqualTo: true)
+          .get();
+      
+      // Build set of current user's friend IDs
+      final Set<String> currentUserFriends = {};
+      
+      for (final doc in currentUserSentFriendships.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        currentUserFriends.add(data['friendId'] as String);
+      }
+      
+      for (final doc in currentUserReceivedFriendships.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        currentUserFriends.add(data['userId'] as String);
+      }
+      
+      debugPrint('📊 Current user has ${currentUserFriends.length} friends');
+      
+      // Get other user's friends
+      final otherUserSentFriendships = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: otherUserId)
+          .where('isAccepted', isEqualTo: true)
+          .get();
+      
+      final otherUserReceivedFriendships = await _firestoreService.friendshipsCollection
+          .where('friendId', isEqualTo: otherUserId)
+          .where('isAccepted', isEqualTo: true)
+          .get();
+      
+      // Build set of other user's friend IDs
+      final Set<String> otherUserFriends = {};
+      
+      for (final doc in otherUserSentFriendships.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        otherUserFriends.add(data['friendId'] as String);
+      }
+      
+      for (final doc in otherUserReceivedFriendships.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        otherUserFriends.add(data['userId'] as String);
+      }
+      
+      debugPrint('📊 Other user has ${otherUserFriends.length} friends');
+      
+      // Calculate intersection (mutual friends)
+      final mutualFriends = currentUserFriends.intersection(otherUserFriends);
+      final mutualCount = mutualFriends.length;
+      
+      debugPrint('✅ Found $mutualCount mutual friends between users');
+      
+      return mutualCount;
+    } catch (e) {
+      debugPrint('❌ Error calculating mutual friends: $e');
+      return 0;
+    }
   }
 
   /// Calculate profile completeness percentage
