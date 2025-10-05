@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 
 /// Study technique preset data model
@@ -127,18 +128,40 @@ class _TimerScreenState extends State<TimerScreen> {
   bool _showCustomOptions = false;
   final TextEditingController _labelController = TextEditingController();
   
-  // Saved custom timers for quick selection
+  // Saved custom timers for quick selection (includes converted study techniques)
   List<SavedTimer> _savedTimers = [
+    // Study Technique Presets converted to Saved Timers
     SavedTimer(
-      label: '25 min Focus',
+      label: 'Pomodoro Focus',
       hours: 0,
       minutes: 25,
       seconds: 0,
       includeBreakTimer: true,
       breakMinutes: 5,
       cycles: 1,
+      savedAt: DateTime.now().subtract(const Duration(days: 3)),
+    ),
+    SavedTimer(
+      label: 'Deep Work Session',
+      hours: 1,
+      minutes: 30,
+      seconds: 0,
+      includeBreakTimer: true,
+      breakMinutes: 25,
+      cycles: 1,
+      savedAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+    SavedTimer(
+      label: 'Time-Box Focus',
+      hours: 0,
+      minutes: 45,
+      seconds: 0,
+      includeBreakTimer: false,
+      breakMinutes: 5,
+      cycles: 1,
       savedAt: DateTime.now().subtract(const Duration(days: 1)),
     ),
+    // User's custom saved timers appear after presets
     SavedTimer(
       label: 'Quick Study',
       hours: 0,
@@ -616,19 +639,20 @@ class _TimerScreenState extends State<TimerScreen> {
       ),
       body: Column(
         children: [
-          // Timer display or picker wheels
-          Expanded(
-            flex: 3,
+          // Timer display or picker wheels - use flexible instead of expanded for better space utilization
+          Flexible(
+            flex: _timerState != TimerState.idle ? 3 : 1,
             child: _timerState != TimerState.idle
                 ? _buildTimerDisplay()
                 : _buildTimerPicker(),
           ),
           
-          // Control buttons
-          Expanded(
-            flex: 1,
-            child: _buildControlButtons(),
-          ),
+          // Control buttons - only show when timer is running
+          if (_timerState != TimerState.idle)
+            Flexible(
+              flex: 1,
+              child: _buildControlButtons(),
+            ),
         ],
       ),
     );
@@ -892,7 +916,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Study Techniques',
+                        'Saved Timers',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: _showPresets ? const Color(0xFF16181A) : const Color(0xFFD9D9D9),
@@ -944,7 +968,7 @@ class _TimerScreenState extends State<TimerScreen> {
       children: [
         // Section header
         const Text(
-          'Choose Your Study Technique',
+          'Saved Timer Presets',
           style: TextStyle(
             color: Color(0xFFD9D9D9),
             fontSize: 20,
@@ -953,20 +977,167 @@ class _TimerScreenState extends State<TimerScreen> {
         ),
         const SizedBox(height: 20),
         
-        // Horizontal preset options
-        SizedBox(
-          height: 140,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _timerSessions.length,
-            itemBuilder: (context, index) {
-              final session = _timerSessions[index];
-              return _buildHorizontalSessionCard(session);
-            },
+        // Saved timer options displayed as horizontal scrolling cards
+        if (_savedTimers.isNotEmpty) ...[
+          Container(
+            height: 130, // Increased from 120 to prevent overflow
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _savedTimers.length,
+              itemBuilder: (context, index) {
+                final timer = _savedTimers[index];
+                return _buildSavedTimerPresetCard(timer, index);
+              },
+            ),
           ),
-        ),
+        ] else ...[
+          const Text(
+            'No saved timers yet. Create some in the Custom Timer section!',
+            style: TextStyle(
+              color: Color(0xFFB0B0B0),
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
         const SizedBox(height: 30),
       ],
+    );
+  }
+
+  Widget _buildSavedTimerPresetCard(SavedTimer timer, int index) {
+    return Container(
+      width: 160,
+      margin: const EdgeInsets.only(right: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A3050),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF6FB8E9), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6FB8E9).withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // Load the saved timer settings
+            setState(() {
+              _selectedHours = timer.hours;
+              _selectedMinutes = timer.minutes;
+              _selectedSeconds = timer.seconds;
+              _includeBreakTimer = timer.includeBreakTimer;
+              _breakMinutes = timer.breakMinutes;
+              _iterationCount = timer.cycles;
+              _labelController.text = timer.label;
+            });
+            // Switch to custom timer tab to see the loaded settings
+            setState(() => _showPresets = false);
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Loaded timer "${timer.label}"'),
+                backgroundColor: const Color(0xFF4CAF50),
+              ),
+            );
+          },
+          onLongPress: () {
+            // Remove timer from saved list
+            setState(() {
+              _savedTimers.removeAt(index);
+            });
+            
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Deleted timer "${timer.label}"'),
+                backgroundColor: Colors.red,
+                action: SnackBarAction(
+                  label: 'UNDO',
+                  onPressed: () {
+                    setState(() {
+                      _savedTimers.insert(index, timer);
+                    });
+                  },
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(10), // Reduced from 12
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Timer icon and name
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 36, // Reduced from 40
+                        height: 36, // Reduced from 40
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6FB8E9).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.timer,
+                          color: Color(0xFF6FB8E9),
+                          size: 20, // Reduced from 24
+                        ),
+                      ),
+                      const SizedBox(height: 6), // Reduced from 8
+                      Text(
+                        timer.label,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFFD9D9D9),
+                          fontSize: 12, // Reduced from 14
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Timer details
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        timer.formattedTime,
+                        style: const TextStyle(
+                          color: Color(0xFF6FB8E9),
+                          fontSize: 14, // Reduced from 16
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (timer.includeBreakTimer)
+                        Text(
+                          '+ ${timer.breakMinutes}min break',
+                          style: const TextStyle(
+                            color: Color(0xFFB0B0B0),
+                            fontSize: 10,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1068,12 +1239,6 @@ class _TimerScreenState extends State<TimerScreen> {
           
           const SizedBox(height: 12), // Reduced from 20
           
-          // Quick Selection Area for Saved Timers
-          if (_savedTimers.isNotEmpty) ...[
-            _buildQuickSelectionArea(),
-            const SizedBox(height: 12), // Reduced from 20
-          ],
-          
           // Start Timer Button
           SizedBox(
             width: double.infinity,
@@ -1096,8 +1261,8 @@ class _TimerScreenState extends State<TimerScreen> {
             ),
           ),
           
-          // Minimal bottom padding - maximize space for saved timers
-          const SizedBox(height: 4), // Minimal padding to prevent edge clipping
+          // Extended bottom padding for scrollable container
+          const SizedBox(height: 44), // Extended by 40px (4 + 40 = 44)
         ],
       ),
     );
@@ -1307,6 +1472,8 @@ class _TimerScreenState extends State<TimerScreen> {
                               itemExtent: 28, // Larger items for better usability
                               scrollController: FixedExtentScrollController(initialItem: _breakMinutes - 1),
                               onSelectedItemChanged: (index) {
+                                // Add haptic feedback on every scroll tick
+                                HapticFeedback.selectionClick();
                                 setState(() => _breakMinutes = index + 1);
                               },
                               children: List.generate(30, (index) {
@@ -1356,6 +1523,8 @@ class _TimerScreenState extends State<TimerScreen> {
                               itemExtent: 28, // Larger items for better usability
                               scrollController: FixedExtentScrollController(initialItem: _iterationCount - 1),
                               onSelectedItemChanged: (index) {
+                                // Add haptic feedback on every scroll tick
+                                HapticFeedback.selectionClick();
                                 setState(() => _iterationCount = index + 1);
                               },
                               children: List.generate(10, (index) {
@@ -1414,7 +1583,11 @@ class _TimerScreenState extends State<TimerScreen> {
       child: CupertinoPicker(
         scrollController: controller,
         itemExtent: 25, // Reduced from 30
-        onSelectedItemChanged: onSelectedItemChanged,
+        onSelectedItemChanged: (index) {
+          // Add haptic feedback on every scroll tick
+          HapticFeedback.selectionClick();
+          onSelectedItemChanged(index);
+        },
         children: List.generate(itemCount, (index) {
           return Center(
             child: Text(
@@ -1595,152 +1768,5 @@ class _TimerScreenState extends State<TimerScreen> {
     
     final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
     return _formatTime(totalSeconds);
-  }
-  
-  Widget _buildQuickSelectionArea() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Quick Select Saved Timers',
-          style: TextStyle(
-            color: Color(0xFFD9D9D9),
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          height: 100,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _savedTimers.length,
-            itemBuilder: (context, index) {
-              final timer = _savedTimers[index];
-              return _buildSavedTimerCard(timer, index);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-  
-  Widget _buildSavedTimerCard(SavedTimer timer, int index) {
-    return Container(
-      width: 140,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A3050),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF6FB8E9),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => _loadSavedTimer(timer),
-          onLongPress: () => _deleteSavedTimer(index),
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        timer.label.isEmpty ? 'Custom Timer' : timer.label,
-                        style: const TextStyle(
-                          color: Color(0xFFD9D9D9),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(
-                      Icons.access_time,
-                      color: const Color(0xFF6FB8E9),
-                      size: 14,
-                    ),
-                  ],
-                ),
-                Text(
-                  timer.formattedTime,
-                  style: const TextStyle(
-                    color: Color(0xFF6FB8E9),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (timer.includeBreakTimer)
-                  Text(
-                    'Break: ${timer.breakMinutes}m',
-                    style: const TextStyle(
-                      color: Color(0xFFB0B0B0),
-                      fontSize: 10,
-                    ),
-                  ),
-                if (timer.cycles > 1)
-                  Text(
-                    '${timer.cycles} cycles',
-                    style: const TextStyle(
-                      color: Color(0xFFB0B0B0),
-                      fontSize: 10,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-  
-  void _loadSavedTimer(SavedTimer timer) {
-    setState(() {
-      _selectedHours = timer.hours;
-      _selectedMinutes = timer.minutes;
-      _selectedSeconds = timer.seconds;
-      _includeBreakTimer = timer.includeBreakTimer;
-      _breakMinutes = timer.breakMinutes;
-      _iterationCount = timer.cycles;
-      _labelController.text = timer.label;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Loaded timer "${timer.label}"'),
-        backgroundColor: const Color(0xFF4CAF50),
-      ),
-    );
-  }
-  
-  void _deleteSavedTimer(int index) {
-    final timer = _savedTimers[index];
-    setState(() {
-      _savedTimers.removeAt(index);
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Deleted timer "${timer.label}"'),
-        backgroundColor: Colors.red,
-        action: SnackBarAction(
-          label: 'UNDO',
-          onPressed: () {
-            setState(() {
-              _savedTimers.insert(index, timer);
-            });
-          },
-        ),
-      ),
-    );
   }
 }
