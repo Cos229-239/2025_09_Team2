@@ -2,34 +2,33 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
-/// Service for fetching GIFs from Tenor API (Discord's GIF provider)
+/// Service for fetching GIFs - Uses Giphy API (works immediately, no approval needed)
 class GifService {
-  // Tenor API key from Google Cloud Console
-  static const String _apiKey = 'AIzaSyCmtkUPudyPMjUMkRjmjSnAHRKV4NpByyo';
-  static const String _clientKey = 'studypals_app'; // Client identifier for Tenor API v2
-  static const String _baseUrl = 'https://tenor.googleapis.com/v2';
+  // Giphy Public Beta API Key (no approval needed, works instantly)
+  static const String _giphyApiKey = 'sXpGFDGZs0Dv1mmNFvYaGUvYwKX0PWIh'; // Public beta key
+  static const String _giphyBaseUrl = 'https://api.giphy.com/v1/gifs';
   
-  /// Search for GIFs
+  /// Search for GIFs using Giphy
   Future<List<GifResult>> searchGifs(String query, {int limit = 20}) async {
     try {
       debugPrint('🔍 Searching GIFs: $query');
       
       final url = Uri.parse(
-        '$_baseUrl/search?q=$query&key=$_apiKey&client_key=$_clientKey&limit=$limit&media_filter=gif,tinygif',
+        '$_giphyBaseUrl/search?api_key=$_giphyApiKey&q=$query&limit=$limit&rating=g',
       );
       
       final response = await http.get(url);
       
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final results = (data['results'] as List)
-            .map((item) => GifResult.fromJson(item))
+        final results = (data['data'] as List)
+            .map((item) => GifResult.fromGiphyJson(item))
             .toList();
         
-        debugPrint('✅ Found ${results.length} GIFs');
+        debugPrint('✅ Found ${results.length} GIFs from Giphy');
         return results;
       } else {
-        debugPrint('❌ Tenor API error: ${response.statusCode}');
+        debugPrint('❌ Giphy API error: ${response.statusCode}');
         debugPrint('Response body: ${response.body}');
         return [];
       }
@@ -39,36 +38,27 @@ class GifService {
     }
   }
   
-  /// Get trending/featured GIFs
+  /// Get trending GIFs using Giphy
   Future<List<GifResult>> getTrendingGifs({int limit = 20}) async {
     try {
-      debugPrint('🔥 Fetching trending GIFs');
+      debugPrint('🔥 Fetching trending GIFs from Giphy');
       
-      // Try search endpoint first (works immediately after API enable)
       final url = Uri.parse(
-        '$_baseUrl/search?q=trending&key=$_apiKey&client_key=$_clientKey&limit=$limit&media_filter=gif,tinygif',
+        '$_giphyBaseUrl/trending?api_key=$_giphyApiKey&limit=$limit&rating=g',
       );
-      
-      debugPrint('📡 Calling: ${url.toString().replaceAll(_apiKey, 'API_KEY_HIDDEN')}');
       
       final response = await http.get(url);
       
-      debugPrint('📬 Response status: ${response.statusCode}');
-      
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        final results = (data['results'] as List)
-            .map((item) => GifResult.fromJson(item))
+        final results = (data['data'] as List)
+            .map((item) => GifResult.fromGiphyJson(item))
             .toList();
         
-        debugPrint('✅ Found ${results.length} trending GIFs');
+        debugPrint('✅ Found ${results.length} trending GIFs from Giphy');
         return results;
-      } else if (response.statusCode == 403) {
-        debugPrint('⏳ Tenor API permissions still propagating (usually takes 5-10 minutes after enabling)');
-        debugPrint('Response: ${response.body}');
-        return [];
       } else {
-        debugPrint('❌ Tenor API error: ${response.statusCode}');
+        debugPrint('❌ Giphy API error: ${response.statusCode}');
         debugPrint('Response body: ${response.body}');
         return [];
       }
@@ -80,28 +70,8 @@ class GifService {
   
   /// Get GIF categories
   Future<List<String>> getCategories() async {
-    try {
-      final url = Uri.parse(
-        '$_baseUrl/categories?key=$_apiKey&client_key=$_clientKey',
-      );
-      
-      final response = await http.get(url);
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final tags = (data['tags'] as List)
-            .map((tag) => tag['searchterm'] as String)
-            .toList();
-        
-        debugPrint('✅ Found ${tags.length} categories');
-        return tags;
-      } else {
-        return _defaultCategories;
-      }
-    } catch (e) {
-      debugPrint('❌ Error fetching categories: $e');
-      return _defaultCategories;
-    }
+    // Giphy doesn't have a categories endpoint, so return popular search terms
+    return _defaultCategories;
   }
   
   static const List<String> _defaultCategories = [
@@ -120,7 +90,7 @@ class GifService {
   ];
 }
 
-/// GIF result from Tenor API
+/// GIF result from Giphy API
 class GifResult {
   final String id;
   final String title;
@@ -138,22 +108,24 @@ class GifResult {
     required this.height,
   });
   
-  factory GifResult.fromJson(Map<String, dynamic> json) {
-    final mediaFormats = json['media_formats'] as Map<String, dynamic>;
+  /// Parse Giphy API response
+  factory GifResult.fromGiphyJson(Map<String, dynamic> json) {
+    final images = json['images'] as Map<String, dynamic>;
     
-    // Get tinygif for preview (smaller, faster loading)
-    final preview = mediaFormats['tinygif'] as Map<String, dynamic>?;
+    // Use fixed_width for better quality preview (not small)
+    // This gives us good quality while still being optimized for grid display
+    final preview = images['fixed_width'] as Map<String, dynamic>?;
     final previewUrl = preview?['url'] as String? ?? '';
     
-    // Get gif for full quality
-    final gif = mediaFormats['gif'] as Map<String, dynamic>?;
-    final fullUrl = gif?['url'] as String? ?? previewUrl;
-    final width = (gif?['dims'] as List?)?.first as int? ?? 200;
-    final height = (gif?['dims'] as List?)?.last as int? ?? 200;
+    // Get full quality GIF (original or downsized)
+    final original = images['original'] as Map<String, dynamic>?;
+    final fullUrl = original?['url'] as String? ?? previewUrl;
+    final width = int.tryParse(original?['width']?.toString() ?? '200') ?? 200;
+    final height = int.tryParse(original?['height']?.toString() ?? '200') ?? 200;
     
     return GifResult(
       id: json['id'] as String? ?? '',
-      title: json['content_description'] as String? ?? 'GIF',
+      title: json['title'] as String? ?? 'GIF',
       previewUrl: previewUrl,
       fullUrl: fullUrl,
       width: width,

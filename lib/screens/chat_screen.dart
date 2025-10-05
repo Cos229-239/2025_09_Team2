@@ -6,6 +6,8 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/social_learning_service.dart';
 import '../services/gif_service.dart';
+import '../services/webrtc_service.dart';
+import 'call_screen.dart';
 
 /// Real-time chat screen with Discord-like features (reactions, GIFs, attachments)
 class ChatScreen extends StatefulWidget {
@@ -27,18 +29,73 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final GifService _gifService = GifService();
   final ImagePicker _imagePicker = ImagePicker();
+  final WebRTCService _webrtcService = WebRTCService();
   
   Timer? _typingTimer;
   bool _isCurrentlyTyping = false;
   bool _showEmojiPicker = false;
   bool _isUploading = false;
   double _uploadProgress = 0.0;
+  int _previousMessageCount = 0;
+  bool _hasScrolledToBottom = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize WebRTC service
+    _webrtcService.initialize();
+    // Add listener to rebuild when text changes (for send button state)
+    _messageController.addListener(_onTextChanged);
+    // Listen for incoming calls
+    _listenForIncomingCalls();
+  }
+  
+  void _onTextChanged() {
+    // Trigger rebuild when text changes to update send button color
+    setState(() {});
+    
+    // Handle typing indicator
+    if (_messageController.text.trim().isNotEmpty) {
+      if (!_isCurrentlyTyping) {
+        _isCurrentlyTyping = true;
+        widget.socialService.updateTypingStatus(
+          recipientId: widget.otherUser.id,
+          isTyping: true,
+        );
+      }
+      
+      // Reset typing timer
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 2), () {
+        if (_isCurrentlyTyping) {
+          _isCurrentlyTyping = false;
+          widget.socialService.updateTypingStatus(
+            recipientId: widget.otherUser.id,
+            isTyping: false,
+          );
+        }
+      });
+    } else {
+      // Stop typing when text is cleared
+      if (_isCurrentlyTyping) {
+        _isCurrentlyTyping = false;
+        _typingTimer?.cancel();
+        widget.socialService.updateTypingStatus(
+          recipientId: widget.otherUser.id,
+          isTyping: false,
+        );
+      }
+    }
+  }
+
+  @override
+  @override
   void dispose() {
+    _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
     _typingTimer?.cancel();
+    _webrtcService.dispose();
     
     // Clear typing status on exit
     if (_isCurrentlyTyping) {
@@ -49,6 +106,178 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     
     super.dispose();
+  }
+  
+  /// Listen for incoming calls
+  void _listenForIncomingCalls() {
+    _webrtcService.callStateStream.listen((state) {
+      if (state == CallState.ringing && mounted) {
+        _showIncomingCallDialog();
+      }
+    });
+  }
+  
+  /// Show incoming call dialog
+  void _showIncomingCallDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              _webrtcService.currentCallType == CallType.video
+                  ? Icons.videocam
+                  : Icons.call,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              _webrtcService.currentCallType == CallType.video
+                  ? 'Incoming Video Call'
+                  : 'Incoming Audio Call',
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundImage: widget.otherUser.avatar != null
+                  ? NetworkImage(widget.otherUser.avatar!)
+                  : null,
+              child: widget.otherUser.avatar == null
+                  ? Text(
+                      widget.otherUser.displayName[0].toUpperCase(),
+                      style: const TextStyle(fontSize: 32),
+                    )
+                  : null,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              widget.otherUser.displayName,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _webrtcService.currentCallType == CallType.video
+                  ? 'wants to video call you'
+                  : 'wants to call you',
+              style: TextStyle(
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _webrtcService.endCall();
+            },
+            icon: const Icon(Icons.call_end, color: Colors.red),
+            label: const Text('Decline', style: TextStyle(color: Colors.red)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              Navigator.pop(context);
+              
+              // Answer the call using the stored call ID in the WebRTC service
+              final callId = _webrtcService.currentCallId;
+              if (callId != null) {
+                final success = await _webrtcService.answerCall(callId: callId);
+                
+                if (success && mounted) {
+                  // Navigate to call screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CallScreen(
+                        webrtcService: _webrtcService,
+                        otherUser: widget.otherUser,
+                        isOutgoing: false,
+                        callType: _webrtcService.currentCallType ?? CallType.audio,
+                      ),
+                    ),
+                  );
+                } else if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to answer call'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.call),
+            label: const Text('Answer'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  /// Start an audio call
+  void _startAudioCall() async {
+    final success = await _webrtcService.startCall(
+      recipientId: widget.otherUser.id,
+      callType: CallType.audio,
+    );
+    
+    if (success && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CallScreen(
+            webrtcService: _webrtcService,
+            otherUser: widget.otherUser,
+            isOutgoing: true,
+            callType: CallType.audio,
+          ),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to start call. Please check permissions.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+  
+  /// Start a video call
+  void _startVideoCall() async {
+    final success = await _webrtcService.startCall(
+      recipientId: widget.otherUser.id,
+      callType: CallType.video,
+    );
+    
+    if (success && mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CallScreen(
+            webrtcService: _webrtcService,
+            otherUser: widget.otherUser,
+            isOutgoing: true,
+            callType: CallType.video,
+          ),
+        ),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to start video call. Please check permissions.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -121,6 +350,19 @@ class _ChatScreenState extends State<ChatScreen> {
           ],
         ),
         actions: [
+          // Audio call button
+          IconButton(
+            onPressed: _startAudioCall,
+            icon: const Icon(Icons.call),
+            tooltip: 'Audio Call',
+          ),
+          // Video call button
+          IconButton(
+            onPressed: _startVideoCall,
+            icon: const Icon(Icons.videocam),
+            tooltip: 'Video Call',
+          ),
+          // Menu button
           IconButton(
             onPressed: _showChatOptions,
             icon: const Icon(Icons.more_vert),
@@ -134,7 +376,8 @@ class _ChatScreenState extends State<ChatScreen> {
             child: StreamBuilder<List<Map<String, dynamic>>>(
               stream: widget.socialService.listenToMessages(widget.otherUser.id),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                // Only show loading on FIRST load, not on every rebuild
+                if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
@@ -198,16 +441,19 @@ class _ChatScreenState extends State<ChatScreen> {
                   );
                 }
                 
-                // Auto-scroll to bottom when new messages arrive
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (_scrollController.hasClients) {
-                    _scrollController.animateTo(
-                      _scrollController.position.maxScrollExtent,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOut,
-                    );
-                  }
-                });
+                // Auto-scroll to bottom ONLY when:
+                // 1. First load (haven't scrolled yet)
+                // 2. New message arrives (message count increased)
+                final currentMessageCount = messages.length;
+                final shouldAutoScroll = !_hasScrolledToBottom || currentMessageCount > _previousMessageCount;
+                
+                if (shouldAutoScroll) {
+                  // Schedule multiple scroll attempts to ensure we reach the bottom
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _scrollToBottom();
+                  });
+                  _previousMessageCount = currentMessageCount;
+                }
                 
                 return ListView.builder(
                   controller: _scrollController,
@@ -531,12 +777,37 @@ class _ChatScreenState extends State<ChatScreen> {
         );
         
       case 'gif':
+        // Use Image.network for GIFs to ensure animation works
         return ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: CachedNetworkImage(
-            imageUrl: url,
+          child: Image.network(
+            url,
             width: 250,
             fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                width: 250,
+                height: 150,
+                color: Colors.grey[300],
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: 250,
+                height: 150,
+                color: Colors.grey[300],
+                child: const Icon(Icons.broken_image, size: 48),
+              );
+            },
           ),
         );
         
@@ -590,6 +861,26 @@ class _ChatScreenState extends State<ChatScreen> {
   
   bool get _canSendMessage {
     return _messageController.text.trim().isNotEmpty && !_isUploading;
+  }
+  
+  /// Scroll to the absolute bottom of the chat
+  /// Uses multiple attempts to ensure we reach the very bottom after layout completes
+  /// Especially important for GIFs and images that take time to load
+  void _scrollToBottom() async {
+    if (!_scrollController.hasClients || !mounted) return;
+    
+    // First immediate scroll
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    
+    // Multiple delayed scrolls to catch GIFs/images as they load and expand
+    for (int i = 0; i < 5; i++) {
+      await Future.delayed(Duration(milliseconds: 100 + (i * 100)));
+      if (_scrollController.hasClients && mounted) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    }
+    
+    _hasScrolledToBottom = true;
   }
   
   void _showReactionPicker(String messageId, bool isMyMessage) {
@@ -1042,19 +1333,24 @@ class _GifPickerModalState extends State<_GifPickerModal> {
                             },
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: CachedNetworkImage(
-                                imageUrl: gif.previewUrl,
+                              child: Image.network(
+                                gif.previewUrl,
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(
-                                  color: Colors.grey[300],
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) => Container(
-                                  color: Colors.grey[300],
-                                  child: const Icon(Icons.error),
-                                ),
+                                loadingBuilder: (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.error),
+                                  );
+                                },
                               ),
                             ),
                           );
@@ -1116,11 +1412,14 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),
       onExit: (_) => setState(() => _isHovering = false),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Main Message Bubble
-          GestureDetector(
+      child: Padding(
+        // Add padding at the top to ensure MouseRegion covers the reaction bar area
+        padding: const EdgeInsets.only(top: 24),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Main Message Bubble
+            GestureDetector(
             onLongPress: widget.onLongPress,
             child: Container(
               padding: const EdgeInsets.symmetric(
@@ -1241,6 +1540,7 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
               ),
             ),
         ],
+        ),
       ),
     );
   }

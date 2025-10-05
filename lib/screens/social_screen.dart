@@ -405,6 +405,44 @@ class _SocialScreenState extends State<SocialScreen>
               ),
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Recent Activity Section
+          Card(
+            color: const Color(0xFF21262D),
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Recent Activity',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        Icons.history,
+                        color: Colors.grey[400],
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildRecentActivity(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -534,15 +572,36 @@ class _SocialScreenState extends State<SocialScreen>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox(
             height: 100,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF58A6FF)),
+              ),
+            ),
           );
         }
 
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox(
+          return SizedBox(
             height: 100,
             child: Center(
-              child: Text('No recent activity'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.history,
+                    size: 32,
+                    color: Colors.grey[600],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No recent activity',
+                    style: TextStyle(
+                      color: Colors.grey[400],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -603,12 +662,20 @@ class _SocialScreenState extends State<SocialScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(activity.description),
+                        Text(
+                          activity.description,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
                         Text(
                           activity.getTimeAgo(),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -698,8 +765,8 @@ class _SocialScreenState extends State<SocialScreen>
               // Fetch the friend's actual profile
               // Using refresh key ensures FutureBuilder rebuilds when cache is cleared
               return FutureBuilder<service.UserProfile?>(
-                key: ValueKey('friend_$friendId\_$_profileRefreshKey'),
-                future: _socialService!.getUserProfile(friendId),
+                key: ValueKey('friend_${friendId}_$_profileRefreshKey'),
+                future: _socialService!.getUserProfile(friendId, forceRefresh: true),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Card(

@@ -86,9 +86,23 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
       _members = await _socialService!.getGroupMembers(freshGroup);
       debugPrint('✅ Loaded ${_members.length} member profiles');
       
-      // TODO: Load pending join requests (would need to be stored in Firestore)
-      // For now, keep empty list
-      _pendingRequests = [];
+      // Load pending join requests (only for owner/moderator)
+      if (_isOwner || freshGroup.members.any((m) => 
+          m.userId == currentUserId && m.role == service.StudyGroupRole.moderator)) {
+        final pendingMembers = _socialService!.getPendingMembers(freshGroup.id);
+        
+        // Load user profiles for pending members
+        _pendingRequests = [];
+        for (final pendingMember in pendingMembers) {
+          final profile = await _socialService!.getUserProfile(pendingMember.userId);
+          if (profile != null) {
+            _pendingRequests.add(profile);
+          }
+        }
+        debugPrint('📋 Loaded ${_pendingRequests.length} pending requests');
+      } else {
+        _pendingRequests = [];
+      }
 
       setState(() {
         _isLoading = false;
@@ -573,52 +587,225 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     }
   }
 
-  void _handlePendingRequest(service.UserProfile user, bool accept) {
-    setState(() {
-      _pendingRequests.remove(user);
-      if (accept) {
-        _members.add(user);
-      }
-    });
+  void _handlePendingRequest(service.UserProfile user, bool accept) async {
+    if (_socialService == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(accept
-            ? '${user.displayName} has been added to the group'
-            : '${user.displayName}\'s request has been declined'),
-        backgroundColor: accept ? Colors.green : Colors.orange,
-      ),
-    );
-  }
+    bool success;
+    if (accept) {
+      success = await _socialService!.approveMember(
+        groupId: widget.group.id,
+        userId: user.id,
+      );
+    } else {
+      success = await _socialService!.denyMember(
+        groupId: widget.group.id,
+        userId: user.id,
+      );
+    }
 
-  void _joinGroup() async {
-    // For simplicity, assume private groups require approval
-    if (widget.group.isPrivate) {
+    if (!mounted) return;
+
+    if (success) {
       setState(() {
-        _hasRequestedToJoin = true;
+        _pendingRequests.remove(user);
+        if (accept) {
+          _members.add(user);
+        }
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Join request sent! Waiting for approval.'),
+        SnackBar(
+          content: Text(accept
+              ? '${user.displayName} has been added to the group'
+              : '${user.displayName}\'s request has been declined'),
+          backgroundColor: accept ? Colors.green : Colors.orange,
         ),
       );
     } else {
-      setState(() {
-        _isMember = true;
-      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Successfully joined the group!'),
-          backgroundColor: Colors.green,
+          content: Text('Failed to process request'),
+          backgroundColor: Colors.red,
         ),
       );
     }
   }
 
-  void _showInviteDialog() {
-    // Implementation for inviting friends
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Invite friends feature coming soon!')),
+  void _joinGroup() async {
+    if (_socialService == null) return;
+
+    String? password;
+    
+    // If group is private and has a password, show password dialog
+    if (widget.group.isPrivate && widget.group.password != null) {
+      password = await _showPasswordDialog();
+      if (password == null) return; // User cancelled
+    }
+
+    final success = await _socialService!.joinStudyGroup(
+      groupId: widget.group.id,
+      password: password,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      if (widget.group.isPrivate) {
+        setState(() {
+          _hasRequestedToJoin = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Application sent! Status: Pending approval'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      } else {
+        setState(() {
+          _isMember = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully joined the group!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        await _loadGroupData(); // Reload group data
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to join group. Check your password or group availability.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<String?> _showPasswordDialog() async {
+    final TextEditingController passwordController = TextEditingController();
+    
+    return showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enter Group Password'),
+        content: TextField(
+          controller: passwordController,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Password',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, null),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, passwordController.text),
+            child: const Text('Join'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInviteDialog() async {
+    if (_socialService == null) return;
+    
+    // Get all friends
+    final friends = _socialService!.friends;
+    
+    // Get current group members to filter them out
+    final memberIds = widget.group.members.map((m) => m.userId).toSet();
+    
+    // Filter friends who are not already members
+    final availableFriends = <service.UserProfile>[];
+    for (final friendship in friends) {
+      final friendId = friendship.userId == _socialService!.currentUserProfile?.id 
+          ? friendship.friendId 
+          : friendship.userId;
+      
+      if (!memberIds.contains(friendId)) {
+        final friendProfile = await _socialService!.getUserProfile(friendId);
+        if (friendProfile != null) {
+          availableFriends.add(friendProfile);
+        }
+      }
+    }
+
+    if (!mounted) return;
+
+    if (availableFriends.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No friends available to invite')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Invite Friends'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: availableFriends.length,
+            itemBuilder: (context, index) {
+              final friend = availableFriends[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundImage: friend.avatar != null
+                      ? NetworkImage(friend.avatar!)
+                      : null,
+                  child: friend.avatar == null
+                      ? Text(friend.displayName[0].toUpperCase())
+                      : null,
+                ),
+                title: Text(friend.displayName),
+                subtitle: Text('@${friend.username}'),
+                trailing: ElevatedButton(
+                  onPressed: () async {
+                    final success = await _socialService!.inviteFriendToGroup(
+                      groupId: widget.group.id,
+                      friendId: friend.id,
+                    );
+                    
+                    if (!mounted) return;
+                    
+                    if (success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Invited ${friend.displayName} to the group!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      Navigator.pop(context);
+                      setState(() {}); // Refresh the members list
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Failed to invite friend'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Invite'),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
