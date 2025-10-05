@@ -1,26 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../services/social_learning_service.dart';
 
-// TODO: Chat Screen - Critical Real-Time Messaging Gaps
-// - Current implementation is LOCAL UI ONLY - NO REAL MESSAGING FUNCTIONALITY
-// - Need to implement real-time messaging with Firebase/Firestore or WebSocket
-// - Missing proper message encryption and security for private conversations
-// - Need to implement message delivery and read receipts
-// - Missing typing indicators and real-time user presence
-// - Need to implement proper message persistence and chat history
-// - Missing file sharing, image sharing, and voice message capabilities
-// - Need to implement message reactions, replies, and threading
-// - Missing push notifications for new messages when app is closed
-// - Need to implement proper user blocking and reporting functionality
-// - Missing message search and filtering capabilities
-// - Need to implement proper chat backup and restoration
-// - Missing integration with study session scheduling from chat
-// - Need to implement group chat functionality beyond 1-on-1
-// - Missing accessibility features for screen readers and voice commands
-// - Need to implement proper message moderation and content filtering
-// - Missing integration with translation services for international users
-// - Need to implement proper offline message queuing and sync
-
+/// Real-time chat screen with Firestore integration (Discord-like)
 class ChatScreen extends StatefulWidget {
   final UserProfile otherUser;
   final SocialLearningService socialService;
@@ -37,79 +19,34 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final List<ChatMessage> _messages = [];
   final ScrollController _scrollController = ScrollController();
-  bool _isTyping = false;
+  Timer? _typingTimer;
+  bool _isCurrentlyTyping = false;
 
   @override
   void initState() {
     super.initState();
-    _loadChatHistory();
+    _markMessagesAsRead();
   }
 
   @override
   void dispose() {
+    _typingTimer?.cancel();
+    // Clear typing status when leaving chat
+    if (_isCurrentlyTyping) {
+      widget.socialService.updateTypingStatus(
+        recipientId: widget.otherUser.id,
+        isTyping: false,
+      );
+    }
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  /// TODO: CHAT HISTORY LOADING - REPLACE WITH REAL IMPLEMENTATION
-  /// - Current method loads only hardcoded mock messages
-  /// - Need to implement real chat history loading from Firebase/Firestore
-  /// - Missing pagination for large chat histories
-  /// - Need to implement proper message ordering and chronological display
-  /// - Missing integration with user authentication and message ownership
-  /// - Need to implement real-time message listeners for new incoming messages
-  /// - Missing proper error handling for network failures and data corruption
-  /// - Need to implement message caching for offline viewing
-  void _loadChatHistory() {
-    // Mock chat history - in a real app, this would load from a database
-    setState(() {
-      _messages.addAll([
-        ChatMessage(
-          id: '1',
-          senderId: widget.otherUser.id,
-          senderName: widget.otherUser.displayName,
-          message: 'Hey! Ready for our study session?',
-          timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-          isMe: false,
-        ),
-        ChatMessage(
-          id: '2',
-          senderId: widget.socialService.currentUserProfile?.id ?? '',
-          senderName:
-              widget.socialService.currentUserProfile?.displayName ?? 'You',
-          message: 'Yes! I\'ve prepared some notes. What time works for you?',
-          timestamp:
-              DateTime.now().subtract(const Duration(hours: 1, minutes: 45)),
-          isMe: true,
-        ),
-        ChatMessage(
-          id: '3',
-          senderId: widget.otherUser.id,
-          senderName: widget.otherUser.displayName,
-          message: 'How about 3 PM? We can meet in the virtual study room.',
-          timestamp:
-              DateTime.now().subtract(const Duration(hours: 1, minutes: 30)),
-          isMe: false,
-        ),
-        ChatMessage(
-          id: '4',
-          senderId: widget.socialService.currentUserProfile?.id ?? '',
-          senderName:
-              widget.socialService.currentUserProfile?.displayName ?? 'You',
-          message: 'Perfect! See you at 3 PM 📚',
-          timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-          isMe: true,
-        ),
-      ]);
-    });
-
-    // Auto-scroll to bottom
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToBottom();
-    });
+  void _markMessagesAsRead() {
+    // Mark messages as read when opening chat
+    widget.socialService.markMessagesAsRead(widget.otherUser.id);
   }
 
   @override
@@ -148,14 +85,33 @@ class _ChatScreenState extends State<ChatScreen> {
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    widget.otherUser.isOnline ? 'Online' : 'Offline',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: widget.otherUser.isOnline
-                          ? Colors.green
-                          : Colors.grey,
-                    ),
+                  // Real-time typing status
+                  StreamBuilder<bool>(
+                    stream: widget.socialService.listenToTypingStatus(widget.otherUser.id),
+                    builder: (context, snapshot) {
+                      final isTyping = snapshot.data ?? false;
+                      
+                      if (isTyping) {
+                        return Text(
+                          'typing...',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        );
+                      }
+                      
+                      return Text(
+                        widget.otherUser.isOnline ? 'Online' : 'Offline',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: widget.otherUser.isOnline
+                              ? Colors.green
+                              : Colors.grey,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -164,16 +120,6 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: _startVideoCall,
-            icon: const Icon(Icons.videocam),
-            tooltip: 'Video Call',
-          ),
-          IconButton(
-            onPressed: _startVoiceCall,
-            icon: const Icon(Icons.call),
-            tooltip: 'Voice Call',
-          ),
-          IconButton(
             onPressed: _showChatOptions,
             icon: const Icon(Icons.more_vert),
           ),
@@ -181,65 +127,98 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          // Messages List
+          // Messages List (Real-time from Firestore)
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(message);
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: widget.socialService.listenToMessages(widget.otherUser.id),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red[300],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading messages',
+                          style: TextStyle(color: Colors.red[300]),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () => setState(() {}),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                final messages = snapshot.data ?? [];
+                
+                if (messages.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No messages yet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Send a message to start chatting!',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
+                // Auto-scroll to bottom when new messages arrive
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (_scrollController.hasClients) {
+                    _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOut,
+                    );
+                  }
+                });
+                
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    return _buildMessageBubble(message);
+                  },
+                );
               },
             ),
           ),
-
-          // Typing indicator
-          if (_isTyping)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 12,
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                    child: Text(
-                      widget.otherUser.displayName[0].toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${widget.otherUser.displayName} is typing...',
-                    style: TextStyle(
-                      fontStyle: FontStyle.italic,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
           // Message Input
           _buildMessageInput(),
@@ -248,26 +227,35 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message) {
+  Widget _buildMessageBubble(Map<String, dynamic> message) {
+    final isMe = message['isMe'] as bool;
+    final messageText = message['message'] as String;
+    final timestamp = message['timestamp'] as DateTime;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment:
-            message.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!message.isMe) ...[
+          if (!isMe) ...[
             CircleAvatar(
               radius: 16,
               backgroundColor:
                   Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              child: Text(
-                message.senderName[0].toUpperCase(),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
+              backgroundImage: widget.otherUser.avatar != null
+                  ? NetworkImage(widget.otherUser.avatar!)
+                  : null,
+              child: widget.otherUser.avatar == null
+                  ? Text(
+                      widget.otherUser.displayName[0].toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(width: 8),
           ],
@@ -278,36 +266,28 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: message.isMe
+                color: isMe
                     ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surface,
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(20),
-                border: !message.isMe
-                    ? Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withValues(alpha: 0.2),
-                      )
-                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    message.message,
+                    messageText,
                     style: TextStyle(
-                      color: message.isMe
+                      color: isMe
                           ? Theme.of(context).colorScheme.onPrimary
                           : Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _formatTimestamp(message.timestamp),
+                    _formatTimestamp(timestamp),
                     style: TextStyle(
                       fontSize: 11,
-                      color: message.isMe
+                      color: isMe
                           ? Theme.of(context)
                               .colorScheme
                               .onPrimary
@@ -322,21 +302,6 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ),
-          if (message.isMe) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              child: Text(
-                'You'[0].toUpperCase(),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -356,22 +321,17 @@ class _ChatScreenState extends State<ChatScreen> {
       child: SafeArea(
         child: Row(
           children: [
-            IconButton(
-              onPressed: _showAttachmentOptions,
-              icon: const Icon(Icons.add_circle_outline),
-              tooltip: 'Attach',
-            ),
             Expanded(
               child: TextField(
                 controller: _messageController,
                 decoration: InputDecoration(
-                  hintText: 'Type a message...',
+                  hintText: 'Message @${widget.otherUser.username}',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
@@ -406,105 +366,56 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onMessageChanged(String text) {
-    // Simulate typing indicator
-    if (text.isNotEmpty && !_isTyping) {
-      setState(() {
-        _isTyping = true;
-      });
-
-      // Hide typing indicator after 3 seconds
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) {
-          setState(() {
-            _isTyping = false;
-          });
+    // Update typing status (Discord-like debouncing)
+    if (text.isNotEmpty) {
+      if (!_isCurrentlyTyping) {
+        _isCurrentlyTyping = true;
+        widget.socialService.updateTypingStatus(
+          recipientId: widget.otherUser.id,
+          isTyping: true,
+        );
+      }
+      
+      // Reset typing timer
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 3), () {
+        if (_isCurrentlyTyping) {
+          _isCurrentlyTyping = false;
+          widget.socialService.updateTypingStatus(
+            recipientId: widget.otherUser.id,
+            isTyping: false,
+          );
         }
       });
+    } else {
+      // Clear typing immediately when text is empty
+      _typingTimer?.cancel();
+      if (_isCurrentlyTyping) {
+        _isCurrentlyTyping = false;
+        widget.socialService.updateTypingStatus(
+          recipientId: widget.otherUser.id,
+          isTyping: false,
+        );
+      }
     }
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     final messageText = _messageController.text.trim();
     if (messageText.isEmpty) return;
 
-    final newMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      senderId: widget.socialService.currentUserProfile?.id ?? '',
-      senderName: widget.socialService.currentUserProfile?.displayName ?? 'You',
-      message: messageText,
-      timestamp: DateTime.now(),
-      isMe: true,
+    // Clear input immediately (Discord-like UX)
+    _messageController.clear();
+    
+    // Clear typing status
+    _typingTimer?.cancel();
+    _isCurrentlyTyping = false;
+
+    // Send message to Firestore
+    await widget.socialService.sendMessage(
+      recipientId: widget.otherUser.id,
+      messageText: messageText,
     );
-
-    setState(() {
-      _messages.add(newMessage);
-      _messageController.clear();
-    });
-
-    _scrollToBottom();
-
-    // Simulate a response after 2-5 seconds
-    Future.delayed(
-      Duration(seconds: 2 + (DateTime.now().millisecond % 3)),
-      () {
-        if (mounted) {
-          _simulateResponse(messageText);
-        }
-      },
-    );
-  }
-
-  void _simulateResponse(String originalMessage) {
-    List<String> responses = [
-      'That sounds great! 📚',
-      'I agree with you on that.',
-      'Let me think about it...',
-      'Good point! I hadn\'t considered that.',
-      'Thanks for sharing that resource!',
-      'Should we schedule a study session?',
-      'I found a helpful video about this topic.',
-      'Can you explain that concept again?',
-      'This is really helpful, thanks!',
-      'Let\'s review this together later.',
-    ];
-
-    // Generate contextual responses based on keywords
-    String response;
-    if (originalMessage.toLowerCase().contains('study')) {
-      response =
-          'Great! Let\'s set up a study session. What time works for you?';
-    } else if (originalMessage.toLowerCase().contains('help')) {
-      response = 'I\'d be happy to help! What do you need assistance with?';
-    } else if (originalMessage.toLowerCase().contains('thanks')) {
-      response = 'You\'re welcome! Happy to help anytime! 😊';
-    } else {
-      response = responses[DateTime.now().millisecond % responses.length];
-    }
-
-    final responseMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      senderId: widget.otherUser.id,
-      senderName: widget.otherUser.displayName,
-      message: response,
-      timestamp: DateTime.now(),
-      isMe: false,
-    );
-
-    setState(() {
-      _messages.add(responseMessage);
-    });
-
-    _scrollToBottom();
-  }
-
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
   }
 
   String _formatTimestamp(DateTime timestamp) {
@@ -514,57 +425,14 @@ class _ChatScreenState extends State<ChatScreen> {
     if (difference.inMinutes < 1) {
       return 'Now';
     } else if (difference.inHours < 1) {
-      return '${difference.inMinutes}m';
+      return '${difference.inMinutes}m ago';
     } else if (difference.inDays < 1) {
-      return '${difference.inHours}h';
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
     } else {
-      return '${difference.inDays}d';
+      return '${timestamp.month}/${timestamp.day}/${timestamp.year}';
     }
-  }
-
-  void _showAttachmentOptions() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo),
-              title: const Text('Photo'),
-              onTap: () {
-                Navigator.pop(context);
-                _attachPhoto();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.videocam),
-              title: const Text('Video'),
-              onTap: () {
-                Navigator.pop(context);
-                _attachVideo();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.insert_drive_file),
-              title: const Text('Document'),
-              onTap: () {
-                Navigator.pop(context);
-                _attachDocument();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.location_on),
-              title: const Text('Location'),
-              onTap: () {
-                Navigator.pop(context);
-                _shareLocation();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showChatOptions() {
@@ -575,11 +443,13 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.search),
-              title: const Text('Search Messages'),
+              leading: const Icon(Icons.person),
+              title: Text('View ${widget.otherUser.displayName}\'s Profile'),
               onTap: () {
                 Navigator.pop(context);
-                _searchMessages();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Profile view - Coming soon!')),
+                );
               },
             ),
             ListTile(
@@ -587,23 +457,17 @@ class _ChatScreenState extends State<ChatScreen> {
               title: const Text('Mute Conversation'),
               onTap: () {
                 Navigator.pop(context);
-                _muteConversation();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Mute - Coming soon!')),
+                );
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text('Clear Chat History'),
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Clear Chat History', style: TextStyle(color: Colors.red)),
               onTap: () {
                 Navigator.pop(context);
-                _clearChatHistory();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.block),
-              title: const Text('Block User'),
-              onTap: () {
-                Navigator.pop(context);
-                _blockUser();
+                _confirmClearChat();
               },
             ),
           ],
@@ -612,67 +476,13 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _startVideoCall() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'Starting video call with ${widget.otherUser.displayName} - Coming soon!'),
-      ),
-    );
-  }
-
-  void _startVoiceCall() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-            'Starting voice call with ${widget.otherUser.displayName} - Coming soon!'),
-      ),
-    );
-  }
-
-  void _attachPhoto() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Photo attachment - Coming soon!')),
-    );
-  }
-
-  void _attachVideo() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Video attachment - Coming soon!')),
-    );
-  }
-
-  void _attachDocument() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Document attachment - Coming soon!')),
-    );
-  }
-
-  void _shareLocation() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Location sharing - Coming soon!')),
-    );
-  }
-
-  void _searchMessages() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Message search - Coming soon!')),
-    );
-  }
-
-  void _muteConversation() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Conversation muted - Coming soon!')),
-    );
-  }
-
-  void _clearChatHistory() {
+  void _confirmClearChat() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear Chat History'),
         content: const Text(
-          'Are you sure you want to clear all messages? This action cannot be undone.',
+          'This will delete all messages in this conversation. This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -682,11 +492,8 @@ class _ChatScreenState extends State<ChatScreen> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              setState(() {
-                _messages.clear();
-              });
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Chat history cleared')),
+                const SnackBar(content: Text('Clear chat - Coming soon!')),
               );
             },
             style: FilledButton.styleFrom(
@@ -698,53 +505,4 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-
-  void _blockUser() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Block ${widget.otherUser.displayName}?'),
-        content: const Text(
-          'This user will no longer be able to send you messages.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Block user functionality - Coming soon!')),
-              );
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Block'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ChatMessage {
-  final String id;
-  final String senderId;
-  final String senderName;
-  final String message;
-  final DateTime timestamp;
-  final bool isMe;
-
-  ChatMessage({
-    required this.id,
-    required this.senderId,
-    required this.senderName,
-    required this.message,
-    required this.timestamp,
-    required this.isMe,
-  });
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -419,11 +420,55 @@ class SocialLearningService {
   List<Friendship> _friendships = [];
   List<StudyGroup> _studyGroups = [];
   List<CollaborativeSession> _collaborativeSessions = [];
+  
+  // Cache for user profiles to avoid redundant Firestore calls
+  final Map<String, UserProfile> _profileCache = {};
 
   /// Initialize the service
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
     await _loadUserData();
+    _setupPresenceTracking();
+  }
+  
+  /// Set up automatic presence tracking
+  void _setupPresenceTracking() {
+    final user = _auth.currentUser;
+    if (user != null) {
+      // Set user as active on initialization
+      _updatePresence(isActive: true);
+      
+      // Update presence periodically (every 5 minutes)
+      Timer.periodic(const Duration(minutes: 5), (timer) {
+        final currentUser = _auth.currentUser;
+        if (currentUser != null) {
+          _updatePresence(isActive: true);
+        } else {
+          timer.cancel();
+        }
+      });
+    }
+  }
+  
+  /// Update user presence status
+  Future<void> _updatePresence({required bool isActive}) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    
+    try {
+      await _firestoreService.usersCollection.doc(user.uid).update({
+        'isActive': isActive,
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      });
+      debugPrint('✅ Updated presence: isActive=$isActive');
+    } catch (e) {
+      debugPrint('⚠️ Error updating presence: $e');
+    }
+  }
+  
+  /// Set user offline (call when logging out)
+  Future<void> setOffline() async {
+    await _updatePresence(isActive: false);
   }
 
   /// Load user data from storage
@@ -789,6 +834,23 @@ class SocialLearningService {
     );
 
     await _saveUserData();
+    
+    // Clear cache so friends see updated profile
+    final userId = _currentUserProfile!.id;
+    _profileCache.remove(userId);
+    debugPrint('🔄 Cleared profile cache for user: $userId');
+  }
+  
+  /// Clear cached profile for a specific user (useful when profile is updated)
+  void clearProfileCache(String userId) {
+    _profileCache.remove(userId);
+    debugPrint('🔄 Cleared profile cache for user: $userId');
+  }
+  
+  /// Clear all cached profiles
+  void clearAllProfileCaches() {
+    _profileCache.clear();
+    debugPrint('🔄 Cleared all profile caches');
   }
 
   /// Send friend request
@@ -1099,14 +1161,590 @@ class SocialLearningService {
       .where((f) => !f.isAccepted && f.userId == _currentUserProfile?.id)
       .toList();
 
+  /// Refresh friendships from Firestore
+  /// Call this to check for new friend requests
+  Future<void> refreshFriendships() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      debugPrint('❌ Cannot refresh friendships: Not authenticated');
+      return;
+    }
+
+    try {
+      debugPrint('🔄 Refreshing friendships from Firestore...');
+      
+      // Load sent requests (where current user is the sender)
+      final sentRequests = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: currentUser.uid)
+          .get();
+      
+      // Load received requests (where current user is the receiver)
+      final receivedRequests = await _firestoreService.friendshipsCollection
+          .where('friendId', isEqualTo: currentUser.uid)
+          .get();
+      
+      _friendships.clear();
+      
+      // Process sent requests
+      for (final doc in sentRequests.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        _friendships.add(Friendship(
+          id: data['id'],
+          userId: data['userId'],
+          friendId: data['friendId'],
+          requestDate: (data['requestDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          acceptDate: (data['acceptDate'] as Timestamp?)?.toDate(),
+          isAccepted: data['isAccepted'] ?? false,
+          requestMessage: data['requestMessage'],
+        ));
+      }
+      
+      // Process received requests
+      for (final doc in receivedRequests.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        _friendships.add(Friendship(
+          id: data['id'],
+          userId: data['userId'],
+          friendId: data['friendId'],
+          requestDate: (data['requestDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          acceptDate: (data['acceptDate'] as Timestamp?)?.toDate(),
+          isAccepted: data['isAccepted'] ?? false,
+          requestMessage: data['requestMessage'],
+        ));
+      }
+      
+      debugPrint('✅ Refreshed ${_friendships.length} friendships from Firestore');
+      debugPrint('📊 Pending requests: ${pendingFriendRequests.length}, Sent requests: ${sentFriendRequests.length}');
+    } catch (e) {
+      debugPrint('❌ Error refreshing friendships: $e');
+    }
+  }
+
+  /// Get user profile by ID from Firestore
+  Future<UserProfile?> getUserProfile(String userId) async {
+    // Check cache first
+    if (_profileCache.containsKey(userId)) {
+      debugPrint('✅ Using cached profile for: $userId');
+      return _profileCache[userId];
+    }
+    
+    try {
+      debugPrint('📥 Fetching user profile for: $userId');
+      
+      final doc = await _firestoreService.usersCollection.doc(userId).get();
+      
+      if (!doc.exists) {
+        debugPrint('❌ User profile not found: $userId');
+        
+        // Check if this might be a demo user by searching all users
+        final allUsersSnapshot = await _firestoreService.usersCollection.get();
+        for (final userDoc in allUsersSnapshot.docs) {
+          final data = userDoc.data() as Map<String, dynamic>?;
+          if (data != null) {
+            final docId = userDoc.id;
+            // Check if document ID matches or if there's any reference to this userId
+            if (docId == userId || data['uid'] == userId) {
+              debugPrint('🔍 Found user in document: $docId with uid: ${data['uid']}');
+              // Recursively call with the correct document ID
+              if (docId != userId) {
+                return await getUserProfile(docId);
+              }
+            }
+          }
+        }
+        
+        // If still not found, create a demo user profile
+        debugPrint('⚠️ Creating demo profile for: $userId');
+        final demoProfile = UserProfile(
+          id: userId,
+          username: 'demo_${userId.substring(0, 8)}',
+          displayName: 'Demo User',
+          bio: 'This is a demo account',
+          joinDate: DateTime.now(),
+          level: 1,
+          totalXP: 0,
+          title: 'Demo',
+          interests: [],
+        );
+        _profileCache[userId] = demoProfile;
+        return demoProfile;
+      }
+      
+      final rawData = doc.data();
+      if (rawData == null) {
+        debugPrint('❌ User document has no data: $userId');
+        return null;
+      }
+      
+      // Safely convert to Map<String, dynamic>
+      Map<String, dynamic> data;
+      if (rawData is Map<String, dynamic>) {
+        data = rawData;
+      } else if (rawData is Map) {
+        data = Map<String, dynamic>.from(rawData);
+      } else {
+        debugPrint('❌ Unexpected data type for user $userId: ${rawData.runtimeType}');
+        return null;
+      }
+      
+      // Check if this is a demo user (missing critical fields)
+      final hasValidUid = data['uid'] != null && data['uid'] == userId;
+      final hasEmail = data['email'] != null && (data['email'] as String).isNotEmpty;
+      
+      if (!hasValidUid || !hasEmail) {
+        debugPrint('⚠️ User $userId appears to be a demo account (uid: ${data['uid']}, hasEmail: $hasEmail)');
+        // Mark it as a demo user in the display
+        final demoProfile = UserProfile(
+          id: userId,
+          username: data['username'] ?? 'demo_user',
+          displayName: '${data['displayName'] ?? 'Demo User'} [Demo]',
+          avatar: data['profilePicture'],
+          bio: data['bio'] ?? 'Demo account',
+          joinDate: DateTime.now(),
+          level: 1,
+          totalXP: 0,
+          title: 'Demo',
+          interests: [],
+        );
+        _profileCache[userId] = demoProfile;
+        return demoProfile;
+      }
+      
+      // Helper function to safely get Map from dynamic data
+      Map<String, dynamic>? getMapSafely(dynamic value) {
+        if (value == null) return null;
+        if (value is Map<String, dynamic>) return value;
+        if (value is Map) return Map<String, dynamic>.from(value);
+        return null;
+      }
+      
+      // Helper function to safely get List from dynamic data
+      List<String> getListSafely(dynamic value) {
+        if (value == null) return [];
+        if (value is List) return value.map((e) => e.toString()).toList();
+        return [];
+      }
+      
+      final studyStatsData = getMapSafely(data['studyStats']);
+      final privacySettingsData = getMapSafely(data['privacySettings']);
+      
+      // Determine if user is truly online based on lastActiveAt timestamp
+      final lastActive = (data['lastActiveAt'] as Timestamp?)?.toDate();
+      final isActive = data['isActive'] ?? false;
+      
+      // Consider user online if they're marked active AND were active within last 10 minutes
+      final isTrulyOnline = isActive && lastActive != null && 
+          DateTime.now().difference(lastActive).inMinutes < 10;
+      
+      final profile = UserProfile(
+        id: userId,
+        username: data['username'] ?? 'unknown',
+        displayName: data['displayName'] ?? 'Unknown User',
+        avatar: data['profilePicture'],
+        bio: data['bio'],
+        joinDate: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        level: studyStatsData?['level'] ?? 1,
+        totalXP: studyStatsData?['totalXP'] ?? 0,
+        title: studyStatsData?['title'] ?? 'Beginner',
+        interests: getListSafely(data['interests']),
+        profilePrivacy: _parsePrivacyLevel(privacySettingsData?['profileVisibility']),
+        progressPrivacy: _parsePrivacyLevel(privacySettingsData?['progressVisibility']),
+        friendsPrivacy: _parsePrivacyLevel(privacySettingsData?['friendsVisibility']),
+        isOnline: isTrulyOnline,
+        lastActive: lastActive,
+        studyStats: studyStatsData ?? {},
+        achievements: getMapSafely(data['achievements']) ?? {},
+      );
+      
+      // Cache the profile
+      _profileCache[userId] = profile;
+      
+      debugPrint('✅ Loaded profile: ${profile.displayName} (@${profile.username}) - Online: $isTrulyOnline');
+      return profile;
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error fetching user profile: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return null;
+    }
+  }
+
   /// Get study groups where user is a member
   List<StudyGroup> get myStudyGroups => _studyGroups
       .where((g) => g.members.any((m) => m.userId == _currentUserProfile?.id))
       .toList();
 
   /// Get all public study groups (for discovery)
+  /// This returns only locally loaded groups - use getPublicStudyGroupsForDiscovery for full list
   List<StudyGroup> get publicStudyGroups =>
       _studyGroups.where((g) => !g.isPrivate).toList();
+      
+  /// Get all public study groups from Firestore for discovery
+  Future<List<StudyGroup>> getPublicStudyGroupsForDiscovery({int limit = 20}) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot load public groups: Not authenticated');
+        return [];
+      }
+      
+      debugPrint('🔍 Loading public study groups from Firestore...');
+      
+      // Query Firestore for public groups
+      final groupsSnapshot = await _firestoreService.studyGroupsCollection
+          .where('isPrivate', isEqualTo: false)
+          .limit(limit)
+          .get();
+      
+      debugPrint('Found ${groupsSnapshot.docs.length} public study groups');
+      
+      final groups = <StudyGroup>[];
+      
+      for (final doc in groupsSnapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          
+          // Parse members array
+          final membersData = data['members'] as List<dynamic>? ?? [];
+          final members = <StudyGroupMember>[];
+          
+          for (final memberData in membersData) {
+            final member = memberData as Map<String, dynamic>;
+            members.add(StudyGroupMember(
+              userId: member['userId'] ?? '',
+              groupId: data['id'] ?? doc.id,
+              role: _parseStudyGroupRole(member['role']),
+              status: _parseMembershipStatus(member['status']),
+              joinDate: (member['joinDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+              lastActive: (member['lastActive'] as Timestamp?)?.toDate(),
+              contributions: member['contributions'] ?? 0,
+            ));
+          }
+          
+          final group = StudyGroup(
+            id: data['id'] ?? doc.id,
+            name: data['name'] ?? 'Unnamed Group',
+            description: data['description'] ?? '',
+            ownerId: data['ownerId'] ?? '',
+            createdDate: (data['createdDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            subjects: List<String>.from(data['subjects'] ?? []),
+            maxMembers: data['maxMembers'] ?? 50,
+            isPrivate: data['isPrivate'] ?? false,
+            password: data['password'],
+            avatar: data['avatar'],
+            currentMembers: members.length,
+            members: members,
+            settings: data['settings'] as Map<String, dynamic>? ?? {},
+          );
+          
+          groups.add(group);
+          debugPrint('✅ Loaded group: ${group.name} (${group.currentMembers}/${group.maxMembers} members)');
+        } catch (e) {
+          debugPrint('⚠️ Error parsing group ${doc.id}: $e');
+        }
+      }
+      
+      debugPrint('✅ Loaded ${groups.length} public study groups for discovery');
+      return groups;
+    } catch (e) {
+      debugPrint('❌ Error loading public study groups: $e');
+      return [];
+    }
+  }
+
+  /// Get a specific study group by ID from Firestore
+  Future<StudyGroup?> getStudyGroupById(String groupId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot load group: Not authenticated');
+        return null;
+      }
+      
+      debugPrint('🔍 Loading study group $groupId from Firestore...');
+      
+      final groupDoc = await _firestoreService.studyGroupsCollection.doc(groupId).get();
+      
+      if (!groupDoc.exists) {
+        debugPrint('❌ Group $groupId not found');
+        return null;
+      }
+      
+      final data = groupDoc.data() as Map<String, dynamic>;
+      
+      // Parse members array
+      final membersData = data['members'] as List<dynamic>? ?? [];
+      final members = <StudyGroupMember>[];
+      
+      for (final memberData in membersData) {
+        final member = memberData as Map<String, dynamic>;
+        members.add(StudyGroupMember(
+          userId: member['userId'] ?? '',
+          groupId: data['id'] ?? groupDoc.id,
+          role: _parseStudyGroupRole(member['role']),
+          status: _parseMembershipStatus(member['status']),
+          joinDate: (member['joinDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          lastActive: (member['lastActive'] as Timestamp?)?.toDate(),
+          contributions: member['contributions'] ?? 0,
+        ));
+      }
+      
+      final group = StudyGroup(
+        id: data['id'] ?? groupDoc.id,
+        name: data['name'] ?? 'Unnamed Group',
+        description: data['description'] ?? '',
+        ownerId: data['ownerId'] ?? '',
+        createdDate: (data['createdDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        subjects: List<String>.from(data['subjects'] ?? []),
+        maxMembers: data['maxMembers'] ?? 50,
+        isPrivate: data['isPrivate'] ?? false,
+        password: data['password'],
+        avatar: data['avatar'],
+        currentMembers: members.length,
+        members: members,
+        settings: data['settings'] as Map<String, dynamic>? ?? {},
+      );
+      
+      debugPrint('✅ Loaded group: ${group.name} (${group.currentMembers}/${group.maxMembers} members)');
+      return group;
+    } catch (e) {
+      debugPrint('❌ Error loading study group $groupId: $e');
+      return null;
+    }
+  }
+
+  /// Get member profiles for a study group
+  Future<List<UserProfile>> getGroupMembers(StudyGroup group) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot load group members: Not authenticated');
+        return [];
+      }
+      
+      debugPrint('🔍 Loading ${group.members.length} members for group ${group.name}...');
+      
+      final memberProfiles = <UserProfile>[];
+      
+      for (final member in group.members) {
+        // Skip inactive/banned members
+        if (member.status != MembershipStatus.active) {
+          debugPrint('⏭️ Skipping non-active member: ${member.userId}');
+          continue;
+        }
+        
+        final profile = await getUserProfile(member.userId);
+        if (profile != null) {
+          memberProfiles.add(profile);
+          debugPrint('✅ Loaded member profile: ${profile.displayName}');
+        } else {
+          debugPrint('⚠️ Could not load profile for member: ${member.userId}');
+        }
+      }
+      
+      debugPrint('✅ Loaded ${memberProfiles.length} member profiles for group ${group.name}');
+      return memberProfiles;
+    } catch (e) {
+      debugPrint('❌ Error loading group members: $e');
+      return [];
+    }
+  }
+
+  // ==================== CHAT SYSTEM ====================
+  
+  /// Get unique chat ID for two users (always same order)
+  String getChatId(String userId1, String userId2) {
+    final ids = [userId1, userId2]..sort();
+    return '${ids[0]}_${ids[1]}';
+  }
+  
+  /// Send a message to another user
+  Future<void> sendMessage({
+    required String recipientId,
+    required String messageText,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot send message: Not authenticated');
+        return;
+      }
+      
+      if (messageText.trim().isEmpty) {
+        debugPrint('❌ Cannot send empty message');
+        return;
+      }
+      
+      final chatId = getChatId(currentUser.uid, recipientId);
+      final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      debugPrint('💬 Sending message to chat: $chatId');
+      
+      // Create message data
+      final messageData = {
+        'id': messageId,
+        'chatId': chatId,
+        'senderId': currentUser.uid,
+        'recipientId': recipientId,
+        'message': messageText.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+      };
+      
+      // Save message to Firestore
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .doc(messageId)
+          .set(messageData);
+      
+      // Update chat metadata (last message, timestamp)
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .set({
+        'participants': [currentUser.uid, recipientId],
+        'lastMessage': messageText.trim(),
+        'lastMessageTime': FieldValue.serverTimestamp(),
+        'lastMessageSenderId': currentUser.uid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      // Clear typing indicator
+      await updateTypingStatus(recipientId: recipientId, isTyping: false);
+      
+      debugPrint('✅ Message sent successfully');
+    } catch (e) {
+      debugPrint('❌ Error sending message: $e');
+    }
+  }
+  
+  /// Listen to messages in a chat (real-time)
+  Stream<List<Map<String, dynamic>>> listenToMessages(String otherUserId) {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      debugPrint('❌ Cannot listen to messages: Not authenticated');
+      return Stream.value([]);
+    }
+    
+    final chatId = getChatId(currentUser.uid, otherUserId);
+    debugPrint('👂 Listening to messages in chat: $chatId');
+    
+    return FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .orderBy('timestamp', descending: false)
+        .snapshots()
+        .map((snapshot) {
+      debugPrint('📨 Received ${snapshot.docs.length} messages');
+      
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': data['id'] ?? doc.id,
+          'senderId': data['senderId'] ?? '',
+          'recipientId': data['recipientId'] ?? '',
+          'message': data['message'] ?? '',
+          'timestamp': (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          'isRead': data['isRead'] ?? false,
+          'isMe': data['senderId'] == currentUser.uid,
+        };
+      }).toList();
+    });
+  }
+  
+  /// Update typing status
+  Future<void> updateTypingStatus({
+    required String recipientId,
+    required bool isTyping,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+      
+      final chatId = getChatId(currentUser.uid, recipientId);
+      
+      await FirebaseFirestore.instance
+          .collection('chat_typing')
+          .doc(chatId)
+          .set({
+        currentUser.uid: {
+          'isTyping': isTyping,
+          'timestamp': FieldValue.serverTimestamp(),
+        },
+      }, SetOptions(merge: true));
+      
+      debugPrint('⌨️ Updated typing status: $isTyping');
+    } catch (e) {
+      debugPrint('❌ Error updating typing status: $e');
+    }
+  }
+  
+  /// Listen to other user's typing status
+  Stream<bool> listenToTypingStatus(String otherUserId) {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      return Stream.value(false);
+    }
+    
+    final chatId = getChatId(currentUser.uid, otherUserId);
+    
+    return FirebaseFirestore.instance
+        .collection('chat_typing')
+        .doc(chatId)
+        .snapshots()
+        .map((snapshot) {
+      if (!snapshot.exists) return false;
+      
+      final data = snapshot.data();
+      if (data == null) return false;
+      
+      // Get OTHER user's typing status (not yours)
+      final otherUserData = data[otherUserId] as Map<String, dynamic>?;
+      if (otherUserData == null) return false;
+      
+      final isTyping = otherUserData['isTyping'] ?? false;
+      final timestamp = (otherUserData['timestamp'] as Timestamp?)?.toDate();
+      
+      // Only show typing if timestamp is recent (within 5 seconds)
+      if (timestamp != null && isTyping) {
+        final age = DateTime.now().difference(timestamp).inSeconds;
+        return age < 5;
+      }
+      
+      return false;
+    });
+  }
+  
+  /// Mark messages as read
+  Future<void> markMessagesAsRead(String otherUserId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+      
+      final chatId = getChatId(currentUser.uid, otherUserId);
+      
+      final unreadMessages = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .where('recipientId', isEqualTo: currentUser.uid)
+          .where('isRead', isEqualTo: false)
+          .get();
+      
+      final batch = FirebaseFirestore.instance.batch();
+      
+      for (final doc in unreadMessages.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+      
+      await batch.commit();
+      debugPrint('✅ Marked ${unreadMessages.docs.length} messages as read');
+    } catch (e) {
+      debugPrint('❌ Error marking messages as read: $e');
+    }
+  }
 
   /// Get collaborative sessions where user is involved
   List<CollaborativeSession> get myCollaborativeSessions =>
@@ -1163,12 +1801,24 @@ class SocialLearningService {
       }
 
       debugPrint('Current user UID: ${currentUser.uid}');
+      
+      // Get list of friend IDs to exclude from discovery
+      final friendIds = <String>{};
+      for (final friendship in _friendships) {
+        // Add both userId and friendId to cover all friendship records
+        friendIds.add(friendship.userId);
+        friendIds.add(friendship.friendId);
+      }
+      // Remove current user from exclusion list
+      friendIds.remove(currentUser.uid);
+      
+      debugPrint('📋 Excluding ${friendIds.length} friends from discovery');
 
       // Try to get data from Firestore with offline support
       try {
         // First, let's try a simpler query without the isActive filter
         // since that field might not exist on all user documents
-        final usersQuery = _firestoreService.usersCollection.limit(limit);
+        final usersQuery = _firestoreService.usersCollection.limit(limit + friendIds.length);
 
         final querySnapshot = await usersQuery.get();
 
@@ -1189,6 +1839,12 @@ class SocialLearningService {
             debugPrint('Skipping current user: $uid');
             continue;
           }
+          
+          // Skip friends (existing friendships)
+          if (uid != null && friendIds.contains(uid)) {
+            debugPrint('Skipping friend: $uid');
+            continue;
+          }
 
           // Convert Firestore user data to UserProfile
           final userProfile = _mapFirestoreUserToProfile(data);
@@ -1196,12 +1852,17 @@ class SocialLearningService {
             debugPrint(
                 'Successfully mapped user profile: ${userProfile.displayName}');
             userProfiles.add(userProfile);
+            
+            // Stop if we've reached the limit
+            if (userProfiles.length >= limit) {
+              break;
+            }
           } else {
             debugPrint('Failed to map user profile for UID: $uid');
           }
         }
 
-        debugPrint('Returning ${userProfiles.length} user profiles');
+        debugPrint('Returning ${userProfiles.length} user profiles (excluding ${friendIds.length} friends)');
         return userProfiles;
       } catch (firestoreError) {
         debugPrint('Firestore query failed: $firestoreError');

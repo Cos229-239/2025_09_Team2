@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../services/social_learning_service.dart' as service;
 
 class GroupDetailsScreen extends StatefulWidget {
@@ -18,10 +19,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   late TabController _tabController;
   bool _isLoading = true;
   bool _isMember = false;
+  bool _isOwner = false;
   bool _hasRequestedToJoin = false;
   List<service.UserProfile> _members = [];
   List<service.UserProfile> _pendingRequests = [];
   service.SocialLearningService? _socialService;
+  service.StudyGroup? _currentGroup; // Store the fresh group data
 
   @override
   void initState() {
@@ -43,90 +46,59 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   }
 
   Future<void> _loadGroupData() async {
-    // Simulate loading group data
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      debugPrint('🔍 Loading group data for: ${widget.group.id}');
+      
+      // Get current user ID
+      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+      if (currentUserId == null) {
+        debugPrint('❌ No current user ID');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      // Fetch fresh group data from Firestore
+      final freshGroup = await _socialService!.getStudyGroupById(widget.group.id);
+      
+      if (freshGroup == null) {
+        debugPrint('❌ Could not load group data');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      _currentGroup = freshGroup;
+      
+      // Check if current user is the owner
+      _isOwner = freshGroup.ownerId == currentUserId;
+      debugPrint('👑 Is owner: $_isOwner (Owner: ${freshGroup.ownerId}, Current: $currentUserId)');
+      
+      // Check if current user is a member (owner is always a member)
+      _isMember = _isOwner || freshGroup.members.any((member) => 
+        member.userId == currentUserId && member.status == service.MembershipStatus.active
+      );
+      debugPrint('👥 Is member: $_isMember');
+      
+      // Load member profiles
+      _members = await _socialService!.getGroupMembers(freshGroup);
+      debugPrint('✅ Loaded ${_members.length} member profiles');
+      
+      // TODO: Load pending join requests (would need to be stored in Firestore)
+      // For now, keep empty list
+      _pendingRequests = [];
 
-    // Mock data - in a real app, this would come from the service
-    _members = [
-      service.UserProfile(
-        id: '1',
-        username: 'alex_study',
-        displayName: 'Alex Johnson',
-        bio: 'Math enthusiast and study group leader',
-        joinDate: DateTime.now().subtract(const Duration(days: 30)),
-        level: 5,
-        totalXP: 1250,
-        title: 'Study Group Leader',
-        interests: ['Mathematics', 'Calculus'],
-        achievements: {},
-        profilePrivacy: service.PrivacyLevel.public,
-        progressPrivacy: service.PrivacyLevel.public,
-        friendsPrivacy: service.PrivacyLevel.friends,
-        isOnline: true,
-        studyStats: {},
-      ),
-      service.UserProfile(
-        id: '2',
-        username: 'sarah_math',
-        displayName: 'Sarah Chen',
-        bio: 'Engineering student passionate about learning',
-        joinDate: DateTime.now().subtract(const Duration(days: 15)),
-        level: 3,
-        totalXP: 750,
-        title: 'Active Learner',
-        interests: ['Engineering', 'Mathematics'],
-        achievements: {},
-        profilePrivacy: service.PrivacyLevel.public,
-        progressPrivacy: service.PrivacyLevel.friends,
-        friendsPrivacy: service.PrivacyLevel.friends,
-        isOnline: false,
-        studyStats: {},
-      ),
-      service.UserProfile(
-        id: '3',
-        username: 'mike_tutor',
-        displayName: 'Mike Rodriguez',
-        bio: 'Tutor and study companion',
-        joinDate: DateTime.now().subtract(const Duration(days: 45)),
-        level: 7,
-        totalXP: 2100,
-        title: 'Tutor Master',
-        interests: ['Mathematics', 'Teaching'],
-        achievements: {},
-        profilePrivacy: service.PrivacyLevel.public,
-        progressPrivacy: service.PrivacyLevel.public,
-        friendsPrivacy: service.PrivacyLevel.public,
-        isOnline: true,
-        studyStats: {},
-      ),
-    ];
-
-    _pendingRequests = [
-      service.UserProfile(
-        id: '4',
-        username: 'jen_student',
-        displayName: 'Jennifer Lee',
-        bio: 'Aspiring mathematician',
-        joinDate: DateTime.now().subtract(const Duration(days: 5)),
-        level: 2,
-        totalXP: 300,
-        title: 'New Student',
-        interests: ['Mathematics'],
-        achievements: {},
-        profilePrivacy: service.PrivacyLevel.friends,
-        progressPrivacy: service.PrivacyLevel.private,
-        friendsPrivacy: service.PrivacyLevel.friends,
-        isOnline: false,
-        studyStats: {},
-      ),
-    ];
-
-    _isMember = widget.group.members
-        .any((member) => member.userId == 'current_user_id');
-
-    setState(() {
-      _isLoading = false;
-    });
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('❌ Error loading group data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -153,31 +125,34 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
             PopupMenuButton<String>(
               onSelected: _handleMenuAction,
               itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'invite',
-                  child: ListTile(
-                    leading: Icon(Icons.person_add),
-                    title: Text('Invite Friends'),
-                    contentPadding: EdgeInsets.zero,
+                if (_isOwner) ...[
+                  const PopupMenuItem(
+                    value: 'invite',
+                    child: ListTile(
+                      leading: Icon(Icons.person_add),
+                      title: Text('Invite Friends'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
-                const PopupMenuItem(
-                  value: 'settings',
-                  child: ListTile(
-                    leading: Icon(Icons.settings),
-                    title: Text('Group Settings'),
-                    contentPadding: EdgeInsets.zero,
+                  const PopupMenuItem(
+                    value: 'settings',
+                    child: ListTile(
+                      leading: Icon(Icons.settings),
+                      title: Text('Group Settings'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
-                const PopupMenuItem(
-                  value: 'leave',
-                  child: ListTile(
-                    leading: Icon(Icons.exit_to_app, color: Colors.red),
-                    title: Text('Leave Group',
-                        style: TextStyle(color: Colors.red)),
-                    contentPadding: EdgeInsets.zero,
+                ],
+                if (!_isOwner)
+                  const PopupMenuItem(
+                    value: 'leave',
+                    child: ListTile(
+                      leading: Icon(Icons.exit_to_app, color: Colors.red),
+                      title: Text('Leave Group',
+                          style: TextStyle(color: Colors.red)),
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
               ],
             ),
         ],
@@ -389,7 +364,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   }
 
   Widget _buildMemberTile(service.UserProfile user) {
-    final isAdmin = user.id == widget.group.ownerId;
+    // Use the fresh group data if available, otherwise fall back to widget.group
+    final groupOwnerId = _currentGroup?.ownerId ?? widget.group.ownerId;
+    final isAdmin = user.id == groupOwnerId;
 
     return ListTile(
       leading: Stack(
@@ -485,96 +462,86 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   }
 
   Widget _buildActivityTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _buildActivityItem(
-          icon: Icons.person_add,
-          title: 'Sarah Chen joined the group',
-          time: '2 hours ago',
-          color: Colors.green,
+    // TODO: Load real activity from Firestore
+    // For now, show empty state
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.timeline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No Activity Yet',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Group activity will appear here when members interact',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[500],
+                  ),
+            ),
+          ],
         ),
-        _buildActivityItem(
-          icon: Icons.message,
-          title: 'New message in group chat',
-          time: '5 hours ago',
-          color: Colors.blue,
-        ),
-        _buildActivityItem(
-          icon: Icons.upload_file,
-          title: 'Mike uploaded study materials',
-          time: '1 day ago',
-          color: Colors.orange,
-        ),
-        _buildActivityItem(
-          icon: Icons.event,
-          title: 'Study session scheduled',
-          time: '2 days ago',
-          color: Colors.purple,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityItem({
-    required IconData icon,
-    required String title,
-    required String time,
-    required Color color,
-  }) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: color.withValues(alpha: 0.1),
-        child: Icon(icon, color: color),
       ),
-      title: Text(title),
-      subtitle: Text(time),
     );
   }
 
   Widget _buildResourcesTab() {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        ListTile(
-          leading: Icon(Icons.picture_as_pdf, color: Colors.red),
-          title: Text('Calculus Study Guide'),
-          subtitle: Text('Uploaded by Alex Johnson • 2.3 MB'),
-          trailing: IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.download),
-          ),
-        ),
-        ListTile(
-          leading: Icon(Icons.video_library, color: Colors.blue),
-          title: Text('Lecture Recording - Derivatives'),
-          subtitle: Text('Shared by Sarah Chen • 45 min'),
-          trailing: IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.play_arrow),
-          ),
-        ),
-        ListTile(
-          leading: Icon(Icons.link, color: Colors.green),
-          title: Text('Khan Academy - Calculus'),
-          subtitle: Text('External resource • khanacademy.org'),
-          trailing: IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.open_in_new),
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (_isMember)
-          ElevatedButton.icon(
-            onPressed: _uploadResource,
-            icon: Icon(Icons.upload),
-            label: Text('Upload Resource'),
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+    // TODO: Load real resources from Firestore
+    // For now, show empty state with upload option
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.folder_open,
+              size: 64,
+              color: Colors.grey[400],
             ),
-          ),
-      ],
+            const SizedBox(height: 16),
+            Text(
+              'No Resources Yet',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Upload study materials to share with your group',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[500],
+                  ),
+            ),
+            if (_isMember) ...[
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _uploadResource,
+                icon: Icon(Icons.upload),
+                label: Text('Upload Resource'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 
