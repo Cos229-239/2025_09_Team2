@@ -1120,11 +1120,14 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   // Group Methods
-  void _createStudyGroup() {
-    showDialog(
+  void _createStudyGroup() async {
+    await showDialog(
       context: context,
-      builder: (context) => CreateStudyGroupDialog(),
+      builder: (context) => CreateStudyGroupDialog(socialService: _socialService!),
     );
+    
+    // Refresh the UI after the dialog closes to show the new group
+    setState(() {});
   }
 
   void _showGroupDetails(service.StudyGroup group) {
@@ -1809,7 +1812,12 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
 }
 
 class CreateStudyGroupDialog extends StatefulWidget {
-  const CreateStudyGroupDialog({super.key});
+  final service.SocialLearningService socialService;
+  
+  const CreateStudyGroupDialog({
+    super.key,
+    required this.socialService,
+  });
 
   @override
   State<CreateStudyGroupDialog> createState() => _CreateStudyGroupDialogState();
@@ -2123,32 +2131,65 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
     );
   }
 
-  void _createGroup() {
+  void _createGroup() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // Show success and close dialog
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                  'Study group "${_groupNameController.text}" created successfully!'),
+    try {
+      // Create the study group using the provided social service
+      final group = await widget.socialService.createStudyGroup(
+        name: _groupNameController.text,
+        description: _descriptionController.text,
+        subjects: [_selectedSubject, ..._selectedTopics],
+        maxMembers: _maxMembers,
+        isPrivate: _privacy == 'Private',
+      );
+
+      if (!mounted) return;
+
+      if (group != null) {
+        // Show success and close dialog
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                      'Study group "${_groupNameController.text}" created successfully!'),
+                ),
+              ],
             ),
-          ],
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      } else {
+        // Failed to create group
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create study group'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Error creating study group in UI: $e');
+      if (!mounted) return;
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating study group: $e'),
+          backgroundColor: Colors.red,
         ),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
+      );
+    }
   }
 }
