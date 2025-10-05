@@ -22,6 +22,7 @@ import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard stu
 // Import additional screens for hamburger menu navigation
 import 'package:studypals/screens/achievement_screen.dart'; // Achievement and rewards screen
 import 'package:studypals/screens/social_screen.dart'; // Social learning screen
+import 'package:studypals/screens/timer_screen.dart'; // Timer screen
 import 'package:studypals/widgets/profile/profile_panel.dart'; // Profile panel widget
 import 'package:studypals/widgets/profile/profile_settings_panel.dart'; // Profile settings panel widget
 import 'package:studypals/screens/settings_screen.dart'; // Main settings screen
@@ -723,7 +724,7 @@ class _DashboardHomeState extends State<DashboardHome>
     _tabController = TabController(
       length: 5, 
       vsync: this,
-      animationDuration: const Duration(milliseconds: 400), // Faster animation for bottom-up slide
+      animationDuration: const Duration(milliseconds: 0), // Immediate switching - no animation delay
     );
     _tabController.addListener(() {
       // Animate icons when tab changes
@@ -1909,8 +1910,11 @@ class _DashboardHomeState extends State<DashboardHome>
           color: Colors.red,
           onTap: () {
             _closeAllPanels();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Timer feature coming soon!')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TimerScreen(),
+              ),
             );
           },
         ),
