@@ -182,7 +182,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
     if (total == 0) return const SizedBox.shrink();
     
     final progress = completed / total;
-    return Container(
+    return SizedBox(
       width: 60,
       height: 60,
       child: Stack(

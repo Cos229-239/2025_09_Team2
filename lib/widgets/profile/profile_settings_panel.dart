@@ -286,7 +286,7 @@ class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<PrivacyLevel>(
-          value: currentValue,
+          initialValue: currentValue,
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),

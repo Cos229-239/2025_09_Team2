@@ -3,11 +3,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import '../../services/social_learning_service.dart';
 import '../../screens/dashboard_screen.dart'; // Import for SettingsGearPainter
+import '../../providers/app_state.dart';
 
 /// Extension to add display names to PrivacyLevel enum
 extension PrivacyLevelExtension on PrivacyLevel {
@@ -50,7 +52,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
   String? _avatarUrl;
   
   // Badge system
-  List<String> _availableBadges = [
+  final List<String> _availableBadges = [
     'Study Streak', 'Early Bird', 'Night Owl', 'Flash Master', 'Goal Crusher',
     'Team Player', 'Quick Learner', 'Persistent', 'Creative Thinker', 'Helper',
     'Focus Master', 'Time Manager', 'Knowledge Seeker', 'Problem Solver', 'Achiever'
@@ -554,7 +556,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
         const SizedBox(height: 12),
         
         // Display selected badges (all clickable)
-        Container(
+        SizedBox(
           height: 40,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -972,21 +974,10 @@ class _ProfilePanelState extends State<ProfilePanel> {
       ),
     );
 
-    if (shouldLogout == true) {
+    if (shouldLogout == true && context.mounted) {
       try {
-        await FirebaseAuth.instance.signOut();
-        if (mounted) {
-          // Close the profile panel first
-          Navigator.of(context).pop();
-          
-          // Navigate to login screen or handle logout navigation
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Logged out successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
+        // Sign out the user through AppState (same as settings screen)
+        await Provider.of<AppState>(context, listen: false).logout();
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
