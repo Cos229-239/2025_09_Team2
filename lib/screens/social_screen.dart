@@ -50,6 +50,7 @@ class _SocialScreenState extends State<SocialScreen>
   String _currentUserId = '';
   String _currentUsername = 'User';
   String _currentDisplayName = 'User';
+  int _profileRefreshKey = 0; // Counter to force FutureBuilder refresh
 
   @override
   void initState() {
@@ -664,66 +665,144 @@ class _SocialScreenState extends State<SocialScreen>
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: friends.length,
-      itemBuilder: (context, index) {
-        final friendship = friends[index];
-        // In a real app, you'd fetch the friend's profile
-        final mockProfile = service.UserProfile(
-          id: friendship.friendId,
-          username: 'user${friendship.friendId}',
-          displayName: 'Friend ${friendship.friendId}',
-          joinDate: DateTime.now().subtract(const Duration(days: 30)),
-          level: 15,
-          totalXP: 2500,
-          title: 'Intermediate',
-          interests: ['Math', 'Science'],
-          isOnline: index % 3 == 0,
-        );
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: UserProfileCard(
-            profile: mockProfile,
-            onTap: () => _showUserProfile(mockProfile),
-            onMessageTap: () => _startChat(mockProfile),
+    return Column(
+      children: [
+        // Refresh button to clear cache and reload profiles
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton.icon(
+            onPressed: () {
+              // Clear all profile caches to force fresh data
+              _socialService!.clearAllProfileCaches();
+              setState(() {
+                _profileRefreshKey++; // Increment to force new FutureBuilder instances
+              });
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refresh Friend Profiles'),
           ),
-        );
-      },
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: friends.length,
+            itemBuilder: (context, index) {
+              final friendship = friends[index];
+              
+              // Determine the friend's ID (not the current user's ID)
+              final currentUserId = _socialService!.currentUserProfile?.id;
+              final friendId = friendship.userId == currentUserId 
+                  ? friendship.friendId 
+                  : friendship.userId;
+              
+              // Fetch the friend's actual profile
+              // Using refresh key ensures FutureBuilder rebuilds when cache is cleared
+              return FutureBuilder<service.UserProfile?>(
+                key: ValueKey('friend_$friendId\_$_profileRefreshKey'),
+                future: _socialService!.getUserProfile(friendId),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    );
+                  }
+                  
+                  final friendProfile = snapshot.data;
+                  if (friendProfile == null) {
+                    return const SizedBox.shrink();
+                  }
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: UserProfileCard(
+                      profile: friendProfile,
+                      onTap: () => _showUserProfile(friendProfile),
+                      onMessageTap: () => _startChat(friendProfile),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildFriendRequests() {
     final requests = _socialService!.pendingFriendRequests;
 
-    if (requests.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inbox, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('No friend requests'),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: requests.length,
-      itemBuilder: (context, index) {
-        final request = requests[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: FriendRequestCard(
-            friendship: request,
-            onAccept: () => _acceptFriendRequest(request.id),
-            onDecline: () => _declineFriendRequest(request.id),
+    return Column(
+      children: [
+        // Refresh button at the top
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton.icon(
+            onPressed: () async {
+              await _socialService!.refreshFriendships();
+              setState(() {}); // Rebuild UI after refresh
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Refresh Friend Requests'),
           ),
-        );
-      },
+        ),
+        Expanded(
+          child: requests.isEmpty
+              ? const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.inbox, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('No friend requests'),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    final request = requests[index];
+                    // Fetch the requester's profile
+                    return FutureBuilder<service.UserProfile?>(
+                      future: _socialService!.getUserProfile(request.userId),
+                      builder: (context, snapshot) {
+                        // Show loading indicator while fetching
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: FriendRequestCard(
+                              friendship: request,
+                              requesterProfile: null, // Will show "Unknown User" while loading
+                              onAccept: () => _acceptFriendRequest(request.id),
+                              onDecline: () => _declineFriendRequest(request.id),
+                            ),
+                          );
+                        }
+                        
+                        // Show error state if fetch failed
+                        if (snapshot.hasError) {
+                          debugPrint('Error loading profile for ${request.userId}: ${snapshot.error}');
+                        }
+                        
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: FriendRequestCard(
+                            friendship: request,
+                            requesterProfile: snapshot.data,
+                            onAccept: () => _acceptFriendRequest(request.id),
+                            onDecline: () => _declineFriendRequest(request.id),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 
@@ -920,24 +999,60 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Widget _buildDiscoverGroups() {
-    final groups = _socialService!.publicStudyGroups;
+    return FutureBuilder<List<service.StudyGroup>>(
+      future: _socialService!.getPublicStudyGroupsForDiscovery(limit: 50),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Error loading groups: ${snapshot.error}'),
+              ],
+            ),
+          );
+        }
+        
+        final groups = snapshot.data ?? [];
+        
+        if (groups.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.groups, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text('No public groups available'),
+                Text('Be the first to create one!'),
+              ],
+            ),
+          );
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: groups.length,
-      itemBuilder: (context, index) {
-        final group = groups[index];
-        final isJoined =
-            _socialService!.myStudyGroups.any((g) => g.id == group.id);
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: groups.length,
+          itemBuilder: (context, index) {
+            final group = groups[index];
+            final isJoined =
+                _socialService!.myStudyGroups.any((g) => g.id == group.id);
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: StudyGroupCard(
-            group: group,
-            isJoined: isJoined,
-            onTap: () => _showGroupDetails(group),
-            onJoin: () => _joinGroup(group),
-          ),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: StudyGroupCard(
+                group: group,
+                isJoined: isJoined,
+                onTap: () => _showGroupDetails(group),
+                onJoin: () => _joinGroup(group),
+              ),
+            );
+          },
         );
       },
     );
