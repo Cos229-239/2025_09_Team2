@@ -462,7 +462,7 @@ class SocialLearningService {
               // Save to local storage for offline access
               await _prefs?.setString(_userProfileKey, jsonEncode(_currentUserProfile!.toJson()));
               debugPrint('✅ User profile loaded from Firestore successfully');
-              return;
+              // Don't return here - continue to load friendships and groups
             }
           } else {
             debugPrint('⚠️ No Firestore document found for user');
@@ -470,28 +470,31 @@ class SocialLearningService {
         } catch (e) {
           debugPrint('⚠️ Error loading from Firestore: $e');
         }
-      }
-      
-      // Fallback to SharedPreferences
-      final profileData = _prefs?.getString(_userProfileKey);
-      if (profileData != null) {
-        _currentUserProfile = UserProfile.fromJson(jsonDecode(profileData));
-        debugPrint('✅ User profile loaded from SharedPreferences');
+      } else {
+        // Fallback to SharedPreferences if not authenticated
+        final profileData = _prefs?.getString(_userProfileKey);
+        if (profileData != null) {
+          _currentUserProfile = UserProfile.fromJson(jsonDecode(profileData));
+          debugPrint('✅ User profile loaded from SharedPreferences');
+        }
       }
 
+      // Reload user reference for friendships and groups loading
+      final currentUser = _auth.currentUser;
+      
       // Load friendships from Firestore if authenticated
-      if (user != null) {
+      if (currentUser != null) {
         try {
           debugPrint('📥 Loading friendships from Firestore...');
           
           // Load sent requests (where current user is the sender)
           final sentRequests = await _firestoreService.friendshipsCollection
-              .where('userId', isEqualTo: user.uid)
+              .where('userId', isEqualTo: currentUser.uid)
               .get();
           
           // Load received requests (where current user is the receiver)
           final receivedRequests = await _firestoreService.friendshipsCollection
-              .where('friendId', isEqualTo: user.uid)
+              .where('friendId', isEqualTo: currentUser.uid)
               .get();
           
           _friendships.clear();
@@ -544,11 +547,88 @@ class SocialLearningService {
         }
       }
 
-      // Load study groups
-      final groupsData = _prefs?.getString(_studyGroupsKey);
-      if (groupsData != null) {
-        final List<dynamic> groupsList = jsonDecode(groupsData);
-        _studyGroups = groupsList.map((g) => StudyGroup.fromJson(g)).toList();
+      // Load study groups from Firestore if authenticated
+      if (currentUser != null) {
+        try {
+          debugPrint('📥 Loading study groups from Firestore...');
+          debugPrint('Current user ID: ${currentUser.uid}');
+          
+          // Load all groups and filter by membership locally
+          // TODO: Add a separate memberIds array field in Firestore for better querying
+          final groupsSnapshot = await _firestoreService.studyGroupsCollection.get();
+          
+          debugPrint('Found ${groupsSnapshot.docs.length} total study groups in Firestore');
+          
+          _studyGroups.clear();
+          int skippedGroups = 0;
+          
+          for (final doc in groupsSnapshot.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            debugPrint('Processing group: ${data['name']} (ID: ${doc.id})');
+            
+            final membersList = (data['members'] as List<dynamic>?)?.map((m) {
+              final memberData = m as Map<String, dynamic>;
+              return StudyGroupMember(
+                userId: memberData['userId'],
+                groupId: memberData['groupId'],
+                role: _parseStudyGroupRole(memberData['role']),
+                status: _parseMembershipStatus(memberData['status']),
+                joinDate: (memberData['joinDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+                lastActive: (memberData['lastActive'] as Timestamp?)?.toDate(),
+                contributions: memberData['contributions'] ?? 0,
+              );
+            }).toList() ?? [];
+            
+            debugPrint('Group has ${membersList.length} members');
+            for (final member in membersList) {
+              debugPrint('  - Member: ${member.userId} (${member.role.name})');
+            }
+            
+            // Only include groups where current user is a member
+            final isMember = membersList.any((m) => m.userId == currentUser.uid);
+            if (!isMember) {
+              debugPrint('⏭️ Skipping group "${data['name']}" - current user is not a member');
+              skippedGroups++;
+              continue;
+            }
+            
+            debugPrint('✅ Adding group "${data['name']}" to user\'s groups');
+            
+            _studyGroups.add(StudyGroup(
+              id: data['id'],
+              name: data['name'],
+              description: data['description'],
+              ownerId: data['ownerId'],
+              createdDate: (data['createdDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+              subjects: List<String>.from(data['subjects'] ?? []),
+              maxMembers: data['maxMembers'] ?? 50,
+              isPrivate: data['isPrivate'] ?? false,
+              password: data['password'],
+              avatar: data['avatar'],
+              currentMembers: data['currentMembers'] ?? membersList.length,
+              members: membersList,
+              settings: Map<String, dynamic>.from(data['settings'] ?? {}),
+            ));
+          }
+          
+          debugPrint('✅ Loaded ${_studyGroups.length} study groups from Firestore (skipped $skippedGroups groups)');
+        } catch (e) {
+          debugPrint('⚠️ Error loading study groups from Firestore: $e');
+          
+          // Fallback to local storage
+          final groupsData = _prefs?.getString(_studyGroupsKey);
+          if (groupsData != null) {
+            final List<dynamic> groupsList = jsonDecode(groupsData);
+            _studyGroups = groupsList.map((g) => StudyGroup.fromJson(g)).toList();
+          }
+        }
+      } else {
+        // Load study groups from local storage if not authenticated
+        final groupsData = _prefs?.getString(_studyGroupsKey);
+        if (groupsData != null) {
+          final List<dynamic> groupsList = jsonDecode(groupsData);
+          _studyGroups = groupsList.map((g) => StudyGroup.fromJson(g)).toList();
+        }
       }
 
       // Load collaborative sessions
@@ -574,6 +654,36 @@ class SocialLearningService {
         return PrivacyLevel.private;
       default:
         return PrivacyLevel.public;
+    }
+  }
+  
+  /// Parse study group role from string
+  StudyGroupRole _parseStudyGroupRole(String? value) {
+    switch (value) {
+      case 'owner':
+        return StudyGroupRole.owner;
+      case 'moderator':
+        return StudyGroupRole.moderator;
+      case 'member':
+        return StudyGroupRole.member;
+      default:
+        return StudyGroupRole.member;
+    }
+  }
+  
+  /// Parse membership status from string
+  MembershipStatus _parseMembershipStatus(String? value) {
+    switch (value) {
+      case 'pending':
+        return MembershipStatus.pending;
+      case 'active':
+        return MembershipStatus.active;
+      case 'banned':
+        return MembershipStatus.banned;
+      case 'left':
+        return MembershipStatus.left;
+      default:
+        return MembershipStatus.active;
     }
   }
 
@@ -699,18 +809,34 @@ class SocialLearningService {
 
     try {
       // Check if friendship already exists in Firestore
+      debugPrint('🔍 Checking for existing friendship between ${user.uid} and $friendId');
+      
       final existingFriendships = await _firestoreService.friendshipsCollection
           .where('userId', isEqualTo: user.uid)
           .where('friendId', isEqualTo: friendId)
           .get();
       
+      debugPrint('Found ${existingFriendships.docs.length} friendships where userId=${user.uid} and friendId=$friendId');
+      
       final reverseExistingFriendships = await _firestoreService.friendshipsCollection
           .where('userId', isEqualTo: friendId)
           .where('friendId', isEqualTo: user.uid)
           .get();
+      
+      debugPrint('Found ${reverseExistingFriendships.docs.length} friendships where userId=$friendId and friendId=${user.uid}');
 
       if (existingFriendships.docs.isNotEmpty || reverseExistingFriendships.docs.isNotEmpty) {
-        debugPrint('❌ Friendship already exists');
+        // Show which friendship exists
+        if (existingFriendships.docs.isNotEmpty) {
+          final doc = existingFriendships.docs.first;
+          final data = doc.data() as Map<String, dynamic>;
+          debugPrint('❌ Friendship already exists: ${doc.id}, status: ${data['status']}, isAccepted: ${data['isAccepted']}');
+        }
+        if (reverseExistingFriendships.docs.isNotEmpty) {
+          final doc = reverseExistingFriendships.docs.first;
+          final data = doc.data() as Map<String, dynamic>;
+          debugPrint('❌ Reverse friendship already exists: ${doc.id}, status: ${data['status']}, isAccepted: ${data['isAccepted']}');
+        }
         return false;
       }
 
@@ -798,62 +924,80 @@ class SocialLearningService {
     bool isPrivate = false,
     String? password,
   }) async {
-    if (_currentUserProfile == null) return null;
+    if (_currentUserProfile == null) {
+      debugPrint('❌ Cannot create study group: No user profile');
+      return null;
+    }
 
-    final group = StudyGroup(
-      id: _generateId(),
-      name: name,
-      description: description,
-      ownerId: _currentUserProfile!.id,
-      createdDate: DateTime.now(),
-      subjects: subjects ?? [],
-      maxMembers: maxMembers,
-      isPrivate: isPrivate,
-      password: password,
-      members: [
-        StudyGroupMember(
-          userId: _currentUserProfile!.id,
-          groupId: '',
-          role: StudyGroupRole.owner,
-          status: MembershipStatus.active,
-          joinDate: DateTime.now(),
-          lastActive: DateTime.now(),
-        ),
-      ],
-    );
+    final user = _auth.currentUser;
+    if (user == null) {
+      debugPrint('❌ Cannot create study group: Not authenticated');
+      return null;
+    }
 
-    // Update member group ID
-    final updatedMembers = group.members
-        .map((m) => StudyGroupMember(
-              userId: m.userId,
-              groupId: group.id,
-              role: m.role,
-              status: m.status,
-              joinDate: m.joinDate,
-              lastActive: m.lastActive,
-              contributions: m.contributions,
-            ))
-        .toList();
+    try {
+      final groupId = _generateId();
+      
+      final group = StudyGroup(
+        id: groupId,
+        name: name,
+        description: description,
+        ownerId: user.uid,
+        createdDate: DateTime.now(),
+        subjects: subjects ?? [],
+        maxMembers: maxMembers,
+        isPrivate: isPrivate,
+        password: password,
+        members: [
+          StudyGroupMember(
+            userId: user.uid,
+            groupId: groupId,
+            role: StudyGroupRole.owner,
+            status: MembershipStatus.active,
+            joinDate: DateTime.now(),
+            lastActive: DateTime.now(),
+          ),
+        ],
+        currentMembers: 1,
+      );
 
-    final finalGroup = StudyGroup(
-      id: group.id,
-      name: group.name,
-      description: group.description,
-      ownerId: group.ownerId,
-      createdDate: group.createdDate,
-      subjects: group.subjects,
-      maxMembers: group.maxMembers,
-      isPrivate: group.isPrivate,
-      password: group.password,
-      avatar: group.avatar,
-      settings: group.settings,
-      members: updatedMembers,
-      currentMembers: 1,
-    );
+      // Save to Firestore
+      final groupData = {
+        'id': group.id,
+        'name': group.name,
+        'description': group.description,
+        'ownerId': group.ownerId,
+        'createdDate': FieldValue.serverTimestamp(),
+        'subjects': group.subjects,
+        'maxMembers': group.maxMembers,
+        'isPrivate': group.isPrivate,
+        'password': group.password,
+        'avatar': group.avatar,
+        'currentMembers': 1,
+        'members': group.members.map((m) => {
+          'userId': m.userId,
+          'groupId': m.groupId,
+          'role': m.role.name,
+          'status': m.status.name,
+          'joinDate': Timestamp.fromDate(m.joinDate),
+          'lastActive': m.lastActive != null ? Timestamp.fromDate(m.lastActive!) : FieldValue.serverTimestamp(),
+          'contributions': m.contributions,
+        }).toList(),
+        'settings': group.settings,
+      };
 
-    _studyGroups.add(finalGroup);
-    await _saveUserData();
-    return finalGroup;
+      await _firestoreService.studyGroupsCollection.doc(groupId).set(groupData);
+      
+      // Also save locally
+      _studyGroups.add(group);
+      await _saveUserData();
+      
+      debugPrint('✅ Study group created successfully: ${group.name} (ID: ${group.id})');
+      return group;
+    } catch (e) {
+      debugPrint('❌ Error creating study group: $e');
+      return null;
+    }
   }
 
   /// Join study group
