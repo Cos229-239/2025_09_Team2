@@ -203,10 +203,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 // Navigate to call screen if answer was successful
                 if (success && mounted) {
                   debugPrint('✅ Call answered successfully, navigating to CallScreen');
-                  // Wait a frame for the dialog to fully close
-                  await Future.delayed(const Duration(milliseconds: 100));
+                  // Wait for the dialog to fully close and route to settle
+                  // Increased delay for web platform reliability
+                  await Future.delayed(const Duration(milliseconds: 300));
                   
                   if (mounted) {
+                    debugPrint('🧭 Pushing CallScreen route...');
                     // Navigate to call screen
                     Navigator.push(
                       context,
@@ -218,7 +220,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           callType: _webrtcService.currentCallType ?? CallType.audio,
                         ),
                       ),
-                    );
+                    ).then((_) {
+                      debugPrint('🔙 Returned from CallScreen');
+                    });
                   }
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -263,9 +267,15 @@ class _ChatScreenState extends State<ChatScreen> {
       _weInitiatedCall = false; // Reset if failed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to start call. Please check permissions.'),
+          SnackBar(
+            content: const Text('Failed to start audio call.\nPlease allow microphone access in your browser.'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
           ),
         );
       }
@@ -297,9 +307,15 @@ class _ChatScreenState extends State<ChatScreen> {
       _weInitiatedCall = false; // Reset if failed
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to start video call. Please check permissions.'),
+          SnackBar(
+            content: const Text('Failed to start video call.\nPlease allow camera and microphone access in your browser.'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
           ),
         );
       }
