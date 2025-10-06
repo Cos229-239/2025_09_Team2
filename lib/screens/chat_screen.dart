@@ -193,49 +193,65 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           ElevatedButton.icon(
             onPressed: () async {
-              // Get the navigator and scaffold messenger before closing dialog
-              final navigator = Navigator.of(context);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              debugPrint('🎯 Answer button pressed - starting call answer flow');
+              
+              // Store the call details before any async operations
+              final callId = _webrtcService.currentCallId;
+              final callType = _webrtcService.currentCallType ?? CallType.audio;
+              
+              if (callId == null) {
+                debugPrint('❌ No call ID found - cannot answer');
+                Navigator.pop(context);
+                return;
+              }
 
               // Close the dialog first
-              navigator.pop();
+              Navigator.pop(context);
+              debugPrint('✅ Dialog closed, answering call...');
 
-              // Answer the call using the stored call ID in the WebRTC service
-              final callId = _webrtcService.currentCallId;
-              if (callId != null) {
-                final success = await _webrtcService.answerCall(callId: callId);
+              // Answer the call - this will acquire media and set up the connection
+              final success = await _webrtcService.answerCall(callId: callId);
 
-                // Navigate to call screen if answer was successful
-                if (success) {
-                  debugPrint(
-                      '✅ Call answered successfully, navigating to CallScreen');
-
-                  // Use the navigator we captured before dialog closed
-                  if (mounted) {
-                    debugPrint('🧭 Pushing CallScreen route...');
-                    navigator
-                        .push(
-                      MaterialPageRoute(
-                        builder: (context) => CallScreen(
-                          webrtcService: _webrtcService,
-                          otherUser: widget.otherUser,
-                          isOutgoing: false,
-                          callType:
-                              _webrtcService.currentCallType ?? CallType.audio,
-                        ),
-                      ),
-                    )
-                        .then((_) {
-                      debugPrint('🔙 Returned from CallScreen');
-                    });
-                  }
-                } else {
-                  scaffoldMessenger.showSnackBar(
+              if (!success) {
+                debugPrint('❌ Failed to answer call');
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Failed to answer call'),
+                      content: Text('Failed to answer call. Please check your camera and microphone permissions.'),
                       backgroundColor: Colors.red,
+                      duration: Duration(seconds: 5),
                     ),
                   );
+                }
+                return;
+              }
+
+              debugPrint('✅ Call answered successfully, preparing to navigate');
+
+              // CRITICAL FIX: Wait for a full frame cycle to ensure:
+              // 1. Dialog animation is complete
+              // 2. Media tracks are properly established
+              // 3. Widget tree is in a stable state
+              if (mounted) {
+                await Future.delayed(const Duration(milliseconds: 100));
+                
+                if (mounted) {
+                  debugPrint('🧭 Navigating to CallScreen...');
+                  
+                  // Navigate to call screen with the answered call
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CallScreen(
+                        webrtcService: _webrtcService,
+                        otherUser: widget.otherUser,
+                        isOutgoing: false,
+                        callType: callType,
+                      ),
+                    ),
+                  ).then((_) {
+                    debugPrint('🔙 Returned from CallScreen');
+                  });
                 }
               }
             },
