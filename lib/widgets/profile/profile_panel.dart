@@ -50,18 +50,30 @@ class _ProfilePanelState extends State<ProfilePanel> {
   List<String> _interests = [];
   bool _isLoading = false;
   String? _avatarUrl;
-  
+
   // Badge system
   final List<String> _availableBadges = [
-    'Study Streak', 'Early Bird', 'Night Owl', 'Flash Master', 'Goal Crusher',
-    'Team Player', 'Quick Learner', 'Persistent', 'Creative Thinker', 'Helper',
-    'Focus Master', 'Time Manager', 'Knowledge Seeker', 'Problem Solver', 'Achiever'
+    'Study Streak',
+    'Early Bird',
+    'Night Owl',
+    'Flash Master',
+    'Goal Crusher',
+    'Team Player',
+    'Quick Learner',
+    'Persistent',
+    'Creative Thinker',
+    'Helper',
+    'Focus Master',
+    'Time Manager',
+    'Knowledge Seeker',
+    'Problem Solver',
+    'Achiever'
   ];
   List<String> _selectedBadges = [];
-  
+
   // Settings view state
   bool _isShowingSettings = false;
-  
+
   // Additional privacy settings for settings view
   bool _profileVisibility = true;
   bool _onlineStatus = true;
@@ -128,7 +140,9 @@ class _ProfilePanelState extends State<ProfilePanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: widget.isBottomSheet ? MediaQuery.of(context).size.height * 0.8 : null,
+      height: widget.isBottomSheet
+          ? MediaQuery.of(context).size.height * 0.8
+          : null,
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: widget.isBottomSheet
@@ -155,7 +169,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
                 color: Colors.transparent,
               );
             }
-            
+
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -177,8 +191,8 @@ class _ProfilePanelState extends State<ProfilePanel> {
   /// Build the header section with user name and action buttons
   Widget _buildHeader(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final userName = _displayNameController.text.isNotEmpty 
-        ? _displayNameController.text 
+    final userName = _displayNameController.text.isNotEmpty
+        ? _displayNameController.text
         : user?.displayName ?? 'User Profile';
 
     return Container(
@@ -205,7 +219,8 @@ class _ProfilePanelState extends State<ProfilePanel> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: (Theme.of(context).iconTheme.color ?? Colors.black).withOpacity(0.2),
+                  color: (Theme.of(context).iconTheme.color ?? Colors.black)
+                      .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -217,14 +232,14 @@ class _ProfilePanelState extends State<ProfilePanel> {
             ),
             const SizedBox(width: 16),
           ],
-          
+
           // Title - changes based on view
           Expanded(
             child: Text(
               _isShowingSettings ? 'Settings' : userName,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: _isShowingSettings 
+                    color: _isShowingSettings
                         ? (Theme.of(context).iconTheme.color ?? Colors.black)
                         : null,
                   ),
@@ -249,7 +264,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(width: 16),
 
                 // Logout button
@@ -278,7 +293,9 @@ class _ProfilePanelState extends State<ProfilePanel> {
     }
 
     // Show settings content or profile content based on current view
-    return _isShowingSettings ? _buildSettingsContent() : _buildMainProfileContent();
+    return _isShowingSettings
+        ? _buildSettingsContent()
+        : _buildMainProfileContent();
   }
 
   Widget _buildMainProfileContent() {
@@ -307,7 +324,9 @@ class _ProfilePanelState extends State<ProfilePanel> {
 
             // Save Button
             _buildSaveButton(),
-            const SizedBox(height: 247), // Extended space at bottom (original spacing restored)
+            const SizedBox(
+                height:
+                    247), // Extended space at bottom (original spacing restored)
           ],
         ),
       ),
@@ -346,7 +365,6 @@ class _ProfilePanelState extends State<ProfilePanel> {
                   ),
             ),
             const SizedBox(height: 16),
-            
             SwitchListTile(
               title: const Text('Profile Visibility'),
               subtitle: const Text('Allow others to see your profile'),
@@ -357,7 +375,6 @@ class _ProfilePanelState extends State<ProfilePanel> {
                 });
               },
             ),
-            
             SwitchListTile(
               title: const Text('Online Status'),
               subtitle: const Text('Show when you\'re online'),
@@ -368,7 +385,6 @@ class _ProfilePanelState extends State<ProfilePanel> {
                 });
               },
             ),
-            
             SwitchListTile(
               title: const Text('Study Progress'),
               subtitle: const Text('Share your study progress with friends'),
@@ -399,7 +415,6 @@ class _ProfilePanelState extends State<ProfilePanel> {
                   ),
             ),
             const SizedBox(height: 16),
-            
             ListTile(
               leading: Icon(
                 Icons.security,
@@ -415,9 +430,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
                 );
               },
             ),
-            
             const Divider(),
-            
             ListTile(
               leading: Icon(
                 Icons.email,
@@ -433,9 +446,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
                 );
               },
             ),
-            
             const Divider(),
-            
             ListTile(
               leading: Icon(
                 Icons.delete_forever,
@@ -513,7 +524,8 @@ class _ProfilePanelState extends State<ProfilePanel> {
                       child: CachedNetworkImage(
                         imageUrl: _avatarUrl!,
                         fit: BoxFit.cover,
-                        placeholder: (context, url) => const CircularProgressIndicator(),
+                        placeholder: (context, url) =>
+                            const CircularProgressIndicator(),
                         errorWidget: (context, url, error) => const Icon(
                           Icons.person,
                           size: 60,
@@ -535,7 +547,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
             label: const Text('Change Picture'),
           ),
           const SizedBox(height: 16),
-          
+
           // Featured Badges Section
           _buildFeaturedBadges(),
         ],
@@ -554,14 +566,15 @@ class _ProfilePanelState extends State<ProfilePanel> {
               ),
         ),
         const SizedBox(height: 12),
-        
+
         // Display selected badges (all clickable)
         SizedBox(
           height: 40,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(3, (index) => 
-              GestureDetector(
+            children: List.generate(
+              3,
+              (index) => GestureDetector(
                 onTap: () => _showBadgeSelectionDialog(),
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -569,10 +582,14 @@ class _ProfilePanelState extends State<ProfilePanel> {
                   height: 30,
                   child: index < _selectedBadges.length
                       ? Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor.withOpacity(0.1),
-                            border: Border.all(color: Theme.of(context).primaryColor),
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.1),
+                            border: Border.all(
+                                color: Theme.of(context).primaryColor),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Text(
@@ -588,7 +605,8 @@ class _ProfilePanelState extends State<ProfilePanel> {
                           width: 60,
                           height: 30,
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!, width: 1.5),
+                            border: Border.all(
+                                color: Colors.grey[300]!, width: 1.5),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Icon(
@@ -652,8 +670,8 @@ class _ProfilePanelState extends State<ProfilePanel> {
                 'Selected: ${_selectedBadges.length}/3',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: _selectedBadges.length == 3 
-                          ? Theme.of(context).primaryColor 
+                      color: _selectedBadges.length == 3
+                          ? Theme.of(context).primaryColor
                           : Colors.grey[600],
                     ),
               ),
@@ -911,10 +929,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set({
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'displayName': _displayNameController.text.trim(),
           'username': _usernameController.text.trim(),
           'bio': _bioController.text.trim(),

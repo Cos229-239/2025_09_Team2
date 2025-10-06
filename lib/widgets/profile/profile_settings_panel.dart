@@ -37,12 +37,12 @@ class ProfileSettingsPanel extends StatefulWidget {
 
 class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Privacy settings state
   PrivacyLevel _profilePrivacy = PrivacyLevel.public;
   PrivacyLevel _progressPrivacy = PrivacyLevel.friends;
   PrivacyLevel _friendsPrivacy = PrivacyLevel.friends;
-  
+
   bool _isLoading = false;
   User? _currentUser;
 
@@ -64,7 +64,7 @@ class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
 
       if (userDoc.exists && mounted) {
         Map<String, dynamic>? data = userDoc.data() as Map<String, dynamic>?;
-        
+
         setState(() {
           _profilePrivacy = _parsePrivacyLevel(data?['profilePrivacy']);
           _progressPrivacy = _parsePrivacyLevel(data?['progressPrivacy']);
@@ -133,7 +133,7 @@ class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -155,7 +155,7 @@ class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
@@ -169,7 +169,8 @@ class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: (Theme.of(context).iconTheme.color ?? Colors.black).withOpacity(0.2),
+                color: (Theme.of(context).iconTheme.color ?? Colors.black)
+                    .withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -179,17 +180,17 @@ class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
               ),
             ),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Title
           Expanded(
             child: Text(
               'Settings',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).iconTheme.color ?? Colors.black,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).iconTheme.color ?? Colors.black,
+                  ),
             ),
           ),
         ],
@@ -291,7 +292,8 @@ class _ProfileSettingsPanelState extends State<ProfileSettingsPanel> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             filled: true,
             fillColor: Theme.of(context).cardColor,
           ),
