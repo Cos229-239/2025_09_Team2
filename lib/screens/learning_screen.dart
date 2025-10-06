@@ -64,7 +64,7 @@ class SinglePageScrollPhysics extends ScrollPhysics {
       position.pixels,
       clampedTarget,
       velocity,
-      tolerance: tolerance,
+      tolerance: toleranceFor(position),
     );
   }
 }

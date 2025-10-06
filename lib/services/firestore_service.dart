@@ -45,12 +45,9 @@ class FirestoreService {
   CollectionReference get cardsCollection => _firestore.collection('cards');
   CollectionReference get tasksCollection => _firestore.collection('tasks');
   CollectionReference get notesCollection => _firestore.collection('notes');
-  CollectionReference get activitiesCollection =>
-      _firestore.collection('activities');
-  CollectionReference get friendshipsCollection =>
-      _firestore.collection('friendships');
-  CollectionReference get studyGroupsCollection =>
-      _firestore.collection('study_groups');
+  CollectionReference get activitiesCollection => _firestore.collection('activities');
+  CollectionReference get friendshipsCollection => _firestore.collection('friendships');
+  CollectionReference get studyGroupsCollection => _firestore.collection('study_groups');
 
   /// Create or update user profile in Firestore with comprehensive data
   Future<bool> createUserProfile({
@@ -544,8 +541,6 @@ class FirestoreService {
   // ==================== NOTES MANAGEMENT METHODS ====================
 
   /// Create a new note for user
-  /// Uses client timestamp initially to ensure immediate visibility in queries
-  /// Server will update with accurate server timestamp
   Future<String?> createNote({
     required String uid,
     required String title,
@@ -553,33 +548,18 @@ class FirestoreService {
     List<String> tags = const [],
   }) async {
     try {
-      final now = Timestamp
-          .now(); // Use client timestamp for immediate query visibility
-
       final noteData = {
         'uid': uid,
         'title': title,
         'contentMd': contentMd,
         'tags': tags,
-        'createdAt': now, // Client timestamp for immediate visibility
-        'updatedAt': now, // Client timestamp for immediate visibility
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
         'wordCount': contentMd.split(' ').length,
         'isArchived': false,
       };
 
       final docRef = await notesCollection.add(noteData);
-
-      // Optionally update with server timestamp in background (for accuracy)
-      // This won't cause the note to disappear since it already has a valid timestamp
-      docRef.update({
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }).catchError((e) {
-        if (kDebugMode) {
-          print('⚠️ Warning: Could not update to server timestamp: $e');
-        }
-      });
-
       if (kDebugMode) {
         print('✅ Created note with ID: ${docRef.id}');
       }
@@ -668,13 +648,12 @@ class FirestoreService {
   }
 
   /// Get real-time user notes stream
-  /// includeMetadataChanges: true ensures we see pending writes immediately
   Stream<QuerySnapshot> getUserNotesStream(String uid) {
     return notesCollection
         .where('uid', isEqualTo: uid)
         .where('isArchived', isEqualTo: false)
         .orderBy('updatedAt', descending: true)
-        .snapshots(includeMetadataChanges: true);
+        .snapshots();
   }
 
   // ==================== DAILY QUEST MANAGEMENT METHODS ====================
