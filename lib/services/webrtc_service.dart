@@ -76,9 +76,26 @@ class WebRTCService {
           'stun:stun1.l.google.com:19302',
           'stun:stun2.l.google.com:19302',
         ]
-      }
+      },
+      // Free TURN servers for testing (replace with your own for production)
+      {
+        'urls': 'turn:openrelay.metered.ca:80',
+        'username': 'openrelayproject',
+        'credential': 'openrelayproject',
+      },
+      {
+        'urls': 'turn:openrelay.metered.ca:443',
+        'username': 'openrelayproject',
+        'credential': 'openrelayproject',
+      },
+      {
+        'urls': 'turn:openrelay.metered.ca:443?transport=tcp',
+        'username': 'openrelayproject',
+        'credential': 'openrelayproject',
+      },
     ],
     'sdpSemantics': 'unified-plan',
+    'iceCandidatePoolSize': 10,
   };
   
   // Media constraints
@@ -496,11 +513,19 @@ class WebRTCService {
           
           if (callData != null) {
             final callerId = callData['callerId'] as String;
+            final calleeId = callData['calleeId'] as String;
             
-            // CRITICAL FIX: Only trigger incoming call if:
-            // 1. We are NOT currently in a call (idle state)
-            // 2. The caller is NOT us (prevent showing our own outgoing call as incoming)
-            if (_callState == CallState.idle && callerId != currentUser.uid) {
+            // CRITICAL FIX: Only trigger incoming call if ALL conditions are met:
+            // 1. We are the callee (our UID matches calleeId)
+            // 2. The caller is NOT us (prevent self-calls)
+            // 3. We are NOT currently in any call state (idle only)
+            // 4. We haven't already processed this call ID
+            final isWeTheCallee = calleeId == currentUser.uid;
+            final isCallerDifferent = callerId != currentUser.uid;
+            final areWeIdle = _callState == CallState.idle;
+            final isNewCall = _currentCallId != callId;
+            
+            if (isWeTheCallee && isCallerDifferent && areWeIdle && isNewCall) {
               debugPrint('📞 Incoming call from $callerId (Call ID: $callId)');
               
               // Store the call details
@@ -510,10 +535,17 @@ class WebRTCService {
               
               // Trigger ringing state for incoming call
               _updateCallState(CallState.ringing);
-            } else if (callerId == currentUser.uid) {
-              debugPrint('ℹ️ Ignoring our own outgoing call (Call ID: $callId)');
             } else {
-              debugPrint('ℹ️ Ignoring incoming call - already in call state: $_callState');
+              // Debug logging for why we ignored this call
+              if (!isWeTheCallee) {
+                debugPrint('ℹ️ Ignoring call - not for us (calleeId: $calleeId vs our UID: ${currentUser.uid})');
+              } else if (!isCallerDifferent) {
+                debugPrint('ℹ️ Ignoring our own outgoing call (Call ID: $callId)');
+              } else if (!areWeIdle) {
+                debugPrint('ℹ️ Ignoring incoming call - already in call state: $_callState');
+              } else if (!isNewCall) {
+                debugPrint('ℹ️ Ignoring duplicate call notification (Call ID: $callId)');
+              }
             }
           }
         }

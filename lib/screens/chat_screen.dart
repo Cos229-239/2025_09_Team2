@@ -38,6 +38,7 @@ class _ChatScreenState extends State<ChatScreen> {
   double _uploadProgress = 0.0;
   int _previousMessageCount = 0;
   bool _hasScrolledToBottom = false;
+  bool _weInitiatedCall = false; // Track if we started the call
 
   @override
   void initState() {
@@ -112,7 +113,15 @@ class _ChatScreenState extends State<ChatScreen> {
   void _listenForIncomingCalls() {
     _webrtcService.callStateStream.listen((state) {
       if (state == CallState.ringing && mounted) {
-        _showIncomingCallDialog();
+        // Only show incoming call dialog if WE didn't initiate the call
+        if (!_weInitiatedCall) {
+          _showIncomingCallDialog();
+        } else {
+          debugPrint('ℹ️ Not showing incoming dialog - we initiated this call');
+        }
+      } else if (state == CallState.idle || state == CallState.ended) {
+        // Reset the flag when call ends
+        _weInitiatedCall = false;
       }
     });
   }
@@ -191,19 +200,26 @@ class _ChatScreenState extends State<ChatScreen> {
               if (callId != null) {
                 final success = await _webrtcService.answerCall(callId: callId);
                 
+                // Only navigate if still mounted and not already navigated
                 if (success && mounted) {
-                  // Navigate to call screen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CallScreen(
-                        webrtcService: _webrtcService,
-                        otherUser: widget.otherUser,
-                        isOutgoing: false,
-                        callType: _webrtcService.currentCallType ?? CallType.audio,
+                  // Check if we're not already on a call screen
+                  final currentRoute = ModalRoute.of(context);
+                  if (currentRoute?.isCurrent == true) {
+                    // Navigate to call screen
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CallScreen(
+                          webrtcService: _webrtcService,
+                          otherUser: widget.otherUser,
+                          isOutgoing: false,
+                          callType: _webrtcService.currentCallType ?? CallType.audio,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    debugPrint('⚠️ Not navigating - already navigated or context invalid');
+                  }
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -224,6 +240,8 @@ class _ChatScreenState extends State<ChatScreen> {
   
   /// Start an audio call
   void _startAudioCall() async {
+    _weInitiatedCall = true; // Mark that we started this call
+    
     final success = await _webrtcService.startCall(
       recipientId: widget.otherUser.id,
       callType: CallType.audio,
@@ -241,18 +259,23 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
       );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to start call. Please check permissions.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } else {
+      _weInitiatedCall = false; // Reset if failed
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to start call. Please check permissions.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
   
   /// Start a video call
   void _startVideoCall() async {
+    _weInitiatedCall = true; // Mark that we started this call
+    
     final success = await _webrtcService.startCall(
       recipientId: widget.otherUser.id,
       callType: CallType.video,
@@ -270,13 +293,16 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
       );
-    } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to start video call. Please check permissions.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } else {
+      _weInitiatedCall = false; // Reset if failed
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to start video call. Please check permissions.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
