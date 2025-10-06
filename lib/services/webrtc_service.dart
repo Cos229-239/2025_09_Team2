@@ -152,12 +152,29 @@ class WebRTCService {
       _currentCallId = '${currentUser.uid}_${recipientId}_${DateTime.now().millisecondsSinceEpoch}';
       debugPrint('📞 Starting $callType call to $recipientId (Call ID: $_currentCallId)');
       
-      // Get local media stream
+      // Get local media stream with proper error handling
       final constraints = callType == CallType.audio ? _audioConstraints : _videoConstraints;
-      _localStream = await navigator.mediaDevices.getUserMedia(constraints);
-      _localStreamController.add(_localStream);
       
-      debugPrint('🎙️ Local stream obtained: ${_localStream!.getTracks().length} tracks');
+      try {
+        debugPrint('🎤 Requesting media permissions: ${callType == CallType.video ? "audio + video" : "audio only"}');
+        _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        _localStreamController.add(_localStream);
+        
+        debugPrint('🎙️ Local stream obtained: ${_localStream!.getTracks().length} tracks');
+        
+        // Verify tracks are enabled
+        for (var track in _localStream!.getTracks()) {
+          debugPrint('  Track: ${track.kind} - enabled: ${track.enabled}, muted: ${track.muted}');
+        }
+      } catch (e) {
+        debugPrint('❌ Failed to get media stream: $e');
+        debugPrint('   This usually means:');
+        debugPrint('   1. User denied permission');
+        debugPrint('   2. No camera/microphone available');
+        debugPrint('   3. Camera/microphone is being used by another app');
+        _updateCallState(CallState.error);
+        return false;
+      }
       
       // Create peer connection
       _peerConnection = await createPeerConnection(_configuration);
@@ -271,12 +288,29 @@ class WebRTCService {
       _otherUserId = callData['callerId'];
       _currentCallType = callData['callType'] == 'audio' ? CallType.audio : CallType.video;
       
-      // Get local media stream
+      // Get local media stream with proper error handling
       final constraints = _currentCallType == CallType.audio ? _audioConstraints : _videoConstraints;
-      _localStream = await navigator.mediaDevices.getUserMedia(constraints);
-      _localStreamController.add(_localStream);
       
-      debugPrint('🎙️ Local stream obtained: ${_localStream!.getTracks().length} tracks');
+      try {
+        debugPrint('🎤 Requesting media permissions: ${_currentCallType == CallType.video ? "audio + video" : "audio only"}');
+        _localStream = await navigator.mediaDevices.getUserMedia(constraints);
+        _localStreamController.add(_localStream);
+        
+        debugPrint('🎙️ Local stream obtained: ${_localStream!.getTracks().length} tracks');
+        
+        // Verify tracks are enabled
+        for (var track in _localStream!.getTracks()) {
+          debugPrint('  Track: ${track.kind} - enabled: ${track.enabled}, muted: ${track.muted}');
+        }
+      } catch (e) {
+        debugPrint('❌ Failed to get media stream: $e');
+        debugPrint('   This usually means:');
+        debugPrint('   1. User denied permission');
+        debugPrint('   2. No camera/microphone available');
+        debugPrint('   3. Camera/microphone is being used by another app');
+        _updateCallState(CallState.error);
+        return false;
+      }
       
       // Create peer connection
       _peerConnection = await createPeerConnection(_configuration);
