@@ -117,17 +117,15 @@ class _TimerScreenState extends State<TimerScreen> {
   TimerState _timerState = TimerState.idle;
   TimerSession? _activeSession;
   int _currentPhaseIndex = 0;
-  // TODO: Future feature - track session cycles and completed sessions for statistics
-  // int _sessionCycle = 1;
-  // int _totalSessionsCompleted = 0;
+  int _sessionCycle = 1;
+  int _totalSessionsCompleted = 0;
 
   // Custom timer advanced options
   bool _includeBreakTimer = false;
   int _breakMinutes = 5;
   int _iterationCount = 1;
-  // TODO: Future feature - custom timer labels and advanced options
-  // final String _customTimerLabel = '';
-  // bool _showCustomOptions = false;
+  final String _customTimerLabel = '';
+  bool _showCustomOptions = false;
   final TextEditingController _labelController = TextEditingController();
 
   // Saved custom timers for quick selection (includes converted study techniques)
@@ -176,9 +174,7 @@ class _TimerScreenState extends State<TimerScreen> {
     ),
   ];
 
-  // TODO: Future feature - Additional timer session presets
-  // These are currently unused but preserved for potential future UI enhancements
-  /*
+  // Timer session definitions with automatic phase transitions
   static const List<TimerSession> _timerSessions = [
     TimerSession(
       name: 'Pomodoro Cycle',
@@ -214,14 +210,16 @@ class _TimerScreenState extends State<TimerScreen> {
           name: 'Deep Focus',
           minutes: 90,
           isBreak: false,
-          instructions: 'Enter deep work mode. No interruptions for 90 minutes.',
+          instructions:
+              'Enter deep work mode. No interruptions for 90 minutes.',
           color: Color(0xFF6FB8E9),
         ),
         SessionPhase(
           name: 'Recharge Break',
           minutes: 25,
           isBreak: true,
-          instructions: 'Take a longer break. Walk, rest, or do light activity.',
+          instructions:
+              'Take a longer break. Walk, rest, or do light activity.',
           color: Color(0xFF4CAF50),
         ),
       ],
@@ -243,7 +241,6 @@ class _TimerScreenState extends State<TimerScreen> {
       ],
     ),
   ];
-  */
 
   // Scroll controllers for the picker wheels
   final FixedExtentScrollController _hoursController =
@@ -296,7 +293,7 @@ class _TimerScreenState extends State<TimerScreen> {
     setState(() {
       _activeSession = session;
       _currentPhaseIndex = 0;
-      // _sessionCycle = 1; // TODO: Future feature for session tracking
+      _sessionCycle = 1;
       _remainingSeconds = session.phases[0].minutes * 60;
       _timerState = TimerState.running;
     });
@@ -344,7 +341,7 @@ class _TimerScreenState extends State<TimerScreen> {
       _remainingSeconds = 0;
       _activeSession = null;
       _currentPhaseIndex = 0;
-      // _sessionCycle = 1; // TODO: Future feature for session tracking
+      _sessionCycle = 1;
     });
   }
 
@@ -380,11 +377,11 @@ class _TimerScreenState extends State<TimerScreen> {
 
   void _sessionComplete() {
     setState(() {
-      // _totalSessionsCompleted++; // TODO: Future feature for session statistics
+      _totalSessionsCompleted++;
       _timerState = TimerState.idle;
       _activeSession = null;
       _currentPhaseIndex = 0;
-      // _sessionCycle = 1; // TODO: Future feature for session tracking
+      _sessionCycle = 1;
       _remainingSeconds = 0;
     });
 
@@ -1170,9 +1167,6 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
-  // TODO: Future feature - Alternative horizontal card layout for timer sessions
-  // This method is preserved for potential future UI variations
-  /*
   Widget _buildHorizontalSessionCard(TimerSession session) {
     return Container(
       width: 160,
@@ -1212,7 +1206,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // Name
               Text(
                 session.name,
@@ -1226,7 +1220,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              
+
               // Duration info
               Text(
                 session.phases.map((p) => '${p.minutes}m').join(' + '),
@@ -1238,7 +1232,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-              
+
               // Technique type
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1261,7 +1255,6 @@ class _TimerScreenState extends State<TimerScreen> {
       ),
     );
   }
-  */
 
   Widget _buildCustomTimer() {
     return SingleChildScrollView(

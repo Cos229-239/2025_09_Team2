@@ -2,12 +2,8 @@
 import 'package:flutter/foundation.dart';
 // Import developer tools for logging and debugging
 import 'dart:developer' as developer;
-// Import async for stream subscriptions
-import 'dart:async';
 // Import Firebase Auth for user authentication
 import 'package:firebase_auth/firebase_auth.dart';
-// Import Cloud Firestore for real-time updates
-import 'package:cloud_firestore/cloud_firestore.dart';
 // Import Note model to manage study note data and operations
 import 'package:studypals/models/note.dart';
 // Import Firestore service for persistence
@@ -27,9 +23,6 @@ class NoteProvider extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Stream subscription for real-time updates
-  StreamSubscription<QuerySnapshot>? _notesStreamSubscription;
-
   /// Getter for accessing the list of all notes (read-only)
   /// @return List of Note objects containing all study notes
   List<Note> get notes => _notes;
@@ -38,7 +31,7 @@ class NoteProvider extends ChangeNotifier {
   /// @return Boolean indicating if note data is currently being loaded
   bool get isLoading => _isLoading;
 
-  /// Loads all study notes from persistent storage with real-time updates
+  /// Loads all study notes from persistent storage (database)
   /// Sets loading state and handles errors gracefully with logging
   Future<void> loadNotes() async {
     _isLoading = true; // Set loading state to true
@@ -49,183 +42,197 @@ class NoteProvider extends ChangeNotifier {
       if (currentUser == null) {
         debugPrint('No user logged in, cannot load notes');
         _notes.clear();
-        _isLoading = false;
-        notifyListeners();
         return;
       }
 
-      // Cancel any existing stream subscription
-      await _notesStreamSubscription?.cancel();
+      // Load notes from Firestore
+      final notesData = await _firestoreService.getUserNotes(currentUser.uid);
+      _notes.clear();
+      _notes.addAll(notesData.map((data) => _convertFirestoreToNote(data)));
 
-      // Set up real-time stream listener with includeMetadataChanges
-      // This ensures we see pending writes immediately
-      _notesStreamSubscription =
-          _firestoreService.getUserNotesStream(currentUser.uid).listen(
-        (QuerySnapshot snapshot) {
-          _notes.clear();
+      debugPrint('✅ Loaded ${_notes.length} notes from Firestore');
 
-          debugPrint(
-              '📡 Stream update received: ${snapshot.docs.length} documents');
+      // If no notes found, add sample data for development
+      if (_notes.isEmpty) {
+        debugPrint('No notes found, adding sample notes');
+        _notes.addAll([
+          Note(
+            id: 'note_1',
+            title: 'JavaScript Fundamentals',
+            contentMd: '''# JavaScript Fundamentals
 
-          for (var doc in snapshot.docs) {
-            final data = doc.data() as Map<String, dynamic>;
-            data['id'] = doc.id;
+## Variables and Data Types
+- `let` and `const` for variable declarations
+- String, Number, Boolean, Array, Object
+- Template literals for string interpolation
 
-            // Log each document for debugging
-            debugPrint(
-                '  📝 Note: ${doc.id} - ${data['title']} (hasPendingWrites: ${doc.metadata.hasPendingWrites})');
+## Functions
+- Function declarations vs expressions
+- Arrow functions
+- Scope and closures
+''',
+            tags: ['javascript', 'programming', 'fundamentals'],
+            createdAt: DateTime.now().subtract(const Duration(days: 2)),
+            updatedAt: DateTime.now().subtract(const Duration(hours: 6)),
+          ),
+          Note(
+            id: 'note_2',
+            title: 'React Hooks Study Guide',
+            contentMd: '''# React Hooks
 
-            _notes.add(_convertFirestoreToNote(data));
-          }
+## useState
+- Managing component state
+- State updates are asynchronous
+- Functional updates for complex state
 
-          debugPrint('✅ Loaded ${_notes.length} notes from Firestore stream');
-          _isLoading = false;
-          notifyListeners();
-        },
-        onError: (error) {
-          developer.log('❌ Error in notes stream: $error',
-              name: 'NoteProvider');
-          _notes.clear();
-          _isLoading = false;
-          notifyListeners();
-        },
-      );
+## useEffect
+- Side effects in functional components
+- Dependency arrays
+- Cleanup functions
+
+## Custom Hooks
+- Reusable state logic
+- Naming convention: start with "use"
+''',
+            tags: ['react', 'javascript', 'frontend'],
+            createdAt: DateTime.now().subtract(const Duration(days: 1)),
+            updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+          ),
+          Note(
+            id: 'note_3',
+            title: 'Database Design Principles',
+            contentMd: '''# Database Design
+
+## Normalization
+- 1NF, 2NF, 3NF forms
+- Eliminating redundancy
+- Maintaining data integrity
+
+## Relationships
+- One-to-One
+- One-to-Many
+- Many-to-Many
+
+## Indexing
+- Primary keys
+- Foreign keys
+- Performance optimization
+''',
+            tags: ['database', 'sql', 'design'],
+            createdAt: DateTime.now().subtract(const Duration(hours: 12)),
+            updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
+          ),
+        ]);
+      }
     } catch (e) {
       // Log any errors that occur during note loading for debugging
       developer.log('Error loading notes: $e', name: 'NoteProvider');
-      _notes.clear();
-      _isLoading = false;
-      notifyListeners();
+      _notes.clear(); // Clear notes on error
+    } finally {
+      _isLoading = false; // Always clear loading state
+      notifyListeners(); // Notify UI that loading is complete
     }
-  }
-
-  @override
-  void dispose() {
-    _notesStreamSubscription?.cancel();
-    super.dispose();
   }
 
   /// Convert Firestore document data to Note object
   Note _convertFirestoreToNote(Map<String, dynamic> data) {
-    // Handle Firestore Timestamp objects
-    DateTime? createdAt;
-    DateTime? updatedAt;
-
-    try {
-      if (data['createdAt'] != null) {
-        final createdAtValue = data['createdAt'];
-        if (createdAtValue is Timestamp) {
-          createdAt = createdAtValue.toDate();
-        }
-      }
-
-      if (data['updatedAt'] != null) {
-        final updatedAtValue = data['updatedAt'];
-        if (updatedAtValue is Timestamp) {
-          updatedAt = updatedAtValue.toDate();
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ Error parsing timestamps: $e');
-    }
-
     return Note(
       id: data['id'] ?? '',
       title: data['title'] ?? 'Untitled Note',
       contentMd: data['contentMd'] ?? '',
       tags: List<String>.from(data['tags'] ?? []),
-      createdAt: createdAt ?? DateTime.now(),
-      updatedAt: updatedAt ?? DateTime.now(),
+      createdAt: data['createdAt']?.toDate() ?? DateTime.now(),
+      updatedAt: data['updatedAt']?.toDate() ?? DateTime.now(),
     );
   }
 
   /// Adds a new note to the collection and notifies listeners
   /// @param note - The Note object to add to the collection
-  /// Note: The real-time stream will automatically update the UI with the new note
   Future<void> addNote(Note note) async {
+    _notes.add(note); // Add note to the list locally first
+    notifyListeners(); // Notify UI of the addition immediately
+
+    // Save to Firestore in the background
     final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      debugPrint('❌ No user logged in, cannot create note');
-      return;
-    }
+    if (currentUser != null) {
+      try {
+        final noteId = await _firestoreService.createNote(
+          uid: currentUser.uid,
+          title: note.title,
+          contentMd: note.contentMd,
+          tags: note.tags,
+        );
 
-    try {
-      // Save to Firestore and wait for the document ID
-      final noteId = await _firestoreService.createNote(
-        uid: currentUser.uid,
-        title: note.title,
-        contentMd: note.contentMd,
-        tags: note.tags,
-      );
+        if (noteId != null) {
+          debugPrint('✅ Saved note to Firestore with ID: $noteId');
 
-      if (noteId != null) {
-        debugPrint('✅ Created note in Firestore with ID: $noteId');
-        // The real-time stream listener will automatically update _notes
-      } else {
-        debugPrint('❌ Failed to create note in Firestore');
-        throw Exception('Failed to create note in Firestore');
+          // Update the local note with the Firestore ID
+          final noteIndex = _notes.indexWhere((n) => n.id == note.id);
+          if (noteIndex != -1) {
+            _notes[noteIndex] = note.copyWith(id: noteId);
+            notifyListeners();
+          }
+        } else {
+          debugPrint('❌ Failed to save note to Firestore');
+        }
+      } catch (e) {
+        debugPrint('❌ Error saving note to Firestore: $e');
       }
-    } catch (e) {
-      debugPrint('❌ Error creating note in Firestore: $e');
-      rethrow;
     }
   }
 
   /// Updates an existing note in the collection by ID
+  /// Finds note by ID and replaces it with updated version
   /// @param note - The updated Note object with same ID
-  /// Note: The real-time stream will automatically update the UI with changes
   Future<void> updateNote(Note note) async {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      debugPrint('❌ No user logged in, cannot update note');
-      return;
-    }
+    // Find the index of the note to update by matching ID
+    final index = _notes.indexWhere((n) => n.id == note.id);
 
-    try {
-      final success = await _firestoreService.updateNote(
-        noteId: note.id,
-        uid: currentUser.uid,
-        title: note.title,
-        contentMd: note.contentMd,
-        tags: note.tags,
-      );
+    if (index != -1) {
+      // If note found
+      _notes[index] = note; // Replace with updated note locally
+      notifyListeners(); // Notify UI of the change immediately
 
-      if (success) {
-        debugPrint('✅ Updated note in Firestore: ${note.id}');
-        // The real-time stream listener will automatically update _notes
-      } else {
-        debugPrint('❌ Failed to update note in Firestore');
-        throw Exception('Failed to update note in Firestore');
+      // Update in Firestore in the background
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        try {
+          final success = await _firestoreService.updateNote(
+            noteId: note.id,
+            uid: currentUser.uid,
+            title: note.title,
+            contentMd: note.contentMd,
+            tags: note.tags,
+          );
+
+          if (success) {
+            debugPrint('✅ Updated note in Firestore: ${note.id}');
+          } else {
+            debugPrint('❌ Failed to update note in Firestore');
+          }
+        } catch (e) {
+          debugPrint('❌ Error updating note in Firestore: $e');
+        }
       }
-    } catch (e) {
-      debugPrint('❌ Error updating note in Firestore: $e');
-      rethrow;
     }
   }
 
   /// Removes a note from the collection by ID
   /// @param noteId - The ID of the note to remove
-  /// Note: The real-time stream will automatically update the UI after deletion
   Future<void> deleteNote(String noteId) async {
-    final currentUser = _auth.currentUser;
-    if (currentUser == null) {
-      debugPrint('❌ No user logged in, cannot delete note');
-      return;
-    }
-
     try {
-      // Delete from Firestore (soft delete by archiving)
-      final success = await _firestoreService.deleteNote(noteId);
-
-      if (success) {
-        debugPrint('✅ Deleted note from Firestore: $noteId');
-        // The real-time stream listener will automatically update _notes
-      } else {
-        debugPrint('❌ Failed to delete note from Firestore');
-        throw Exception('Failed to delete note from Firestore');
+      // Delete from Firestore first
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestoreService.deleteNote(noteId);
       }
+
+      // Remove from local list
+      _notes.removeWhere((note) => note.id == noteId);
+      notifyListeners(); // Notify UI of the removal
     } catch (e) {
-      debugPrint('❌ Error deleting note from Firestore: $e');
+      debugPrint('Error deleting note: $e');
+      // Re-throw to let UI handle the error
       rethrow;
     }
   }
