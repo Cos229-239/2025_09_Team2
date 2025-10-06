@@ -200,11 +200,13 @@ class _ChatScreenState extends State<ChatScreen> {
               if (callId != null) {
                 final success = await _webrtcService.answerCall(callId: callId);
                 
-                // Only navigate if still mounted and not already navigated
+                // Navigate to call screen if answer was successful
                 if (success && mounted) {
-                  // Check if we're not already on a call screen
-                  final currentRoute = ModalRoute.of(context);
-                  if (currentRoute?.isCurrent == true) {
+                  debugPrint('✅ Call answered successfully, navigating to CallScreen');
+                  // Wait a frame for the dialog to fully close
+                  await Future.delayed(const Duration(milliseconds: 100));
+                  
+                  if (mounted) {
                     // Navigate to call screen
                     Navigator.push(
                       context,
@@ -217,8 +219,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     );
-                  } else {
-                    debugPrint('⚠️ Not navigating - already navigated or context invalid');
                   }
                 } else if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

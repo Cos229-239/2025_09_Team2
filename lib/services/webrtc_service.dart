@@ -157,11 +157,14 @@ class WebRTCService {
       _localStream = await navigator.mediaDevices.getUserMedia(constraints);
       _localStreamController.add(_localStream);
       
+      debugPrint('🎙️ Local stream obtained: ${_localStream!.getTracks().length} tracks');
+      
       // Create peer connection
       _peerConnection = await createPeerConnection(_configuration);
       
-      // Add local stream to peer connection
+      // Add local stream tracks to peer connection with explicit send direction
       _localStream!.getTracks().forEach((track) {
+        debugPrint('➕ Adding local track: ${track.kind} (enabled: ${track.enabled})');
         _peerConnection!.addTrack(track, _localStream!);
       });
       
@@ -197,9 +200,15 @@ class WebRTCService {
         }
       };
       
-      // Create offer
-      RTCSessionDescription offer = await _peerConnection!.createOffer();
+      // Create offer with proper media options
+      final offerOptions = {
+        'offerToReceiveAudio': true,
+        'offerToReceiveVideo': callType == CallType.video,
+      };
+      RTCSessionDescription offer = await _peerConnection!.createOffer(offerOptions);
       await _peerConnection!.setLocalDescription(offer);
+      
+      debugPrint('📝 Created offer with ${callType == CallType.video ? "video" : "audio only"}');
       
       // Save call document to Firestore
       await _firestore.collection('calls').doc(_currentCallId).set({
@@ -267,11 +276,14 @@ class WebRTCService {
       _localStream = await navigator.mediaDevices.getUserMedia(constraints);
       _localStreamController.add(_localStream);
       
+      debugPrint('🎙️ Local stream obtained: ${_localStream!.getTracks().length} tracks');
+      
       // Create peer connection
       _peerConnection = await createPeerConnection(_configuration);
       
-      // Add local stream to peer connection
+      // Add local stream tracks to peer connection with explicit send direction
       _localStream!.getTracks().forEach((track) {
+        debugPrint('➕ Adding local track: ${track.kind} (enabled: ${track.enabled})');
         _peerConnection!.addTrack(track, _localStream!);
       });
       
@@ -317,9 +329,15 @@ class WebRTCService {
       _remoteDescriptionSet = true;
       debugPrint('✅ Remote description set from offer');
       
-      // Create answer
-      RTCSessionDescription answer = await _peerConnection!.createAnswer();
+      // Create answer with proper media options
+      final answerOptions = {
+        'offerToReceiveAudio': true,
+        'offerToReceiveVideo': _currentCallType == CallType.video,
+      };
+      RTCSessionDescription answer = await _peerConnection!.createAnswer(answerOptions);
       await _peerConnection!.setLocalDescription(answer);
+      
+      debugPrint('📝 Created answer with ${_currentCallType == CallType.video ? "video" : "audio only"}');
       
       // Save answer to Firestore
       await _firestore.collection('calls').doc(callId).update({
