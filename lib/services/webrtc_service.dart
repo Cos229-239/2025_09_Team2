@@ -46,11 +46,21 @@ class WebRTCService {
   // ICE candidate subscription
   StreamSubscription? _iceCandidateSubscription;
   StreamSubscription? _callStateSubscription;
+  StreamSubscription? _incomingCallSubscription;
+  
+  // ICE candidate queue (for candidates received before remote description is set)
+  final List<RTCIceCandidate> _pendingIceCandidates = [];
+  bool _remoteDescriptionSet = false;
+  
+  // Connection timeout
+  Timer? _connectionTimeoutTimer;
+  static const Duration _connectionTimeout = Duration(seconds: 30);
   
   // Getters
   CallState get callState => _callState;
   CallType? get currentCallType => _currentCallType;
   String? get currentCallId => _currentCallId;
+  String? get otherUserId => _otherUserId;
   Stream<CallState> get callStateStream => _callStateController.stream;
   Stream<MediaStream?> get remoteStreamStream => _remoteStreamController.stream;
   Stream<MediaStream?> get localStreamStream => _localStreamController.stream;
@@ -118,6 +128,8 @@ class WebRTCService {
       _updateCallState(CallState.connecting);
       _currentCallType = callType;
       _otherUserId = recipientId;
+      _remoteDescriptionSet = false;
+      _pendingIceCandidates.clear();
       
       // Generate call ID
       _currentCallId = '${currentUser.uid}_${recipientId}_${DateTime.now().millisecondsSinceEpoch}';
@@ -159,10 +171,11 @@ class WebRTCService {
       _peerConnection!.onConnectionState = (RTCPeerConnectionState state) {
         debugPrint('🔗 Connection state: $state');
         if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+          _cancelConnectionTimeout();
           _updateCallState(CallState.connected);
         } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
                    state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
-          _updateCallState(CallState.ended);
+          _updateCallState(CallState.error);
           endCall();
         }
       };
@@ -187,10 +200,13 @@ class WebRTCService {
       debugPrint('✅ Call offer created and sent');
       _updateCallState(CallState.ringing);
       
+      // Start connection timeout
+      _startConnectionTimeout();
+      
       // Listen for answer
       _listenForAnswer();
       
-      // Listen for callee ICE candidates
+      // Listen for callee ICE candidates (will be queued until remote description is set)
       _listenForCalleeICECandidates();
       
       return true;
@@ -213,6 +229,8 @@ class WebRTCService {
       
       _updateCallState(CallState.connecting);
       _currentCallId = callId;
+      _remoteDescriptionSet = false;
+      _pendingIceCandidates.clear();
       
       debugPrint('📞 Answering call: $callId');
       
@@ -263,10 +281,11 @@ class WebRTCService {
       _peerConnection!.onConnectionState = (RTCPeerConnectionState state) {
         debugPrint('🔗 Connection state: $state');
         if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+          _cancelConnectionTimeout();
           _updateCallState(CallState.connected);
         } else if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
                    state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
-          _updateCallState(CallState.ended);
+          _updateCallState(CallState.error);
           endCall();
         }
       };
@@ -276,6 +295,10 @@ class WebRTCService {
       await _peerConnection!.setRemoteDescription(
         RTCSessionDescription(offerData['sdp'], offerData['type']),
       );
+      
+      // Mark remote description as set
+      _remoteDescriptionSet = true;
+      debugPrint('✅ Remote description set from offer');
       
       // Create answer
       RTCSessionDescription answer = await _peerConnection!.createAnswer();
@@ -292,8 +315,14 @@ class WebRTCService {
       
       debugPrint('✅ Call answer created and sent');
       
-      // Listen for caller ICE candidates
+      // Start connection timeout
+      _startConnectionTimeout();
+      
+      // Listen for caller ICE candidates (will be queued until remote description is set)
       _listenForCallerICECandidates();
+      
+      // Process any pending ICE candidates
+      await _processPendingIceCandidates();
       
       return true;
     } catch (e) {
@@ -316,15 +345,63 @@ class WebRTCService {
       final data = snapshot.data();
       if (data == null) return;
       
-      if (data['answer'] != null && _peerConnection != null) {
+      if (data['answer'] != null && _peerConnection != null && !_remoteDescriptionSet) {
         final answerData = data['answer'];
         final answer = RTCSessionDescription(answerData['sdp'], answerData['type']);
         
         debugPrint('📥 Received answer from callee');
         await _peerConnection!.setRemoteDescription(answer);
-        _updateCallState(CallState.connected);
+        
+        // Mark remote description as set
+        _remoteDescriptionSet = true;
+        debugPrint('✅ Remote description set from answer');
+        
+        // Process any pending ICE candidates
+        await _processPendingIceCandidates();
       }
     });
+  }
+  
+  /// Process pending ICE candidates after remote description is set
+  Future<void> _processPendingIceCandidates() async {
+    if (_pendingIceCandidates.isEmpty) {
+      debugPrint('ℹ️ No pending ICE candidates to process');
+      return;
+    }
+    
+    debugPrint('🧊 Processing ${_pendingIceCandidates.length} pending ICE candidates');
+    
+    for (final candidate in _pendingIceCandidates) {
+      try {
+        await _peerConnection?.addCandidate(candidate);
+        debugPrint('✅ Added pending ICE candidate');
+      } catch (e) {
+        debugPrint('❌ Error adding pending ICE candidate: $e');
+      }
+    }
+    
+    _pendingIceCandidates.clear();
+    debugPrint('✅ All pending ICE candidates processed');
+  }
+  
+  /// Start connection timeout timer
+  void _startConnectionTimeout() {
+    _connectionTimeoutTimer?.cancel();
+    _connectionTimeoutTimer = Timer(_connectionTimeout, () {
+      if (_callState == CallState.connecting || _callState == CallState.ringing) {
+        debugPrint('⏰ Connection timeout - call failed to connect within ${_connectionTimeout.inSeconds} seconds');
+        _updateCallState(CallState.error);
+        endCall();
+      }
+    });
+    debugPrint('⏰ Connection timeout started (${_connectionTimeout.inSeconds}s)');
+  }
+  
+  /// Cancel connection timeout timer
+  void _cancelConnectionTimeout() {
+    _connectionTimeoutTimer?.cancel();
+    _connectionTimeoutTimer = null;
+    debugPrint('⏰ Connection timeout cancelled');
   }
   
   /// Listen for caller ICE candidates
@@ -334,7 +411,7 @@ class WebRTCService {
         .doc(_currentCallId)
         .collection('callerCandidates')
         .snapshots()
-        .listen((snapshot) {
+        .listen((snapshot) async {
       for (var change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.added) {
           final data = change.doc.data();
@@ -344,8 +421,19 @@ class WebRTCService {
               data['sdpMid'],
               data['sdpMLineIndex'],
             );
-            _peerConnection!.addCandidate(candidate);
-            debugPrint('🧊 Added caller ICE candidate');
+            
+            // Only add candidate if remote description is set, otherwise queue it
+            if (_remoteDescriptionSet) {
+              try {
+                await _peerConnection!.addCandidate(candidate);
+                debugPrint('🧊 Added caller ICE candidate');
+              } catch (e) {
+                debugPrint('❌ Error adding caller ICE candidate: $e');
+              }
+            } else {
+              _pendingIceCandidates.add(candidate);
+              debugPrint('🧊 Queued caller ICE candidate (waiting for remote description)');
+            }
           }
         }
       }
@@ -359,7 +447,7 @@ class WebRTCService {
         .doc(_currentCallId)
         .collection('calleeCandidates')
         .snapshots()
-        .listen((snapshot) {
+        .listen((snapshot) async {
       for (var change in snapshot.docChanges) {
         if (change.type == DocumentChangeType.added) {
           final data = change.doc.data();
@@ -369,8 +457,19 @@ class WebRTCService {
               data['sdpMid'],
               data['sdpMLineIndex'],
             );
-            _peerConnection!.addCandidate(candidate);
-            debugPrint('🧊 Added callee ICE candidate');
+            
+            // Only add candidate if remote description is set, otherwise queue it
+            if (_remoteDescriptionSet) {
+              try {
+                await _peerConnection!.addCandidate(candidate);
+                debugPrint('🧊 Added callee ICE candidate');
+              } catch (e) {
+                debugPrint('❌ Error adding callee ICE candidate: $e');
+              }
+            } else {
+              _pendingIceCandidates.add(candidate);
+              debugPrint('🧊 Queued callee ICE candidate (waiting for remote description)');
+            }
           }
         }
       }
@@ -384,7 +483,7 @@ class WebRTCService {
     
     debugPrint('👂 Listening for incoming calls...');
     
-    _firestore
+    _incomingCallSubscription = _firestore
         .collection('calls')
         .where('calleeId', isEqualTo: currentUser.uid)
         .where('status', isEqualTo: 'ringing')
@@ -395,20 +494,27 @@ class WebRTCService {
           final callData = change.doc.data();
           final callId = change.doc.id;
           
-          // IMPORTANT: Only trigger incoming call if we didn't initiate this call
-          // Check if the current call ID matches the one we started
-          if (callData != null && 
-              _callState == CallState.idle && 
-              callId != _currentCallId) {  // Don't show incoming for our own outgoing call
-            debugPrint('📞 Incoming call from ${callData['callerId']} (Call ID: $callId)');
+          if (callData != null) {
+            final callerId = callData['callerId'] as String;
             
-            // Store the call ID so we can answer it later
-            _currentCallId = callId;
-            _otherUserId = callData['callerId'];
-            _currentCallType = callData['callType'] == 'audio' ? CallType.audio : CallType.video;
-            
-            // Trigger ringing state for incoming call
-            _updateCallState(CallState.ringing);
+            // CRITICAL FIX: Only trigger incoming call if:
+            // 1. We are NOT currently in a call (idle state)
+            // 2. The caller is NOT us (prevent showing our own outgoing call as incoming)
+            if (_callState == CallState.idle && callerId != currentUser.uid) {
+              debugPrint('📞 Incoming call from $callerId (Call ID: $callId)');
+              
+              // Store the call details
+              _currentCallId = callId;
+              _otherUserId = callerId;
+              _currentCallType = callData['callType'] == 'audio' ? CallType.audio : CallType.video;
+              
+              // Trigger ringing state for incoming call
+              _updateCallState(CallState.ringing);
+            } else if (callerId == currentUser.uid) {
+              debugPrint('ℹ️ Ignoring our own outgoing call (Call ID: $callId)');
+            } else {
+              debugPrint('ℹ️ Ignoring incoming call - already in call state: $_callState');
+            }
           }
         }
       }
@@ -526,33 +632,54 @@ class WebRTCService {
   Future<void> endCall() async {
     debugPrint('📞 Ending call...');
     
-    // Stop all tracks
-    _localStream?.getTracks().forEach((track) {
-      track.stop();
-    });
+    // Cancel connection timeout
+    _cancelConnectionTimeout();
     
-    // Close peer connection
-    await _peerConnection?.close();
-    
-    // Cancel subscriptions
-    await _iceCandidateSubscription?.cancel();
-    await _callStateSubscription?.cancel();
-    
-    // Update call status in Firestore
-    if (_currentCallId != null) {
-      await _firestore.collection('calls').doc(_currentCallId).update({
-        'status': 'ended',
-        'endedAt': FieldValue.serverTimestamp(),
+    try {
+      // Stop all local tracks immediately
+      _localStream?.getTracks().forEach((track) {
+        track.stop();
+        debugPrint('🛑 Stopped local track: ${track.kind}');
       });
+      
+      // Stop all remote tracks
+      _remoteStream?.getTracks().forEach((track) {
+        track.stop();
+        debugPrint('🛑 Stopped remote track: ${track.kind}');
+      });
+      
+      // Close peer connection
+      await _peerConnection?.close();
+      await _peerConnection?.dispose();
+      
+      // Cancel subscriptions
+      await _iceCandidateSubscription?.cancel();
+      await _callStateSubscription?.cancel();
+      
+      // Update call status in Firestore
+      if (_currentCallId != null) {
+        try {
+          await _firestore.collection('calls').doc(_currentCallId).update({
+            'status': 'ended',
+            'endedAt': FieldValue.serverTimestamp(),
+          });
+        } catch (e) {
+          debugPrint('⚠️ Could not update call status in Firestore: $e');
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error during call cleanup: $e');
     }
     
-    // Clear streams
+    // Clear all state
     _localStream = null;
     _remoteStream = null;
     _peerConnection = null;
     _currentCallId = null;
     _currentCallType = null;
     _otherUserId = null;
+    _remoteDescriptionSet = false;
+    _pendingIceCandidates.clear();
     
     // Update stream controllers
     _localStreamController.add(null);
@@ -563,17 +690,22 @@ class WebRTCService {
     
     // Reset to idle after a short delay
     Future.delayed(const Duration(milliseconds: 500), () {
-      _updateCallState(CallState.idle);
+      if (_callState == CallState.ended) {
+        _updateCallState(CallState.idle);
+      }
     });
     
-    debugPrint('✅ Call ended');
+    debugPrint('✅ Call ended and resources cleaned up');
   }
   
   /// Dispose the service
   void dispose() {
+    debugPrint('🧹 Disposing WebRTC service...');
+    _incomingCallSubscription?.cancel();
     endCall();
     _callStateController.close();
     _remoteStreamController.close();
     _localStreamController.close();
+    debugPrint('✅ WebRTC service disposed');
   }
 }

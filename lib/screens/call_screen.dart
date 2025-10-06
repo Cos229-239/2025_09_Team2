@@ -94,8 +94,13 @@ class _CallScreenState extends State<CallScreen> {
   
   @override
   void dispose() {
+    debugPrint('🧹 Disposing CallScreen...');
+    
+    // Dispose renderers first to release video tracks
     _localRenderer.dispose();
     _remoteRenderer.dispose();
+    
+    debugPrint('✅ CallScreen disposed');
     super.dispose();
   }
   
