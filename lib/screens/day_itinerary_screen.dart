@@ -40,7 +40,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
             children: [
               // Day overview header
               _buildDayOverviewHeader(context, events),
-              
+
               // Events list
               Expanded(
                 child: events.isEmpty
@@ -59,10 +59,12 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
     );
   }
 
-  Widget _buildDayOverviewHeader(BuildContext context, List<CalendarEvent> events) {
+  Widget _buildDayOverviewHeader(
+      BuildContext context, List<CalendarEvent> events) {
     final isToday = _isToday(widget.selectedDate);
     final isPast = widget.selectedDate.isBefore(DateTime.now());
-    final completedEvents = events.where((e) => e.status == CalendarEventStatus.completed).length;
+    final completedEvents =
+        events.where((e) => e.status == CalendarEventStatus.completed).length;
     final totalEvents = events.length;
 
     return Container(
@@ -74,7 +76,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
           end: Alignment.bottomRight,
           colors: [
             Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withOpacity(0.8),
+            Theme.of(context).primaryColor.withValues(alpha: 0.8),
           ],
         ),
       ),
@@ -84,7 +86,11 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
           Row(
             children: [
               Icon(
-                isToday ? Icons.today : isPast ? Icons.history : Icons.event,
+                isToday
+                    ? Icons.today
+                    : isPast
+                        ? Icons.history
+                        : Icons.event,
                 color: Colors.white,
                 size: 28,
               ),
@@ -94,7 +100,11 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isToday ? 'Today\'s Schedule' : isPast ? 'Past Day' : 'Upcoming Day',
+                      isToday
+                          ? 'Today\'s Schedule'
+                          : isPast
+                              ? 'Past Day'
+                              : 'Upcoming Day',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -114,7 +124,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          
+
           // Statistics row
           Row(
             children: [
@@ -141,11 +151,12 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
     );
   }
 
-  Widget _buildStatChip(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildStatChip(
+      BuildContext context, String label, String value, IconData icon) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -178,9 +189,10 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
     );
   }
 
-  Widget _buildProgressIndicator(BuildContext context, int total, int completed) {
+  Widget _buildProgressIndicator(
+      BuildContext context, int total, int completed) {
     if (total == 0) return const SizedBox.shrink();
-    
+
     final progress = completed / total;
     return SizedBox(
       width: 60,
@@ -189,7 +201,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
         children: [
           CircularProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white.withOpacity(0.3),
+            backgroundColor: Colors.white.withValues(alpha: 0.3),
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
             strokeWidth: 4,
           ),
@@ -244,7 +256,8 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
           ],
@@ -256,7 +269,8 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
   Widget _buildEventsList(BuildContext context, List<CalendarEvent> events) {
     return RefreshIndicator(
       onRefresh: () async {
-        await Provider.of<CalendarProvider>(context, listen: false).refreshAllEvents();
+        await Provider.of<CalendarProvider>(context, listen: false)
+            .refreshAllEvents();
       },
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -265,7 +279,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
           if (index == events.length) {
             return const SizedBox(height: 80); // Space for FAB
           }
-          
+
           final event = events[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -283,10 +297,10 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: event.color.withOpacity(0.08),
+          color: event.color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: event.color.withOpacity(0.2),
+            color: event.color.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -302,7 +316,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
               ),
             ),
             const SizedBox(width: 16),
-            
+
             // Event icon
             Icon(
               event.icon,
@@ -310,7 +324,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
               size: 24,
             ),
             const SizedBox(width: 16),
-            
+
             // Event details
             Expanded(
               child: Column(
@@ -349,14 +363,16 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                         const SizedBox(width: 4),
                         Text(
                           '${event.estimatedMinutes}min',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
                         ),
                       ],
                     ],
                   ),
-                  if (event.description.isNotEmpty && event.description != event.title) ...[
+                  if (event.description.isNotEmpty &&
+                      event.description != event.title) ...[
                     const SizedBox(height: 6),
                     Text(
                       event.description,
@@ -370,13 +386,14 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                 ],
               ),
             ),
-            
+
             // Status indicator & actions
             Column(
               children: [
                 // Status indicator
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getStatusColor(event.status),
                     borderRadius: BorderRadius.circular(12),
@@ -391,7 +408,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
+
                 // Action menu
                 PopupMenuButton(
                   icon: Icon(
@@ -490,16 +507,18 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
 
   bool _isToday(DateTime date) {
     final now = DateTime.now();
-    return date.year == now.year && date.month == now.month && date.day == now.day;
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
   }
 
   String _getRelativeDateString(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final compareDate = DateTime(date.year, date.month, date.day);
-    
+
     final difference = compareDate.difference(today).inDays;
-    
+
     if (difference == 0) return 'Today';
     if (difference == 1) return 'Tomorrow';
     if (difference == -1) return 'Yesterday';

@@ -79,9 +79,9 @@ class SavedTimer {
     required this.cycles,
     required this.savedAt,
   });
-  
+
   int get totalSeconds => (hours * 3600) + (minutes * 60) + seconds;
-  
+
   String get formattedTime {
     if (hours > 0) {
       return '${hours}h ${minutes}m ${seconds}s';
@@ -117,17 +117,19 @@ class _TimerScreenState extends State<TimerScreen> {
   TimerState _timerState = TimerState.idle;
   TimerSession? _activeSession;
   int _currentPhaseIndex = 0;
-  int _sessionCycle = 1;
-  int _totalSessionsCompleted = 0;
+  // TODO: Future feature - track session cycles and completed sessions for statistics
+  // int _sessionCycle = 1;
+  // int _totalSessionsCompleted = 0;
 
   // Custom timer advanced options
   bool _includeBreakTimer = false;
   int _breakMinutes = 5;
   int _iterationCount = 1;
-  final String _customTimerLabel = '';
-  bool _showCustomOptions = false;
+  // TODO: Future feature - custom timer labels and advanced options
+  // final String _customTimerLabel = '';
+  // bool _showCustomOptions = false;
   final TextEditingController _labelController = TextEditingController();
-  
+
   // Saved custom timers for quick selection (includes converted study techniques)
   List<SavedTimer> _savedTimers = [
     // Study Technique Presets converted to Saved Timers
@@ -174,7 +176,9 @@ class _TimerScreenState extends State<TimerScreen> {
     ),
   ];
 
-  // Timer session definitions with automatic phase transitions
+  // TODO: Future feature - Additional timer session presets
+  // These are currently unused but preserved for potential future UI enhancements
+  /*
   static const List<TimerSession> _timerSessions = [
     TimerSession(
       name: 'Pomodoro Cycle',
@@ -239,11 +243,15 @@ class _TimerScreenState extends State<TimerScreen> {
       ],
     ),
   ];
+  */
 
   // Scroll controllers for the picker wheels
-  final FixedExtentScrollController _hoursController = FixedExtentScrollController();
-  final FixedExtentScrollController _minutesController = FixedExtentScrollController();
-  final FixedExtentScrollController _secondsController = FixedExtentScrollController();
+  final FixedExtentScrollController _hoursController =
+      FixedExtentScrollController();
+  final FixedExtentScrollController _minutesController =
+      FixedExtentScrollController();
+  final FixedExtentScrollController _secondsController =
+      FixedExtentScrollController();
 
   @override
   @override
@@ -257,8 +265,9 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   void _startTimer() {
-    final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
-    
+    final totalSeconds =
+        (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
+
     if (totalSeconds == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please set a time greater than 0')),
@@ -287,7 +296,7 @@ class _TimerScreenState extends State<TimerScreen> {
     setState(() {
       _activeSession = session;
       _currentPhaseIndex = 0;
-      _sessionCycle = 1;
+      // _sessionCycle = 1; // TODO: Future feature for session tracking
       _remainingSeconds = session.phases[0].minutes * 60;
       _timerState = TimerState.running;
     });
@@ -335,22 +344,23 @@ class _TimerScreenState extends State<TimerScreen> {
       _remainingSeconds = 0;
       _activeSession = null;
       _currentPhaseIndex = 0;
-      _sessionCycle = 1;
+      // _sessionCycle = 1; // TODO: Future feature for session tracking
     });
   }
 
   void _sessionPhaseComplete() {
     if (_activeSession == null) return;
-    
+
     // Check if there's a next phase in the session
     if (_currentPhaseIndex + 1 < _activeSession!.phases.length) {
       // Move to next phase (e.g., from focus to break)
       setState(() {
         _currentPhaseIndex++;
-        _remainingSeconds = _activeSession!.phases[_currentPhaseIndex].minutes * 60;
+        _remainingSeconds =
+            _activeSession!.phases[_currentPhaseIndex].minutes * 60;
         _timerState = TimerState.breakTime;
       });
-      
+
       // Auto-start the break phase
       _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
         setState(() {
@@ -370,11 +380,11 @@ class _TimerScreenState extends State<TimerScreen> {
 
   void _sessionComplete() {
     setState(() {
-      _totalSessionsCompleted++;
+      // _totalSessionsCompleted++; // TODO: Future feature for session statistics
       _timerState = TimerState.idle;
       _activeSession = null;
       _currentPhaseIndex = 0;
-      _sessionCycle = 1;
+      // _sessionCycle = 1; // TODO: Future feature for session tracking
       _remainingSeconds = 0;
     });
 
@@ -384,7 +394,7 @@ class _TimerScreenState extends State<TimerScreen> {
 
   void _showSessionCompleteDialog() {
     if (_activeSession == null) return;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -548,13 +558,14 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
-  Widget _buildTechniqueInfo(String title, String structure, String bestFor, Color color, IconData icon) {
+  Widget _buildTechniqueInfo(String title, String structure, String bestFor,
+      Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,7 +596,7 @@ class _TimerScreenState extends State<TimerScreen> {
           Text(
             'Best for: $bestFor',
             style: TextStyle(
-              color: const Color(0xFFD9D9D9).withOpacity(0.8),
+              color: const Color(0xFFD9D9D9).withValues(alpha: 0.8),
               fontSize: 13,
             ),
           ),
@@ -598,7 +609,7 @@ class _TimerScreenState extends State<TimerScreen> {
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
     final seconds = totalSeconds % 60;
-    
+
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     } else {
@@ -614,7 +625,8 @@ class _TimerScreenState extends State<TimerScreen> {
         backgroundColor: const Color(0xFF16181A), // Dashboard background color
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF6FB8E9)), // Dashboard primary accent
+          icon: const Icon(Icons.arrow_back_ios,
+              color: Color(0xFF6FB8E9)), // Dashboard primary accent
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
@@ -646,7 +658,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 ? _buildTimerDisplay()
                 : _buildTimerPicker(),
           ),
-          
+
           // Control buttons - only show when timer is running
           if (_timerState != TimerState.idle)
             Flexible(
@@ -668,10 +680,10 @@ class _TimerScreenState extends State<TimerScreen> {
 
   Widget _buildSessionDisplay() {
     if (_activeSession == null) return Container();
-    
+
     final currentPhase = _activeSession!.phases[_currentPhaseIndex];
-    final nextPhase = _currentPhaseIndex + 1 < _activeSession!.phases.length 
-        ? _activeSession!.phases[_currentPhaseIndex + 1] 
+    final nextPhase = _currentPhaseIndex + 1 < _activeSession!.phases.length
+        ? _activeSession!.phases[_currentPhaseIndex + 1]
         : null;
 
     return Padding(
@@ -696,7 +708,7 @@ class _TimerScreenState extends State<TimerScreen> {
             ),
           ),
           const SizedBox(height: 30),
-          
+
           // Current and next phase display
           Row(
             children: [
@@ -711,7 +723,7 @@ class _TimerScreenState extends State<TimerScreen> {
                   instructions: currentPhase.instructions,
                 ),
               ),
-              
+
               if (nextPhase != null) ...[
                 const SizedBox(width: 16),
                 // Next phase (queued)
@@ -728,9 +740,9 @@ class _TimerScreenState extends State<TimerScreen> {
               ],
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Status text with phase-specific styling
           Text(
             _getSessionStatusText(),
@@ -758,16 +770,18 @@ class _TimerScreenState extends State<TimerScreen> {
         color: const Color(0xFF2A3050),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isActive ? color : color.withOpacity(0.3),
+          color: isActive ? color : color.withValues(alpha: 0.3),
           width: isActive ? 3 : 1,
         ),
-        boxShadow: isActive ? [
-          BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ] : null,
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -782,7 +796,7 @@ class _TimerScreenState extends State<TimerScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          
+
           // Time display
           Text(
             time,
@@ -793,7 +807,7 @@ class _TimerScreenState extends State<TimerScreen> {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          
+
           if (isActive) ...[
             const SizedBox(height: 8),
             // Instructions for active phase
@@ -842,12 +856,20 @@ class _TimerScreenState extends State<TimerScreen> {
             ),
           ),
           const SizedBox(height: 40),
-          
+
           // Status text
           Text(
-            _timerState == TimerState.paused ? 'Paused' : _timerState == TimerState.breakTime ? 'Break Time' : 'Timer Running',
+            _timerState == TimerState.paused
+                ? 'Paused'
+                : _timerState == TimerState.breakTime
+                    ? 'Break Time'
+                    : 'Timer Running',
             style: TextStyle(
-              color: _timerState == TimerState.paused ? const Color(0xFF6FB8E9) : _timerState == TimerState.breakTime ? const Color(0xFF4CAF50) : const Color(0xFFD9D9D9), // Dashboard colors
+              color: _timerState == TimerState.paused
+                  ? const Color(0xFF6FB8E9)
+                  : _timerState == TimerState.breakTime
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFD9D9D9), // Dashboard colors
               fontSize: 18,
               fontWeight: FontWeight.w400,
             ),
@@ -864,8 +886,8 @@ class _TimerScreenState extends State<TimerScreen> {
       case TimerState.breakTime:
         return 'Break Time - Relax and Recharge';
       case TimerState.running:
-        return _activeSession!.phases[_currentPhaseIndex].isBreak 
-            ? 'Break Time Active' 
+        return _activeSession!.phases[_currentPhaseIndex].isBreak
+            ? 'Break Time Active'
             : 'Focus Session Active';
       default:
         return 'Session Ready';
@@ -879,7 +901,7 @@ class _TimerScreenState extends State<TimerScreen> {
       case TimerState.breakTime:
         return const Color(0xFF4CAF50);
       case TimerState.running:
-        return _activeSession!.phases[_currentPhaseIndex].isBreak 
+        return _activeSession!.phases[_currentPhaseIndex].isBreak
             ? const Color(0xFF4CAF50)
             : const Color(0xFFEF5350);
       default:
@@ -891,7 +913,8 @@ class _TimerScreenState extends State<TimerScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start, // Changed from center to start
+        mainAxisAlignment:
+            MainAxisAlignment.start, // Changed from center to start
         children: [
           // Toggle between presets and custom timer
           Container(
@@ -912,14 +935,18 @@ class _TimerScreenState extends State<TimerScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _showPresets ? const Color(0xFF6FB8E9) : Colors.transparent,
+                        color: _showPresets
+                            ? const Color(0xFF6FB8E9)
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'Saved Timers',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: _showPresets ? const Color(0xFF16181A) : const Color(0xFFD9D9D9),
+                          color: _showPresets
+                              ? const Color(0xFF16181A)
+                              : const Color(0xFFD9D9D9),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -932,14 +959,18 @@ class _TimerScreenState extends State<TimerScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: !_showPresets ? const Color(0xFF6FB8E9) : Colors.transparent,
+                        color: !_showPresets
+                            ? const Color(0xFF6FB8E9)
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'Custom Timer',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: !_showPresets ? const Color(0xFF16181A) : const Color(0xFFD9D9D9),
+                          color: !_showPresets
+                              ? const Color(0xFF16181A)
+                              : const Color(0xFFD9D9D9),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -954,9 +985,7 @@ class _TimerScreenState extends State<TimerScreen> {
 
           // Show presets or custom timer based on toggle - wrapped in Expanded
           Expanded(
-            child: _showPresets 
-              ? _buildStudyPresets()
-              : _buildCustomTimer(),
+            child: _showPresets ? _buildStudyPresets() : _buildCustomTimer(),
           ),
         ],
       ),
@@ -976,7 +1005,7 @@ class _TimerScreenState extends State<TimerScreen> {
           ),
         ),
         const SizedBox(height: 20),
-        
+
         // Saved timer options displayed as horizontal scrolling cards
         if (_savedTimers.isNotEmpty) ...[
           Container(
@@ -1015,7 +1044,7 @@ class _TimerScreenState extends State<TimerScreen> {
         border: Border.all(color: const Color(0xFF6FB8E9), width: 2),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6FB8E9).withOpacity(0.2),
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -1038,7 +1067,7 @@ class _TimerScreenState extends State<TimerScreen> {
             });
             // Switch to custom timer tab to see the loaded settings
             setState(() => _showPresets = false);
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Loaded timer "${timer.label}"'),
@@ -1051,7 +1080,7 @@ class _TimerScreenState extends State<TimerScreen> {
             setState(() {
               _savedTimers.removeAt(index);
             });
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Deleted timer "${timer.label}"'),
@@ -1083,7 +1112,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         width: 36, // Reduced from 40
                         height: 36, // Reduced from 40
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6FB8E9).withOpacity(0.2),
+                          color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -1107,7 +1136,7 @@ class _TimerScreenState extends State<TimerScreen> {
                     ],
                   ),
                 ),
-                
+
                 // Timer details
                 Expanded(
                   flex: 1,
@@ -1141,6 +1170,9 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
+  // TODO: Future feature - Alternative horizontal card layout for timer sessions
+  // This method is preserved for potential future UI variations
+  /*
   Widget _buildHorizontalSessionCard(TimerSession session) {
     return Container(
       width: 160,
@@ -1151,7 +1183,7 @@ class _TimerScreenState extends State<TimerScreen> {
         border: Border.all(color: session.primaryColor, width: 2),
         boxShadow: [
           BoxShadow(
-            color: session.primaryColor.withOpacity(0.2),
+            color: session.primaryColor.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -1170,7 +1202,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: session.primaryColor.withOpacity(0.2),
+                  color: session.primaryColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -1211,7 +1243,7 @@ class _TimerScreenState extends State<TimerScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: session.primaryColor.withOpacity(0.2),
+                  color: session.primaryColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -1229,6 +1261,7 @@ class _TimerScreenState extends State<TimerScreen> {
       ),
     );
   }
+  */
 
   Widget _buildCustomTimer() {
     return SingleChildScrollView(
@@ -1236,9 +1269,9 @@ class _TimerScreenState extends State<TimerScreen> {
         children: [
           // All-in-One Timer Container
           _buildUnifiedTimerContainer(),
-          
+
           const SizedBox(height: 12), // Reduced from 20
-          
+
           // Start Timer Button
           SizedBox(
             width: double.infinity,
@@ -1260,7 +1293,7 @@ class _TimerScreenState extends State<TimerScreen> {
               ),
             ),
           ),
-          
+
           // Extended bottom padding for scrollable container
           const SizedBox(height: 44), // Extended by 40px (4 + 40 = 44)
         ],
@@ -1276,299 +1309,305 @@ class _TimerScreenState extends State<TimerScreen> {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: const Color(0xFF6FB8E9),
-            width: 2,
-          ),
+          width: 2,
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Section Header
-              const Center(
-                child: Text(
-                  'Custom Timer Setup',
-                  style: TextStyle(
-                    color: Color(0xFFD9D9D9),
-                    fontSize: 18, // Reduced from 20
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16), // Reduced from 20
-              
-              // Main Timer Pickers
-              const Text(
-                'Timer Duration:',
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Section Header
+            const Center(
+              child: Text(
+                'Custom Timer Setup',
                 style: TextStyle(
-                  color: Color(0xFFB0B0B0),
-                  fontSize: 15, // Reduced from 16
-                  fontWeight: FontWeight.w500,
+                  color: Color(0xFFD9D9D9),
+                  fontSize: 18, // Reduced from 20
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 10), // Reduced from 12
-              
-              Container(
-                height: 100, // Reduced from 120
-                decoration: BoxDecoration(
-                  color: const Color(0xFF16181A),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF6FB8E9).withOpacity(0.5),
-                    width: 1,
+            ),
+
+            const SizedBox(height: 16), // Reduced from 20
+
+            // Main Timer Pickers
+            const Text(
+              'Timer Duration:',
+              style: TextStyle(
+                color: Color(0xFFB0B0B0),
+                fontSize: 15, // Reduced from 16
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 10), // Reduced from 12
+
+            Container(
+              height: 100, // Reduced from 120
+              decoration: BoxDecoration(
+                color: const Color(0xFF16181A),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.5),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Hours
+                  _buildCompactPickerWheel(
+                    controller: _hoursController,
+                    itemCount: 25,
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        _selectedHours = index;
+                      });
+                    },
+                    suffix: _selectedHours == 1 ? ' hour' : ' hours',
+                  ),
+
+                  // Minutes
+                  _buildCompactPickerWheel(
+                    controller: _minutesController,
+                    itemCount: 60,
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        _selectedMinutes = index;
+                      });
+                    },
+                    suffix: _selectedMinutes == 1 ? ' min' : ' min',
+                  ),
+
+                  // Seconds
+                  _buildCompactPickerWheel(
+                    controller: _secondsController,
+                    itemCount: 60,
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        _selectedSeconds = index;
+                      });
+                    },
+                    suffix: _selectedSeconds == 1 ? ' sec' : ' sec',
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10), // Reduced from 12
+
+            // Selected time display
+            Center(
+              child: Text(
+                _formatSelectedTime(),
+                style: const TextStyle(
+                  color: Color(0xFFD9D9D9),
+                  fontSize: 16, // Reduced from 18
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16), // Reduced from 20
+
+            // Timer Label
+            const Text(
+              'Timer Label (optional):',
+              style: TextStyle(
+                color: Color(0xFFB0B0B0),
+                fontSize: 15, // Reduced from 16
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 6), // Reduced from 8
+            TextField(
+              controller: _labelController,
+              style: const TextStyle(color: Color(0xFFD9D9D9)),
+              decoration: InputDecoration(
+                hintText: 'e.g., "Study Session", "Deep Focus"',
+                hintStyle: const TextStyle(color: Color(0xFF6B6B6B)),
+                filled: true,
+                fillColor: const Color(0xFF16181A),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 8), // Reduced vertical padding
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16), // Reduced from 20
+
+            // Break timer option
+            Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: Checkbox(
+                    value: _includeBreakTimer,
+                    onChanged: (value) =>
+                        setState(() => _includeBreakTimer = value ?? false),
+                    activeColor: const Color(0xFF6FB8E9),
+                    checkColor: const Color(0xFF16181A),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    // Hours
-                    _buildCompactPickerWheel(
-                      controller: _hoursController,
-                      itemCount: 25,
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          _selectedHours = index;
-                        });
-                      },
-                      suffix: _selectedHours == 1 ? ' hour' : ' hours',
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Include break timer with cycles',
+                    style: TextStyle(
+                      color: Color(0xFFD9D9D9),
+                      fontSize: 15, // Reduced from 16
+                      fontWeight: FontWeight.w500,
                     ),
-                    
-                    // Minutes
-                    _buildCompactPickerWheel(
-                      controller: _minutesController,
-                      itemCount: 60,
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          _selectedMinutes = index;
-                        });
-                      },
-                      suffix: _selectedMinutes == 1 ? ' min' : ' min',
-                    ),
-                    
-                    // Seconds
-                    _buildCompactPickerWheel(
-                      controller: _secondsController,
-                      itemCount: 60,
-                      onSelectedItemChanged: (index) {
-                        setState(() {
-                          _selectedSeconds = index;
-                        });
-                      },
-                      suffix: _selectedSeconds == 1 ? ' sec' : ' sec',
-                    ),
-                  ],
-                ),
-              ),
-              
-              const SizedBox(height: 10), // Reduced from 12
-              
-              // Selected time display
-              Center(
-                child: Text(
-                  _formatSelectedTime(),
-                  style: const TextStyle(
-                    color: Color(0xFFD9D9D9),
-                    fontSize: 16, // Reduced from 18
-                    fontWeight: FontWeight.w400,
                   ),
                 ),
-              ),
-              
-              const SizedBox(height: 16), // Reduced from 20
-              
-              // Timer Label
-              const Text(
-                'Timer Label (optional):',
-                style: TextStyle(
-                  color: Color(0xFFB0B0B0),
-                  fontSize: 15, // Reduced from 16
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 6), // Reduced from 8
-              TextField(
-                controller: _labelController,
-                style: const TextStyle(color: Color(0xFFD9D9D9)),
-                decoration: InputDecoration(
-                  hintText: 'e.g., "Study Session", "Deep Focus"',
-                  hintStyle: const TextStyle(color: Color(0xFF6B6B6B)),
-                  filled: true,
-                  fillColor: const Color(0xFF16181A),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Reduced vertical padding
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 16), // Reduced from 20
-              
-              // Break timer option
+              ],
+            ),
+
+            if (_includeBreakTimer) ...[
+              const SizedBox(
+                  height: 20), // Increased spacing when break timer is enabled
+
+              // Break Duration and Cycles in a Row
               Row(
                 children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: Checkbox(
-                      value: _includeBreakTimer,
-                      onChanged: (value) => setState(() => _includeBreakTimer = value ?? false),
-                      activeColor: const Color(0xFF6FB8E9),
-                      checkColor: const Color(0xFF16181A),
+                  // Break Duration
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Break duration:',
+                          style: TextStyle(
+                            color: Color(0xFFB0B0B0),
+                            fontSize: 15, // Slightly larger text
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 10), // More spacing
+                        Container(
+                          height: 90, // Increased height for better visibility
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16181A),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFF6FB8E9),
+                              width: 1,
+                            ),
+                          ),
+                          child: CupertinoPicker(
+                            itemExtent: 28, // Larger items for better usability
+                            scrollController: FixedExtentScrollController(
+                                initialItem: _breakMinutes - 1),
+                            onSelectedItemChanged: (index) {
+                              // Add haptic feedback on every scroll tick
+                              HapticFeedback.selectionClick();
+                              setState(() => _breakMinutes = index + 1);
+                            },
+                            children: List.generate(30, (index) {
+                              return Center(
+                                child: Text(
+                                  '${index + 1} min',
+                                  style: const TextStyle(
+                                    color: Color(0xFFD9D9D9),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Include break timer with cycles',
-                      style: TextStyle(
-                        color: Color(0xFFD9D9D9),
-                        fontSize: 15, // Reduced from 16
-                        fontWeight: FontWeight.w500,
-                      ),
+
+                  const SizedBox(width: 16),
+
+                  // Number of Cycles
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Number of cycles:',
+                          style: TextStyle(
+                            color: Color(0xFFB0B0B0),
+                            fontSize: 15, // Slightly larger text
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 10), // More spacing
+                        Container(
+                          height: 90, // Increased height for better visibility
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF16181A),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: const Color(0xFF6FB8E9),
+                              width: 1,
+                            ),
+                          ),
+                          child: CupertinoPicker(
+                            itemExtent: 28, // Larger items for better usability
+                            scrollController: FixedExtentScrollController(
+                                initialItem: _iterationCount - 1),
+                            onSelectedItemChanged: (index) {
+                              // Add haptic feedback on every scroll tick
+                              HapticFeedback.selectionClick();
+                              setState(() => _iterationCount = index + 1);
+                            },
+                            children: List.generate(10, (index) {
+                              return Center(
+                                child: Text(
+                                  '${index + 1}',
+                                  style: const TextStyle(
+                                    color: Color(0xFFD9D9D9),
+                                    fontSize: 13, // Larger text
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              
-              if (_includeBreakTimer) ...[
-                const SizedBox(height: 20), // Increased spacing when break timer is enabled
-                
-                // Break Duration and Cycles in a Row
-                Row(
-                  children: [
-                    // Break Duration
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Break duration:',
-                            style: TextStyle(
-                              color: Color(0xFFB0B0B0),
-                              fontSize: 15, // Slightly larger text
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 10), // More spacing
-                          Container(
-                            height: 90, // Increased height for better visibility
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF16181A),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFF6FB8E9),
-                                width: 1,
-                              ),
-                            ),
-                            child: CupertinoPicker(
-                              itemExtent: 28, // Larger items for better usability
-                              scrollController: FixedExtentScrollController(initialItem: _breakMinutes - 1),
-                              onSelectedItemChanged: (index) {
-                                // Add haptic feedback on every scroll tick
-                                HapticFeedback.selectionClick();
-                                setState(() => _breakMinutes = index + 1);
-                              },
-                              children: List.generate(30, (index) {
-                                return Center(
-                                  child: Text(
-                                    '${index + 1} min',
-                                    style: const TextStyle(
-                                      color: Color(0xFFD9D9D9),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    const SizedBox(width: 16),
-                    
-                    // Number of Cycles
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Number of cycles:',
-                            style: TextStyle(
-                              color: Color(0xFFB0B0B0),
-                              fontSize: 15, // Slightly larger text
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 10), // More spacing
-                          Container(
-                            height: 90, // Increased height for better visibility
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF16181A),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFF6FB8E9),
-                                width: 1,
-                              ),
-                            ),
-                            child: CupertinoPicker(
-                              itemExtent: 28, // Larger items for better usability
-                              scrollController: FixedExtentScrollController(initialItem: _iterationCount - 1),
-                              onSelectedItemChanged: (index) {
-                                // Add haptic feedback on every scroll tick
-                                HapticFeedback.selectionClick();
-                                setState(() => _iterationCount = index + 1);
-                              },
-                              children: List.generate(10, (index) {
-                                return Center(
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: const TextStyle(
-                                      color: Color(0xFFD9D9D9),
-                                      fontSize: 13, // Larger text
-                                    ),
-                                  ),
-                                );
-                              }),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              
-              const SizedBox(height: 16),
-              
-              // Save Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _saveCustomTimer,
-                  icon: const Icon(Icons.save, size: 16),
-                  label: const Text('Save Timer'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+            ],
+
+            const SizedBox(height: 16),
+
+            // Save Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _saveCustomTimer,
+                icon: const Icon(Icons.save, size: 16),
+                label: const Text('Save Timer'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4CAF50),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
     );
   }
 
@@ -1614,7 +1653,7 @@ class _TimerScreenState extends State<TimerScreen> {
       );
       return;
     }
-    
+
     final label = _labelController.text.trim();
     final newTimer = SavedTimer(
       label: label.isEmpty ? 'Custom Timer ${_savedTimers.length + 1}' : label,
@@ -1626,24 +1665,25 @@ class _TimerScreenState extends State<TimerScreen> {
       cycles: _iterationCount,
       savedAt: DateTime.now(),
     );
-    
+
     setState(() {
       _savedTimers.add(newTimer);
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Timer "${newTimer.label}" saved!'),
         backgroundColor: const Color(0xFF6FB8E9),
       ),
     );
-    
+
     // Clear the label after saving
     _labelController.clear();
   }
 
   void _startCustomTimer() {
-    final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
+    final totalSeconds =
+        (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
     if (totalSeconds == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1657,10 +1697,11 @@ class _TimerScreenState extends State<TimerScreen> {
     if (_includeBreakTimer) {
       // Create a custom session with study and break phases
       final customSession = TimerSession(
-        name: _labelController.text.trim().isEmpty 
-            ? 'Custom Session' 
+        name: _labelController.text.trim().isEmpty
+            ? 'Custom Session'
             : _labelController.text.trim(),
-        description: 'Custom ${_formatSelectedTime()} + ${_breakMinutes}min break × $_iterationCount',
+        description:
+            'Custom ${_formatSelectedTime()} + ${_breakMinutes}min break × $_iterationCount',
         technique: 'Custom Timer',
         icon: Icons.timer_outlined,
         primaryColor: const Color(0xFF6FB8E9),
@@ -1706,7 +1747,8 @@ class _TimerScreenState extends State<TimerScreen> {
           if (_timerState != TimerState.idle) ...[
             // Pause/Resume button
             _buildControlButton(
-              onPressed: _timerState == TimerState.paused ? _resumeTimer : _pauseTimer,
+              onPressed:
+                  _timerState == TimerState.paused ? _resumeTimer : _pauseTimer,
               color: const Color(0xFF6FB8E9), // Dashboard primary accent
               child: Text(
                 _timerState == TimerState.paused ? 'Resume' : 'Pause',
@@ -1717,7 +1759,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 ),
               ),
             ),
-            
+
             // Stop button
             _buildControlButton(
               onPressed: _stopTimer,
@@ -1765,8 +1807,9 @@ class _TimerScreenState extends State<TimerScreen> {
     if (_selectedHours == 0 && _selectedMinutes == 0 && _selectedSeconds == 0) {
       return 'Set a timer';
     }
-    
-    final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
+
+    final totalSeconds =
+        (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
     return _formatTime(totalSeconds);
   }
 }
