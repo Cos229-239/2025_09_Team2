@@ -649,14 +649,20 @@ class WebRTCService {
             // CRITICAL FIX: Only trigger incoming call if ALL conditions are met:
             // 1. We are the callee (our UID matches calleeId)
             // 2. The caller is NOT us (prevent self-calls)
-            // 3. We are NOT currently in any call state (idle only)
-            // 4. We haven't already processed this call ID
+            // 3. We haven't already processed this call ID
+            // 4. We are idle OR this is the call we're already handling (ringing/connecting)
             final isWeTheCallee = calleeId == currentUser.uid;
             final isCallerDifferent = callerId != currentUser.uid;
-            final areWeIdle = _callState == CallState.idle;
             final isNewCall = _currentCallId != callId;
+            final areWeAvailable = _callState == CallState.idle ||
+                (_currentCallId == callId &&
+                    (_callState == CallState.ringing ||
+                        _callState == CallState.connecting));
 
-            if (isWeTheCallee && isCallerDifferent && areWeIdle && isNewCall) {
+            if (isWeTheCallee &&
+                isCallerDifferent &&
+                isNewCall &&
+                areWeAvailable) {
               debugPrint('📞 Incoming call from $callerId (Call ID: $callId)');
 
               // Store the call details
@@ -669,20 +675,20 @@ class WebRTCService {
               // Trigger ringing state for incoming call
               _updateCallState(CallState.ringing);
             } else {
-              // Debug logging for why we ignored this call
-              if (!isWeTheCallee) {
-                debugPrint(
-                    'ℹ️ Ignoring call - not for us (calleeId: $calleeId vs our UID: ${currentUser.uid})');
-              } else if (!isCallerDifferent) {
-                debugPrint(
-                    'ℹ️ Ignoring our own outgoing call (Call ID: $callId)');
-              } else if (!areWeIdle) {
-                debugPrint(
-                    'ℹ️ Ignoring incoming call - already in call state: $_callState');
-              } else if (!isNewCall) {
-                debugPrint(
-                    'ℹ️ Ignoring duplicate call notification (Call ID: $callId)');
+              // Debug logging for why we ignored this call (only if it's truly a new call)
+              if (isNewCall) {
+                if (!isWeTheCallee) {
+                  debugPrint(
+                      'ℹ️ Ignoring call - not for us (calleeId: $calleeId vs our UID: ${currentUser.uid})');
+                } else if (!isCallerDifferent) {
+                  debugPrint(
+                      'ℹ️ Ignoring our own outgoing call (Call ID: $callId)');
+                } else if (!areWeAvailable) {
+                  debugPrint(
+                      'ℹ️ Ignoring incoming call - already in call state: $_callState');
+                }
               }
+              // Don't log anything for duplicate notifications of the same call
             }
           }
         }

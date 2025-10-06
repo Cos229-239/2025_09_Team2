@@ -30,7 +30,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final GifService _gifService = GifService();
   final ImagePicker _imagePicker = ImagePicker();
   final WebRTCService _webrtcService = WebRTCService();
-  
+
   Timer? _typingTimer;
   bool _isCurrentlyTyping = false;
   bool _showEmojiPicker = false;
@@ -50,11 +50,11 @@ class _ChatScreenState extends State<ChatScreen> {
     // Listen for incoming calls
     _listenForIncomingCalls();
   }
-  
+
   void _onTextChanged() {
     // Trigger rebuild when text changes to update send button color
     setState(() {});
-    
+
     // Handle typing indicator
     if (_messageController.text.trim().isNotEmpty) {
       if (!_isCurrentlyTyping) {
@@ -64,7 +64,7 @@ class _ChatScreenState extends State<ChatScreen> {
           isTyping: true,
         );
       }
-      
+
       // Reset typing timer
       _typingTimer?.cancel();
       _typingTimer = Timer(const Duration(seconds: 2), () {
@@ -97,7 +97,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollController.dispose();
     _typingTimer?.cancel();
     _webrtcService.dispose();
-    
+
     // Clear typing status on exit
     if (_isCurrentlyTyping) {
       widget.socialService.updateTypingStatus(
@@ -105,10 +105,10 @@ class _ChatScreenState extends State<ChatScreen> {
         isTyping: false,
       );
     }
-    
+
     super.dispose();
   }
-  
+
   /// Listen for incoming calls
   void _listenForIncomingCalls() {
     _webrtcService.callStateStream.listen((state) {
@@ -125,7 +125,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     });
   }
-  
+
   /// Show incoming call dialog
   void _showIncomingCallDialog() {
     showDialog(
@@ -193,39 +193,44 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           ElevatedButton.icon(
             onPressed: () async {
-              Navigator.pop(context);
-              
+              // Get the navigator and scaffold messenger before closing dialog
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+              // Close the dialog first
+              navigator.pop();
+
               // Answer the call using the stored call ID in the WebRTC service
               final callId = _webrtcService.currentCallId;
               if (callId != null) {
                 final success = await _webrtcService.answerCall(callId: callId);
-                
+
                 // Navigate to call screen if answer was successful
-                if (success && mounted) {
-                  debugPrint('✅ Call answered successfully, navigating to CallScreen');
-                  // Wait for the dialog to fully close and route to settle
-                  // Increased delay for web platform reliability
-                  await Future.delayed(const Duration(milliseconds: 300));
-                  
+                if (success) {
+                  debugPrint(
+                      '✅ Call answered successfully, navigating to CallScreen');
+
+                  // Use the navigator we captured before dialog closed
                   if (mounted) {
                     debugPrint('🧭 Pushing CallScreen route...');
-                    // Navigate to call screen
-                    Navigator.push(
-                      context,
+                    navigator
+                        .push(
                       MaterialPageRoute(
                         builder: (context) => CallScreen(
                           webrtcService: _webrtcService,
                           otherUser: widget.otherUser,
                           isOutgoing: false,
-                          callType: _webrtcService.currentCallType ?? CallType.audio,
+                          callType:
+                              _webrtcService.currentCallType ?? CallType.audio,
                         ),
                       ),
-                    ).then((_) {
+                    )
+                        .then((_) {
                       debugPrint('🔙 Returned from CallScreen');
                     });
                   }
-                } else if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                } else {
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('Failed to answer call'),
                       backgroundColor: Colors.red,
@@ -241,16 +246,16 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-  
+
   /// Start an audio call
   void _startAudioCall() async {
     _weInitiatedCall = true; // Mark that we started this call
-    
+
     final success = await _webrtcService.startCall(
       recipientId: widget.otherUser.id,
       callType: CallType.audio,
     );
-    
+
     if (success && mounted) {
       Navigator.push(
         context,
@@ -268,7 +273,8 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to start audio call.\nPlease allow microphone access in your browser.'),
+            content: const Text(
+                'Failed to start audio call.\nPlease allow microphone access in your browser.'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
@@ -281,16 +287,16 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
   }
-  
+
   /// Start a video call
   void _startVideoCall() async {
     _weInitiatedCall = true; // Mark that we started this call
-    
+
     final success = await _webrtcService.startCall(
       recipientId: widget.otherUser.id,
       callType: CallType.video,
     );
-    
+
     if (success && mounted) {
       Navigator.push(
         context,
@@ -308,7 +314,8 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to start video call.\nPlease allow camera and microphone access in your browser.'),
+            content: const Text(
+                'Failed to start video call.\nPlease allow camera and microphone access in your browser.'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
             action: SnackBarAction(
@@ -360,10 +367,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   // Real-time typing status
                   StreamBuilder<bool>(
-                    stream: widget.socialService.listenToTypingStatus(widget.otherUser.id),
+                    stream: widget.socialService
+                        .listenToTypingStatus(widget.otherUser.id),
                     builder: (context, snapshot) {
                       final isTyping = snapshot.data ?? false;
-                      
+
                       if (isTyping) {
                         return Text(
                           'typing...',
@@ -374,7 +382,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           ),
                         );
                       }
-                      
+
                       return Text(
                         widget.otherUser.isOnline ? 'Online' : 'Offline',
                         style: TextStyle(
@@ -416,15 +424,17 @@ class _ChatScreenState extends State<ChatScreen> {
           // Messages List (Real-time from Firestore)
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: widget.socialService.listenToMessages(widget.otherUser.id),
+              stream:
+                  widget.socialService.listenToMessages(widget.otherUser.id),
               builder: (context, snapshot) {
                 // Only show loading on FIRST load, not on every rebuild
-                if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
+                if (!snapshot.hasData &&
+                    snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
                     child: CircularProgressIndicator(),
                   );
                 }
-                
+
                 if (snapshot.hasError) {
                   return Center(
                     child: Column(
@@ -449,9 +459,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   );
                 }
-                
+
                 final messages = snapshot.data ?? [];
-                
+
                 if (messages.isEmpty) {
                   return Center(
                     child: Column(
@@ -482,13 +492,14 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   );
                 }
-                
+
                 // Auto-scroll to bottom ONLY when:
                 // 1. First load (haven't scrolled yet)
                 // 2. New message arrives (message count increased)
                 final currentMessageCount = messages.length;
-                final shouldAutoScroll = !_hasScrolledToBottom || currentMessageCount > _previousMessageCount;
-                
+                final shouldAutoScroll = !_hasScrolledToBottom ||
+                    currentMessageCount > _previousMessageCount;
+
                 if (shouldAutoScroll) {
                   // Schedule multiple scroll attempts to ensure we reach the bottom
                   WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -496,7 +507,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   });
                   _previousMessageCount = currentMessageCount;
                 }
-                
+
                 return ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),
@@ -509,7 +520,7 @@ class _ChatScreenState extends State<ChatScreen> {
               },
             ),
           ),
-          
+
           // Upload Progress Indicator
           if (_isUploading)
             Container(
@@ -533,7 +544,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 ],
               ),
             ),
-          
+
           // Discord-like Message Input Bar
           Container(
             decoration: BoxDecoration(
@@ -556,7 +567,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   tooltip: 'Add attachment',
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                
+
                 // Text Input
                 Expanded(
                   child: Container(
@@ -582,9 +593,9 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(width: 8),
-                
+
                 // GIF Button
                 IconButton(
                   onPressed: _showGifPicker,
@@ -592,7 +603,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   tooltip: 'Send GIF',
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                
+
                 // Emoji Button
                 IconButton(
                   onPressed: () {
@@ -601,25 +612,27 @@ class _ChatScreenState extends State<ChatScreen> {
                     });
                   },
                   icon: Icon(
-                    _showEmojiPicker ? Icons.keyboard : Icons.emoji_emotions_outlined,
+                    _showEmojiPicker
+                        ? Icons.keyboard
+                        : Icons.emoji_emotions_outlined,
                   ),
                   tooltip: 'Emoji',
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                
+
                 // Send Button
                 IconButton(
                   onPressed: _canSendMessage ? _sendMessage : null,
                   icon: const Icon(Icons.send),
                   tooltip: 'Send',
-                  color: _canSendMessage 
-                    ? Theme.of(context).colorScheme.primary 
-                    : null,
+                  color: _canSendMessage
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                 ),
               ],
             ),
           ),
-          
+
           // Emoji Picker
           if (_showEmojiPicker)
             SizedBox(
@@ -641,18 +654,18 @@ class _ChatScreenState extends State<ChatScreen> {
     final messageText = message['message'] as String? ?? '';
     final timestamp = message['timestamp'] as DateTime;
     final messageId = message['id'] as String;
-    
+
     // Attachment data
     final attachmentUrl = message['attachmentUrl'] as String?;
     final attachmentType = message['attachmentType'] as String?;
     final attachmentName = message['attachmentName'] as String?;
-    
+
     // Reactions data - convert to Map<String, dynamic> to handle LinkedMap from Firestore
     final reactionsRaw = message['reactions'];
-    final reactions = reactionsRaw != null 
+    final reactions = reactionsRaw != null
         ? Map<String, dynamic>.from(reactionsRaw as Map)
         : <String, dynamic>{};
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -683,7 +696,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             const SizedBox(width: 8),
           ],
-          
+
           // Message Content + Reactions
           Flexible(
             child: Column(
@@ -710,7 +723,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   buildAttachment: _buildAttachment,
                   formatTimestamp: _formatTimestamp,
                 ),
-                
+
                 // Reactions Display
                 if (reactions.isNotEmpty)
                   Padding(
@@ -721,9 +734,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       children: reactions.entries.map((entry) {
                         final emoji = entry.key;
                         final userIds = List<String>.from(entry.value as List);
-                        final currentUserId = widget.socialService.currentUserId;
-                        final hasReacted = currentUserId != null && userIds.contains(currentUserId);
-                        
+                        final currentUserId =
+                            widget.socialService.currentUserId;
+                        final hasReacted = currentUserId != null &&
+                            userIds.contains(currentUserId);
+
                         return GestureDetector(
                           onTap: () async {
                             if (hasReacted) {
@@ -747,11 +762,17 @@ class _ChatScreenState extends State<ChatScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: hasReacted
-                                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
-                                  : Theme.of(context).colorScheme.surfaceVariant,
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.2)
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .surfaceVariant,
                               border: hasReacted
                                   ? Border.all(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                       width: 1.5,
                                     )
                                   : null,
@@ -772,7 +793,9 @@ class _ChatScreenState extends State<ChatScreen> {
                                     fontWeight: FontWeight.bold,
                                     color: hasReacted
                                         ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context).colorScheme.onSurface,
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
                                   ),
                                 ),
                               ],
@@ -785,13 +808,13 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
           ),
-          
+
           if (isMe) const SizedBox(width: 8),
         ],
       ),
     );
   }
-  
+
   Widget _buildAttachment(String url, String? type, String? name) {
     switch (type) {
       case 'image':
@@ -817,7 +840,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
         );
-        
+
       case 'gif':
         // Use Image.network for GIFs to ensure animation works
         return ClipRRect(
@@ -852,7 +875,7 @@ class _ChatScreenState extends State<ChatScreen> {
             },
           ),
         );
-        
+
       case 'sticker':
         return Image.network(
           url,
@@ -860,7 +883,7 @@ class _ChatScreenState extends State<ChatScreen> {
           height: 160,
           fit: BoxFit.contain,
         );
-        
+
       case 'file':
       default:
         return Container(
@@ -900,20 +923,20 @@ class _ChatScreenState extends State<ChatScreen> {
         );
     }
   }
-  
+
   bool get _canSendMessage {
     return _messageController.text.trim().isNotEmpty && !_isUploading;
   }
-  
+
   /// Scroll to the absolute bottom of the chat
   /// Uses multiple attempts to ensure we reach the very bottom after layout completes
   /// Especially important for GIFs and images that take time to load
   void _scrollToBottom() async {
     if (!_scrollController.hasClients || !mounted) return;
-    
+
     // First immediate scroll
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-    
+
     // Multiple delayed scrolls to catch GIFs/images as they load and expand
     for (int i = 0; i < 5; i++) {
       await Future.delayed(Duration(milliseconds: 100 + (i * 100)));
@@ -921,10 +944,10 @@ class _ChatScreenState extends State<ChatScreen> {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     }
-    
+
     _hasScrolledToBottom = true;
   }
-  
+
   void _showReactionPicker(String messageId, bool isMyMessage) {
     showModalBottomSheet(
       context: context,
@@ -961,7 +984,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-  
+
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
@@ -1003,17 +1026,17 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
-  
+
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? image = await _imagePicker.pickImage(source: source);
       if (image == null) return;
-      
+
       setState(() {
         _isUploading = true;
         _uploadProgress = 0.0;
       });
-      
+
       final result = await widget.socialService.uploadAttachment(
         filePath: image.path,
         fileName: image.name,
@@ -1025,7 +1048,7 @@ class _ChatScreenState extends State<ChatScreen> {
           });
         },
       );
-      
+
       await widget.socialService.sendEnhancedMessage(
         recipientId: widget.otherUser.id,
         attachmentUrl: result['url'],
@@ -1033,7 +1056,7 @@ class _ChatScreenState extends State<ChatScreen> {
         attachmentName: result['name'],
         attachmentSize: result['size'],
       );
-      
+
       setState(() {
         _isUploading = false;
         _uploadProgress = 0.0;
@@ -1050,20 +1073,20 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
   }
-  
+
   Future<void> _pickFile() async {
     try {
       final result = await FilePicker.platform.pickFiles();
       if (result == null) return;
-      
+
       final file = result.files.first;
       if (file.path == null) return;
-      
+
       setState(() {
         _isUploading = true;
         _uploadProgress = 0.0;
       });
-      
+
       final uploadResult = await widget.socialService.uploadAttachment(
         filePath: file.path!,
         fileName: file.name,
@@ -1075,7 +1098,7 @@ class _ChatScreenState extends State<ChatScreen> {
           });
         },
       );
-      
+
       await widget.socialService.sendEnhancedMessage(
         recipientId: widget.otherUser.id,
         attachmentUrl: uploadResult['url'],
@@ -1083,7 +1106,7 @@ class _ChatScreenState extends State<ChatScreen> {
         attachmentName: uploadResult['name'],
         attachmentSize: uploadResult['size'],
       );
-      
+
       setState(() {
         _isUploading = false;
         _uploadProgress = 0.0;
@@ -1100,7 +1123,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
   }
-  
+
   void _showGifPicker() async {
     final gif = await showModalBottomSheet<String>(
       context: context,
@@ -1111,7 +1134,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       builder: (context) => _GifPickerModal(gifService: _gifService),
     );
-    
+
     if (gif != null) {
       await widget.socialService.sendEnhancedMessage(
         recipientId: widget.otherUser.id,
@@ -1120,14 +1143,14 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
   }
-  
+
   void _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
-    
+
     // Clear input immediately
     _messageController.clear();
-    
+
     try {
       await widget.socialService.sendEnhancedMessage(
         recipientId: widget.otherUser.id,
@@ -1152,7 +1175,7 @@ class _ChatScreenState extends State<ChatScreen> {
           isTyping: true,
         );
       }
-      
+
       // Reset typing timer
       _typingTimer?.cancel();
       _typingTimer = Timer(const Duration(seconds: 2), () {
@@ -1174,7 +1197,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String _formatTimestamp(DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
-    
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inHours < 1) {
@@ -1220,9 +1243,9 @@ class _ChatScreenState extends State<ChatScreen> {
 // GIF Picker Modal Widget
 class _GifPickerModal extends StatefulWidget {
   final GifService gifService;
-  
+
   const _GifPickerModal({required this.gifService});
-  
+
   @override
   State<_GifPickerModal> createState() => _GifPickerModalState();
 }
@@ -1231,18 +1254,18 @@ class _GifPickerModalState extends State<_GifPickerModal> {
   final TextEditingController _searchController = TextEditingController();
   List<GifResult> _gifs = [];
   bool _isLoading = false;
-  
+
   @override
   void initState() {
     super.initState();
     _loadTrendingGifs();
   }
-  
+
   Future<void> _loadTrendingGifs() async {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final gifs = await widget.gifService.getTrendingGifs();
       setState(() {
@@ -1255,17 +1278,17 @@ class _GifPickerModalState extends State<_GifPickerModal> {
       });
     }
   }
-  
+
   Future<void> _searchGifs(String query) async {
     if (query.isEmpty) {
       _loadTrendingGifs();
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       final gifs = await widget.gifService.searchGifs(query);
       setState(() {
@@ -1278,7 +1301,7 @@ class _GifPickerModalState extends State<_GifPickerModal> {
       });
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1300,9 +1323,9 @@ class _GifPickerModalState extends State<_GifPickerModal> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Search Bar
           TextField(
             controller: _searchController,
@@ -1316,9 +1339,9 @@ class _GifPickerModalState extends State<_GifPickerModal> {
             ),
             onSubmitted: _searchGifs,
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // GIF Grid
           Expanded(
             child: _isLoading
@@ -1360,7 +1383,8 @@ class _GifPickerModalState extends State<_GifPickerModal> {
                         ),
                       )
                     : GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 8,
                           mainAxisSpacing: 8,
@@ -1378,7 +1402,8 @@ class _GifPickerModalState extends State<_GifPickerModal> {
                               child: Image.network(
                                 gif.previewUrl,
                                 fit: BoxFit.cover,
-                                loadingBuilder: (context, child, loadingProgress) {
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
                                   if (loadingProgress == null) return child;
                                   return Container(
                                     color: Colors.grey[300],
@@ -1403,7 +1428,7 @@ class _GifPickerModalState extends State<_GifPickerModal> {
       ),
     );
   }
-  
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -1440,14 +1465,22 @@ class _MessageBubbleWithHover extends StatefulWidget {
   });
 
   @override
-  State<_MessageBubbleWithHover> createState() => _MessageBubbleWithHoverState();
+  State<_MessageBubbleWithHover> createState() =>
+      _MessageBubbleWithHoverState();
 }
 
 class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
   bool _isHovering = false;
 
   // Discord's most common quick reactions
-  static const List<String> _quickReactions = ['😂', '👍', '❤️', '😮', '😢', '🔥'];
+  static const List<String> _quickReactions = [
+    '😂',
+    '👍',
+    '❤️',
+    '😮',
+    '😢',
+    '🔥'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -1462,126 +1495,128 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
           children: [
             // Main Message Bubble
             GestureDetector(
-            onLongPress: widget.onLongPress,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: widget.isMe
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surfaceVariant,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(widget.isMe ? 18 : 4),
-                  bottomRight: Radius.circular(widget.isMe ? 4 : 18),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Attachment (if present)
-                  if (widget.attachmentUrl != null) ...[
-                    widget.buildAttachment(
-                      widget.attachmentUrl!,
-                      widget.attachmentType,
-                      widget.attachmentName,
-                    ),
-                    if (widget.messageText.isNotEmpty) const SizedBox(height: 8),
-                  ],
-
-                  // Text Message
-                  if (widget.messageText.isNotEmpty)
-                    Text(
-                      widget.messageText,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: widget.isMe
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-
-                  const SizedBox(height: 4),
-
-                  // Timestamp
-                  Text(
-                    widget.formatTimestamp(widget.timestamp),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: widget.isMe
-                          ? Colors.white70
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Discord-style Quick Reaction Bar (appears on hover)
-          if (_isHovering)
-            Positioned(
-              top: -20,
-              right: widget.isMe ? 0 : null,
-              left: widget.isMe ? null : 0,
+              onLongPress: widget.onLongPress,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Theme.of(context).dividerColor,
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                decoration: BoxDecoration(
+                  color: widget.isMe
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surfaceVariant,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(widget.isMe ? 18 : 4),
+                    bottomRight: Radius.circular(widget.isMe ? 4 : 18),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Quick reaction emojis
-                    ..._quickReactions.map((emoji) => _QuickReactionButton(
-                          emoji: emoji,
-                          onTap: () => widget.onQuickReact(emoji),
-                        )),
-                    
-                    // Divider
-                    Container(
-                      width: 1,
-                      height: 20,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      color: Theme.of(context).dividerColor,
-                    ),
-                    
-                    // More reactions button (opens full picker)
-                    InkWell(
-                      onTap: widget.onLongPress,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        child: Icon(
-                          Icons.add_reaction_outlined,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.onSurface,
+                    // Attachment (if present)
+                    if (widget.attachmentUrl != null) ...[
+                      widget.buildAttachment(
+                        widget.attachmentUrl!,
+                        widget.attachmentType,
+                        widget.attachmentName,
+                      ),
+                      if (widget.messageText.isNotEmpty)
+                        const SizedBox(height: 8),
+                    ],
+
+                    // Text Message
+                    if (widget.messageText.isNotEmpty)
+                      Text(
+                        widget.messageText,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: widget.isMe
+                              ? Colors.white
+                              : Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
+
+                    const SizedBox(height: 4),
+
+                    // Timestamp
+                    Text(
+                      widget.formatTimestamp(widget.timestamp),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: widget.isMe
+                            ? Colors.white70
+                            : Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-        ],
+
+            // Discord-style Quick Reaction Bar (appears on hover)
+            if (_isHovering)
+              Positioned(
+                top: -20,
+                right: widget.isMe ? 0 : null,
+                left: widget.isMe ? null : 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Theme.of(context).dividerColor,
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Quick reaction emojis
+                      ..._quickReactions.map((emoji) => _QuickReactionButton(
+                            emoji: emoji,
+                            onTap: () => widget.onQuickReact(emoji),
+                          )),
+
+                      // Divider
+                      Container(
+                        width: 1,
+                        height: 20,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        color: Theme.of(context).dividerColor,
+                      ),
+
+                      // More reactions button (opens full picker)
+                      InkWell(
+                        onTap: widget.onLongPress,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          child: Icon(
+                            Icons.add_reaction_outlined,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
