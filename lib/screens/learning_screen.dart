@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:studypals/providers/task_provider.dart';
 import 'package:studypals/providers/note_provider.dart';
 import 'package:studypals/providers/deck_provider.dart';
+import 'package:studypals/models/deck.dart';
 import 'package:studypals/screens/task_list_screen.dart';
 import 'package:studypals/screens/create_note_screen.dart';
-import 'package:studypals/screens/flashcard_study_screen.dart';
+import 'package:studypals/screens/flashcard_detail_screen.dart';
 import 'package:studypals/models/task.dart';
+import 'package:studypals/widgets/ai/ai_flashcard_generator.dart';
 import '../widgets/common/themed_background_wrapper.dart';
 
 /// Custom scroll physics for single-page-at-a-time movement
@@ -82,10 +84,10 @@ class _LearningScreenState extends State<LearningScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late PageController _pageController;
-  final TextEditingController _flashcardSearchController = TextEditingController();
   final TextEditingController _noteSearchController = TextEditingController();
-  String _flashcardSearchQuery = '';
+  final TextEditingController _flashcardSearchController = TextEditingController();
   String _noteSearchQuery = '';
+  String _flashcardSearchQuery = '';
   int _currentPageIndex = 0;
   bool _isAnimating = false;
   double _startDragX = 0.0;
@@ -134,8 +136,8 @@ class _LearningScreenState extends State<LearningScreen>
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _pageController.dispose();
-    _flashcardSearchController.dispose();
     _noteSearchController.dispose();
+    _flashcardSearchController.dispose();
     super.dispose();
   }
 
@@ -468,16 +470,255 @@ class _LearningScreenState extends State<LearningScreen>
     );
   }
 
-  /// Build flashcards tab with flashcards section  
+  /// Build flashcards tab with search bar, deck list, and create button  
   Widget _buildFlashcardsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildFlashcardsSection(),
-        ],
-      ),
+    return Consumer<DeckProvider>(
+      builder: (context, deckProvider, child) {
+        // Filter decks based on search query
+        final filteredDecks = deckProvider.decks.where((deck) {
+          return deck.title.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()) ||
+                 deck.tags.any((tag) => tag.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()));
+        }).toList();
+
+        // Sort decks by updated date (most recent first)
+        filteredDecks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        return Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _flashcardSearchController,
+                decoration: InputDecoration(
+                  hintText: 'Search flashcard decks...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _flashcardSearchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _flashcardSearchController.clear();
+                            setState(() {
+                              _flashcardSearchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _flashcardSearchQuery = value;
+                  });
+                },
+              ),
+            ),
+            
+            // Deck list
+            Expanded(
+              child: filteredDecks.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.style_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _flashcardSearchQuery.isEmpty
+                                ? 'No flashcard decks yet'
+                                : 'No decks match your search',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _flashcardSearchQuery.isEmpty
+                                ? 'Create your first deck to get started'
+                                : 'Try a different search term',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: filteredDecks.length,
+                      itemBuilder: (context, index) {
+                        final deck = filteredDecks[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              _showDeckModeSelection(context, deck);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.style,
+                                      color: Colors.blue,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          deck.title,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        if (deck.tags.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 4,
+                                            children: deck.tags.take(3).map((tag) => Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                tag,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                            )).toList(),
+                                          ),
+                                        ],
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.layers,
+                                              size: 16,
+                                              color: Colors.grey[500],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${deck.cards.length} cards',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Icon(
+                                              Icons.access_time,
+                                              size: 16,
+                                              color: Colors.grey[500],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _formatTimeAgo(deck.updatedAt),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showEditDeckDialog(context, deck, deckProvider);
+                                      } else if (value == 'delete') {
+                                        _showDeleteDeckDialog(context, deck, deckProvider);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit, size: 18),
+                                            SizedBox(width: 12),
+                                            Text('Edit'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete, size: 18, color: Colors.red),
+                                            SizedBox(width: 12),
+                                            Text('Delete', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    child: Icon(
+                                      Icons.more_vert,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            
+            // Create button at bottom with extra spacing above AI tutor
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    _showAIFlashcardGeneratorModal(context);
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create New Deck'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -615,275 +856,6 @@ class _LearningScreenState extends State<LearningScreen>
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// Build the flashcards section with search, quiz mode, and study mode
-  Widget _buildFlashcardsSection() {
-    return Consumer<DeckProvider>(
-      builder: (context, deckProvider, child) {
-        final decks = deckProvider.decks;
-        final filteredDecks = _flashcardSearchQuery.isEmpty
-            ? decks
-            : decks.where((deck) {
-                return deck.title
-                        .toLowerCase()
-                        .contains(_flashcardSearchQuery.toLowerCase()) ||
-                    deck.tags.any((tag) => tag
-                        .toLowerCase()
-                        .contains(_flashcardSearchQuery.toLowerCase()));
-              }).toList();
-
-        return Column(
-          children: [
-            // Flash cards with search bar option
-            Card(
-              elevation: 2,
-              child: ExpansionTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.style, color: Colors.blue, size: 24),
-                ),
-                title: const Text(
-                  'flash cards with search bar option',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  '${decks.length} ${decks.length == 1 ? 'deck' : 'decks'}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Column(
-                      children: [
-                        // Search bar
-                        TextField(
-                          controller: _flashcardSearchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search flashcard decks...',
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            suffixIcon: _flashcardSearchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 20),
-                                    onPressed: () {
-                                      _flashcardSearchController.clear();
-                                      setState(() {
-                                        _flashcardSearchQuery = '';
-                                      });
-                                    },
-                                  )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _flashcardSearchQuery = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Deck list
-                        if (filteredDecks.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              _flashcardSearchQuery.isEmpty
-                                  ? 'No decks available'
-                                  : 'No decks found',
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredDecks.length,
-                            itemBuilder: (context, index) {
-                              final deck = filteredDecks[index];
-                              return ListTile(
-                                dense: true,
-                                leading: const Icon(Icons.style, size: 20),
-                                title: Text(
-                                  deck.title,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                subtitle: Text(
-                                  '${deck.cards.length} cards',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                trailing: const Icon(Icons.arrow_forward_ios,
-                                    size: 14),
-                                onTap: () {
-                                  if (deck.cards.isNotEmpty) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            FlashcardStudyScreen(deck: deck),
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Deck "${deck.title}" has no cards'),
-                                      ),
-                                    );
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Quiz mode
-            _buildFlashcardModeCard(
-              context,
-              title: 'quiz mode',
-              icon: Icons.quiz,
-              color: Colors.green,
-              onTap: () {
-                _showDeckSelectionDialog(context, isQuizMode: true);
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // Study mode
-            _buildFlashcardModeCard(
-              context,
-              title: 'Study mode',
-              icon: Icons.school,
-              color: Colors.indigo,
-              onTap: () {
-                _showDeckSelectionDialog(context, isQuizMode: false);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  /// Build a flashcard mode card (quiz or study)
-  Widget _buildFlashcardModeCard(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Show dialog to select a deck for quiz or study mode
-  void _showDeckSelectionDialog(BuildContext context,
-      {required bool isQuizMode}) {
-    final deckProvider = Provider.of<DeckProvider>(context, listen: false);
-    final decks = deckProvider.decks;
-
-    if (decks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No decks available')),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Select Deck for ${isQuizMode ? 'Quiz' : 'Study'} Mode'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: decks.length,
-            itemBuilder: (context, index) {
-              final deck = decks[index];
-              return ListTile(
-                leading: const Icon(Icons.style),
-                title: Text(deck.title),
-                subtitle: Text('${deck.cards.length} cards'),
-                onTap: () {
-                  Navigator.pop(context);
-                  if (deck.cards.isNotEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FlashcardStudyScreen(
-                          deck: deck,
-                          startInQuizMode: isQuizMode,
-                        ),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Deck "${deck.title}" has no cards'),
-                      ),
-                    );
-                  }
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
       ),
     );
   }
@@ -1063,6 +1035,294 @@ class _LearningScreenState extends State<LearningScreen>
           ],
         );
       },
+    );
+  }
+
+  /// Format time ago for display (e.g., "2 hours ago", "3 days ago")
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  /// Show AI flashcard generator as a modal overlay
+  void _showAIFlashcardGeneratorModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('AI Flashcard Generator'),
+            leading: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: const SingleChildScrollView(
+            padding: EdgeInsets.all(16),
+            child: AIFlashcardGenerator(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Show mode selection dialog for deck
+  void _showDeckModeSelection(BuildContext context, Deck deck) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF2A3050),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF6FB8E9),
+              width: 2,
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF6FB8E9),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.style,
+                        color: Color(0xFF6FB8E9),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            deck.title,
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${deck.cards.length} cards',
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+                
+                Text(
+                  'Choose your study mode:',
+                  style: const TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Study Mode Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FlashcardDetailScreen(
+                            deck: deck,
+                            startInQuizMode: false,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.school),
+                    label: const Text('Study Mode'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Quiz Mode Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FlashcardDetailScreen(
+                            deck: deck,
+                            startInQuizMode: true,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.quiz),
+                    label: const Text('Quiz Mode'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2A3050),
+                      foregroundColor: const Color(0xFF6FB8E9),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Cancel Button
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFFD9D9D9),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Show dialog to edit an existing deck
+  void _showEditDeckDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+    final titleController = TextEditingController(text: deck.title);
+    final tagsController = TextEditingController(text: deck.tags.join(', '));
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Deck'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Deck Title',
+                hintText: 'Enter deck title',
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: tagsController,
+              decoration: const InputDecoration(
+                labelText: 'Tags (optional)',
+                hintText: 'Enter tags separated by commas',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (titleController.text.trim().isNotEmpty) {
+                final tags = tagsController.text
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .where((tag) => tag.isNotEmpty)
+                    .toList();
+
+                final updatedDeck = deck.copyWith(
+                  title: titleController.text.trim(),
+                  tags: tags,
+                  updatedAt: DateTime.now(),
+                );
+
+                deckProvider.updateDeck(updatedDeck);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show dialog to confirm deck deletion
+  void _showDeleteDeckDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Deck'),
+        content: Text('Are you sure you want to delete "${deck.title}"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              deckProvider.deleteDeck(deck.id);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 }

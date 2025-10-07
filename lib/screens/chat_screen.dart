@@ -541,7 +541,7 @@ class _ChatScreenState extends State<ChatScreen> {
           if (_isUploading)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               child: Row(
                 children: [
                   SizedBox(
@@ -600,7 +600,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
@@ -784,7 +784,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       .withValues(alpha: 0.2)
                                   : Theme.of(context)
                                       .colorScheme
-                                      .surfaceVariant,
+                                      .surfaceContainerHighest,
                               border: hasReacted
                                   ? Border.all(
                                       color:
@@ -1520,7 +1520,7 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
                 decoration: BoxDecoration(
                   color: widget.isMe
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.surfaceVariant,
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
