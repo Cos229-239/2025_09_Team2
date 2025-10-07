@@ -145,16 +145,16 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0D1117),
+        backgroundColor: Colors.white,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Color(0xFF58A6FF)),
+              CircularProgressIndicator(color: Color(0xFF6200EE)),
               SizedBox(height: 16),
               Text(
                 'Loading competitive features...',
-                style: TextStyle(color: Colors.white70),
+                style: TextStyle(color: Color(0xFF6200EE)),
               ),
             ],
           ),
@@ -164,7 +164,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
     if (_errorMessage != null) {
       return Scaffold(
-        backgroundColor: const Color(0xFF0D1117),
+        backgroundColor: Colors.white,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -173,7 +173,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
               const SizedBox(height: 16),
               Text(
                 _errorMessage!,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.black87),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -182,7 +182,8 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                 icon: const Icon(Icons.refresh),
                 label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF58A6FF),
+                  backgroundColor: const Color(0xFF6200EE),
+                  foregroundColor: Colors.white,
                 ),
               ),
             ],
@@ -192,13 +193,13 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1117), // Dark background
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text(
-          'Competitive Learning',
+          'Social Learning',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
-        backgroundColor: const Color(0xFF161B22),
+        backgroundColor: const Color(0xFF6200EE),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
@@ -209,10 +210,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFF58A6FF),
+          indicatorColor: Colors.white,
           indicatorWeight: 3,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.grey[400],
+          unselectedLabelColor: Colors.white70,
           tabs: const [
             Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
             Tab(icon: Icon(Icons.leaderboard), text: 'Leaderboards'),
@@ -227,8 +228,8 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF0D1117),
-              Color(0xFF161B22),
+              Color(0xFFF5F5F5),
+              Colors.white,
             ],
           ),
         ),
@@ -261,11 +262,11 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
           // Quick Rankings
           Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
+            color: Colors.white,
+            elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+              side: BorderSide(color: Colors.grey[300]!, width: 0.5),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -276,7 +277,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                     'Your Rankings',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: const Color(0xFF6200EE),
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -289,11 +290,11 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
 
           // Active Competitions
           Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
+            color: Colors.white,
+            elevation: 2,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
+              side: BorderSide(color: Colors.grey[300]!, width: 0.5),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -306,7 +307,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                         'Active Competitions',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: const Color(0xFF6200EE),
                             ),
                       ),
                       const Spacer(),
@@ -314,7 +315,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                         onPressed: () => _tabController.animateTo(2),
                         child: const Text(
                           'View All',
-                          style: TextStyle(color: Color(0xFF58A6FF)),
+                          style: TextStyle(color: Color(0xFF6200EE)),
                         ),
                       ),
                     ],
@@ -361,9 +362,17 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -384,9 +393,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                 ),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: Colors.white70,
+                    color: Colors.grey[700],
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -445,9 +454,9 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: const BoxDecoration(
-            color: Color(0xFF161B22),
+            color: Colors.white,
             border: Border(
-              bottom: BorderSide(color: Color(0xFF30363D), width: 1),
+              bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1),
             ),
           ),
           child: Row(
@@ -455,29 +464,29 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
               Expanded(
                 child: DropdownButtonFormField<CompetitionCategory>(
                   initialValue: _selectedCategory,
-                  dropdownColor: const Color(0xFF21262D),
-                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: Colors.white,
+                  style: const TextStyle(color: Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'Category',
-                    labelStyle: TextStyle(color: Colors.grey[400]),
+                    labelStyle: TextStyle(color: Colors.grey[600]),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey[700]!),
+                      borderSide: BorderSide(color: Colors.grey[400]!),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey[700]!),
+                      borderSide: BorderSide(color: Colors.grey[400]!),
                     ),
                     focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF58A6FF)),
+                      borderSide: BorderSide(color: Color(0xFF6200EE)),
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF21262D),
+                    fillColor: Colors.white,
                   ),
                   items: CompetitionCategory.values.map((category) {
                     return DropdownMenuItem(
                       value: category,
                       child: Text(
                         _getCategoryName(category),
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black87),
                       ),
                     );
                   }).toList(),
@@ -494,29 +503,29 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
               Expanded(
                 child: DropdownButtonFormField<LeaderboardPeriod>(
                   initialValue: _selectedPeriod,
-                  dropdownColor: const Color(0xFF21262D),
-                  style: const TextStyle(color: Colors.white),
+                  dropdownColor: Colors.white,
+                  style: const TextStyle(color: Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'Period',
-                    labelStyle: TextStyle(color: Colors.grey[400]),
+                    labelStyle: TextStyle(color: Colors.grey[600]),
                     border: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey[700]!),
+                      borderSide: BorderSide(color: Colors.grey[400]!),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.grey[700]!),
+                      borderSide: BorderSide(color: Colors.grey[400]!),
                     ),
                     focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF58A6FF)),
+                      borderSide: BorderSide(color: Color(0xFF6200EE)),
                     ),
                     filled: true,
-                    fillColor: const Color(0xFF21262D),
+                    fillColor: Colors.white,
                   ),
                   items: LeaderboardPeriod.values.map((period) {
                     return DropdownMenuItem(
                       value: period,
                       child: Text(
                         _getPeriodName(period),
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black87),
                       ),
                     );
                   }).toList(),
@@ -859,10 +868,10 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF21262D),
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey[800]!, width: 1),
+          side: BorderSide(color: Colors.grey[300]!, width: 1),
         ),
         child: Container(
           padding: const EdgeInsets.all(24),
@@ -874,30 +883,30 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                 competition.name,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: const Color(0xFF6200EE),
                     ),
               ),
               const SizedBox(height: 16),
               Text(
                 competition.description,
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: Colors.grey[800]),
               ),
               const SizedBox(height: 16),
               Text(
                 'Participants: ${competition.participants.length}/${competition.maxParticipants}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Start: ${_formatDateTime(competition.startDate)}',
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: Colors.grey[700]),
               ),
               Text(
                 'End: ${_formatDateTime(competition.endDate)}',
-                style: const TextStyle(color: Colors.white70),
+                style: TextStyle(color: Colors.grey[700]),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -905,7 +914,7 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF58A6FF),
+                    backgroundColor: const Color(0xFF6200EE),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
