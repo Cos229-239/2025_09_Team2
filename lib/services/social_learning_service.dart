@@ -2112,7 +2112,7 @@ class SocialLearningService {
           .ref()
           .child('chats')
           .child(chatId)
-          .child('$timestamp\_$fileName');
+          .child('${timestamp}_$fileName');
       
       // Read file
       final file = File(filePath);

@@ -125,11 +125,11 @@ class _TimerScreenState extends State<TimerScreen> {
   int _breakMinutes = 5;
   int _iterationCount = 1;
   final String _customTimerLabel = '';
-  bool _showCustomOptions = false;
+  final bool _showCustomOptions = false;
   final TextEditingController _labelController = TextEditingController();
 
   // Saved custom timers for quick selection (includes converted study techniques)
-  List<SavedTimer> _savedTimers = [
+  final List<SavedTimer> _savedTimers = [
     // Study Technique Presets converted to Saved Timers
     SavedTimer(
       label: 'Pomodoro Focus',
@@ -1005,7 +1005,7 @@ class _TimerScreenState extends State<TimerScreen> {
 
         // Saved timer options displayed as horizontal scrolling cards
         if (_savedTimers.isNotEmpty) ...[
-          Container(
+          SizedBox(
             height: 130, // Increased from 120 to prevent overflow
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
