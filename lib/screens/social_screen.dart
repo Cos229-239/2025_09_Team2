@@ -14,7 +14,6 @@ import 'profile_settings_screen.dart';
 import 'user_profile_screen.dart';
 import 'chat_screen.dart';
 import 'group_details_screen.dart';
-import 'competitive_screen.dart';
 import '../widgets/common/themed_background_wrapper.dart';
 
 // TODO: Social Screen - Major Social Feature Implementation Gaps
@@ -333,12 +332,6 @@ class _SocialScreenState extends State<SocialScreen>
 
           // Quick Rankings
           Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
-            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -348,7 +341,7 @@ class _SocialScreenState extends State<SocialScreen>
                     'Your Rankings',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: const Color(0xFF6FB8E9),
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -359,62 +352,8 @@ class _SocialScreenState extends State<SocialScreen>
           ),
           const SizedBox(height: 16),
 
-          // Active Competitions
-          Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Active Competitions',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          // Navigate to full competitive screen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CompetitiveScreen(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'View All',
-                          style: TextStyle(color: Color(0xFF58A6FF)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildActiveCompetitionsPreview(),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Recent Activity Section
           Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
-            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -426,13 +365,13 @@ class _SocialScreenState extends State<SocialScreen>
                         'Recent Activity',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: const Color(0xFF6FB8E9),
                             ),
                       ),
                       const Spacer(),
                       Icon(
                         Icons.history,
-                        color: Colors.grey[400],
+                        color: const Color(0xFF6FB8E9),
                         size: 20,
                       ),
                     ],
@@ -479,9 +418,9 @@ class _SocialScreenState extends State<SocialScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
         children: [
@@ -504,7 +443,7 @@ class _SocialScreenState extends State<SocialScreen>
                   title,
                   style: const TextStyle(
                     fontSize: 10,
-                    color: Colors.white70,
+                    color: Color(0xFFD9D9D9),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -513,55 +452,6 @@ class _SocialScreenState extends State<SocialScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildActiveCompetitionsPreview() {
-    if (_competitiveService == null) {
-      return const Center(child: Text('Loading competitions...'));
-    }
-
-    final competitions = _competitiveService!.getActiveCompetitions();
-
-    if (competitions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              Icon(Icons.emoji_events, size: 48, color: Colors.grey[600]),
-              const SizedBox(height: 12),
-              Text(
-                'No active competitions',
-                style: TextStyle(color: Colors.grey[400]),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Check back later for new challenges!',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Column(
-      children: competitions.take(3).map((competition) {
-        return CompetitionCard(
-          competition: competition,
-          isParticipating: competition.participants.contains(_currentUserId),
-          onViewDetails: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CompetitiveScreen(),
-              ),
-            );
-          },
-        );
-      }).toList(),
     );
   }
 
