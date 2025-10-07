@@ -13,7 +13,6 @@ import 'package:studypals/models/task.dart';
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart';
 import 'package:studypals/widgets/notes/create_note_form_simple.dart' as simple;
 import '../widgets/common/themed_background_wrapper.dart';
-import '../features/notes/notes_editor_screen.dart';
 
 /// Custom scroll physics for single-page-at-a-time movement
 class SinglePageScrollPhysics extends ScrollPhysics {
@@ -97,6 +96,7 @@ class _LearningScreenState extends State<LearningScreen>
   bool _isDragging = false;
   DateTime? _lastPageChangeTime;
   static bool _globalPageChangeLock = false; // GLOBAL lock across all instances
+  bool _isCompletedTasksExpanded = false; // Track collapse/expand state for completed tasks
   
   // ENHANCED TRACKPAD GESTURE DETECTION SYSTEM
   // This system fixes the trackpad multi-page jumping issue by properly
@@ -951,52 +951,22 @@ class _LearningScreenState extends State<LearningScreen>
             // Create button at bottom with extra spacing above AI tutor
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        print('Create Note button clicked'); // Debug output
-                        _showCreateNoteModal(context);
-                      },
-                      icon: const Icon(Icons.add),
-                      label: const Text('Create New Note'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    print('Create Note button clicked'); // Debug output
+                    _showCreateNoteModal(context);
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create New Note'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const NotesEditorScreen(
-                              title: 'Rich Text Editor Test',
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Test Rich Text Editor'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6FB8E9),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 64), // Extra spacing above AI tutor
@@ -1006,129 +976,481 @@ class _LearningScreenState extends State<LearningScreen>
     );
   }
 
-  /// Build the learning tasks section with daily and weekly tasks
+  /// Build the learning tasks section with actual task content
   Widget _buildTasksSection() {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, child) {
-        final allTasks = taskProvider.tasks
-            .where((task) => task.status != TaskStatus.completed)
-            .toList();
-
-        // Filter tasks for today (daily tasks)
-        final today = DateTime.now();
-        final dailyTasks = allTasks.where((task) {
-          if (task.dueAt == null) return false;
-          return task.dueAt!.year == today.year &&
-              task.dueAt!.month == today.month &&
-              task.dueAt!.day == today.day;
-        }).toList();
-
-        // Filter tasks for this week (weekly tasks)
-        final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
-        final endOfWeek = startOfWeek.add(const Duration(days: 6));
-        final weeklyTasks = allTasks.where((task) {
-          if (task.dueAt == null) return false;
-          return task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-              task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
-        }).toList();
-
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Daily tasks
-            _buildTaskCard(
-              context,
-              title: 'daily tasks',
-              count: dailyTasks.length,
+            _buildTaskSectionInline(
+              title: "Today's Tasks",
+              tasks: _getTodayTasks(taskProvider.tasks),
               icon: Icons.today,
-              color: Colors.orange,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TaskListScreen(),
-                  ),
-                );
-              },
+              emptyMessage: "No tasks due today",
             ),
-            const SizedBox(height: 12),
-
-            // Weekly tasks
-            _buildTaskCard(
-              context,
-              title: 'Weekly tasks',
-              count: weeklyTasks.length,
-              icon: Icons.calendar_today,
-              color: Colors.purple,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TaskListScreen(),
-                  ),
-                );
-              },
+            const SizedBox(height: 24),
+            _buildTaskSectionInline(
+              title: "This Week's Tasks",
+              tasks: _getThisWeekTasks(taskProvider.tasks),
+              icon: Icons.view_week,
+              emptyMessage: "No tasks due this week",
             ),
+            const SizedBox(height: 24),
+            _buildTaskSectionInline(
+              title: "This Month's Tasks",
+              tasks: _getThisMonthTasks(taskProvider.tasks),
+              icon: Icons.calendar_month,
+              emptyMessage: "No tasks due this month",
+            ),
+            const SizedBox(height: 24),
+            _buildTaskSectionInline(
+              title: "Upcoming Tasks",
+              tasks: _getUpcomingTasks(taskProvider.tasks),
+              icon: Icons.schedule,
+              emptyMessage: "No upcoming tasks",
+            ),
+            const SizedBox(height: 24),
+            _buildCompletedTasksSection(taskProvider.tasks),
           ],
         );
       },
     );
   }
 
-  /// Build a task card with icon and count
-  Widget _buildTaskCard(
-    BuildContext context, {
+  /// Get tasks due today
+  List<Task> _getTodayTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      return task.dueAt!.year == today.year &&
+          task.dueAt!.month == today.month &&
+          task.dueAt!.day == today.day;
+    }).toList();
+  }
+
+  /// Get tasks due this week
+  List<Task> _getThisWeekTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      // Exclude today's tasks as they're shown in the today section
+      final isToday = task.dueAt!.year == today.year &&
+          task.dueAt!.month == today.month &&
+          task.dueAt!.day == today.day;
+      if (isToday) return false;
+      
+      return task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  /// Get tasks due this month
+  List<Task> _getThisMonthTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final startOfMonth = DateTime(today.year, today.month, 1);
+    final endOfMonth = DateTime(today.year, today.month + 1, 0);
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      
+      // Exclude tasks already shown in today and this week sections
+      final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+      final endOfWeek = startOfWeek.add(const Duration(days: 6));
+      final isInCurrentWeek = task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+      if (isInCurrentWeek) return false;
+      
+      return task.dueAt!.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfMonth.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  /// Get completed tasks
+  List<Task> _getCompletedTasks(List<Task> allTasks) {
+    return allTasks.where((task) => task.status == TaskStatus.completed).toList()
+      ..sort((a, b) => (b.dueAt ?? DateTime.now()).compareTo(a.dueAt ?? DateTime.now()));
+  }
+
+  /// Get upcoming tasks (beyond this month)
+  List<Task> _getUpcomingTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final endOfMonth = DateTime(today.year, today.month + 1, 0);
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      
+      // Only include tasks due after this month
+      return task.dueAt!.isAfter(endOfMonth);
+    }).toList()
+      ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!)); // Sort by due date (earliest first)
+  }
+
+  /// Build a task section with header and task list inline
+  Widget _buildTaskSectionInline({
     required String title,
-    required int count,
+    required List<Task> tasks,
     required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
+    required String emptyMessage,
   }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 28),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF6FB8E9),
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFD9D9D9), // Light text for dark theme
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$count ${count == 1 ? 'task' : 'tasks'}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${tasks.length}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF6FB8E9),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-            ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        
+        // Task list or empty message
+        if (tasks.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF242628), // Match dashboard header color
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.task_alt,
+                  size: 40,
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.7),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  emptyMessage,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFD9D9D9),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...tasks.take(3).map((task) => _buildInlineTaskCard(task)).toList(),
+        
+        // Show more button if there are more than 3 tasks
+        if (tasks.length > 3)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TaskListScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'View all ${tasks.length} tasks',
+                  style: const TextStyle(
+                    color: Color(0xFF6FB8E9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Build collapsible completed tasks section
+  Widget _buildCompletedTasksSection(List<Task> allTasks) {
+    final completedTasks = _getCompletedTasks(allTasks);
+    
+    if (completedTasks.isEmpty) {
+      return const SizedBox.shrink(); // Don't show section if no completed tasks
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Collapsible header
+        InkWell(
+          onTap: () {
+            setState(() {
+              _isCompletedTasksExpanded = !_isCompletedTasksExpanded;
+            });
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+            child: Row(
+              children: [
+                Icon(
+                  _isCompletedTasksExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: const Color(0xFF6FB8E9),
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.check_circle,
+                  color: const Color(0xFF4CAF50),
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Completed Tasks',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFD9D9D9), // Light text for dark theme
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${completedTasks.length}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF4CAF50),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // Expanded task list
+        if (_isCompletedTasksExpanded) ...[
+          const SizedBox(height: 12),
+          ...completedTasks.map((task) => _buildInlineTaskCard(task)).toList(),
+        ],
+      ],
+    );
+  }
+
+  /// Build individual task card for inline display
+  Widget _buildInlineTaskCard(Task task) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Card(
+        elevation: 1,
+        color: const Color(0xFF242628), // Match dashboard header color
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _showTaskDetailsInline(task),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Task status checkbox
+                GestureDetector(
+                  onTap: () => _toggleTaskStatusInline(task),
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: task.status == TaskStatus.completed
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      color: task.status == TaskStatus.completed
+                          ? const Color(0xFF4CAF50)
+                          : Colors.transparent,
+                    ),
+                    child: task.status == TaskStatus.completed
+                        ? const Icon(
+                            Icons.check,
+                            size: 12,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                // Task content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          decoration: task.status == TaskStatus.completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: task.status == TaskStatus.completed
+                              ? const Color(0xFF888888)
+                              : const Color(0xFFD9D9D9), // Light text for dark theme
+                        ),
+                      ),
+                      if (task.dueAt != null) ...[
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 12,
+                              color: const Color(0xFF888888), // Lighter grey for dark theme
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatDueDateInline(task.dueAt!),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF888888), // Lighter grey for dark theme
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// Format due date for inline display
+  String _formatDueDateInline(DateTime dueDate) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final taskDate = DateTime(dueDate.year, dueDate.month, dueDate.day);
+
+    if (taskDate == today) {
+      return 'Due today';
+    } else if (taskDate == tomorrow) {
+      return 'Due tomorrow';
+    } else if (taskDate.isBefore(today)) {
+      final diff = today.difference(taskDate).inDays;
+      return 'Overdue by $diff day${diff > 1 ? 's' : ''}';
+    } else {
+      final diff = taskDate.difference(today).inDays;
+      return 'Due in $diff day${diff > 1 ? 's' : ''}';
+    }
+  }
+
+  /// Toggle task completion status inline
+  void _toggleTaskStatusInline(Task task) {
+    final provider = Provider.of<TaskProvider>(context, listen: false);
+    final newStatus = task.status == TaskStatus.completed
+        ? TaskStatus.pending
+        : TaskStatus.completed;
+    
+    // Create updated task
+    final updatedTask = Task(
+      id: task.id,
+      title: task.title,
+      estMinutes: task.estMinutes,
+      dueAt: task.dueAt,
+      priority: task.priority,
+      tags: task.tags,
+      status: newStatus,
+      linkedNoteId: task.linkedNoteId,
+      linkedDeckId: task.linkedDeckId,
+    );
+    
+    provider.updateTask(updatedTask);
+  }
+
+  /// Show task details inline
+  void _showTaskDetailsInline(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(task.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Estimated time: ${task.estMinutes} minutes'),
+            if (task.dueAt != null)
+              Text('Due: ${_formatDueDateInline(task.dueAt!)}'),
+            Text('Priority: ${_getPriorityTextInline(task.priority)}'),
+            if (task.tags.isNotEmpty)
+              Text('Tags: ${task.tags.join(', ')}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get priority text inline
+  String _getPriorityTextInline(int priority) {
+    switch (priority) {
+      case 1:
+        return 'Low';
+      case 2:
+        return 'Medium';
+      case 3:
+        return 'High';
+      default:
+        return 'Unknown';
+    }
   }
 
   /// Format time ago for display (e.g., "2 hours ago", "3 days ago")

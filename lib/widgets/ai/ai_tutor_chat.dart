@@ -170,23 +170,10 @@ class _AITutorChatState extends State<AITutorChat>
     return Consumer2<EnhancedAITutorProvider, AppState>(
       builder: (context, tutorProvider, appState, child) {
         return Scaffold(
+          backgroundColor: const Color(0xFF16181A), // Dashboard background color
           appBar: _buildAppBar(tutorProvider),
           body: Stack(
             children: [
-              // Background gradient
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).primaryColor.withValues(alpha: 0.05),
-                      Theme.of(context).scaffoldBackgroundColor,
-                    ],
-                  ),
-                ),
-              ),
-              
               Column(
                 children: [
                   // Progress bar if active session
@@ -235,31 +222,36 @@ class _AITutorChatState extends State<AITutorChat>
 
   PreferredSizeWidget _buildAppBar(EnhancedAITutorProvider provider) {
     return AppBar(
+      backgroundColor: const Color(0xFF242628), // Dashboard header color
+      foregroundColor: const Color(0xFFD9D9D9), // Light text
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.psychology,
                 size: 20,
-                color: Theme.of(context).primaryColor,
+                color: Color(0xFF6FB8E9), // Dashboard blue accent
               ),
               const SizedBox(width: 8),
               Text(
                 provider.hasActiveSession
                     ? 'AI Tutor - ${provider.currentSubject}'
                     : 'AI Tutor',
-                style: const TextStyle(fontSize: 18),
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Color(0xFFD9D9D9), // Light text
+                ),
               ),
             ],
           ),
           if (provider.hasActiveSession)
             Text(
               '${provider.currentDifficulty} Level',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).textTheme.bodySmall?.color,
+                color: Color(0xFF888888), // Muted text
               ),
             ),
         ],
@@ -271,7 +263,7 @@ class _AITutorChatState extends State<AITutorChat>
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.2),
+              color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard blue accent
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -283,6 +275,7 @@ class _AITutorChatState extends State<AITutorChat>
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
+                    color: Color(0xFFD9D9D9), // Light text
                   ),
                 ),
               ],
@@ -294,7 +287,7 @@ class _AITutorChatState extends State<AITutorChat>
           margin: const EdgeInsets.only(right: 8),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard blue accent
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -306,6 +299,7 @@ class _AITutorChatState extends State<AITutorChat>
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
+                  color: Color(0xFFD9D9D9), // Light text
                 ),
               ),
             ],
@@ -341,9 +335,9 @@ class _AITutorChatState extends State<AITutorChat>
                 value: 'end_session',
                 child: Row(
                   children: [
-                    Icon(Icons.stop, size: 20, color: Colors.red),
-                    SizedBox(width: 8),
-                    Text('End Session', style: TextStyle(color: Colors.red)),
+                    const Icon(Icons.stop, size: 20, color: Color(0xFFE57373)), // Softer red for dark theme
+                    const SizedBox(width: 8),
+                    const Text('End Session', style: TextStyle(color: Color(0xFFE57373))), // Softer red for dark theme
                   ],
                 ),
               ),
@@ -360,13 +354,13 @@ class _AITutorChatState extends State<AITutorChat>
       height: 4,
       child: LinearProgressIndicator(
         value: mastery,
-        backgroundColor: Colors.grey.shade300,
+        backgroundColor: const Color(0xFF242628), // Dashboard header color
         valueColor: AlwaysStoppedAnimation<Color>(
           mastery > 0.7
-              ? Colors.green
+              ? const Color(0xFF4CAF50) // Green for high mastery
               : mastery > 0.4
-                  ? Colors.orange
-                  : Theme.of(context).primaryColor,
+                  ? const Color(0xFFFF9800) // Orange for medium mastery
+                  : const Color(0xFF6FB8E9), // Dashboard blue for low mastery
         ),
       ),
     );
@@ -414,16 +408,17 @@ class _AITutorChatState extends State<AITutorChat>
   Widget _buildWelcomeCard(EnhancedAITutorProvider provider) {
     return Card(
       elevation: 8,
+      color: const Color(0xFF242628), // Dashboard header color
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
-              Theme.of(context).primaryColor.withValues(alpha: 0.1),
-              Theme.of(context).primaryColor.withValues(alpha: 0.05),
+              Color(0xFF16181A), // Match main background color
+              Color(0xFF242628), // Dashboard header color
             ],
           ),
         ),
@@ -436,11 +431,11 @@ class _AITutorChatState extends State<AITutorChat>
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
+                  color: const Color(0xFF6FB8E9), // Dashboard blue accent
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -454,17 +449,20 @@ class _AITutorChatState extends State<AITutorChat>
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Welcome to AI Tutor!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: TextStyle(
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: Color(0xFFD9D9D9), // Light text for dark theme
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Your personalized learning companion',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).textTheme.bodySmall?.color,
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF888888), // Muted text for dark theme
               ),
               textAlign: TextAlign.center,
             ),
@@ -473,7 +471,7 @@ class _AITutorChatState extends State<AITutorChat>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard blue accent
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -486,6 +484,7 @@ class _AITutorChatState extends State<AITutorChat>
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
+                        color: Color(0xFFD9D9D9), // Light text for dark theme
                       ),
                     ),
                   ],
@@ -500,6 +499,7 @@ class _AITutorChatState extends State<AITutorChat>
 
   Widget _buildSubjectSelection(EnhancedAITutorProvider provider) {
     return Card(
+      color: const Color(0xFF242628), // Dashboard header color
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -508,17 +508,19 @@ class _AITutorChatState extends State<AITutorChat>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(
                   Icons.school,
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF6FB8E9), // Dashboard blue accent
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   'Choose Subject',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFFD9D9D9), // Light text for dark theme
                   ),
                 ),
               ],
@@ -535,19 +537,28 @@ class _AITutorChatState extends State<AITutorChat>
                   label: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(subject),
+                      Text(
+                        subject,
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : const Color(0xFFD9D9D9),
+                        ),
+                      ),
                       if (mastery > 0)
                         Text(
                           '${(mastery * 100).toInt()}%',
-                          style: const TextStyle(fontSize: 10),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isSelected ? Colors.white : const Color(0xFF888888),
+                          ),
                         ),
                     ],
                   ),
                   selected: isSelected,
                   onSelected: (_) => provider.updateSubject(subject),
-                  selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                  selectedColor: const Color(0xFF6FB8E9), // Dashboard blue accent
+                  backgroundColor: const Color(0xFF16181A), // Match main background color
                   avatar: isSelected
-                      ? const Icon(Icons.check, size: 18)
+                      ? const Icon(Icons.check, size: 18, color: Colors.white)
                       : null,
                 );
               }).toList(),
@@ -560,6 +571,7 @@ class _AITutorChatState extends State<AITutorChat>
 
   Widget _buildDifficultySelection(EnhancedAITutorProvider provider) {
     return Card(
+      color: const Color(0xFF242628), // Dashboard header color
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -570,15 +582,17 @@ class _AITutorChatState extends State<AITutorChat>
           children: [
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.speed,
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF6FB8E9), // Dashboard blue accent
                 ),
                 const SizedBox(width: 8),
-                Text(
+                const Text(
                   'Difficulty Level',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFFD9D9D9), // Light text for dark theme
                   ),
                 ),
               ],
@@ -602,13 +616,17 @@ class _AITutorChatState extends State<AITutorChat>
                       label: Text(difficulty),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isSelected
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey.shade300,
+                            ? const Color(0xFF6FB8E9) // Dashboard blue accent
+                            : const Color(0xFF16181A), // Match main background color
                         foregroundColor: isSelected
                             ? Colors.white
-                            : Colors.black87,
+                            : const Color(0xFFD9D9D9), // Light text for dark theme
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                            width: 1,
+                          ),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -625,6 +643,7 @@ class _AITutorChatState extends State<AITutorChat>
 
   Widget _buildLearningGoals(EnhancedAITutorProvider provider) {
     return Card(
+      color: const Color(0xFF242628), // Dashboard header color
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -635,15 +654,17 @@ class _AITutorChatState extends State<AITutorChat>
           children: [
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.flag,
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF6FB8E9), // Dashboard blue accent
                 ),
                 const SizedBox(width: 8),
-                Text(
+                const Text(
                   'Learning Goals (Optional)',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFFD9D9D9), // Light text for dark theme
                   ),
                 ),
               ],
@@ -655,8 +676,13 @@ class _AITutorChatState extends State<AITutorChat>
               children: _learningGoalOptions.map((goal) {
                 final isSelected = provider.learningGoals.contains(goal);
                 
-                return FilterChip(
-                  label: Text(goal),
+                return ChoiceChip(
+                  label: Text(
+                    goal,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : const Color(0xFFD9D9D9),
+                    ),
+                  ),
                   selected: isSelected,
                   onSelected: (_) {
                     if (isSelected) {
@@ -665,8 +691,11 @@ class _AITutorChatState extends State<AITutorChat>
                       provider.addLearningGoal(goal);
                     }
                   },
-                  selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                  checkmarkColor: Theme.of(context).primaryColor,
+                  selectedColor: const Color(0xFF6FB8E9), // Dashboard blue accent
+                  backgroundColor: const Color(0xFF16181A), // Match main background color
+                  avatar: isSelected
+                      ? const Icon(Icons.check, size: 18, color: Colors.white)
+                      : null,
                 );
               }).toList(),
             ),
@@ -686,13 +715,13 @@ class _AITutorChatState extends State<AITutorChat>
           await provider.startAdaptiveSession();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor,
+          backgroundColor: const Color(0xFF6FB8E9), // Dashboard blue accent
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),
           elevation: 8,
-          shadowColor: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+          shadowColor: const Color(0xFF6FB8E9).withValues(alpha: 0.5), // Dashboard blue shadow
         ),
         child: provider.isStartingSession
             ? const Row(
