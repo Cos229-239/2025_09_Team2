@@ -56,11 +56,22 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       opacity: _fadeAnimation,
       child: GestureDetector(
         onTap: widget.onTap,
-        child: Card(
-          elevation: 8,
+        child: Container(
           margin: const EdgeInsets.all(12),
-          shape: RoundedRectangleBorder(
+          decoration: BoxDecoration(
+            color: const Color(0xFF242628), // Dashboard container color
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Dashboard accent with transparency
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Container(
             decoration: BoxDecoration(
@@ -69,8 +80,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white,
-                  _getSubjectColor().withValues(alpha: 0.05),
+                  const Color(0xFF242628), // Dashboard container
+                  const Color(0xFF6FB8E9).withValues(alpha: 0.05), // Dashboard accent with transparency
                 ],
               ),
             ),
@@ -123,35 +134,35 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: _getSubjectColor().withValues(alpha: 0.1),
+        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent with transparency
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _getSubjectColor().withValues(alpha: 0.3),
+          color: const Color(0xFF6FB8E9), // Dashboard accent
           width: 1,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          const Icon(
             Icons.visibility,
             size: 16,
-            color: _getSubjectColor(),
+            color: Color(0xFF6FB8E9), // Dashboard accent
           ),
           const SizedBox(width: 6),
-          Text(
+          const Text(
             'Visual Learning Card',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: _getSubjectColor(),
+              color: Color(0xFF6FB8E9), // Dashboard accent
             ),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: _getSubjectColor(),
+              color: const Color(0xFF6FB8E9), // Dashboard accent
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -176,7 +187,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _getSubjectColor().withValues(alpha: 0.2),
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.5), // Dashboard accent
           width: 2,
         ),
       ),
@@ -246,40 +257,44 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            _getSubjectColor().withValues(alpha: 0.1),
-            _getSubjectColor().withValues(alpha: 0.3),
+            const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard accent
+            const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Dashboard accent
           ],
         ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            _getSubjectIcon(),
+          const Icon(
+            Icons.image,
             size: 64,
-            color: _getSubjectColor(),
+            color: Color(0xFF6FB8E9), // Dashboard accent
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Visual Learning Content',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: _getSubjectColor(),
+              color: Color(0xFF6FB8E9), // Dashboard accent
             ),
           ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
+              color: const Color(0xFF242628).withValues(alpha: 0.9), // Dashboard container
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.5), // Dashboard accent
+                width: 1,
+              ),
             ),
             child: Text(
               _getVisualDescription(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: _getSubjectColor(),
+                color: Color(0xFFD9D9D9), // Dashboard text
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -303,10 +318,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.05),
+        color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard accent
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.blue.withValues(alpha: 0.2),
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Dashboard accent
           width: 1,
         ),
       ),
@@ -318,17 +333,17 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(
-                  _getDiagramIcon(),
-                  color: Colors.blue[700],
+                const Icon(
+                  Icons.account_tree, // Generic diagram icon
+                  color: Color(0xFF6FB8E9), // Dashboard accent
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Interactive ${_getVisualType().replaceAll('_', ' ').toUpperCase()}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue[700],
+                    color: Color(0xFF6FB8E9), // Dashboard accent
                     fontSize: 14,
                   ),
                 ),
@@ -343,7 +358,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -354,14 +369,14 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                               ? Icons.expand_less
                               : Icons.expand_more,
                           size: 16,
-                          color: Colors.blue[700],
+                          color: const Color(0xFF6FB8E9), // Dashboard accent
                         ),
                         const SizedBox(width: 4),
                         Text(
                           _showDiagramDetails ? 'Hide' : 'Show',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 10,
-                            color: Colors.blue[700],
+                            color: Color(0xFF6FB8E9), // Dashboard accent
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -426,7 +441,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                   color:
                       _getElementColor(element['type'] as String? ?? 'process'),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                  border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.5)), // Dashboard accent
                 ),
                 child: Text(
                   element['label'] as String? ?? 'Step ${index + 1}',
@@ -442,7 +457,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
                 const SizedBox(height: 8),
                 Icon(
                   Icons.arrow_downward,
-                  color: Colors.blue[400],
+                  color: const Color(0xFF6FB8E9), // Dashboard accent
                   size: 20,
                 ),
                 const SizedBox(height: 8),
@@ -820,22 +835,22 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: const Color(0xFF242628), // Dashboard container
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)), // Dashboard accent
       ),
-      child: Column(
+      child: const Column(
         children: [
           Icon(
             Icons.error_outline,
             size: 32,
-            color: Colors.grey[400],
+            color: Color(0xFFB0B0B0), // Dashboard secondary text
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'Diagram content loading...',
             style: TextStyle(
-              color: Colors.grey[600],
+              color: Color(0xFFB0B0B0), // Dashboard secondary text
               fontSize: 12,
             ),
           ),
@@ -850,30 +865,30 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _getSubjectColor().withValues(alpha: 0.08),
+        color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard accent
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _getSubjectColor().withValues(alpha: 0.2),
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Dashboard accent
           width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.help_outline,
                 size: 18,
-                color: _getSubjectColor(),
+                color: Color(0xFF6FB8E9), // Dashboard accent
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Visual Learning Question',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: _getSubjectColor(),
+                  color: Color(0xFF6FB8E9), // Dashboard accent
                 ),
               ),
             ],
@@ -885,6 +900,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
               fontSize: 16,
               fontWeight: FontWeight.w600,
               height: 1.4,
+              color: Color(0xFFD9D9D9), // Dashboard text
             ),
           ),
         ],
@@ -898,30 +914,30 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.08),
+        color: const Color(0xFF38A169).withValues(alpha: 0.1), // Success green
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.green.withValues(alpha: 0.2),
+          color: const Color(0xFF38A169).withValues(alpha: 0.3), // Success green
           width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.lightbulb_outline,
                 size: 18,
-                color: Colors.green[700],
+                color: Color(0xFF38A169), // Success green
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Visual Learning Answer',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Colors.green[700],
+                  color: Color(0xFF38A169), // Success green
                 ),
               ),
             ],
@@ -932,6 +948,7 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
             style: const TextStyle(
               fontSize: 15,
               height: 1.5,
+              color: Color(0xFFD9D9D9), // Dashboard text
             ),
           ),
         ],
@@ -944,27 +961,27 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.purple.withValues(alpha: 0.05),
+        color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard accent
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.purple.withValues(alpha: 0.2),
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Dashboard accent
           width: 1,
         ),
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.psychology,
-            color: Colors.purple[700],
+            color: Color(0xFF6FB8E9), // Dashboard accent
             size: 16,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'Enhanced for visual learning with ${_getVisualType().replaceAll('_', ' ')} layout',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 11,
-                color: Colors.purple[700],
+                color: Color(0xFFB0B0B0), // Dashboard secondary text
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -972,15 +989,15 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.purple.withValues(alpha: 0.1),
+              color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
+            child: const Text(
               'VISUAL',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
-                color: Colors.purple[700],
+                color: Color(0xFF6FB8E9), // Dashboard accent
               ),
             ),
           ),
@@ -1007,15 +1024,8 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
 
   /// Get subject-appropriate color
   Color _getSubjectColor() {
-    final subject =
-        widget.flashcard.visualMetadata?['subject']?.toLowerCase() ?? '';
-    if (subject.contains('biology')) return const Color(0xFF4CAF50);
-    if (subject.contains('chemistry')) return const Color(0xFF2196F3);
-    if (subject.contains('physics')) return const Color(0xFFFF9800);
-    if (subject.contains('math')) return const Color(0xFF9C27B0);
-    if (subject.contains('history')) return const Color(0xFF795548);
-    if (subject.contains('literature')) return const Color(0xFFE91E63);
-    return const Color(0xFF607D8B);
+    // Return dashboard accent color for consistent theming
+    return const Color(0xFF6FB8E9); // Dashboard accent
   }
 
   /// Get subject-appropriate icon
@@ -1069,15 +1079,15 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
   Color _getElementColor(String elementType) {
     switch (elementType) {
       case 'start':
-        return Colors.green;
+        return const Color(0xFF38A169); // Success green
       case 'end':
-        return Colors.red;
+        return const Color(0xFFE53E3E); // Error red
       case 'process':
-        return Colors.blue;
+        return const Color(0xFF6FB8E9); // Dashboard accent
       case 'decision':
-        return Colors.orange;
+        return const Color(0xFFFF9800); // Warning orange
       default:
-        return _getSubjectColor();
+        return const Color(0xFF6FB8E9); // Dashboard accent
     }
   }
 }
