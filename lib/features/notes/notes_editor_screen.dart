@@ -225,11 +225,15 @@ class _NotesEditorScreenState extends State<NotesEditorScreen> {
                   isUnderline: _isUnderline,
                   isHighlighted: _isHighlighted,
                   currentAlignment: _currentAlignment,
+                  currentFontSize: 16, // Default font size
+                  isBulletList: false, // Default bullet list state
                   onToggleBold: () => _toggleInline(Attribute.bold),
                   onToggleItalic: () => _toggleInline(Attribute.italic),
                   onToggleUnderline: () => _toggleInline(Attribute.underline),
                   onToggleHighlight: _toggleHighlight,
                   onSetAlignment: _setAlignment,
+                  onSetFontSize: (fontSize) {}, // Placeholder - not implemented in this screen
+                  onToggleBulletList: () {}, // Placeholder - not implemented in this screen
                 ),
               ],
             ),

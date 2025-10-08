@@ -8,11 +8,15 @@ class NotesFormattingToolbar extends StatelessWidget {
   final bool isUnderline;
   final bool isHighlighted;
   final String currentAlignment;
+  final int currentFontSize;
+  final bool isBulletList;
   final VoidCallback onToggleBold;
   final VoidCallback onToggleItalic;
   final VoidCallback onToggleUnderline;
   final VoidCallback onToggleHighlight;
   final Function(Attribute) onSetAlignment;
+  final Function(int) onSetFontSize;
+  final VoidCallback onToggleBulletList;
 
   const NotesFormattingToolbar({
     super.key,
@@ -22,11 +26,15 @@ class NotesFormattingToolbar extends StatelessWidget {
     required this.isUnderline,
     required this.isHighlighted,
     required this.currentAlignment,
+    required this.currentFontSize,
+    required this.isBulletList,
     required this.onToggleBold,
     required this.onToggleItalic,
     required this.onToggleUnderline,
     required this.onToggleHighlight,
     required this.onSetAlignment,
+    required this.onSetFontSize,
+    required this.onToggleBulletList,
   });
 
   @override
@@ -79,6 +87,15 @@ class NotesFormattingToolbar extends StatelessWidget {
           activeColor: const Color(0xFFFFFF00),
         ),
         
+        // Bullet List Button
+        _FormatButton(
+          icon: Icons.format_list_bulleted,
+          label: 'Bullets',
+          tooltip: 'Bullet List',
+          isActive: isBulletList,
+          onPressed: onToggleBulletList,
+        ),
+        
         // Divider
         Container(
           width: 1,
@@ -91,6 +108,20 @@ class NotesFormattingToolbar extends StatelessWidget {
         _AlignmentButtonGroup(
           currentAlignment: currentAlignment,
           onSetAlignment: onSetAlignment,
+        ),
+        
+        // Divider
+        Container(
+          width: 1,
+          height: 40,
+          color: const Color(0xFF444444),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+        ),
+        
+        // Font Size Dropdown
+        _FontSizeDropdown(
+          currentFontSize: currentFontSize,
+          onSetFontSize: onSetFontSize,
         ),
         ],
       ),
@@ -265,6 +296,81 @@ class _AlignmentButton extends StatelessWidget {
             semanticLabel: tooltip,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FontSizeDropdown extends StatelessWidget {
+  final int currentFontSize;
+  final Function(int) onSetFontSize;
+
+  const _FontSizeDropdown({
+    required this.currentFontSize,
+    required this.onSetFontSize,
+  });
+
+  // Generate font sizes from 12 to 48, incrementing by 2
+  List<int> get _fontSizes {
+    return List.generate((48 - 12) ~/ 2 + 1, (index) => 12 + (index * 2));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(
+        minWidth: 70,
+        minHeight: 48,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2A2A2A),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFF6FB8E9), width: 1),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.format_size,
+            color: Color(0xFF6FB8E9),
+            size: 16,
+          ),
+          const SizedBox(height: 2),
+          DropdownButton<int>(
+            value: _fontSizes.contains(currentFontSize) ? currentFontSize : 16,
+            isDense: true,
+            underline: Container(),
+            dropdownColor: const Color(0xFF2A2A2A),
+            style: const TextStyle(
+              color: Color(0xFF6FB8E9),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+            icon: const Icon(
+              Icons.arrow_drop_down,
+              color: Color(0xFF6FB8E9),
+              size: 14,
+            ),
+            items: _fontSizes.map((int size) {
+              return DropdownMenuItem<int>(
+                value: size,
+                child: Text(
+                  '$size',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                ),
+              );
+            }).toList(),
+            onChanged: (int? newSize) {
+              if (newSize != null) {
+                onSetFontSize(newSize);
+              }
+            },
+          ),
+        ],
       ),
     );
   }
