@@ -639,14 +639,24 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             vertical: 6,
           ),
           decoration: BoxDecoration(
-            color: _showAnswer ? Colors.green.shade100 : Colors.blue.shade100,
+            color: _showAnswer 
+              ? const Color(0xFF4CAF50).withValues(alpha: 0.2) // Green for answer
+              : const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent for question
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _showAnswer 
+                ? const Color(0xFF4CAF50) 
+                : const Color(0xFF6FB8E9),
+              width: 1,
+            ),
           ),
           child: Text(
             _showAnswer ? 'ANSWER' : 'QUESTION',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: _showAnswer ? Colors.green.shade700 : Colors.blue.shade700,
+              color: _showAnswer 
+                ? const Color(0xFF4CAF50) 
+                : const Color(0xFF6FB8E9),
             ),
           ),
         ),
@@ -690,6 +700,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
       style: const TextStyle(
         fontSize: 20,
         height: 1.4,
+        color: Color(0xFFD9D9D9), // Dashboard text color
       ),
       textAlign: TextAlign.center,
     );
@@ -730,14 +741,18 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.blue.shade100,
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent with transparency
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF6FB8E9),
+              width: 1,
+            ),
           ),
           child: Text(
             'DECK QUIZ - Question ${math.min(_currentQuizSession!.currentQuestionIndex + 1, _currentQuizSession!.totalQuestions)}/${_currentQuizSession!.totalQuestions}',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.blue.shade700,
+              color: Color(0xFF6FB8E9), // Dashboard accent color
             ),
           ),
         ),
@@ -749,8 +764,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: LinearProgressIndicator(
             value: _currentQuizSession!.progress,
-            backgroundColor: Colors.grey.shade300,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+            backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Dashboard accent with transparency
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6FB8E9)), // Dashboard accent color
           ),
         ),
 
@@ -760,18 +775,24 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Score: '),
+            const Text(
+              'Score: ',
+              style: TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
+            ),
             Text(
               '${_currentQuizSession!.correctAnswers}/${_currentQuizSession!.questionsAnswered}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFD9D9D9), // Dashboard text color
+              ),
             ),
             if (_currentQuizSession!.questionsAnswered > 0) ...[
               Text(
                 ' (${(_currentQuizSession!.currentScore * 100).round()}%)',
                 style: TextStyle(
                   color: _currentQuizSession!.currentScore >= 0.8
-                      ? Colors.green
-                      : Colors.orange,
+                      ? const Color(0xFF4CAF50) // Green for good score
+                      : const Color(0xFFFF9800), // Orange for lower score
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -788,6 +809,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             fontSize: 18,
             fontWeight: FontWeight.w600,
             height: 1.4,
+            color: Color(0xFFD9D9D9), // Dashboard text color
           ),
           textAlign: TextAlign.center,
         ),
@@ -806,14 +828,24 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
               final showResult = hasAnswered;
 
               Color? buttonColor;
+              Color? textColor;
               if (showResult) {
                 if (isSelected && isCorrect) {
-                  buttonColor = Colors.green;
+                  buttonColor = const Color(0xFF4CAF50); // Green for correct
+                  textColor = Colors.white;
                 } else if (isSelected && !isCorrect) {
-                  buttonColor = Colors.red;
+                  buttonColor = const Color(0xFFEF5350); // Red for incorrect
+                  textColor = Colors.white;
                 } else if (isCorrect) {
-                  buttonColor = Colors.green;
+                  buttonColor = const Color(0xFF4CAF50); // Green for correct answer
+                  textColor = Colors.white;
+                } else {
+                  buttonColor = const Color(0xFF242628); // Dashboard container color
+                  textColor = const Color(0xFFD9D9D9); // Dashboard text color
                 }
+              } else {
+                buttonColor = const Color(0xFF242628); // Dashboard container color
+                textColor = const Color(0xFFD9D9D9); // Dashboard text color
               }
 
               return Padding(
@@ -824,15 +856,24 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
-                    foregroundColor: buttonColor != null ? Colors.white : null,
+                    foregroundColor: textColor,
                     padding: const EdgeInsets.all(16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: showResult && isCorrect 
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
                   ),
                   child: Text(
                     '${String.fromCharCode(65 + index)}. $option',
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: textColor,
+                    ),
                     textAlign: TextAlign.left,
                   ),
                 ),
@@ -847,7 +888,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           ElevatedButton(
             onPressed: _nextDeckQuizQuestion,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade600,
+              backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
@@ -862,8 +903,14 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: currentAnswer!.isCorrect
-                  ? Colors.green.shade100
-                  : Colors.red.shade100,
+                  ? const Color(0xFF4CAF50).withValues(alpha: 0.2) // Green with transparency
+                  : const Color(0xFFEF5350).withValues(alpha: 0.2), // Red with transparency
+              border: Border.all(
+                color: currentAnswer.isCorrect
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFEF5350),
+                width: 1,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -871,7 +918,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
               children: [
                 Icon(
                   currentAnswer.isCorrect ? Icons.check_circle : Icons.cancel,
-                  color: currentAnswer.isCorrect ? Colors.green : Colors.red,
+                  color: currentAnswer.isCorrect 
+                    ? const Color(0xFF4CAF50) 
+                    : const Color(0xFFEF5350),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -880,8 +929,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                       : 'Incorrect',
                   style: TextStyle(
                     color: currentAnswer.isCorrect
-                        ? Colors.green.shade700
-                        : Colors.red.shade700,
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFEF5350),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1097,14 +1146,14 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
           title: Text(
             widget.deck.title,
             style: const TextStyle(
-              color: Color(0xFFD9D9D9),
+              color: Color(0xFFD9D9D9), // Dashboard text color
               fontWeight: FontWeight.w600,
             ),
           ),
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628), // Dashboard container color
           elevation: 0,
           iconTheme: const IconThemeData(
-            color: Color(0xFF6FB8E9),
+            color: Color(0xFF6FB8E9), // Dashboard accent color
           ),
           actions: [
             Padding(
@@ -1113,7 +1162,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                 '${_currentCardIndex + 1} / ${widget.deck.cards.length}',
                 style: const TextStyle(
                   fontSize: 16,
-                  color: Color(0xFFD9D9D9),
+                  color: Color(0xFFD9D9D9), // Dashboard text color
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1127,9 +1176,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             // Progress indicator
             LinearProgressIndicator(
               value: (_currentCardIndex + 1) / widget.deck.cards.length,
-              backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).primaryColor,
+              backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Dashboard accent with transparency
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF6FB8E9), // Dashboard accent color
               ),
             ),
 
@@ -1138,15 +1187,27 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
             // Card display area
             Expanded(
               child: Center(
-                child: Card(
-                  elevation: 8,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    child: _isDeckQuizMode
-                        ? _buildQuizInterface()
-                        : _buildCardInterface(),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF242628), // Dashboard container color
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  child: _isDeckQuizMode
+                      ? _buildQuizInterface()
+                      : _buildCardInterface(),
                 ),
               ),
             ),
@@ -1165,7 +1226,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     icon: const Icon(Icons.exit_to_app),
                     label: const Text('Exit Quiz'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade600,
+                      backgroundColor: const Color(0xFF6C7B7F), // Neutral gray
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1175,13 +1236,17 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.blue.shade100,
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent with transparency
+                      border: Border.all(
+                        color: const Color(0xFF6FB8E9),
+                        width: 1,
+                      ),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       'Question ${math.min((_currentQuizSession?.currentQuestionIndex ?? 0) + 1, _currentQuizSession?.totalQuestions ?? 0)}/${_currentQuizSession?.totalQuestions ?? 0}',
-                      style: TextStyle(
-                        color: Colors.blue.shade700,
+                      style: const TextStyle(
+                        color: Color(0xFF6FB8E9), // Dashboard accent color
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1198,7 +1263,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     icon: const Icon(Icons.skip_next),
                     label: const Text('Skip'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.shade600,
+                      backgroundColor: const Color(0xFFFF9800), // Orange for skip
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1229,7 +1294,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                           : Icons.visibility),
                       label: Text(_showAnswer ? 'Hide Answer' : 'Show Answer'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -1246,7 +1311,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                         ? 'Next'
                         : 'Finish'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade600,
+                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1269,7 +1334,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                     icon: const Icon(Icons.quiz_outlined),
                     label: const Text('Start Deck Quiz'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue.shade600,
+                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -1281,8 +1346,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Quiz all ${widget.deck.cards.where((card) => card.multipleChoiceOptions.isNotEmpty).length} cards at once!',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
+                  style: const TextStyle(
+                    color: Color(0xFFB0B0B0), // Dashboard secondary text
                     fontSize: 12,
                   ),
                   textAlign: TextAlign.center,
@@ -1304,8 +1369,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: _currentCard.lastQuizCorrect == true
-                            ? Colors.green.shade100
-                            : Colors.orange.shade100,
+                            ? const Color(0xFF38A169).withValues(alpha: 0.2) // Success green with transparency
+                            : const Color(0xFFFF9800).withValues(alpha: 0.2), // Warning orange with transparency
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -1317,16 +1382,16 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen> {
                                 : Icons.schedule,
                             size: 16,
                             color: _currentCard.lastQuizCorrect == true
-                                ? Colors.green.shade700
-                                : Colors.orange.shade700,
+                                ? const Color(0xFF38A169) // Success green
+                                : const Color(0xFFFF9800), // Warning orange
                           ),
                           const SizedBox(width: 4),
                           Text(
                             _quizService.getQuizStatusDescription(_currentCard),
                             style: TextStyle(
                               color: _currentCard.lastQuizCorrect == true
-                                  ? Colors.green.shade700
-                                  : Colors.orange.shade700,
+                                  ? const Color(0xFF38A169) // Success green
+                                  : const Color(0xFFFF9800), // Warning orange
                               fontSize: 12,
                             ),
                           ),
