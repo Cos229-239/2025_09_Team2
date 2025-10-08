@@ -507,8 +507,28 @@ class _LearningScreenState extends State<LearningScreen>
                           },
                         )
                       : null,
+                  filled: true,
+                  fillColor: const Color(0xFF242628),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
                   ),
                 ),
                 onChanged: (value) {
@@ -561,18 +581,23 @@ class _LearningScreenState extends State<LearningScreen>
                       itemBuilder: (context, index) {
                         final deck = filteredDecks[index];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          elevation: 2,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          elevation: 1,
+                          color: const Color(0xFF242628),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              width: 1,
+                            ),
                           ),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                             onTap: () {
                               _showDeckModeSelection(context, deck);
                             },
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(12),
                               child: Row(
                                 children: [
                                   Container(
@@ -760,8 +785,28 @@ class _LearningScreenState extends State<LearningScreen>
                           },
                         )
                       : null,
+                  filled: true,
+                  fillColor: const Color(0xFF242628),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
                   ),
                 ),
                 onChanged: (value) {
@@ -814,18 +859,23 @@ class _LearningScreenState extends State<LearningScreen>
                       itemBuilder: (context, index) {
                         final note = filteredNotes[index];
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          elevation: 2,
+                          margin: const EdgeInsets.only(bottom: 8),
+                          elevation: 1,
+                          color: const Color(0xFF242628),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              width: 1,
+                            ),
                           ),
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                             onTap: () {
                               _showNoteModeSelection(context, note);
                             },
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(12),
                               child: Row(
                                 children: [
                                   Container(
@@ -1476,7 +1526,7 @@ class _LearningScreenState extends State<LearningScreen>
       barrierDismissible: false, // Prevent dismissing by tapping outside
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
@@ -1576,7 +1626,7 @@ class _LearningScreenState extends State<LearningScreen>
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
@@ -1697,7 +1747,7 @@ class _LearningScreenState extends State<LearningScreen>
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit Note'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2A3050),
+                      backgroundColor: const Color(0xFF242628),
                       foregroundColor: const Color(0xFF6FB8E9),
                       side: const BorderSide(
                         color: Color(0xFF6FB8E9),
@@ -1739,7 +1789,7 @@ class _LearningScreenState extends State<LearningScreen>
       barrierDismissible: false, // Prevent dismissing by tapping outside
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
@@ -1855,7 +1905,7 @@ class _LearningScreenState extends State<LearningScreen>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
@@ -1920,7 +1970,7 @@ class _LearningScreenState extends State<LearningScreen>
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
@@ -2041,7 +2091,7 @@ class _LearningScreenState extends State<LearningScreen>
                     icon: const Icon(Icons.quiz),
                     label: const Text('Quiz Mode'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2A3050),
+                      backgroundColor: const Color(0xFF242628),
                       foregroundColor: const Color(0xFF6FB8E9),
                       side: const BorderSide(
                         color: Color(0xFF6FB8E9),
@@ -2083,7 +2133,18 @@ class _LearningScreenState extends State<LearningScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Deck'),
+        backgroundColor: const Color(0xFF242628),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(
+            color: Color(0xFF6FB8E9),
+            width: 2,
+          ),
+        ),
+        title: const Text(
+          'Edit Deck',
+          style: TextStyle(color: Color(0xFFD9D9D9)),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -2141,8 +2202,22 @@ class _LearningScreenState extends State<LearningScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Deck'),
-        content: Text('Are you sure you want to delete "${deck.title}"? This action cannot be undone.'),
+        backgroundColor: const Color(0xFF242628),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(
+            color: Color(0xFF6FB8E9),
+            width: 2,
+          ),
+        ),
+        title: const Text(
+          'Delete Deck',
+          style: TextStyle(color: Color(0xFFD9D9D9)),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${deck.title}"? This action cannot be undone.',
+          style: const TextStyle(color: Color(0xFFD9D9D9)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/deck.dart';
 import '../services/quiz_service.dart';
-import 'flashcard_study_screen.dart';
+import 'flashcard_detail_screen.dart';
 
 /// Screen shown when a user completes studying a deck
 /// Provides options to take a quiz or return to study
@@ -30,10 +30,11 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF16181A),
       appBar: AppBar(
         title: Text('${widget.deck.title} Complete!'),
         centerTitle: true,
-        backgroundColor: Colors.green.shade600,
+        backgroundColor: const Color(0xFF6FB8E9),
         foregroundColor: Colors.white,
       ),
       body: Padding(
@@ -74,7 +75,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
               'You\'ve successfully studied all ${widget.deck.cards.length} flashcards in "${widget.deck.title}"',
               style: const TextStyle(
                 fontSize: 18,
-                color: Colors.grey,
+                color: Color(0xFFD9D9D9),
               ),
               textAlign: TextAlign.center,
             ),
@@ -86,9 +87,12 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: const Color(0xFF242628),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  width: 1,
+                ),
               ),
               child: Column(
                 children: [
@@ -136,7 +140,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                   label: Text(
                       _isStartingQuiz ? 'Starting Quiz...' : 'Take Deck Quiz'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade600,
+                    backgroundColor: const Color(0xFF6FB8E9),
                     foregroundColor: Colors.white,
                     textStyle: const TextStyle(
                       fontSize: 18,
@@ -153,8 +157,8 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
 
               Text(
                 'Test your knowledge with $_quizEligibleCards multiple choice questions',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
+                style: const TextStyle(
+                  color: Color(0xFFD9D9D9),
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -167,9 +171,12 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
+                  color: const Color(0xFF242628),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange.shade200),
+                  border: Border.all(
+                    color: Colors.orange.shade600.withValues(alpha: 0.5),
+                    width: 1,
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -190,7 +197,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                     Text(
                       'This deck needs at least 2 cards with multiple choice options for quiz mode.',
                       style: TextStyle(
-                        color: Colors.orange.shade600,
+                        color: const Color(0xFFD9D9D9),
                         fontSize: 14,
                       ),
                       textAlign: TextAlign.center,
@@ -211,8 +218,12 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                     icon: const Icon(Icons.refresh),
                     label: const Text('Study Again'),
                     style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6FB8E9),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: BorderSide(color: Colors.grey.shade400),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -223,8 +234,12 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                     icon: const Icon(Icons.arrow_back),
                     label: const Text('Back to Decks'),
                     style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6FB8E9),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: BorderSide(color: Colors.grey.shade400),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -266,7 +281,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
           label,
           style: const TextStyle(
             fontSize: 12,
-            color: Colors.grey,
+            color: Color(0xFFD9D9D9),
           ),
           textAlign: TextAlign.center,
         ),
@@ -301,11 +316,11 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
         return;
       }
 
-      // Navigate to flashcard study screen in quiz mode
+      // Navigate to flashcard detail screen in quiz mode
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => FlashcardStudyScreen(
+            builder: (context) => FlashcardDetailScreen(
               deck: widget.deck,
               startInQuizMode: true,
             ),
@@ -333,7 +348,7 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
   void _studyAgain() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => FlashcardStudyScreen(deck: widget.deck),
+        builder: (context) => FlashcardDetailScreen(deck: widget.deck),
       ),
     );
   }

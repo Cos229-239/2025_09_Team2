@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:studypals/models/note.dart';
@@ -191,11 +192,13 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
 
   void _saveNote() {
     if (_formKey.currentState?.validate() ?? false) {
-      // Get plain text from QuillController
-      final contentText = _contentController.document.toPlainText();
+      // Get the Quill document delta as JSON to preserve rich text formatting
+      final delta = _contentController.document.toDelta();
+      final contentJson = jsonEncode(delta.toJson());
       
       // Validate content manually since it's not in a TextFormField
-      if (contentText.trim().isEmpty) {
+      final plainText = _contentController.document.toPlainText();
+      if (plainText.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please enter some content for your note.'),
@@ -208,7 +211,7 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
       final note = Note(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text.trim(),
-        contentMd: contentText.trim(),
+        contentMd: contentJson,  // Store as JSON string
         tags: _selectedSubject != 'General' ? [_selectedSubject.toLowerCase()] : [],
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
