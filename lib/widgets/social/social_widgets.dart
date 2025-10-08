@@ -36,6 +36,7 @@ class UserProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
+      color: const Color(0xFF242628),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -82,6 +83,7 @@ class UserProfileCard extends StatelessWidget {
                                     .titleLarge
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      color: const Color(0xFFD9D9D9),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -110,7 +112,7 @@ class UserProfileCard extends StatelessWidget {
                           '@${profile.username}',
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey[600],
+                                    color: const Color(0xFF888888),
                                   ),
                         ),
                         const SizedBox(height: 4),
@@ -137,7 +139,9 @@ class UserProfileCard extends StatelessWidget {
                                 color: Colors.amber, size: 16),
                             Text(
                               '${profile.totalXP}',
-                              style: Theme.of(context).textTheme.bodySmall,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: const Color(0xFFD9D9D9),
+                              ),
                             ),
                           ],
                         ),
@@ -152,7 +156,9 @@ class UserProfileCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   profile.bio!,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFFD9D9D9),
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -169,16 +175,16 @@ class UserProfileCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: Colors.blue.withValues(alpha: 0.3)),
+                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         interest,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.blue[700],
+                          color: Color(0xFF6FB8E9),
                         ),
                       ),
                     );
@@ -253,6 +259,7 @@ class FriendRequestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: const Color(0xFF242628),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -288,12 +295,13 @@ class FriendRequestCard extends StatelessWidget {
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFD9D9D9),
                                 ),
                       ),
                       Text(
                         '@${requesterProfile?.username ?? 'unknown'}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
+                              color: const Color(0xFF888888),
                             ),
                       ),
                     ],
@@ -307,12 +315,14 @@ class FriendRequestCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: const Color(0xFF1A1A1A),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   friendship.requestMessage!,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFFD9D9D9),
+                  ),
                 ),
               ),
             ],
@@ -338,7 +348,7 @@ class FriendRequestCard extends StatelessWidget {
             Text(
               'Sent ${_formatTimeAgo(friendship.requestDate)}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: const Color(0xFF888888),
                   ),
             ),
           ],
@@ -384,6 +394,7 @@ class StudyGroupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
+      color: const Color(0xFF242628),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -424,6 +435,7 @@ class StudyGroupCard extends StatelessWidget {
                                     .titleMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
+                                      color: const Color(0xFFD9D9D9),
                                     ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -440,7 +452,7 @@ class StudyGroupCard extends StatelessWidget {
                           '${group.currentMembers}/${group.maxMembers} members',
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
+                                    color: const Color(0xFF888888),
                                   ),
                         ),
                       ],
@@ -454,7 +466,9 @@ class StudyGroupCard extends StatelessWidget {
               // Description
               Text(
                 group.description,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFFD9D9D9),
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -470,16 +484,16 @@ class StudyGroupCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.green.withValues(alpha: 0.1),
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: Colors.green.withValues(alpha: 0.3)),
+                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         subject,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
-                          color: Colors.green[700],
+                          color: Color(0xFF6FB8E9),
                         ),
                       ),
                     );
@@ -516,7 +530,7 @@ class StudyGroupCard extends StatelessWidget {
               Text(
                 'Created ${_formatDate(group.createdDate)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
+                      color: const Color(0xFF888888),
                     ),
               ),
             ],

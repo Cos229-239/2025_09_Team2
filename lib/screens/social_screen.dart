@@ -206,14 +206,15 @@ class _SocialScreenState extends State<SocialScreen>
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFFD9D9D9),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Please log in to access social learning features and connect with other students.',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Color(0xFF888888),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -643,9 +644,12 @@ class _SocialScreenState extends State<SocialScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.inbox, size: 64, color: Colors.grey),
+                      Icon(Icons.inbox, size: 64, color: Color(0xFF888888)),
                       SizedBox(height: 16),
-                      Text('No friend requests'),
+                      Text(
+                        'No friend requests',
+                        style: TextStyle(color: Color(0xFFD9D9D9)),
+                      ),
                     ],
                   ),
                 )
@@ -712,7 +716,7 @@ class _SocialScreenState extends State<SocialScreen>
                     'Finding StudyPal users...',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: Color(0xFF888888),
                     ),
                   ),
                 ],
@@ -728,26 +732,26 @@ class _SocialScreenState extends State<SocialScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Color(0xFF888888),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'Failed to load users',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: Color(0xFFD9D9D9),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Please check your connection and try again',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[500],
+                      color: Color(0xFF888888),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -774,26 +778,26 @@ class _SocialScreenState extends State<SocialScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.people_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Color(0xFF888888),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'No users found',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: Color(0xFFD9D9D9),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Be the first to invite friends to StudyPals!',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[500],
+                      color: Color(0xFF888888),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -854,9 +858,12 @@ class _SocialScreenState extends State<SocialScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.groups, size: 64, color: Colors.grey),
+            const Icon(Icons.groups, size: 64, color: Color(0xFF888888)),
             const SizedBox(height: 16),
-            const Text('No study groups yet'),
+            const Text(
+              'No study groups yet',
+              style: TextStyle(color: Color(0xFFD9D9D9)),
+            ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _createStudyGroup,
@@ -899,9 +906,12 @@ class _SocialScreenState extends State<SocialScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error, size: 64, color: Colors.red),
+                const Icon(Icons.error, size: 64, color: Color(0xFF888888)),
                 const SizedBox(height: 16),
-                Text('Error loading groups: ${snapshot.error}'),
+                Text(
+                  'Error loading groups: ${snapshot.error}',
+                  style: const TextStyle(color: Color(0xFFD9D9D9)),
+                ),
               ],
             ),
           );
@@ -914,10 +924,16 @@ class _SocialScreenState extends State<SocialScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.groups, size: 64, color: Colors.grey),
+                Icon(Icons.groups, size: 64, color: Color(0xFF888888)),
                 SizedBox(height: 16),
-                Text('No public groups available'),
-                Text('Be the first to create one!'),
+                Text(
+                  'No public groups available',
+                  style: TextStyle(color: Color(0xFFD9D9D9)),
+                ),
+                Text(
+                  'Be the first to create one!',
+                  style: TextStyle(color: Color(0xFF888888)),
+                ),
               ],
             ),
           );

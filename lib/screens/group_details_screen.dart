@@ -484,16 +484,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.timeline,
               size: 64,
-              color: Colors.grey[400],
+              color: Color(0xFF888888),
             ),
             const SizedBox(height: 16),
             Text(
               'No Activity Yet',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[600],
+                    color: const Color(0xFFD9D9D9),
                   ),
             ),
             const SizedBox(height: 8),
@@ -501,7 +501,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
               'Group activity will appear here when members interact',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
+                    color: const Color(0xFF888888),
                   ),
             ),
           ],
@@ -519,16 +519,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.folder_open,
               size: 64,
-              color: Colors.grey[400],
+              color: Color(0xFF888888),
             ),
             const SizedBox(height: 16),
             Text(
               'No Resources Yet',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[600],
+                    color: const Color(0xFFD9D9D9),
                   ),
             ),
             const SizedBox(height: 8),
@@ -536,7 +536,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
               'Upload study materials to share with your group',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
+                    color: const Color(0xFF888888),
                   ),
             ),
             if (_isMember) ...[
