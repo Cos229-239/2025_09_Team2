@@ -380,6 +380,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                     hintText: 'e.g., Photosynthesis, World War II, Calculus...',
                     hintStyle: const TextStyle(color: Color(0xFF808080)),
+                    filled: true,
+                    fillColor: const Color(0xFF1A1A1A),
                     border: OutlineInputBorder(
                       borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
                     ),
@@ -405,6 +407,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     hintText:
                         'Paste notes, textbook excerpts, or any material to generate flashcards from...',
                     hintStyle: const TextStyle(color: Color(0xFF808080)),
+                    filled: true,
+                    fillColor: const Color(0xFF1A1A1A),
                     border: OutlineInputBorder(
                       borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
                     ),
@@ -431,6 +435,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                         decoration: InputDecoration(
                           labelText: 'Subject',
                           labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                          filled: true,
+                          fillColor: const Color(0xFF1A1A1A),
                           border: OutlineInputBorder(
                             borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
                           ),
@@ -467,6 +473,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                         decoration: InputDecoration(
                           labelText: 'Learning Style',
                           labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                          filled: true,
+                          fillColor: const Color(0xFF1A1A1A),
                           border: OutlineInputBorder(
                             borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
                           ),

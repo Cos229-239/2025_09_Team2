@@ -346,14 +346,18 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF242628),
         title: Row(
           children: [
             Icon(
               results.isPerfectScore ? Icons.star : Icons.quiz,
-              color: results.isPerfectScore ? Colors.amber : Colors.blue,
+              color: results.isPerfectScore ? Colors.amber : const Color(0xFF6FB8E9),
             ),
             const SizedBox(width: 8),
-            const Text('Quiz Complete!'),
+            const Text(
+              'Quiz Complete!',
+              style: TextStyle(color: Color(0xFFD9D9D9)),
+            ),
           ],
         ),
         content: Column(
@@ -362,7 +366,11 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
           children: [
             Text(
               results.encouragementMessage,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFFD9D9D9),
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -370,8 +378,12 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: const Color(0xFF1A1A1A),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF6FB8E9).withAlpha((0.3 * 255).round()),
+                  width: 1,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,8 +391,13 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Final Score:',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Final Score:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFD9D9D9),
+                        ),
+                      ),
                       Text(
                         '${(results.scorePercentage * 100).round()}% (${results.letterGrade})',
                         style: TextStyle(
@@ -394,10 +411,17 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                      'Correct: ${results.correctAnswers}/${results.totalQuestions}'),
+                    'Correct: ${results.correctAnswers}/${results.totalQuestions}',
+                    style: const TextStyle(color: Color(0xFF888888)),
+                  ),
                   Text(
-                      'Time: ${results.timeSpent.inMinutes}m ${results.timeSpent.inSeconds % 60}s'),
-                  Text('EXP Earned: +${results.totalExpEarned}'),
+                    'Time: ${results.timeSpent.inMinutes}m ${results.timeSpent.inSeconds % 60}s',
+                    style: const TextStyle(color: Color(0xFF888888)),
+                  ),
+                  Text(
+                    'EXP Earned: +${results.totalExpEarned}',
+                    style: const TextStyle(color: Color(0xFF888888)),
+                  ),
                 ],
               ),
             ),
@@ -409,11 +433,18 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
               Navigator.of(context).pop(); // Close dialog
               Navigator.of(context).pop(); // Return to deck list
             },
-            child: const Text('Done'),
+            child: const Text(
+              'Done',
+              style: TextStyle(color: Color(0xFF888888)),
+            ),
           ),
           if (results.scorePercentage <
               0.8) // Allow retry if score is below 80%
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A1A1A),
+                foregroundColor: const Color(0xFFD9D9D9),
+              ),
               onPressed: () {
                 Navigator.of(context).pop(); // Close dialog
                 _exitDeckQuizMode();
@@ -421,6 +452,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
               child: const Text('Study More'),
             ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1A1A1A),
+              foregroundColor: const Color(0xFFD9D9D9),
+            ),
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
               _restartDeckQuiz();
@@ -428,6 +463,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
             child: const Text('Try Again'),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6FB8E9),
+              foregroundColor: Colors.white,
+            ),
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
               _triggerSchedulePrediction();

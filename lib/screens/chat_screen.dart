@@ -349,12 +349,12 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF242628),
         title: Row(
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
               backgroundImage: widget.otherUser.avatar != null
                   ? NetworkImage(widget.otherUser.avatar!)
                   : null,
@@ -363,10 +363,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       widget.otherUser.displayName.isNotEmpty
                           ? widget.otherUser.displayName[0].toUpperCase()
                           : widget.otherUser.username[0].toUpperCase(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Color(0xFF6FB8E9),
                       ),
                     )
                   : null,
@@ -379,7 +379,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Text(
                     widget.otherUser.displayName,
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
+                        fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFD9D9D9)),
                   ),
                   // Real-time typing status
                   StreamBuilder<bool>(
@@ -389,11 +389,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       final isTyping = snapshot.data ?? false;
 
                       if (isTyping) {
-                        return Text(
+                        return const Text(
                           'typing...',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Color(0xFF6FB8E9),
                             fontStyle: FontStyle.italic,
                           ),
                         );
@@ -405,7 +405,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           fontSize: 12,
                           color: widget.otherUser.isOnline
                               ? Colors.green
-                              : Colors.grey,
+                              : const Color(0xFF888888),
                         ),
                       );
                     },
@@ -456,15 +456,15 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.error_outline,
                           size: 48,
-                          color: Colors.red[300],
+                          color: Color(0xFF888888),
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        const Text(
                           'Error loading messages',
-                          style: TextStyle(color: Colors.red[300]),
+                          style: TextStyle(color: Color(0xFFD9D9D9)),
                         ),
                         const SizedBox(height: 8),
                         TextButton(
@@ -479,29 +479,29 @@ class _ChatScreenState extends State<ChatScreen> {
                 final messages = snapshot.data ?? [];
 
                 if (messages.isEmpty) {
-                  return Center(
+                  return const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.chat_bubble_outline,
                           size: 64,
-                          color: Colors.grey[400],
+                          color: Color(0xFF888888),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         Text(
                           'No messages yet',
                           style: TextStyle(
                             fontSize: 18,
-                            color: Colors.grey[600],
+                            color: Color(0xFFD9D9D9),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           'Send a message to start chatting!',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[500],
+                            color: Color(0xFF888888),
                           ),
                         ),
                       ],
@@ -843,7 +843,7 @@ class _ChatScreenState extends State<ChatScreen> {
             placeholder: (context, url) => Container(
               width: 250,
               height: 150,
-              color: Colors.grey[300],
+              color: const Color(0xFF1A1A1A),
               child: const Center(
                 child: CircularProgressIndicator(),
               ),
@@ -851,7 +851,7 @@ class _ChatScreenState extends State<ChatScreen> {
             errorWidget: (context, url, error) => Container(
               width: 250,
               height: 150,
-              color: Colors.grey[300],
+              color: const Color(0xFF1A1A1A),
               child: const Icon(Icons.broken_image, size: 48),
             ),
           ),
@@ -870,7 +870,7 @@ class _ChatScreenState extends State<ChatScreen> {
               return Container(
                 width: 250,
                 height: 150,
-                color: Colors.grey[300],
+                color: const Color(0xFF1A1A1A),
                 child: Center(
                   child: CircularProgressIndicator(
                     value: loadingProgress.expectedTotalBytes != null
@@ -885,7 +885,7 @@ class _ChatScreenState extends State<ChatScreen> {
               return Container(
                 width: 250,
                 height: 150,
-                color: Colors.grey[300],
+                color: const Color(0xFF1A1A1A),
                 child: const Icon(Icons.broken_image, size: 48),
               );
             },
@@ -905,13 +905,13 @@ class _ChatScreenState extends State<ChatScreen> {
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: const Color(0xFF242628),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.insert_drive_file, size: 32),
+              const Icon(Icons.insert_drive_file, size: 32, color: Color(0xFFD9D9D9)),
               const SizedBox(width: 12),
               Flexible(
                 child: Column(
@@ -922,6 +922,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
+                        color: Color(0xFFD9D9D9),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1519,8 +1520,8 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
                 ),
                 decoration: BoxDecoration(
                   color: widget.isMe
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.surfaceContainerHighest,
+                      ? const Color(0xFF6FB8E9)
+                      : const Color(0xFF242628),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
@@ -1546,11 +1547,9 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
                     if (widget.messageText.isNotEmpty)
                       Text(
                         widget.messageText,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 15,
-                          color: widget.isMe
-                              ? Colors.white
-                              : Theme.of(context).colorScheme.onSurface,
+                          color: Colors.white,
                         ),
                       ),
 
@@ -1563,10 +1562,7 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
                         fontSize: 11,
                         color: widget.isMe
                             ? Colors.white70
-                            : Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withValues(alpha: 0.6),
+                            : const Color(0xFF888888),
                       ),
                     ),
                   ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
 import 'package:studypals/providers/task_provider.dart';
 import 'package:studypals/providers/note_provider.dart';
 import 'package:studypals/providers/deck_provider.dart';
@@ -142,6 +143,35 @@ class _LearningScreenState extends State<LearningScreen>
     _noteSearchController.dispose();
     _flashcardSearchController.dispose();
     super.dispose();
+  }
+
+  /// Extract plain text from Quill Delta JSON
+  String _getPlainTextFromDelta(String content) {
+    if (content.isEmpty) return '';
+    
+    try {
+      // Try to parse as JSON (Quill Delta format)
+      final jsonData = jsonDecode(content);
+      
+      if (jsonData is List) {
+        // Extract text from delta operations
+        final StringBuffer buffer = StringBuffer();
+        for (var op in jsonData) {
+          if (op is Map && op.containsKey('insert')) {
+            final insert = op['insert'];
+            if (insert is String) {
+              buffer.write(insert);
+            }
+          }
+        }
+        return buffer.toString().trim();
+      }
+    } catch (e) {
+      // If parsing fails, return the content as-is (might be plain text)
+      return content;
+    }
+    
+    return content;
   }
 
   @override
@@ -756,8 +786,9 @@ class _LearningScreenState extends State<LearningScreen>
       builder: (context, noteProvider, child) {
         // Filter notes based on search query
         final filteredNotes = noteProvider.notes.where((note) {
+          final plainTextContent = _getPlainTextFromDelta(note.contentMd);
           return note.title.toLowerCase().contains(_noteSearchQuery.toLowerCase()) ||
-                 note.contentMd.toLowerCase().contains(_noteSearchQuery.toLowerCase()) ||
+                 plainTextContent.toLowerCase().contains(_noteSearchQuery.toLowerCase()) ||
                  note.tags.any((tag) => tag.toLowerCase().contains(_noteSearchQuery.toLowerCase()));
         }).toList();
 
@@ -925,7 +956,9 @@ class _LearningScreenState extends State<LearningScreen>
                                         ],
                                         const SizedBox(height: 4),
                                         Text(
-                                          note.contentMd.isEmpty ? 'No content' : note.contentMd,
+                                          note.contentMd.isEmpty 
+                                            ? 'No content' 
+                                            : _getPlainTextFromDelta(note.contentMd),
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey[600],
