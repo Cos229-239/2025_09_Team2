@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_quill/flutter_quill.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
 import '../providers/note_provider.dart';
 import '../widgets/common/themed_background_wrapper.dart';
+import '../features/notes/widgets/notes_formatting_toolbar.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final Note note;
@@ -21,11 +24,20 @@ class NoteDetailScreen extends StatefulWidget {
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   Note _currentNote = Note(id: '', title: '', contentMd: '');
   bool _isEditMode = false;
-  bool _showPreview = false;
   final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _contentController = TextEditingController();
+  late QuillController _contentController;
+  final FocusNode _contentFocusNode = FocusNode();
   final TextEditingController _tagsController = TextEditingController();
   bool _isLoading = false;
+
+  // Rich text formatting state
+  bool _isBold = false;
+  bool _isItalic = false;
+  bool _isUnderline = false;
+  bool _isHighlighted = false;
+  String _currentAlignment = 'left';
+  int _currentFontSize = 16;
+  bool _isBulletList = false;
 
   @override
   void initState() {
@@ -33,16 +45,157 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     _currentNote = widget.note;
     _isEditMode = widget.startInEditMode;
     _titleController.text = _currentNote.title;
-    _contentController.text = _currentNote.contentMd;
     _tagsController.text = _currentNote.tags.join(', ');
+    
+    // Initialize QuillController with the note's content
+    _initializeQuillController();
+  }
+
+  void _initializeQuillController() {
+    try {
+      // Try to parse the content as Quill JSON delta
+      final contentData = jsonDecode(_currentNote.contentMd) as List;
+      final doc = Document.fromJson(contentData);
+      _contentController = QuillController(
+        document: doc,
+        selection: const TextSelection.collapsed(offset: 0),
+      );
+    } catch (e) {
+      // If parsing fails (old plain text notes), create document with plain text
+      _contentController = QuillController.basic();
+      // Set the plain text if available
+      if (_currentNote.contentMd.isNotEmpty) {
+        final doc = Document()..insert(0, _currentNote.contentMd);
+        _contentController = QuillController(
+          document: doc,
+          selection: const TextSelection.collapsed(offset: 0),
+        );
+      }
+    }
+    _contentController.addListener(_updateToolbarState);
+  }
+
+  void _updateToolbarState() {
+    final selection = _contentController.selection;
+    
+    setState(() {
+      if (selection.isValid && !selection.isCollapsed) {
+        _isBold = _selectionHas(Attribute.bold);
+        _isItalic = _selectionHas(Attribute.italic);
+        _isUnderline = _selectionHas(Attribute.underline);
+        _isHighlighted = _selectionHas(Attribute.background);
+        _isBulletList = _selectionHas(Attribute.list);
+      }
+      
+      _currentAlignment = _getCurrentAlignment();
+      _currentFontSize = _getCurrentFontSize();
+    });
+  }
+
+  bool _selectionHas(Attribute attribute) {
+    return _contentController
+        .getAllSelectionStyles()
+        .any((style) => style.attributes.containsKey(attribute.key));
+  }
+
+  String _getCurrentAlignment() {
+    final styles = _contentController.getAllSelectionStyles();
+    for (final style in styles) {
+      if (style.attributes.containsKey(Attribute.centerAlignment.key)) {
+        return 'center';
+      } else if (style.attributes.containsKey(Attribute.rightAlignment.key)) {
+        return 'right';
+      }
+    }
+    return 'left';
+  }
+
+  int _getCurrentFontSize() {
+    final styles = _contentController.getAllSelectionStyles();
+    for (final style in styles) {
+      final sizeAttr = style.attributes[Attribute.size.key];
+      if (sizeAttr != null && sizeAttr.value != null) {
+        final sizeValue = sizeAttr.value.toString();
+        final parsedSize = int.tryParse(sizeValue.replaceAll('px', ''));
+        if (parsedSize != null && parsedSize >= 12 && parsedSize <= 48) {
+          return parsedSize;
+        }
+      }
+    }
+    return 16;
   }
 
   @override
   void dispose() {
+    _contentController.removeListener(_updateToolbarState);
     _titleController.dispose();
     _contentController.dispose();
+    _contentFocusNode.dispose();
     _tagsController.dispose();
     super.dispose();
+  }
+
+  void _toggleInline(Attribute attribute) {
+    final isActive = _selectionHas(attribute);
+    _contentController.formatSelection(isActive ? Attribute.clone(attribute, null) : attribute);
+    
+    setState(() {
+      if (attribute == Attribute.bold) _isBold = !isActive;
+      if (attribute == Attribute.italic) _isItalic = !isActive;
+      if (attribute == Attribute.underline) _isUnderline = !isActive;
+    });
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateToolbarState();
+    });
+  }
+
+  void _toggleHighlight() {
+    final isActive = _selectionHas(Attribute.background);
+    _contentController.formatSelection(isActive ? Attribute.clone(Attribute.background, null) : const BackgroundAttribute('#FFFF00'));
+    
+    setState(() {
+      _isHighlighted = !isActive;
+    });
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateToolbarState();
+    });
+  }
+
+  void _setAlignment(Attribute alignmentAttribute) {
+    _contentController.formatSelection(Attribute.clone(Attribute.leftAlignment, null));
+    _contentController.formatSelection(Attribute.clone(Attribute.centerAlignment, null));
+    _contentController.formatSelection(Attribute.clone(Attribute.rightAlignment, null));
+    
+    if (alignmentAttribute != Attribute.leftAlignment) {
+      _contentController.formatSelection(alignmentAttribute);
+    }
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateToolbarState();
+    });
+  }
+
+  void _setFontSize(int fontSize) {
+    _contentController.formatSelection(SizeAttribute(fontSize.toString()));
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateToolbarState();
+    });
+  }
+
+  void _toggleBulletList() {
+    final isActive = _selectionHas(Attribute.list);
+    _contentController.formatSelection(isActive ? Attribute.clone(Attribute.list, null) : const ListAttribute('bullet'));
+    
+    setState(() {
+      _isBulletList = !isActive;
+    });
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateToolbarState();
+    });
   }
 
   void _toggleEditMode() {
@@ -50,8 +203,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       _isEditMode = !_isEditMode;
       if (_isEditMode) {
         _titleController.text = _currentNote.title;
-        _contentController.text = _currentNote.contentMd;
         _tagsController.text = _currentNote.tags.join(', ');
+        // Reinitialize the controller with current note content
+        _initializeQuillController();
       }
     });
   }
@@ -69,10 +223,14 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     });
 
     try {
+      // Convert Quill document to JSON format
+      final delta = _contentController.document.toDelta();
+      final contentJson = jsonEncode(delta.toJson());
+      
       final updatedNote = Note(
         id: _currentNote.id,
         title: _titleController.text.trim(),
-        contentMd: _contentController.text.trim(),
+        contentMd: contentJson,
         tags: _tagsController.text
             .split(',')
             .map((tag) => tag.trim())
@@ -113,7 +271,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
@@ -194,8 +352,9 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF2A3050),
+          backgroundColor: const Color(0xFF242628),
           foregroundColor: const Color(0xFFD9D9D9),
+          elevation: 0,
           title: Text(
             _isEditMode ? 'Edit Note' : _currentNote.title,
             style: const TextStyle(
@@ -271,11 +430,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
         children: [
           // Note header card
           Card(
-            color: const Color(0xFF2A3050),
+            elevation: 1,
+            color: const Color(0xFF242628),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(
-                color: Color(0xFF6FB8E9),
+              side: BorderSide(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -318,7 +478,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                             Text(
                               'Created ${_formatTimeAgo(_currentNote.createdAt)}',
                               style: const TextStyle(
-                                color: Color(0xFFD9D9D9),
+                                color: Color(0xFF888888),
                                 fontSize: 14,
                               ),
                             ),
@@ -335,7 +495,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                       children: _currentNote.tags.map((tag) => Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                          color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: const Color(0xFF6FB8E9),
@@ -362,11 +522,12 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
           
           // Note content card
           Card(
-            color: const Color(0xFF2A3050),
+            elevation: 1,
+            color: const Color(0xFF242628),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(
-                color: Color(0xFF6FB8E9),
+              side: BorderSide(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -388,10 +549,10 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF16181A),
+                      color: const Color(0xFF1A1A1A),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -399,18 +560,13 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                         ? const Text(
                             'No content available',
                             style: TextStyle(
-                              color: Color(0xFFD9D9D9),
+                              color: Color(0xFF888888),
                               fontStyle: FontStyle.italic,
                             ),
                           )
-                        : Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Text(
-                              _currentNote.contentMd,
-                              style: const TextStyle(
-                                color: Color(0xFFD9D9D9),
-                                fontSize: 14,
-                              ),
+                        : IgnorePointer(
+                            child: QuillEditor.basic(
+                              controller: _contentController,
                             ),
                           ),
                   ),
@@ -437,18 +593,18 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               labelStyle: const TextStyle(color: Color(0xFF6FB8E9)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
               ),
               filled: true,
-              fillColor: const Color(0xFF2A3050),
+              fillColor: const Color(0xFF242628),
             ),
           ),
           
@@ -462,21 +618,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               labelText: 'Tags (comma separated)',
               labelStyle: const TextStyle(color: Color(0xFF6FB8E9)),
               hintText: 'e.g., physics, chapter1, formulas',
-              hintStyle: const TextStyle(color: Color(0xFFD9D9D9)),
+              hintStyle: const TextStyle(color: Color(0xFF888888)),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
               ),
               filled: true,
-              fillColor: const Color(0xFF2A3050),
+              fillColor: const Color(0xFF242628),
             ),
           ),
           
@@ -489,128 +645,66 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       'Content',
                       style: TextStyle(
-                        color: const Color(0xFF6FB8E9),
+                        color: Color(0xFFD9D9D9),
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _showPreview = false;
-                            });
-                          },
-                          icon: Icon(
-                            Icons.edit,
-                            size: 16,
-                            color: !_showPreview ? const Color(0xFF6FB8E9) : const Color(0xFFD9D9D9),
-                          ),
-                          label: Text(
-                            'Edit',
-                            style: TextStyle(
-                              color: !_showPreview ? const Color(0xFF6FB8E9) : const Color(0xFFD9D9D9),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        TextButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _showPreview = true;
-                            });
-                          },
-                          icon: Icon(
-                            Icons.visibility,
-                            size: 16,
-                            color: _showPreview ? const Color(0xFF6FB8E9) : const Color(0xFFD9D9D9),
-                          ),
-                          label: Text(
-                            'Preview',
-                            style: TextStyle(
-                              color: _showPreview ? const Color(0xFF6FB8E9) : const Color(0xFFD9D9D9),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 
-                if (!_showPreview) ...[
-                  // Text input field
-                  Expanded(
-                    child: TextFormField(
-                      controller: _contentController,
-                      style: const TextStyle(color: Colors.white),
-                      maxLines: null,
-                      expands: true,
-                      textAlignVertical: TextAlignVertical.top,
-                      decoration: InputDecoration(
-                        hintText: 'Write your note content here...',
-                        hintStyle: const TextStyle(color: Color(0xFF888888)),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF444444)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF444444)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
-                        ),
-                        filled: true,
-                        fillColor: const Color(0xFF1A1A1A),
-                        contentPadding: const EdgeInsets.all(16),
-                      ),
-                      onChanged: (value) {
-                        setState(() {}); // Trigger rebuild for preview
-                      },
-                    ),
+                // Rich Text Formatting Toolbar
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF242628),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
                   ),
-                ] else ...[
-                  // Preview mode
-                  Expanded(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2A3050),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF6FB8E9)),
-                      ),
-                      child: SingleChildScrollView(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            _contentController.text.isEmpty 
-                              ? 'Preview will appear here...' 
-                              : _contentController.text,
-                            style: TextStyle(
-                              color: _contentController.text.isEmpty 
-                                ? const Color(0xFF888888) 
-                                : const Color(0xFFD9D9D9),
-                              fontSize: 14,
-                              fontStyle: _contentController.text.isEmpty 
-                                ? FontStyle.italic 
-                                : FontStyle.normal,
-                            ),
-                          ),
+                  child: NotesFormattingToolbar(
+                    controller: _contentController,
+                    isBold: _isBold,
+                    isItalic: _isItalic,
+                    isUnderline: _isUnderline,
+                    isHighlighted: _isHighlighted,
+                    currentAlignment: _currentAlignment,
+                    currentFontSize: _currentFontSize,
+                    isBulletList: _isBulletList,
+                    onToggleBold: () => _toggleInline(Attribute.bold),
+                    onToggleItalic: () => _toggleInline(Attribute.italic),
+                    onToggleUnderline: () => _toggleInline(Attribute.underline),
+                    onToggleHighlight: _toggleHighlight,
+                    onSetAlignment: _setAlignment,
+                    onSetFontSize: _setFontSize,
+                    onToggleBulletList: _toggleBulletList,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                
+                // Rich Text Content Editor
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        color: const Color(0xFF242628),
+                        padding: const EdgeInsets.all(16),
+                        child: QuillEditor.basic(
+                          controller: _contentController,
+                          focusNode: _contentFocusNode,
                         ),
                       ),
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ),
