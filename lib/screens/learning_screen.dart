@@ -1064,7 +1064,7 @@ class _LearningScreenState extends State<LearningScreen>
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    print('Create Note button clicked'); // Debug output
+                    debugPrint('Create Note button clicked'); // Debug output
                     _showCreateNoteModal(context);
                   },
                   icon: const Icon(Icons.add),
@@ -1878,7 +1878,7 @@ class _LearningScreenState extends State<LearningScreen>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF6FB8E9).withOpacity(0.2),
+                          color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: const Color(0xFF6FB8E9),
@@ -2426,7 +2426,7 @@ class _LearningScreenState extends State<LearningScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6FB8E9).withOpacity(0.1),
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: const Color(0xFF6FB8E9),
@@ -2656,7 +2656,7 @@ class _LearningScreenState extends State<LearningScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF6FB8E9).withOpacity(0.1),
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: const Color(0xFF6FB8E9),

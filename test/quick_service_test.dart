@@ -2,6 +2,7 @@
 // Simple tests for AI tutor services (NO Firebase required)
 // Run with: flutter test test/quick_service_test.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:studypals/services/math_engine.dart';
 import 'package:studypals/services/learning_style_detector.dart';
@@ -60,7 +61,7 @@ void main() {
         expect(result.hasIssues, isFalse);
       } else {
         // Log that complex expression validation needs enhancement
-        print('Note: Complex expression validation may need enhancement');
+        debugPrint('Note: Complex expression validation may need enhancement');
       }
     });
 

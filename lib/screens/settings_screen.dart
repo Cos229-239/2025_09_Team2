@@ -512,7 +512,7 @@ class SettingsScreen extends StatelessWidget {
       
       return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
     } catch (e) {
-      print('Error getting pet care reminders preference: $e');
+      debugPrint('Error getting pet care reminders preference: $e');
       return false; // Default to disabled
     }
   }
@@ -562,7 +562,7 @@ class SettingsScreen extends StatelessWidget {
         ),
       );
     } catch (e) {
-      print('Error updating pet care reminders preference: $e');
+      debugPrint('Error updating pet care reminders preference: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Failed to update setting')),
       );
