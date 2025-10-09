@@ -967,6 +967,9 @@ class _ProfilePanelState extends State<ProfilePanel> {
   }
 
   Future<void> _handleLogout() async {
+    // Capture the AppState provider reference before any async operations
+    final appState = Provider.of<AppState>(context, listen: false);
+    
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -989,12 +992,12 @@ class _ProfilePanelState extends State<ProfilePanel> {
       ),
     );
 
-    if (shouldLogout == true && context.mounted) {
+    if (shouldLogout == true && mounted) {
       try {
         // Sign out the user through AppState (same as settings screen)
-        await Provider.of<AppState>(context, listen: false).logout();
+        await appState.logout();
       } catch (e) {
-        if (mounted) {
+        if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error logging out: $e'),

@@ -114,7 +114,7 @@ class CalendarProvider with ChangeNotifier {
       
       return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
     } catch (e) {
-      print('Error checking pet care reminders preference: $e');
+      debugPrint('Error checking pet care reminders preference: $e');
       return false; // Default to disabled on error
     }
   }
@@ -286,22 +286,22 @@ class CalendarProvider with ChangeNotifier {
 
       final eventMaps = await _firestoreService.getUserCalendarEvents(user.uid);
       
-      print('📅 Loading ${eventMaps.length} calendar events from Firestore');
+      debugPrint('📅 Loading ${eventMaps.length} calendar events from Firestore');
       
       for (final eventMap in eventMaps) {
         try {
           final event = _convertFirestoreToCalendarEvent(eventMap);
           _addEventToMap(event);
-          print('  ✅ Loaded event: ${event.title} (${event.type})');
+          debugPrint('  ✅ Loaded event: ${event.title} (${event.type})');
         } catch (e) {
           // Skip individual event conversion errors
-          print('  ❌ Error converting calendar event: $e');
+          debugPrint('  ❌ Error converting calendar event: $e');
         }
       }
       
-      print('📅 Finished loading calendar events');
+      debugPrint('📅 Finished loading calendar events');
     } catch (e) {
-      print('❌ Error loading calendar events from Firestore: $e');
+      debugPrint('❌ Error loading calendar events from Firestore: $e');
     }
   }
 
@@ -367,17 +367,17 @@ class CalendarProvider with ChangeNotifier {
       final eventData = event.toJson();
       eventData.remove('id'); // Firestore will generate the ID
 
-      print('💾 Saving calendar event to Firestore: $title (type: $type)');
+      debugPrint('💾 Saving calendar event to Firestore: $title (type: $type)');
 
       // Save to Firestore
       final docId = await _firestoreService.createCalendarEvent(user.uid, eventData);
       if (docId == null) {
-        print('❌ Failed to save event to Firestore');
+        debugPrint('❌ Failed to save event to Firestore');
         _setError('Failed to save event to database');
         return null;
       }
 
-      print('✅ Event saved to Firestore with ID: $docId');
+      debugPrint('✅ Event saved to Firestore with ID: $docId');
 
       // Create event with Firestore-generated ID
       final savedEvent = event.copyWith(id: docId);
@@ -420,17 +420,17 @@ class CalendarProvider with ChangeNotifier {
       final eventData = event.toJson();
       eventData.remove('id'); // Firestore will generate the ID
 
-      print('💾 Saving flashcard study event to Firestore: ${event.title}');
+      debugPrint('💾 Saving flashcard study event to Firestore: ${event.title}');
 
       // Save to Firestore
       final docId = await _firestoreService.createCalendarEvent(user.uid, eventData);
       if (docId == null) {
-        print('❌ Failed to save flashcard study event to Firestore');
+        debugPrint('❌ Failed to save flashcard study event to Firestore');
         _setError('Failed to save flashcard study event to database');
         return null;
       }
 
-      print('✅ Flashcard study event saved to Firestore with ID: $docId');
+      debugPrint('✅ Flashcard study event saved to Firestore with ID: $docId');
 
       // Create event with Firestore-generated ID
       final savedEvent = event.copyWith(id: docId);
@@ -487,31 +487,31 @@ class CalendarProvider with ChangeNotifier {
     try {
       _setLoading(true);
 
-      print('🗑️ Deleting calendar event: ${event.title} (ID: ${event.id})');
+      debugPrint('🗑️ Deleting calendar event: ${event.title} (ID: ${event.id})');
 
       // Delete from Firestore (archives it)
       final success = await _firestoreService.deleteCalendarEvent(event.id);
       
       if (!success) {
-        print('❌ Failed to delete event from Firestore');
+        debugPrint('❌ Failed to delete event from Firestore');
         _setError('Failed to delete event from database');
         return false;
       }
 
-      print('✅ Event deleted from Firestore successfully');
+      debugPrint('✅ Event deleted from Firestore successfully');
 
       // Remove from internal events map
       _removeEventFromMap(event);
-      print('✅ Event removed from internal map');
+      debugPrint('✅ Event removed from internal map');
 
       // Delete source object if needed
       await _deleteSourceObject(event);
 
       _updateFilteredEvents();
-      print('✅ Calendar event deletion completed');
+      debugPrint('✅ Calendar event deletion completed');
       return true;
     } catch (e) {
-      print('❌ Error deleting calendar event: $e');
+      debugPrint('❌ Error deleting calendar event: $e');
       _setError('Failed to delete event: $e');
       return false;
     } finally {

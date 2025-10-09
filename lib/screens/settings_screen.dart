@@ -512,7 +512,7 @@ class SettingsScreen extends StatelessWidget {
       
       return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
     } catch (e) {
-      print('Error getting pet care reminders preference: $e');
+      debugPrint('Error getting pet care reminders preference: $e');
       return false; // Default to disabled
     }
   }
@@ -522,18 +522,25 @@ class SettingsScreen extends StatelessWidget {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please log in to change settings')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please log in to change settings')),
+          );
+        }
         return;
       }
+
+      // Capture the calendar provider reference before any async operations
+      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
 
       // Get current user profile to update preferences properly
       final userProfile = await FirestoreService().getUserProfile(user.uid);
       if (userProfile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load user profile')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to load user profile')),
+          );
+        }
         return;
       }
 
@@ -548,24 +555,27 @@ class SettingsScreen extends StatelessWidget {
       });
 
       // Refresh calendar events to apply the new setting
-      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
       await calendarProvider.refreshAllEvents();
 
       // Show feedback to user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            value 
-                ? 'Pet care reminders enabled' 
-                : 'Pet care reminders disabled'
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              value 
+                  ? 'Pet care reminders enabled' 
+                  : 'Pet care reminders disabled'
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (e) {
-      print('Error updating pet care reminders preference: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update setting')),
-      );
+      debugPrint('Error updating pet care reminders preference: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update setting')),
+        );
+      }
     }
   }
 }

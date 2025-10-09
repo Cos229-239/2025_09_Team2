@@ -144,10 +144,10 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.visibility,
+          Icon(
+            _getSubjectIcon(),
             size: 16,
-            color: Color(0xFF6FB8E9), // Dashboard accent
+            color: const Color(0xFF6FB8E9), // Dashboard accent
           ),
           const SizedBox(width: 6),
           const Text(
@@ -333,9 +333,9 @@ class VisualFlashcardWidgetState extends State<VisualFlashcardWidget>
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(
-                  Icons.account_tree, // Generic diagram icon
-                  color: Color(0xFF6FB8E9), // Dashboard accent
+                Icon(
+                  _getDiagramIcon(), // Dynamic diagram icon based on type
+                  color: const Color(0xFF6FB8E9), // Dashboard accent
                   size: 20,
                 ),
                 const SizedBox(width: 8),

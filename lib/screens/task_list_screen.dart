@@ -228,7 +228,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ),
           )
         else
-          ...tasks.map((task) => _buildTaskCard(task)).toList(),
+          ...tasks.map((task) => _buildTaskCard(task)),
       ],
     );
   }

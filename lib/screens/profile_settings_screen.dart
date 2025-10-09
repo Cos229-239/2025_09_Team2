@@ -586,19 +586,30 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       debugPrint('✅ UI state updated');
 
       // Update SocialLearningService if it has a profile
+      // Capture service reference before any async operations
+      SocialLearningService? socialService;
       try {
-        final service = context.read<SocialLearningService>();
-        if (service.currentUserProfile != null) {
-          await service.updateUserProfile(avatar: dataUrl);
-          debugPrint('✅ SocialLearningService updated');
-        } else {
-          debugPrint('⚠️ SocialLearningService has no profile, skipping');
+        if (mounted) {
+          socialService = context.read<SocialLearningService>();
         }
       } catch (e) {
-        debugPrint('⚠️ Could not update SocialLearningService: $e');
+        debugPrint('⚠️ Could not access SocialLearningService: $e');
+      }
+      
+      if (socialService != null) {
+        try {
+          if (socialService.currentUserProfile != null) {
+            await socialService.updateUserProfile(avatar: dataUrl);
+            debugPrint('✅ SocialLearningService updated');
+          } else {
+            debugPrint('⚠️ SocialLearningService has no profile, skipping');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Could not update SocialLearningService: $e');
+        }
       }
 
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile picture updated successfully!'),
@@ -735,9 +746,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       }
 
       // Also update the SocialLearningService if it has a profile
-      final service = context.read<SocialLearningService>();
-      if (service.currentUserProfile != null) {
-        await service.updateUserProfile(
+      // Capture service reference before any async operations
+      SocialLearningService? socialService;
+      try {
+        if (mounted) {
+          socialService = context.read<SocialLearningService>();
+        }
+      } catch (e) {
+        debugPrint('⚠️ Could not access SocialLearningService: $e');
+      }
+      
+      if (socialService != null && socialService.currentUserProfile != null) {
+        await socialService.updateUserProfile(
           displayName: _displayNameController.text.trim(),
           username: _usernameController.text.trim(),
           bio: _bioController.text.trim().isEmpty
@@ -754,7 +774,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         debugPrint('⚠️ SocialLearningService has no profile, skipping');
       }
 
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile updated successfully!'),

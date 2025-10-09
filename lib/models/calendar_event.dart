@@ -490,7 +490,7 @@ class CalendarEvent {
   /// Creates from JSON
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
     // Helper to convert Firestore Timestamp or String to DateTime
-    DateTime _parseDateTime(dynamic value) {
+    DateTime parseDateTime(dynamic value) {
       if (value == null) return DateTime.now();
       if (value is DateTime) return value;
       if (value is String) return DateTime.parse(value);
@@ -506,8 +506,8 @@ class CalendarEvent {
       title: json['title'],
       description: json['description'],
       type: CalendarEventType.values.firstWhere((e) => e.name == json['type']),
-      startTime: _parseDateTime(json['startTime']),
-      endTime: json['endTime'] != null ? _parseDateTime(json['endTime']) : null,
+      startTime: parseDateTime(json['startTime']),
+      endTime: json['endTime'] != null ? parseDateTime(json['endTime']) : null,
       isAllDay: json['isAllDay'] ?? false,
       priority: json['priority'] ?? 1,
       status: CalendarEventStatus.values
@@ -534,8 +534,8 @@ class CalendarEvent {
               .map((r) => EventReminder.fromJson(r))
               .toList()
           : [],
-      createdAt: _parseDateTime(json['createdAt']),
-      updatedAt: _parseDateTime(json['updatedAt']),
+      createdAt: parseDateTime(json['createdAt']),
+      updatedAt: parseDateTime(json['updatedAt']),
     );
   }
 

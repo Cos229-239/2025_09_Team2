@@ -43,13 +43,13 @@ class AppTheme {
         tertiary: tertiaryColor,
         error: errorColor,
         surface: surfaceColor,
-        background: backgroundColor,
+        // background is deprecated, using surface for background in Material Design 3
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onTertiary: Colors.white,
         onError: Colors.white,
         onSurface: const Color(0xFFD9D9D9),
-        onBackground: const Color(0xFFD9D9D9),
+        // onBackground is deprecated, using onSurface for text on background in Material Design 3
       ),
 
       // Text theme with consistent D9D9D9 color

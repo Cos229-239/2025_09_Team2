@@ -773,7 +773,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                       friendId: friend.id,
                     );
                     
-                    if (!mounted) return;
+                    if (!mounted || !context.mounted) return;
                     
                     if (success) {
                       ScaffoldMessenger.of(context).showSnackBar(

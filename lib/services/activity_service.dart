@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../models/activity.dart';
 import 'firestore_service.dart';
 
@@ -28,9 +29,9 @@ class ActivityService {
       );
 
       await _firestoreService.activitiesCollection.doc(activity.id).set(activity.toJson());
-      print('✅ Activity logged: ${activity.description}');
+      debugPrint('✅ Activity logged: ${activity.description}');
     } catch (e) {
-      print('❌ Error logging activity: $e');
+      debugPrint('❌ Error logging activity: $e');
     }
   }
 
@@ -50,7 +51,7 @@ class ActivityService {
           .map((doc) => Activity.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('❌ Error getting recent activities: $e');
+      debugPrint('❌ Error getting recent activities: $e');
       return [];
     }
   }
@@ -68,7 +69,7 @@ class ActivityService {
           .map((doc) => Activity.fromJson(doc.data() as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      print('❌ Error getting user activities: $e');
+      debugPrint('❌ Error getting user activities: $e');
       return [];
     }
   }
@@ -106,9 +107,9 @@ class ActivityService {
       }
       await batch.commit();
 
-      print('✅ Cleared ${querySnapshot.docs.length} old activities');
+      debugPrint('✅ Cleared ${querySnapshot.docs.length} old activities');
     } catch (e) {
-      print('❌ Error clearing old activities: $e');
+      debugPrint('❌ Error clearing old activities: $e');
     }
   }
 }
