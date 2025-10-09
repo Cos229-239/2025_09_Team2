@@ -6,6 +6,7 @@ import '../models/note.dart';
 import '../providers/note_provider.dart';
 import '../widgets/common/themed_background_wrapper.dart';
 import '../features/notes/widgets/notes_formatting_toolbar.dart';
+import '../widgets/ai/ai_flashcard_generator.dart';
 
 class NoteDetailScreen extends StatefulWidget {
   final Note note;
@@ -346,6 +347,35 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     }
   }
 
+  void _generateFlashcards() {
+    // Extract plain text from the Quill document
+    final plainText = _contentController.document.toPlainText();
+    
+    // Navigate to AI flashcard generator with pre-filled text
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Generate Flashcards'),
+            backgroundColor: const Color(0xFF242628),
+            foregroundColor: const Color(0xFFD9D9D9),
+          ),
+          backgroundColor: const Color(0xFF1A1A1A),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: AIFlashcardGenerator(
+                initialTopic: _currentNote.title,
+                initialText: plainText,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ThemedBackgroundWrapper(
@@ -395,9 +425,21 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
                 onSelected: (value) {
                   if (value == 'delete') {
                     _showDeleteDialog();
+                  } else if (value == 'generate_flashcards') {
+                    _generateFlashcards();
                   }
                 },
                 itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'generate_flashcards',
+                    child: Row(
+                      children: [
+                        Icon(Icons.auto_awesome, size: 18, color: Color(0xFF6FB8E9)),
+                        SizedBox(width: 12),
+                        Text('Generate Flashcards', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'delete',
                     child: Row(

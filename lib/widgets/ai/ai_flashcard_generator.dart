@@ -23,7 +23,14 @@ import 'ai_settings_widget.dart';
 
 /// AI-Powered Flashcard Generator
 class AIFlashcardGenerator extends StatefulWidget {
-  const AIFlashcardGenerator({super.key});
+  final String? initialText;
+  final String? initialTopic;
+  
+  const AIFlashcardGenerator({
+    super.key,
+    this.initialText,
+    this.initialTopic,
+  });
 
   @override
   State<AIFlashcardGenerator> createState() => _AIFlashcardGeneratorState();
@@ -60,6 +67,18 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     'kinesthetic',
     'reading',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill text fields if initial values are provided
+    if (widget.initialTopic != null) {
+      _topicController.text = widget.initialTopic!;
+    }
+    if (widget.initialText != null) {
+      _textController.text = widget.initialText!;
+    }
+  }
 
   @override
   void dispose() {
