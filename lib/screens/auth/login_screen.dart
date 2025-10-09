@@ -11,6 +11,8 @@ import 'package:studypals/screens/auth/email_verification_screen.dart';
 import 'package:studypals/screens/auth/signup_screen.dart';
 // Import Lottie for animated icons
 import 'package:lottie/lottie.dart';
+// Import Secure Storage Service for Remember Me functionality
+import 'package:studypals/services/secure_storage_service.dart';
 
 /// Modern login screen that matches the app's Material 3 design system
 class LoginScreen extends StatefulWidget {
@@ -25,8 +27,13 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _secureStorage = SecureStorageService();
+  
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _rememberMe = false;
+  bool _isLoadingCredentials = true;
+  
   late AnimationController _animationController;
 
   @override
@@ -36,6 +43,56 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
+    
+    // Load saved credentials on screen init
+    _loadSavedCredentials();
+  }
+
+  /// Load saved credentials from secure storage
+  Future<void> _loadSavedCredentials() async {
+    try {
+      setState(() {
+        _isLoadingCredentials = true;
+      });
+
+      final savedCredentials = await _secureStorage.getSavedCredentials();
+      
+      if (savedCredentials != null && mounted) {
+        // Validate credentials are not expired
+        final isValid = await _secureStorage.areCredentialsValid();
+        
+        if (isValid) {
+          setState(() {
+            _emailController.text = savedCredentials.email;
+            _passwordController.text = savedCredentials.password;
+            _rememberMe = true;
+          });
+          
+          debugPrint('✅ Auto-filled credentials for: ${savedCredentials.email}');
+          
+          // Optional: Show a snackbar to inform user
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Welcome back! Auto-filled your credentials.'),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          debugPrint('⚠️ Saved credentials expired, cleared');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading saved credentials: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingCredentials = false;
+        });
+      }
+    }
   }
 
   @override
@@ -52,30 +109,50 @@ class _LoginScreenState extends State<LoginScreen>
       backgroundColor:
           const Color(0xFF16181A), // Solid background color from Figma
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 40),
+        child: _isLoadingCredentials
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Loading...',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                    ),
+                  ],
+                ),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 40),
 
-              // App branding section
-              _buildBrandingSection(context),
+                    // App branding section
+                    _buildBrandingSection(context),
 
-              const SizedBox(height: 40),
+                    const SizedBox(height: 40),
 
-              // Login form card
-              _buildLoginCard(context),
+                    // Login form card
+                    _buildLoginCard(context),
 
-              const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-              // Bottom links
-              _buildBottomLinks(context),
+                    // Bottom links
+                    _buildBottomLinks(context),
 
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -287,28 +364,60 @@ class _LoginScreenState extends State<LoginScreen>
                   return null;
                 },
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
-              // Forgot password link
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content:
-                              Text('Forgot password feature coming soon!')),
-                    );
-                  },
-                  child: Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w600,
+              // Remember Me checkbox
+              Row(
+                children: [
+                  Checkbox(
+                    value: _rememberMe,
+                    onChanged: (bool? value) async {
+                      setState(() {
+                        _rememberMe = value ?? false;
+                      });
+                      
+                      // If unchecked, clear saved credentials immediately
+                      if (!_rememberMe) {
+                        await _secureStorage.clearCredentials();
+                        debugPrint('🗑️ Remember Me disabled - credentials cleared');
+                      }
+                    },
+                    activeColor: Theme.of(context).colorScheme.primary,
+                  ),
+                  Text(
+                    'Remember me',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                  ),
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    message: 'Save your credentials securely for next time',
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.outline,
                     ),
                   ),
-                ),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('Forgot password feature coming soon!')),
+                      );
+                    },
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+
               const SizedBox(height: 24),
 
               // Login button
@@ -466,11 +575,26 @@ class _LoginScreenState extends State<LoginScreen>
 
       if (mounted) {
         if (user != null) {
-          // Login successful - show success message
-          ScaffoldMessenger.of(context).showSnackBar(
+          // Capture theme values before async operation
+          final primaryColor = Theme.of(context).colorScheme.primary;
+          final scaffoldMessenger = ScaffoldMessenger.of(context);
+          
+          // Login successful - save credentials if Remember Me is checked
+          if (_rememberMe) {
+            await _secureStorage.saveCredentials(
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+              rememberMe: true,
+            );
+            debugPrint('✅ Credentials saved securely for ${_emailController.text.trim()}');
+          }
+          
+          // Show success message - check mounted after async operation
+          if (!mounted) return;
+          scaffoldMessenger.showSnackBar(
             SnackBar(
               content: Text('Welcome back, ${user.name}!'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: primaryColor,
             ),
           );
           // AuthWrapper will automatically navigate to dashboard since user is now authenticated
