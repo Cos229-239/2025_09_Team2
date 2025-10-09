@@ -3,6 +3,8 @@ import 'task.dart';
 import 'daily_quest.dart';
 import 'social_session.dart';
 import 'pet.dart';
+import 'deck.dart'; // Import Deck model for flashcard events
+import 'note.dart'; // Import Note model for note review events
 
 /// Unified calendar event model that represents all activities in StudyPals
 /// This model aggregates different types of events (tasks, quests, sessions, etc.)
@@ -248,6 +250,83 @@ class CalendarEvent {
     );
   }
 
+  /// Creates a flashcard study event from a deck
+  /// This is used when a user adds a flashcard deck to their calendar
+  factory CalendarEvent.fromDeck({
+    required Deck deck,
+    required DateTime scheduledTime,
+    int? durationMinutes,
+  }) {
+    final estimatedDuration = durationMinutes ?? (deck.cards.length * 2).clamp(15, 120); // 2 mins per card, 15-120 min range
+    
+    return CalendarEvent(
+      id: 'flashcard_${deck.id}_${scheduledTime.millisecondsSinceEpoch}',
+      title: 'Study: ${deck.title}',
+      description: 'Review ${deck.cards.length} flashcard${deck.cards.length == 1 ? '' : 's'} from "${deck.title}"${deck.tags.isNotEmpty ? ' (${deck.tags.join(', ')})' : ''}',
+      type: CalendarEventType.flashcardStudy,
+      startTime: scheduledTime,
+      endTime: scheduledTime.add(Duration(minutes: estimatedDuration)),
+      priority: 2,
+      status: CalendarEventStatus.scheduled,
+      color: Colors.deepPurple,
+      icon: Icons.style,
+      tags: ['flashcards', 'study', ...deck.tags],
+      sourceObject: deck,
+      isEditable: true,
+      isCompletable: true,
+      estimatedMinutes: estimatedDuration,
+      reminders: [
+        EventReminder(
+          type: ReminderType.notification,
+          minutesBefore: 15,
+          message: 'Time to review "${deck.title}" flashcards!',
+        ),
+      ],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  /// Creates a note review event from a note
+  /// This is used when a user adds a note to their calendar for review
+  factory CalendarEvent.fromNote({
+    required Note note,
+    required DateTime scheduledTime,
+    int? durationMinutes,
+  }) {
+    // Estimate reading time: ~200 words per minute
+    // Rough estimate: 5 chars per word = contentMd.length / 1000 minutes
+    final estimatedReading = (note.contentMd.length / 1000).ceil().clamp(15, 120);
+    final estimatedDuration = durationMinutes ?? estimatedReading;
+    
+    return CalendarEvent(
+      id: 'note_${note.id}_${scheduledTime.millisecondsSinceEpoch}',
+      title: 'Review: ${note.title}',
+      description: 'Review and study note: "${note.title}"${note.tags.isNotEmpty ? ' (${note.tags.join(', ')})' : ''}',
+      type: CalendarEventType.studySession,
+      startTime: scheduledTime,
+      endTime: scheduledTime.add(Duration(minutes: estimatedDuration)),
+      priority: 2,
+      status: CalendarEventStatus.scheduled,
+      color: Colors.orange,
+      icon: Icons.note,
+      tags: ['notes', 'review', 'study', ...note.tags],
+      sourceObject: note,
+      isEditable: true,
+      isCompletable: true,
+      estimatedMinutes: estimatedDuration,
+      reminders: [
+        EventReminder(
+          type: ReminderType.notification,
+          minutesBefore: 15,
+          message: 'Time to review "${note.title}"!',
+        ),
+      ],
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+  }
+
   /// Creates a break/rest reminder event
   factory CalendarEvent.breakReminder({
     required String id,
@@ -410,13 +489,25 @@ class CalendarEvent {
 
   /// Creates from JSON
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
+    // Helper to convert Firestore Timestamp or String to DateTime
+    DateTime _parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) return DateTime.parse(value);
+      // Handle Firestore Timestamp
+      if (value.runtimeType.toString() == 'Timestamp') {
+        return (value as dynamic).toDate();
+      }
+      return DateTime.now();
+    }
+
     return CalendarEvent(
       id: json['id'],
       title: json['title'],
       description: json['description'],
       type: CalendarEventType.values.firstWhere((e) => e.name == json['type']),
-      startTime: DateTime.parse(json['startTime']),
-      endTime: json['endTime'] != null ? DateTime.parse(json['endTime']) : null,
+      startTime: _parseDateTime(json['startTime']),
+      endTime: json['endTime'] != null ? _parseDateTime(json['endTime']) : null,
       isAllDay: json['isAllDay'] ?? false,
       priority: json['priority'] ?? 1,
       status: CalendarEventStatus.values
@@ -443,8 +534,8 @@ class CalendarEvent {
               .map((r) => EventReminder.fromJson(r))
               .toList()
           : [],
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      createdAt: _parseDateTime(json['createdAt']),
+      updatedAt: _parseDateTime(json['updatedAt']),
     );
   }
 
@@ -624,6 +715,7 @@ enum CalendarEventType {
   dailyQuest,
   socialSession,
   studySession,
+  flashcardStudy,
   petCare,
   breakReminder,
   deadline,
@@ -798,6 +890,8 @@ extension CalendarEventTypeExtension on CalendarEventType {
         return 'Social Session';
       case CalendarEventType.studySession:
         return 'Study Session';
+      case CalendarEventType.flashcardStudy:
+        return 'Flashcard Study';
       case CalendarEventType.petCare:
         return 'Pet Care';
       case CalendarEventType.breakReminder:
@@ -823,6 +917,8 @@ extension CalendarEventTypeExtension on CalendarEventType {
         return Icons.group_work;
       case CalendarEventType.studySession:
         return Icons.school;
+      case CalendarEventType.flashcardStudy:
+        return Icons.style;
       case CalendarEventType.petCare:
         return Icons.pets;
       case CalendarEventType.breakReminder:
@@ -848,6 +944,8 @@ extension CalendarEventTypeExtension on CalendarEventType {
         return Colors.green;
       case CalendarEventType.studySession:
         return Colors.orange;
+      case CalendarEventType.flashcardStudy:
+        return Colors.deepPurple;
       case CalendarEventType.petCare:
         return Colors.brown;
       case CalendarEventType.breakReminder:

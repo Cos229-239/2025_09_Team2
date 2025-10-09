@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/calendar_event.dart';
 import '../models/task.dart';
+import '../services/firestore_service.dart';
 import 'task_provider.dart';
 import 'daily_quest_provider.dart';
 import 'social_session_provider.dart';
@@ -10,6 +12,11 @@ import 'pet_provider.dart';
 /// Comprehensive calendar provider that unifies all StudyPals activities
 /// This provider aggregates events from all sources and provides a unified calendar interface
 class CalendarProvider with ChangeNotifier {
+  // Firestore service for database operations
+  final FirestoreService _firestoreService = FirestoreService();
+
+  // Firebase Auth for user authentication
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   // Current selected date in the calendar
   DateTime _selectedDay = DateTime.now();
 
@@ -226,6 +233,7 @@ class CalendarProvider with ChangeNotifier {
 
     try {
       await Future.wait([
+        _refreshCalendarEvents(), // Load from Firestore
         _refreshTaskEvents(),
         _refreshQuestEvents(),
         _refreshSocialEvents(),
@@ -238,6 +246,49 @@ class CalendarProvider with ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  /// Load calendar events from Firestore
+  Future<void> _refreshCalendarEvents() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        return; // No user, skip loading
+      }
+
+      // Clear calendar-only event types (not derived from other providers)
+      _removeEventsByType(CalendarEventType.studySession);
+      _removeEventsByType(CalendarEventType.flashcardStudy);
+      _removeEventsByType(CalendarEventType.custom);
+      _removeEventsByType(CalendarEventType.meeting);
+      _removeEventsByType(CalendarEventType.exam);
+      _removeEventsByType(CalendarEventType.deadline);
+      _removeEventsByType(CalendarEventType.breakReminder);
+
+      final eventMaps = await _firestoreService.getUserCalendarEvents(user.uid);
+      
+      print('📅 Loading ${eventMaps.length} calendar events from Firestore');
+      
+      for (final eventMap in eventMaps) {
+        try {
+          final event = _convertFirestoreToCalendarEvent(eventMap);
+          _addEventToMap(event);
+          print('  ✅ Loaded event: ${event.title} (${event.type})');
+        } catch (e) {
+          // Skip individual event conversion errors
+          print('  ❌ Error converting calendar event: $e');
+        }
+      }
+      
+      print('📅 Finished loading calendar events');
+    } catch (e) {
+      print('❌ Error loading calendar events from Firestore: $e');
+    }
+  }
+
+  /// Helper method to convert Firestore document data to CalendarEvent
+  CalendarEvent _convertFirestoreToCalendarEvent(Map<String, dynamic> data) {
+    return CalendarEvent.fromJson(data);
   }
 
   /// Creates a new calendar event
@@ -259,6 +310,13 @@ class CalendarProvider with ChangeNotifier {
   }) async {
     try {
       _setLoading(true);
+
+      // Get current user
+      final user = _auth.currentUser;
+      if (user == null) {
+        _setError('No user logged in');
+        return null;
+      }
 
       final event = CalendarEvent(
         id: _generateEventId(type),
@@ -286,16 +344,88 @@ class CalendarProvider with ChangeNotifier {
         updatedAt: DateTime.now(),
       );
 
+      // Convert to JSON for Firestore
+      final eventData = event.toJson();
+      eventData.remove('id'); // Firestore will generate the ID
+
+      print('💾 Saving calendar event to Firestore: $title (type: $type)');
+
+      // Save to Firestore
+      final docId = await _firestoreService.createCalendarEvent(user.uid, eventData);
+      if (docId == null) {
+        print('❌ Failed to save event to Firestore');
+        _setError('Failed to save event to database');
+        return null;
+      }
+
+      print('✅ Event saved to Firestore with ID: $docId');
+
+      // Create event with Firestore-generated ID
+      final savedEvent = event.copyWith(id: docId);
+
       // Add to internal events map
-      _addEventToMap(event);
+      _addEventToMap(savedEvent);
 
       // Create corresponding object in appropriate provider
-      await _createSourceObject(event);
+      await _createSourceObject(savedEvent);
 
       _updateFilteredEvents();
-      return event;
+      return savedEvent;
     } catch (e) {
       _setError('Failed to create event: $e');
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Adds a flashcard study event to the calendar
+  /// This is a convenience method for adding flashcard study sessions
+  Future<CalendarEvent?> addFlashcardStudyEvent(CalendarEvent event) async {
+    if (event.type != CalendarEventType.flashcardStudy) {
+      _setError('Event must be of type flashcardStudy');
+      return null;
+    }
+
+    try {
+      _setLoading(true);
+
+      // Get current user
+      final user = _auth.currentUser;
+      if (user == null) {
+        _setError('No user logged in');
+        return null;
+      }
+
+      // Convert to JSON for Firestore
+      final eventData = event.toJson();
+      eventData.remove('id'); // Firestore will generate the ID
+
+      print('💾 Saving flashcard study event to Firestore: ${event.title}');
+
+      // Save to Firestore
+      final docId = await _firestoreService.createCalendarEvent(user.uid, eventData);
+      if (docId == null) {
+        print('❌ Failed to save flashcard study event to Firestore');
+        _setError('Failed to save flashcard study event to database');
+        return null;
+      }
+
+      print('✅ Flashcard study event saved to Firestore with ID: $docId');
+
+      // Create event with Firestore-generated ID
+      final savedEvent = event.copyWith(id: docId);
+
+      // Add to internal events map
+      _addEventToMap(savedEvent);
+
+      // Flashcard events don't need source objects created
+      // The deck is already stored in the event's sourceObject field
+
+      _updateFilteredEvents();
+      return savedEvent;
+    } catch (e) {
+      _setError('Failed to add flashcard study event: $e');
       return null;
     } finally {
       _setLoading(false);
@@ -306,6 +436,16 @@ class CalendarProvider with ChangeNotifier {
   Future<CalendarEvent?> updateEvent(CalendarEvent event) async {
     try {
       _setLoading(true);
+
+      // Update in Firestore
+      final eventData = event.toJson();
+      eventData.remove('id'); // Don't update the ID field
+      final success = await _firestoreService.updateCalendarEvent(event.id, eventData);
+      
+      if (!success) {
+        _setError('Failed to update event in database');
+        return null;
+      }
 
       // Update in internal events map
       _updateEventInMap(event);
@@ -328,15 +468,31 @@ class CalendarProvider with ChangeNotifier {
     try {
       _setLoading(true);
 
+      print('🗑️ Deleting calendar event: ${event.title} (ID: ${event.id})');
+
+      // Delete from Firestore (archives it)
+      final success = await _firestoreService.deleteCalendarEvent(event.id);
+      
+      if (!success) {
+        print('❌ Failed to delete event from Firestore');
+        _setError('Failed to delete event from database');
+        return false;
+      }
+
+      print('✅ Event deleted from Firestore successfully');
+
       // Remove from internal events map
       _removeEventFromMap(event);
+      print('✅ Event removed from internal map');
 
       // Delete source object if needed
       await _deleteSourceObject(event);
 
       _updateFilteredEvents();
+      print('✅ Calendar event deletion completed');
       return true;
     } catch (e) {
+      print('❌ Error deleting calendar event: $e');
       _setError('Failed to delete event: $e');
       return false;
     } finally {
@@ -614,6 +770,9 @@ class CalendarProvider with ChangeNotifier {
         break;
       case CalendarEventType.studySession:
         // Create study session (implementation depends on study session provider)
+        break;
+      case CalendarEventType.flashcardStudy:
+        // Flashcard events don't need a source object - the Deck is already stored in sourceObject field
         break;
       default:
         // Other event types might not have source objects

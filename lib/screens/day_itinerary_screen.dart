@@ -571,15 +571,28 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Implement event deletion
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Deleted: ${event.title}'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog first
+              
+              // Delete the event from CalendarProvider and Firestore
+              final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+              final success = await calendarProvider.deleteEvent(event);
+              
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Deleted: ${event.title}'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              } else if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to delete event'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Delete'),

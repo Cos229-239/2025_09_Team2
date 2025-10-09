@@ -5,8 +5,10 @@ import 'dart:convert';
 import 'package:studypals/providers/task_provider.dart';
 import 'package:studypals/providers/note_provider.dart';
 import 'package:studypals/providers/deck_provider.dart';
+import 'package:studypals/providers/calendar_provider.dart';
 import 'package:studypals/models/deck.dart';
 import 'package:studypals/models/note.dart';
+import 'package:studypals/models/calendar_event.dart';
 import 'package:studypals/screens/task_list_screen.dart';
 import 'package:studypals/screens/note_detail_screen.dart';
 import 'package:studypals/screens/flashcard_detail_screen.dart';
@@ -716,6 +718,8 @@ class _LearningScreenState extends State<LearningScreen>
                                         _showEditDeckDialog(context, deck, deckProvider);
                                       } else if (value == 'delete') {
                                         _showDeleteDeckDialog(context, deck, deckProvider);
+                                      } else if (value == 'calendar') {
+                                        _showAddToCalendarDialog(context, deck);
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -726,6 +730,16 @@ class _LearningScreenState extends State<LearningScreen>
                                             Icon(Icons.edit, size: 18),
                                             SizedBox(width: 12),
                                             Text('Edit'),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'calendar',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.calendar_today, size: 18, color: Theme.of(context).colorScheme.primary),
+                                            const SizedBox(width: 12),
+                                            const Text('Add to Calendar'),
                                           ],
                                         ),
                                       ),
@@ -993,6 +1007,8 @@ class _LearningScreenState extends State<LearningScreen>
                                         _showEditNoteDialog(context, note, noteProvider);
                                       } else if (value == 'delete') {
                                         _showDeleteNoteDialog(context, note, noteProvider);
+                                      } else if (value == 'calendar') {
+                                        _showAddNoteToCalendarDialog(context, note);
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -1003,6 +1019,16 @@ class _LearningScreenState extends State<LearningScreen>
                                             Icon(Icons.edit, size: 18),
                                             SizedBox(width: 12),
                                             Text('Edit'),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'calendar',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.calendar_today, size: 18, color: Theme.of(context).colorScheme.primary),
+                                            const SizedBox(width: 12),
+                                            const Text('Add to Calendar'),
                                           ],
                                         ),
                                       ),
@@ -2270,5 +2296,475 @@ class _LearningScreenState extends State<LearningScreen>
         ],
       ),
     );
+  }
+
+  /// Show dialog to add deck to calendar
+  void _showAddToCalendarDialog(BuildContext context, Deck deck) {
+    // Default to tomorrow at 10 AM
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
+    TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
+    int selectedDuration = 30; // Default 30 minutes
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF242628),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(
+                  color: Color(0xFF6FB8E9),
+                  width: 2,
+                ),
+              ),
+              title: const Text(
+                'Schedule Flashcard Study',
+                style: TextStyle(color: Color(0xFFD9D9D9)),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Schedule study time for "${deck.title}"',
+                      style: const TextStyle(color: Color(0xFFD9D9D9)),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Date Picker
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.calendar_today, color: Color(0xFF6FB8E9)),
+                      title: const Text('Date', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      subtitle: Text(
+                        '${selectedDate.month}/${selectedDate.day}/${selectedDate.year}',
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                      ),
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedDate = DateTime(
+                              picked.year,
+                              picked.month,
+                              picked.day,
+                              selectedDate.hour,
+                              selectedDate.minute,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    
+                    // Time Picker
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.access_time, color: Color(0xFF6FB8E9)),
+                      title: const Text('Time', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      subtitle: Text(
+                        selectedTime.format(context),
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                      ),
+                      onTap: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedTime = picked;
+                            selectedDate = DateTime(
+                              selectedDate.year,
+                              selectedDate.month,
+                              selectedDate.day,
+                              picked.hour,
+                              picked.minute,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    
+                    // Duration Selector
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.timer, color: Color(0xFF6FB8E9)),
+                      title: const Text('Duration', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      subtitle: DropdownButton<int>(
+                        value: selectedDuration,
+                        isExpanded: true,
+                        dropdownColor: const Color(0xFF242628),
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                        items: const [
+                          DropdownMenuItem(value: 15, child: Text('15 minutes')),
+                          DropdownMenuItem(value: 30, child: Text('30 minutes')),
+                          DropdownMenuItem(value: 45, child: Text('45 minutes')),
+                          DropdownMenuItem(value: 60, child: Text('1 hour')),
+                          DropdownMenuItem(value: 90, child: Text('1.5 hours')),
+                          DropdownMenuItem(value: 120, child: Text('2 hours')),
+                        ],
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              selectedDuration = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6FB8E9).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF6FB8E9),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, color: Color(0xFF6FB8E9), size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '${deck.cards.length} card${deck.cards.length == 1 ? '' : 's'} to review',
+                              style: const TextStyle(color: Color(0xFFD9D9D9)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _addToCalendar(context, deck, selectedDate, selectedDuration);
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6FB8E9),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Add to Calendar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Add deck to calendar as a study event
+  void _addToCalendar(BuildContext context, Deck deck, DateTime scheduledTime, int durationMinutes) async {
+    try {
+      // Create the calendar event from the deck
+      final event = CalendarEvent.fromDeck(
+        deck: deck,
+        scheduledTime: scheduledTime,
+        durationMinutes: durationMinutes,
+      );
+
+      // Add to calendar provider
+      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      final addedEvent = await calendarProvider.addFlashcardStudyEvent(event);
+
+      if (addedEvent != null && context.mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Added "${deck.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'View',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to planner screen
+                Navigator.pushNamed(context, '/planner');
+              },
+            ),
+          ),
+        );
+      } else if (context.mounted) {
+        // Show error from provider
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to add to calendar'),
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add to calendar: $e'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Show dialog to add note to calendar
+  void _showAddNoteToCalendarDialog(BuildContext context, Note note) {
+    // Default to tomorrow at 10 AM
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+    selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
+    TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
+    int selectedDuration = 30; // Default 30 minutes
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF242628),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: const BorderSide(
+                  color: Color(0xFF6FB8E9),
+                  width: 2,
+                ),
+              ),
+              title: const Text(
+                'Schedule Note Review',
+                style: TextStyle(color: Color(0xFFD9D9D9)),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Schedule review time for "${note.title}"',
+                      style: const TextStyle(color: Color(0xFFD9D9D9)),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Date Picker
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.calendar_today, color: Color(0xFF6FB8E9)),
+                      title: const Text('Date', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      subtitle: Text(
+                        '${selectedDate.month}/${selectedDate.day}/${selectedDate.year}',
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                      ),
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedDate = DateTime(
+                              picked.year,
+                              picked.month,
+                              picked.day,
+                              selectedDate.hour,
+                              selectedDate.minute,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    
+                    // Time Picker
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.access_time, color: Color(0xFF6FB8E9)),
+                      title: const Text('Time', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      subtitle: Text(
+                        selectedTime.format(context),
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                      ),
+                      onTap: () async {
+                        final TimeOfDay? picked = await showTimePicker(
+                          context: context,
+                          initialTime: selectedTime,
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            selectedTime = picked;
+                            selectedDate = DateTime(
+                              selectedDate.year,
+                              selectedDate.month,
+                              selectedDate.day,
+                              picked.hour,
+                              picked.minute,
+                            );
+                          });
+                        }
+                      },
+                    ),
+                    
+                    // Duration Selector
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.timer, color: Color(0xFF6FB8E9)),
+                      title: const Text('Duration', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      subtitle: DropdownButton<int>(
+                        value: selectedDuration,
+                        isExpanded: true,
+                        dropdownColor: const Color(0xFF242628),
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                        items: const [
+                          DropdownMenuItem(value: 15, child: Text('15 minutes')),
+                          DropdownMenuItem(value: 30, child: Text('30 minutes')),
+                          DropdownMenuItem(value: 45, child: Text('45 minutes')),
+                          DropdownMenuItem(value: 60, child: Text('1 hour')),
+                          DropdownMenuItem(value: 90, child: Text('1.5 hours')),
+                          DropdownMenuItem(value: 120, child: Text('2 hours')),
+                        ],
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              selectedDuration = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6FB8E9).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF6FB8E9),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, color: Color(0xFF6FB8E9), size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Note: ${note.title}${note.tags.isNotEmpty ? ' (${note.tags.join(', ')})' : ''}',
+                              style: const TextStyle(color: Color(0xFFD9D9D9)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    _addNoteToCalendar(context, note, selectedDate, selectedDuration);
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6FB8E9),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Add to Calendar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Add note to calendar as a review event
+  void _addNoteToCalendar(BuildContext context, Note note, DateTime scheduledTime, int durationMinutes) async {
+    try {
+      // Create the calendar event from the note
+      final event = CalendarEvent.fromNote(
+        note: note,
+        scheduledTime: scheduledTime,
+        durationMinutes: durationMinutes,
+      );
+
+      // Add to calendar provider
+      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      final addedEvent = await calendarProvider.createEvent(
+        title: event.title,
+        description: event.description,
+        type: event.type,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        priority: event.priority,
+        tags: event.tags,
+        estimatedMinutes: event.estimatedMinutes,
+        reminders: event.reminders,
+      );
+
+      if (addedEvent != null && context.mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Added "${note.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'View',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to planner screen
+                Navigator.pushNamed(context, '/planner');
+              },
+            ),
+          ),
+        );
+      } else if (context.mounted) {
+        // Show error from provider
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to add to calendar'),
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add to calendar: $e'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
