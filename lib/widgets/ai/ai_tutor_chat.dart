@@ -335,9 +335,9 @@ class _AITutorChatState extends State<AITutorChat>
                 value: 'end_session',
                 child: Row(
                   children: [
-                    const Icon(Icons.stop, size: 20, color: Color(0xFFE57373)), // Softer red for dark theme
-                    const SizedBox(width: 8),
-                    const Text('End Session', style: TextStyle(color: Color(0xFFE57373))), // Softer red for dark theme
+                     Icon(Icons.stop, size: 20, color: Color(0xFFE57373)), // Softer red for dark theme
+                     SizedBox(width: 8),
+                     Text('End Session', style: TextStyle(color: Color(0xFFE57373))), // Softer red for dark theme
                   ],
                 ),
               ),

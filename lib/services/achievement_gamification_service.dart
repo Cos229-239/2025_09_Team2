@@ -1358,7 +1358,7 @@ class AchievementGamificationService {
     final unlockedCount = unlockedAchievements.length;
     final totalXPFromAchievements = unlockedAchievements
         .map((a) => a.xpReward)
-        .fold(0, (sum, xp) => sum + xp);
+        .fold(0, (total, xp) => total + xp);
 
     return {
       'level': _userLevel.level,

@@ -1275,7 +1275,7 @@ class _LearningScreenState extends State<LearningScreen>
             ),
           )
         else
-          ...tasks.take(3).map((task) => _buildInlineTaskCard(task)).toList(),
+          ...tasks.take(3).map((task) => _buildInlineTaskCard(task)),
         
         // Show more button if there are more than 3 tasks
         if (tasks.length > 3)
@@ -1372,7 +1372,7 @@ class _LearningScreenState extends State<LearningScreen>
         // Expanded task list
         if (_isCompletedTasksExpanded) ...[
           const SizedBox(height: 12),
-          ...completedTasks.map((task) => _buildInlineTaskCard(task)).toList(),
+          ...completedTasks.map((task) => _buildInlineTaskCard(task)),
         ],
       ],
     );
@@ -1842,7 +1842,7 @@ class _LearningScreenState extends State<LearningScreen>
 
   /// Show create note modal dialog
   void _showCreateNoteModal(BuildContext context) {
-    print('_showCreateNoteModal called'); // Debug output
+    debugPrint('_showCreateNoteModal called'); // Debug output
     showDialog(
       context: context,
       barrierDismissible: false, // Prevent dismissing by tapping outside

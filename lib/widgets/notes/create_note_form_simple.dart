@@ -261,7 +261,7 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
 
           // Subject dropdown
           DropdownButtonFormField<String>(
-            value: _selectedSubject,
+            initialValue: _selectedSubject,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               labelText: 'Subject',

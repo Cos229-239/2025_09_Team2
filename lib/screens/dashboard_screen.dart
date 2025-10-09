@@ -2366,67 +2366,65 @@ class _DashboardHomeState extends State<DashboardHome>
                 child: InkWell(
                   onTap: onTap,
                   borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Icon container with consistent height for alignment
-                        SizedBox(
-                          height: 40, // Fixed height to ensure all icons align horizontally
-                          child: Center(
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeInOut,
-                              padding: EdgeInsets.all(label == 'AI Tutor' && isSelected ? 
-                                2.0 : // Minimal padding for AI Tutor when selected
-                                1.0), // Minimal padding for all other icons
-                              decoration: BoxDecoration(
-                                color: (label == 'AI Tutor' && isSelected) 
-                                    ? const Color(0xFF6FB8E9) // Blue background for selected AI Tutor
-                                    : Colors.transparent, // Transparent for others
-                                borderRadius: BorderRadius.circular(label == 'AI Tutor' && isSelected ? 24 : 16),
-                                border: (label != 'AI Tutor' || !isSelected) ? Border.all(
-                                  color: Colors.transparent,
-                                  width: 0,
-                                ) : null,
-                              ),
-                              child: _buildIconWithHollowEffect(
-                                  icon, isSelected, label),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Icon container with consistent height for alignment
+                      SizedBox(
+                        height: 40, // Fixed height to ensure all icons align horizontally
+                        child: Center(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            padding: EdgeInsets.all(label == 'AI Tutor' && isSelected ? 
+                              2.0 : // Minimal padding for AI Tutor when selected
+                              1.0), // Minimal padding for all other icons
+                            decoration: BoxDecoration(
+                              color: (label == 'AI Tutor' && isSelected) 
+                                  ? const Color(0xFF6FB8E9) // Blue background for selected AI Tutor
+                                  : Colors.transparent, // Transparent for others
+                              borderRadius: BorderRadius.circular(label == 'AI Tutor' && isSelected ? 24 : 16),
+                              border: (label != 'AI Tutor' || !isSelected) ? Border.all(
+                                color: Colors.transparent,
+                                width: 0,
+                              ) : null,
+                            ),
+                            child: _buildIconWithHollowEffect(
+                                icon, isSelected, label),
+                          ),
+                        ),
+                      ),
+                      // No spacing - text immediately under icon
+                      // Label text with consistent baseline alignment
+                      SizedBox(
+                        height: 14, // Fixed height to ensure all text aligns horizontally
+                        child: Center(
+                          child: AnimatedDefaultTextStyle(
+                            duration: const Duration(milliseconds: 200),
+                            style:
+                                Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          color: (label == 'AI Tutor' && isSelected)
+                                              ? Colors.white // White text for selected AI Tutor
+                                              : (label == 'AI Tutor')
+                                                  ? const Color(0xFF6FB8E9) // Blue for unselected AI Tutor
+                                                  : const Color(0xFFCFCFCF), // Gray for all others
+                                          fontWeight: isSelected
+                                              ? FontWeight.w600
+                                              : FontWeight.w500,
+                                          fontSize: 10, // Reduced from 11 to fit better
+                                        ) ??
+                                    const TextStyle(),
+                            child: Text(
+                              label,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
-                        // No spacing - text immediately under icon
-                        // Label text with consistent baseline alignment
-                        SizedBox(
-                          height: 14, // Fixed height to ensure all text aligns horizontally
-                          child: Center(
-                            child: AnimatedDefaultTextStyle(
-                              duration: const Duration(milliseconds: 200),
-                              style:
-                                  Theme.of(context).textTheme.labelSmall?.copyWith(
-                                            color: (label == 'AI Tutor' && isSelected)
-                                                ? Colors.white // White text for selected AI Tutor
-                                                : (label == 'AI Tutor')
-                                                    ? const Color(0xFF6FB8E9) // Blue for unselected AI Tutor
-                                                    : const Color(0xFFCFCFCF), // Gray for all others
-                                            fontWeight: isSelected
-                                                ? FontWeight.w600
-                                                : FontWeight.w500,
-                                            fontSize: 10, // Reduced from 11 to fit better
-                                          ) ??
-                                      const TextStyle(),
-                              child: Text(
-                                label,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
