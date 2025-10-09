@@ -8,14 +8,14 @@ enum TimerState { idle, running, paused, breakTime, completed }
 /// Individual phase within a timer session
 class SessionPhase {
   final String name;
-  final int minutes;
+  final int seconds;
   final bool isBreak;
   final String instructions;
   final Color color;
 
   const SessionPhase({
     required this.name,
-    required this.minutes,
+    required this.seconds,
     required this.isBreak,
     required this.instructions,
     required this.color,
@@ -61,6 +61,7 @@ class TimerProvider extends ChangeNotifier {
   int _selectedSeconds = 0;
   bool _includeBreakTimer = false;
   int _breakMinutes = 5;
+  String _customTimerName = ''; // Store custom timer name for simple timers
   
   // Callback for timer completion (to show dialogs)
   Function()? _onTimerComplete;
@@ -79,6 +80,7 @@ class TimerProvider extends ChangeNotifier {
   int get selectedSeconds => _selectedSeconds;
   bool get includeBreakTimer => _includeBreakTimer;
   int get breakMinutes => _breakMinutes;
+  String get customTimerName => _customTimerName;
   
   bool get isTimerRunning => _timerState == TimerState.running || _timerState == TimerState.breakTime;
   bool get isTimerPaused => _timerState == TimerState.paused;
@@ -120,7 +122,7 @@ class TimerProvider extends ChangeNotifier {
   }
 
   /// Start a custom timer with the configured time
-  void startTimer() {
+  void startTimer({String name = 'Custom Timer'}) {
     final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
 
     if (totalSeconds == 0) {
@@ -128,6 +130,7 @@ class TimerProvider extends ChangeNotifier {
       return;
     }
 
+    _customTimerName = name;
     _remainingSeconds = totalSeconds;
     _timerState = TimerState.running;
     _startTimerTick();
@@ -139,7 +142,7 @@ class TimerProvider extends ChangeNotifier {
     _activeSession = session;
     _currentPhaseIndex = 0;
     _sessionCycle = 1;
-    _remainingSeconds = session.phases[0].minutes * 60;
+    _remainingSeconds = session.phases[0].seconds;
     _timerState = TimerState.running;
     _startTimerTick();
     notifyListeners();
@@ -184,6 +187,7 @@ class TimerProvider extends ChangeNotifier {
     _activeSession = null;
     _currentPhaseIndex = 0;
     _sessionCycle = 1;
+    _customTimerName = ''; // Clear custom timer name
     notifyListeners();
   }
 
@@ -214,7 +218,7 @@ class TimerProvider extends ChangeNotifier {
     if (_currentPhaseIndex + 1 < _activeSession!.phases.length) {
       // Move to next phase (e.g., from focus to break)
       _currentPhaseIndex++;
-      _remainingSeconds = _activeSession!.phases[_currentPhaseIndex].minutes * 60;
+      _remainingSeconds = _activeSession!.phases[_currentPhaseIndex].seconds;
       _timerState = TimerState.breakTime;
       _onPhaseChange?.call();
       
@@ -253,7 +257,7 @@ class TimerProvider extends ChangeNotifier {
   /// Get progress as a percentage (0.0 to 1.0)
   double getProgress() {
     if (_activeSession != null && currentPhase != null) {
-      final totalSeconds = currentPhase!.minutes * 60;
+      final totalSeconds = currentPhase!.seconds;
       return 1.0 - (_remainingSeconds / totalSeconds);
     } else if (_selectedHours > 0 || _selectedMinutes > 0 || _selectedSeconds > 0) {
       final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
