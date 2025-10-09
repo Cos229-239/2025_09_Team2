@@ -1820,6 +1820,56 @@ class _LearningScreenState extends State<LearningScreen>
                   ),
                 ),
                 
+                const SizedBox(height: 12),
+                
+                // Generate Flashcards Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      // Extract plain text from note content
+                      final plainText = _getPlainTextFromDelta(note.contentMd);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Scaffold(
+                            appBar: AppBar(
+                              title: const Text('Generate Flashcards'),
+                              backgroundColor: const Color(0xFF242628),
+                              foregroundColor: const Color(0xFFD9D9D9),
+                            ),
+                            backgroundColor: const Color(0xFF1A1A1A),
+                            body: SingleChildScrollView(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: AIFlashcardGenerator(
+                                  initialTopic: note.title,
+                                  initialText: plainText,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('Generate Flashcards'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                      foregroundColor: const Color(0xFF6FB8E9),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
                 const SizedBox(height: 16),
                 
                 // Cancel Button

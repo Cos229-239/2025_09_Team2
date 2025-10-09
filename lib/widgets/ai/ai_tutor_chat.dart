@@ -8,6 +8,7 @@ import 'dart:math' as math;
 import '../../providers/enhanced_ai_tutor_provider.dart';
 import '../../providers/app_state.dart';
 import '../../models/chat_message.dart';
+import 'ai_flashcard_generator.dart';
 
 /// Main AI Tutor Chat Widget with full adaptive UI
 class AITutorChat extends StatefulWidget {
@@ -163,6 +164,57 @@ class _AITutorChatState extends State<AITutorChat>
         }
       }
     });
+  }
+
+  String _getLastAIResponse(EnhancedAITutorProvider provider) {
+    // Get the last AI tutor response from messages
+    for (int i = provider.messages.length - 1; i >= 0; i--) {
+      final message = provider.messages[i];
+      if (message.type == MessageType.assistant) {
+        return message.content;
+      }
+    }
+    return '';
+  }
+
+  void _generateFlashcardsFromAI(EnhancedAITutorProvider provider) {
+    final lastAIResponse = _getLastAIResponse(provider);
+    
+    if (lastAIResponse.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No AI tutor response found. Please have a conversation first.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Navigate to AI flashcard generator with pre-filled text
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Generate Flashcards'),
+            backgroundColor: const Color(0xFF242628),
+            foregroundColor: const Color(0xFFD9D9D9),
+          ),
+          backgroundColor: const Color(0xFF1A1A1A),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: AIFlashcardGenerator(
+                initialTopic: provider.currentSubject.isNotEmpty 
+                    ? provider.currentSubject 
+                    : 'AI Tutor Session',
+                initialText: lastAIResponse,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -330,6 +382,17 @@ class _AITutorChatState extends State<AITutorChat>
                 ],
               ),
             ),
+            if (provider.hasActiveSession)
+              const PopupMenuItem(
+                value: 'generate_flashcards',
+                child: Row(
+                  children: [
+                    Icon(Icons.auto_awesome, size: 20, color: Color(0xFF6FB8E9)),
+                    SizedBox(width: 8),
+                    Text('Generate Flashcards', style: TextStyle(color: Color(0xFF6FB8E9))),
+                  ],
+                ),
+              ),
             if (provider.hasActiveSession)
               const PopupMenuItem(
                 value: 'end_session',
@@ -1641,6 +1704,9 @@ class _AITutorChatState extends State<AITutorChat>
         break;
       case 'badges':
         provider.toggleBadgesDisplay();
+        break;
+      case 'generate_flashcards':
+        _generateFlashcardsFromAI(provider);
         break;
       case 'end_session':
         _showEndSessionDialog(provider);

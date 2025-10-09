@@ -12,21 +12,21 @@ import 'activity_service.dart';
 /// Integrates with Firestore for persistent storage and cross-device sync
 class QuizService {
   final FirestoreService _firestoreService = FirestoreService();
-  static const Duration _deckCooldownPeriod =
-      Duration(hours: 12); // Longer cooldown for deck quizzes
+  static const Duration _xpCooldownPeriod =
+      Duration(hours: 24); // XP can only be earned once per day per deck
 
   // Cache for active quiz sessions
   final Map<String, QuizSession> _activeSessions = {};
 
-  // Cache for deck cooldowns (deckId -> last attempt time)
-  final Map<String, DateTime> _deckCooldowns = {};
+  // Cache for deck XP cooldowns (deckId -> last XP earn time)
+  final Map<String, DateTime> _deckXpCooldowns = {};
 
   /// Initialize the service by loading cached data
   Future<void> initialize() async {
     try {
       // Add timeout to prevent hanging during initialization
       await Future.wait([
-        _loadDeckCooldowns(),
+        _loadDeckXpCooldowns(),
         loadQuizSessions(),
       ]).timeout(const Duration(seconds: 15));
     } catch (e) {
@@ -37,12 +37,10 @@ class QuizService {
 
   /// Creates a new quiz session for a deck
   /// Only includes cards that have multiple choice options
+  /// NOTE: Quizzes can be taken at any time - XP earning has a separate cooldown
   Future<QuizSession?> createQuizSession(Deck deck) async {
-    // Check if deck can be quizzed (not on cooldown)
-    if (!await canTakeDeckQuiz(deck.id)) {
-      return null;
-    }
-
+    // No longer check cooldown for quiz availability - users can quiz anytime!
+    
     // Filter cards that have multiple choice options
     final quizCards = deck.cards
         .where((card) =>
@@ -75,40 +73,54 @@ class QuizService {
     return session;
   }
 
-  /// Checks if a deck can be quizzed (not on cooldown and has quiz cards)
-  Future<bool> canTakeDeckQuiz(String deckId) async {
+  /// Checks if XP can be earned from a deck (not on XP cooldown)
+  /// Note: Users can take quizzes anytime, but XP is only earned once per cooldown period
+  Future<bool> canEarnXPFromDeck(String deckId) async {
     try {
       // Add timeout to prevent hanging
-      await _loadDeckCooldowns().timeout(const Duration(seconds: 10));
+      await _loadDeckXpCooldowns().timeout(const Duration(seconds: 10));
 
-      // Check if deck is on cooldown
-      if (_deckCooldowns.containsKey(deckId)) {
-        final lastAttempt = _deckCooldowns[deckId]!;
-        final timeSinceLastAttempt = DateTime.now().difference(lastAttempt);
-        return timeSinceLastAttempt >= _deckCooldownPeriod;
+      // Check if deck is on XP earning cooldown
+      if (_deckXpCooldowns.containsKey(deckId)) {
+        final lastXpEarn = _deckXpCooldowns[deckId]!;
+        final timeSinceLastXpEarn = DateTime.now().difference(lastXpEarn);
+        return timeSinceLastXpEarn >= _xpCooldownPeriod;
       }
 
-      return true; // No previous attempt, can take quiz
+      return true; // No previous XP earned, can earn now
     } catch (e) {
-      debugPrint('Error checking deck quiz availability: $e');
-      // If there's an error loading cooldowns, allow the quiz (fail-safe)
+      debugPrint('Error checking deck XP availability: $e');
+      // If there's an error loading cooldowns, allow XP earning (fail-safe)
       return true;
     }
   }
 
-  /// Gets the remaining cooldown time for a deck quiz
-  Future<Duration> getDeckQuizCooldown(String deckId) async {
-    await _loadDeckCooldowns();
+  /// Gets the remaining XP cooldown time for a deck
+  Future<Duration> getDeckXpCooldown(String deckId) async {
+    await _loadDeckXpCooldowns();
 
-    if (!_deckCooldowns.containsKey(deckId)) {
+    if (!_deckXpCooldowns.containsKey(deckId)) {
       return Duration.zero; // No cooldown
     }
 
-    final lastAttempt = _deckCooldowns[deckId]!;
-    final timeSinceLastAttempt = DateTime.now().difference(lastAttempt);
-    final cooldownRemaining = _deckCooldownPeriod - timeSinceLastAttempt;
+    final lastXpEarn = _deckXpCooldowns[deckId]!;
+    final timeSinceLastXpEarn = DateTime.now().difference(lastXpEarn);
+    final cooldownRemaining = _xpCooldownPeriod - timeSinceLastXpEarn;
 
     return cooldownRemaining.isNegative ? Duration.zero : cooldownRemaining;
+  }
+
+  /// @deprecated - Quiz availability is no longer restricted by cooldown
+  /// Use canEarnXPFromDeck() to check if XP can be earned
+  Future<bool> canTakeDeckQuiz(String deckId) async {
+    // Users can always take quizzes
+    return true;
+  }
+
+  /// @deprecated - Returns XP cooldown instead of quiz cooldown
+  /// Use getDeckXpCooldown() for the XP earning cooldown
+  Future<Duration> getDeckQuizCooldown(String deckId) async {
+    return getDeckXpCooldown(deckId);
   }
 
   /// Records an answer to a question in the current quiz session
@@ -170,26 +182,32 @@ class QuizService {
         .map((answer) => answer.expEarned)
         .fold(0, (sum, exp) => sum + exp);
 
+    // Check if XP can be earned from this deck
+    final canEarnXP = await canEarnXPFromDeck(session.deckId);
+    final actualExpAwarded = canEarnXP ? totalExpEarned : 0;
+
     // Create completed session
     final completedSession = session.copyWith(
       isCompleted: true,
       endTime: DateTime.now(),
       finalScore: finalScore,
-      totalExpEarned: totalExpEarned,
+      totalExpEarned: actualExpAwarded, // Only award XP if not on cooldown
       lastAttemptTime: DateTime.now(),
       canRetake: finalScore < 0.8, // Can retake if score is below 80%
     );
 
-    // Award total EXP to pet
-    if (totalExpEarned > 0) {
+    // Award total EXP to pet only if not on XP cooldown
+    if (canEarnXP && totalExpEarned > 0) {
       debugPrint('Awarding $totalExpEarned EXP to pet from quiz session');
       petProvider.addXP(totalExpEarned, source: "quiz_session");
+      
+      // Set XP cooldown for this deck
+      await _setDeckXpCooldown(session.deckId);
+    } else if (!canEarnXP) {
+      debugPrint('Deck is on XP cooldown - no XP awarded (can still take quiz for practice)');
     } else {
       debugPrint('No EXP to award - totalExpEarned: $totalExpEarned');
     }
-
-    // Set deck cooldown
-    await _setDeckCooldown(session.deckId);
 
     // Cache completed session
     _activeSessions[session.id] = completedSession;
@@ -202,11 +220,14 @@ class QuizService {
       final activityService = ActivityService();
       await activityService.logActivity(
         type: ActivityType.quizCompleted,
-        description: 'Completed quiz with ${(finalScore * 100).round()}% score',
+        description: canEarnXP 
+            ? 'Completed quiz with ${(finalScore * 100).round()}% score'
+            : 'Completed quiz for practice (XP already earned today)',
         metadata: {
           'quizId': session.id,
           'score': finalScore,
-          'expEarned': totalExpEarned,
+          'expEarned': actualExpAwarded,
+          'expOnCooldown': !canEarnXP,
           'cardsStudied': session.cardIds.length,
         },
       );
@@ -214,8 +235,11 @@ class QuizService {
       debugPrint('Failed to log quiz completion activity: $e');
     }
 
+    final xpMessage = canEarnXP 
+        ? '+$totalExpEarned total EXP' 
+        : 'No XP (daily limit reached)';
     debugPrint(
-        'Quiz completed: ${(finalScore * 100).round()}% score, +$totalExpEarned total EXP');
+        'Quiz completed: ${(finalScore * 100).round()}% score, $xpMessage');
     return completedSession;
   }
 
@@ -254,15 +278,15 @@ class QuizService {
     }
   }
 
-  /// Gets a descriptive status for deck quiz availability
+  /// Gets a descriptive status for deck quiz XP earning availability
   Future<String> getDeckQuizStatusDescription(String deckId) async {
-    if (await canTakeDeckQuiz(deckId)) {
-      return "Ready to take deck quiz";
+    if (await canEarnXPFromDeck(deckId)) {
+      return "Quiz available - XP can be earned";
     }
 
-    final cooldown = await getDeckQuizCooldown(deckId);
+    final cooldown = await getDeckXpCooldown(deckId);
     final timeLeft = formatCooldownTime(cooldown);
-    return "Quiz available in: $timeLeft";
+    return "XP available in: $timeLeft (Can still quiz for practice)";
   }
 
   /// Gets quiz statistics for all completed sessions
@@ -532,7 +556,7 @@ class QuizService {
   /// Clears all quiz data (for testing or reset functionality)
   Future<void> clearAllData() async {
     _activeSessions.clear();
-    _deckCooldowns.clear();
+    _deckXpCooldowns.clear();
 
     await _firestoreService.clearAllQuizData();
 
@@ -547,26 +571,26 @@ class QuizService {
     return 'quiz_${timestamp}_$random';
   }
 
-  Future<void> _setDeckCooldown(String deckId) async {
-    final cooldownEnd = DateTime.now().add(_deckCooldownPeriod);
-    _deckCooldowns[deckId] = DateTime.now();
+  Future<void> _setDeckXpCooldown(String deckId) async {
+    final cooldownEnd = DateTime.now().add(_xpCooldownPeriod);
+    _deckXpCooldowns[deckId] = DateTime.now();
     await _firestoreService.saveDeckCooldown(deckId, cooldownEnd);
   }
 
-  Future<void> _loadDeckCooldowns() async {
+  Future<void> _loadDeckXpCooldowns() async {
     try {
       // Add timeout to prevent hanging on Firestore calls
       final cooldowns = await _firestoreService
           .getAllDeckCooldowns()
           .timeout(const Duration(seconds: 8));
-      _deckCooldowns.clear();
+      _deckXpCooldowns.clear();
       cooldowns.forEach((deckId, cooldownEnd) {
         // Store the start time (now - cooldown period) for compatibility
-        final startTime = cooldownEnd.subtract(_deckCooldownPeriod);
-        _deckCooldowns[deckId] = startTime;
+        final startTime = cooldownEnd.subtract(_xpCooldownPeriod);
+        _deckXpCooldowns[deckId] = startTime;
       });
     } catch (e) {
-      debugPrint('Error loading deck cooldowns: $e');
+      debugPrint('Error loading deck XP cooldowns: $e');
       // Continue with empty cooldowns if loading fails
     }
   }
