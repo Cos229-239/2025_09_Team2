@@ -468,23 +468,31 @@ class CalendarProvider with ChangeNotifier {
     try {
       _setLoading(true);
 
+      print('🗑️ Deleting calendar event: ${event.title} (ID: ${event.id})');
+
       // Delete from Firestore (archives it)
       final success = await _firestoreService.deleteCalendarEvent(event.id);
       
       if (!success) {
+        print('❌ Failed to delete event from Firestore');
         _setError('Failed to delete event from database');
         return false;
       }
 
+      print('✅ Event deleted from Firestore successfully');
+
       // Remove from internal events map
       _removeEventFromMap(event);
+      print('✅ Event removed from internal map');
 
       // Delete source object if needed
       await _deleteSourceObject(event);
 
       _updateFilteredEvents();
+      print('✅ Calendar event deletion completed');
       return true;
     } catch (e) {
+      print('❌ Error deleting calendar event: $e');
       _setError('Failed to delete event: $e');
       return false;
     } finally {
