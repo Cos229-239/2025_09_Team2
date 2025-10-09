@@ -916,6 +916,32 @@ class _TimerScreenState extends State<TimerScreen> {
       children: [
         // Section header
         const Text(
+          'Study Techniques',
+          style: TextStyle(
+            color: Color(0xFFD9D9D9),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Horizontal scrollable session cards for study techniques
+        SizedBox(
+          height: 140,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemCount: _timerSessions.length,
+            itemBuilder: (context, index) {
+              return _buildHorizontalSessionCard(_timerSessions[index]);
+            },
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        // Section header for saved timers
+        const Text(
           'Saved Timer Presets',
           style: TextStyle(
             color: Color(0xFFD9D9D9),
