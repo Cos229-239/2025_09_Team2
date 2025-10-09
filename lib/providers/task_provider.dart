@@ -84,57 +84,7 @@ class TaskProvider extends ChangeNotifier {
         _tasks = [];
       }
 
-      // Add sample tasks if list is empty (for demonstration)
-      if (_tasks.isEmpty) {
-        final sampleTasks = [
-          Task(
-            id: 'task_1',
-            title: 'Complete JavaScript Assignment',
-            estMinutes: 120,
-            dueAt: DateTime.now().add(const Duration(days: 2)),
-            priority: 3,
-            tags: ['javascript', 'assignment', 'urgent'],
-            status: TaskStatus.pending,
-          ),
-          Task(
-            id: 'task_2',
-            title: 'Review React Documentation',
-            estMinutes: 60,
-            dueAt: DateTime.now().add(const Duration(days: 1)),
-            priority: 2,
-            tags: ['react', 'study', 'documentation'],
-            status: TaskStatus.inProgress,
-          ),
-          Task(
-            id: 'task_3',
-            title: 'Practice SQL Queries',
-            estMinutes: 90,
-            dueAt: DateTime.now().add(const Duration(hours: 8)),
-            priority: 2,
-            tags: ['sql', 'database', 'practice'],
-            status: TaskStatus.pending,
-          ),
-          Task(
-            id: 'task_4',
-            title: 'Study Database Normalization',
-            estMinutes: 45,
-            dueAt: DateTime.now().subtract(const Duration(days: 1)),
-            priority: 1,
-            tags: ['database', 'theory'],
-            status: TaskStatus.completed,
-          ),
-          Task(
-            id: 'task_5',
-            title: 'Set up Development Environment',
-            estMinutes: 30,
-            priority: 1,
-            tags: ['setup', 'tools'],
-            status: TaskStatus.completed,
-          ),
-        ];
-
-        _tasks.addAll(sampleTasks);
-      }
+      // Sample tasks removed - now only shows tasks from Firestore
     } catch (e) {
       // Log any errors that occur during loading for debugging
       // Using developer.log instead of print for better debugging tools

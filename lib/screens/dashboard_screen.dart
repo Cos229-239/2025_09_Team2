@@ -55,6 +55,7 @@ import 'package:studypals/providers/pet_provider.dart'; // Virtual pet state
 import 'package:studypals/providers/srs_provider.dart'; // Spaced repetition system state
 import 'package:studypals/providers/ai_provider.dart'; // AI provider state
 import 'package:studypals/providers/daily_quest_provider.dart'; // Daily quest gamification state
+import 'package:studypals/providers/calendar_provider.dart'; // Calendar provider state
 import 'package:studypals/models/task.dart'; // Task model
 import 'package:studypals/providers/notification_provider.dart'; // Notification system state
 import 'package:studypals/utils/responsive_spacing.dart'; // Responsive spacing utility
@@ -572,6 +573,15 @@ class _DashboardScreenState extends State<DashboardScreen>
         listen: false); // AI provider access
     final notificationProvider = Provider.of<NotificationProvider>(context,
         listen: false); // Notification system access
+    final calendarProvider = Provider.of<CalendarProvider>(context,
+        listen: false); // Calendar provider access
+
+    // Initialize calendar provider with references to other providers
+    calendarProvider.initialize(
+      taskProvider: taskProvider,
+      questProvider: questProvider,
+      petProvider: petProvider,
+    );
 
     // Auto-configure Google AI upon dashboard initialization
     try {
