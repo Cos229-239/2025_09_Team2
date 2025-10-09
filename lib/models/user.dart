@@ -377,6 +377,7 @@ class UserPreferences {
   final bool studyReminders; // Daily study reminder notifications
   final bool achievementNotifications; // Achievement unlock notifications
   final bool socialNotifications; // Social activity notifications
+  final bool petCareReminders; // Automatic pet care event reminders
   final bool emailDigest; // Weekly email digest
   final String reminderTime; // Preferred reminder time (HH:MM format)
 
@@ -417,6 +418,7 @@ class UserPreferences {
     this.studyReminders = true,
     this.achievementNotifications = true,
     this.socialNotifications = true,
+    this.petCareReminders = false, // Disable pet care reminders by default
     this.emailDigest = false,
     this.reminderTime = '09:00',
 
@@ -458,6 +460,7 @@ class UserPreferences {
         'studyReminders': studyReminders,
         'achievementNotifications': achievementNotifications,
         'socialNotifications': socialNotifications,
+        'petCareReminders': petCareReminders,
         'emailDigest': emailDigest,
         'reminderTime': reminderTime,
 
@@ -504,6 +507,7 @@ class UserPreferences {
         achievementNotifications:
             json['achievementNotifications'] as bool? ?? true,
         socialNotifications: json['socialNotifications'] as bool? ?? true,
+        petCareReminders: json['petCareReminders'] as bool? ?? false, // Default to disabled
         emailDigest: json['emailDigest'] as bool? ?? false,
         reminderTime: json['reminderTime'] as String? ?? '09:00',
 
@@ -540,6 +544,7 @@ class UserPreferences {
     bool? studyReminders,
     bool? achievementNotifications,
     bool? socialNotifications,
+    bool? petCareReminders,
     bool? emailDigest,
     String? reminderTime,
     String? theme,
@@ -571,6 +576,7 @@ class UserPreferences {
       achievementNotifications:
           achievementNotifications ?? this.achievementNotifications,
       socialNotifications: socialNotifications ?? this.socialNotifications,
+      petCareReminders: petCareReminders ?? this.petCareReminders,
       emailDigest: emailDigest ?? this.emailDigest,
       reminderTime: reminderTime ?? this.reminderTime,
       theme: theme ?? this.theme,

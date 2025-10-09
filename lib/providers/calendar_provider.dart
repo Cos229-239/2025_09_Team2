@@ -100,6 +100,25 @@ class CalendarProvider with ChangeNotifier {
     }
   }
 
+  /// Check if pet care reminders are enabled in user preferences
+  Future<bool> _arePetCareRemindersEnabled() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return false; // Default to disabled for guest users
+      
+      final userProfile = await _firestoreService.getUserProfile(user.uid);
+      if (userProfile == null) return false; // Default to disabled if no profile
+      
+      final preferences = userProfile['preferences'] as Map<String, dynamic>?;
+      if (preferences == null) return false; // Default to disabled if no preferences
+      
+      return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
+    } catch (e) {
+      print('Error checking pet care reminders preference: $e');
+      return false; // Default to disabled on error
+    }
+  }
+
   /// Gets all events for a specific date
   List<CalendarEvent> getEventsForDay(DateTime day) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
@@ -668,8 +687,11 @@ class CalendarProvider with ChangeNotifier {
     final pet = _petProvider!.currentPet;
     _removeEventsByType(CalendarEventType.petCare);
 
-    // Create pet care reminders for different care types
-    if (pet != null) {
+    // Check if pet care reminders are enabled in user preferences
+    final areEnabled = await _arePetCareRemindersEnabled();
+    
+    // Create pet care reminders for different care types only if enabled
+    if (pet != null && areEnabled) {
       for (final careType in PetCareType.values) {
         final event = CalendarEvent.fromPetCare(pet, careType);
         _addEventToMap(event);
