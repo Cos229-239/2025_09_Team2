@@ -34,24 +34,19 @@ class _SessionsTabState extends State<SessionsTab>
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Column(
       children: [
         // Tab bar
-        Container(
-          color: colorScheme.surface,
-          child: TabBar(
-            controller: _tabController,
-            labelColor: colorScheme.primary,
-            unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.6),
-            indicatorColor: colorScheme.primary,
-            tabs: const [
-              Tab(text: 'Upcoming'),
-              Tab(text: 'Live'),
-              Tab(text: 'Completed'),
-            ],
-          ),
+        TabBar(
+          controller: _tabController,
+          labelColor: const Color(0xFF6FB8E9),
+          unselectedLabelColor: const Color(0xFF888888),
+          indicatorColor: const Color(0xFF6FB8E9),
+          tabs: const [
+            Tab(text: 'Upcoming'),
+            Tab(text: 'Live'),
+            Tab(text: 'Completed'),
+          ],
         ),
 
         // Tab bar view
@@ -169,7 +164,6 @@ class _SessionsTabState extends State<SessionsTab>
   }
 
   Widget _buildSessionCard(BuildContext context, SocialSession session) {
-    final colorScheme = Theme.of(context).colorScheme;
     final socialProvider =
         Provider.of<SocialSessionProvider>(context, listen: false);
     final isHost = session.hostId == socialProvider.currentUserId;
@@ -179,6 +173,7 @@ class _SessionsTabState extends State<SessionsTab>
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
+      color: const Color(0xFF242628),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -205,7 +200,7 @@ class _SessionsTabState extends State<SessionsTab>
                 ),
                 const Spacer(),
                 if (isHost)
-                  Icon(Icons.star, color: colorScheme.primary, size: 16),
+                  const Icon(Icons.star, color: Color(0xFF6FB8E9), size: 16),
                 if (session.isStartingSoon)
                   Container(
                     padding:
@@ -230,19 +225,19 @@ class _SessionsTabState extends State<SessionsTab>
             // Title and description
             Text(
               session.title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: Color(0xFFD9D9D9),
               ),
             ),
             if (session.description.isNotEmpty) ...[
               const SizedBox(height: 4),
               Text(
                 session.description,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Color(0xFF888888),
                 ),
               ),
             ],
@@ -251,23 +246,23 @@ class _SessionsTabState extends State<SessionsTab>
             // Session info
             Row(
               children: [
-                Icon(Icons.schedule, size: 16, color: colorScheme.primary),
+                const Icon(Icons.schedule, size: 16, color: Color(0xFF6FB8E9)),
                 const SizedBox(width: 4),
                 Text(
                   DateFormat('MMM dd, hh:mm a').format(session.scheduledTime),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: Color(0xFFD9D9D9),
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.timer, size: 16, color: colorScheme.primary),
+                const Icon(Icons.timer, size: 16, color: Color(0xFF6FB8E9)),
                 const SizedBox(width: 4),
                 Text(
                   _formatDuration(session.duration),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: Color(0xFFD9D9D9),
                   ),
                 ),
               ],
@@ -275,23 +270,23 @@ class _SessionsTabState extends State<SessionsTab>
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.people, size: 16, color: colorScheme.primary),
+                const Icon(Icons.people, size: 16, color: Color(0xFF6FB8E9)),
                 const SizedBox(width: 4),
                 Text(
                   '${session.participantCount}/${session.maxParticipants} participants',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: Color(0xFFD9D9D9),
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.person, size: 16, color: colorScheme.primary),
+                const Icon(Icons.person, size: 16, color: Color(0xFF6FB8E9)),
                 const SizedBox(width: 4),
                 Text(
                   'Host: ${session.hostName}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                    color: Color(0xFFD9D9D9),
                   ),
                 ),
               ],
@@ -342,7 +337,6 @@ class _SessionsTabState extends State<SessionsTab>
   }
 
   Widget _buildLiveSessionCard(BuildContext context, SocialSession session) {
-    final colorScheme = Theme.of(context).colorScheme;
     final socialProvider =
         Provider.of<SocialSessionProvider>(context, listen: false);
     final isParticipant =
@@ -350,6 +344,7 @@ class _SessionsTabState extends State<SessionsTab>
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
+      color: const Color(0xFF242628),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
@@ -389,9 +384,9 @@ class _SessionsTabState extends State<SessionsTab>
                   const Spacer(),
                   Text(
                     session.type.displayName,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Color(0xFF888888),
                     ),
                   ),
                 ],
@@ -401,10 +396,10 @@ class _SessionsTabState extends State<SessionsTab>
               // Title
               Text(
                 session.title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: colorScheme.onSurface,
+                  color: Color(0xFFD9D9D9),
                 ),
               ),
               const SizedBox(height: 8),
@@ -412,9 +407,9 @@ class _SessionsTabState extends State<SessionsTab>
               // Participants
               Text(
                 '${session.participantCount} participants active',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 14,
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Color(0xFF888888),
                 ),
               ),
               const SizedBox(height: 16),
@@ -449,10 +444,9 @@ class _SessionsTabState extends State<SessionsTab>
 
   Widget _buildCompletedSessionCard(
       BuildContext context, SocialSession session) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Card(
       margin: const EdgeInsets.only(bottom: 12.0),
+      color: const Color(0xFF242628),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -486,10 +480,10 @@ class _SessionsTabState extends State<SessionsTab>
             // Title
             Text(
               session.title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
+                color: Color(0xFFD9D9D9),
               ),
             ),
             const SizedBox(height: 8),
@@ -497,23 +491,23 @@ class _SessionsTabState extends State<SessionsTab>
             // Session info
             Row(
               children: [
-                Icon(Icons.event, size: 16, color: colorScheme.primary),
+                const Icon(Icons.event, size: 16, color: Color(0xFF6FB8E9)),
                 const SizedBox(width: 4),
                 Text(
                   DateFormat('MMM dd, yyyy').format(session.scheduledTime),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Color(0xFF888888),
                   ),
                 ),
                 const SizedBox(width: 16),
-                Icon(Icons.people, size: 16, color: colorScheme.primary),
+                const Icon(Icons.people, size: 16, color: Color(0xFF6FB8E9)),
                 const SizedBox(width: 4),
                 Text(
                   '${session.participantCount} participants',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Color(0xFF888888),
                   ),
                 ),
               ],
@@ -537,8 +531,6 @@ class _SessionsTabState extends State<SessionsTab>
 
   Widget _buildEmptyState(
       BuildContext context, IconData icon, String title, String subtitle) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -548,24 +540,24 @@ class _SessionsTabState extends State<SessionsTab>
             Icon(
               icon,
               size: 80,
-              color: colorScheme.onSurface.withValues(alpha: 0.3),
+              color: const Color(0xFF888888),
             ),
             const SizedBox(height: 16),
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Color(0xFFD9D9D9),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
+                color: Color(0xFF888888),
               ),
             ),
           ],

@@ -322,58 +322,48 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             'About',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: const Color(0xFFD9D9D9),
                 ),
           ),
 
           const SizedBox(height: 12),
 
-          if (widget.userProfile.bio != null &&
+            if (widget.userProfile.bio != null &&
               widget.userProfile.bio!.isNotEmpty)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
+                color: const Color(0xFF242628),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.2),
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                 ),
               ),
-              child: Text(widget.userProfile.bio!),
+              child: Text(
+                widget.userProfile.bio!,
+                style: const TextStyle(color: Color(0xFFD9D9D9)),
+              ),
             )
           else
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .surface
-                    .withValues(alpha: 0.5),
+                color: const Color(0xFF1A1A1A),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.2),
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 'This user hasn\'t added a bio yet.',
                 style: TextStyle(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
+                  color: Color(0xFF888888),
                   fontStyle: FontStyle.italic,
                 ),
               ),
-            ),
-
-          const SizedBox(height: 16),
+            ),          const SizedBox(height: 16),
 
           // Join date and mutual friends
           Row(
@@ -381,19 +371,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               Icon(
                 Icons.calendar_month,
                 size: 16,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
+                color: const Color(0xFF888888),
               ),
               const SizedBox(width: 4),
               Text(
                 'Joined ${_formatJoinDate(widget.userProfile.joinDate)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.6),
+                      color: const Color(0xFF888888),
                     ),
               ),
               const Spacer(),
@@ -415,16 +399,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Icon(
             Icons.people,
             size: 16,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color: const Color(0xFF888888),
           ),
           const SizedBox(width: 4),
           Text(
             '...',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.6),
+                  color: const Color(0xFF888888),
                 ),
           ),
         ],
@@ -442,16 +423,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         Icon(
           Icons.people,
           size: 16,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          color: const Color(0xFF888888),
         ),
         const SizedBox(width: 4),
         Text(
           '$_mutualFriendsCount mutual friend${_mutualFriendsCount == 1 ? '' : 's'}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
+                color: const Color(0xFF888888),
               ),
         ),
       ],
@@ -468,6 +446,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             'Study Stats',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: const Color(0xFFD9D9D9),
                 ),
           ),
           const SizedBox(height: 12),
@@ -475,13 +454,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: const Color(0xFF242628),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.2),
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -496,10 +472,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 Container(
                   width: 1,
                   height: 40,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.2),
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                 ),
                 Expanded(
                   child: _buildStatItem(
@@ -511,10 +484,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 Container(
                   width: 1,
                   height: 40,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.2),
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                 ),
                 Expanded(
                   child: _buildStatItem(
@@ -536,22 +506,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       children: [
         Icon(
           icon,
-          color: Theme.of(context).colorScheme.primary,
+          color: const Color(0xFF6FB8E9),
         ),
         const SizedBox(height: 4),
         Text(
           value,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                color: const Color(0xFFD9D9D9),
               ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
+                color: const Color(0xFF888888),
               ),
         ),
       ],
@@ -568,6 +536,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             'Interests',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: const Color(0xFFD9D9D9),
                 ),
           ),
           const SizedBox(height: 12),
@@ -577,12 +546,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             children: widget.userProfile.interests
                 .map((interest) => Chip(
                       label: Text(interest),
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.1),
-                      labelStyle: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
+                      backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                      labelStyle: const TextStyle(
+                        color: Color(0xFF6FB8E9),
                       ),
                     ))
                 .toList(),
@@ -602,6 +568,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             'Achievements',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: const Color(0xFFD9D9D9),
                 ),
           ),
           const SizedBox(height: 12),
@@ -609,22 +576,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: const Color(0xFF242628),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.2),
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Achievements will be displayed here when available.',
               style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
+                color: Color(0xFF888888),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -644,6 +605,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             'Recent Activity',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: const Color(0xFFD9D9D9),
                 ),
           ),
           const SizedBox(height: 12),
@@ -651,22 +613,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: const Color(0xFF242628),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outline
-                    .withValues(alpha: 0.2),
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
               ),
             ),
-            child: Text(
+            child: const Text(
               'Recent activity will be shown here when available.',
               style: TextStyle(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.6),
+                color: Color(0xFF888888),
                 fontStyle: FontStyle.italic,
               ),
             ),

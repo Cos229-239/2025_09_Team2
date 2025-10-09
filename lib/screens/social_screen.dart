@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/social_learning_service.dart' as service;
-import '../services/activity_service.dart';
 import '../services/competitive_learning_service.dart';
 import '../services/analytics_service.dart';
-import '../models/activity.dart';
 import '../widgets/social/social_widgets.dart';
 import '../widgets/sessions_tab.dart';
-import '../widgets/competitive/competitive_widgets.dart';
 import '../providers/social_session_provider.dart';
 import 'profile_settings_screen.dart';
 import 'user_profile_screen.dart';
 import 'chat_screen.dart';
 import 'group_details_screen.dart';
-import 'competitive_screen.dart';
 import '../widgets/common/themed_background_wrapper.dart';
 
 // TODO: Social Screen - Major Social Feature Implementation Gaps
@@ -44,7 +40,6 @@ class _SocialScreenState extends State<SocialScreen>
   late TabController _tabController;
   service.SocialLearningService? _socialService;
   CompetitiveLearningService? _competitiveService;
-  final ActivityService _activityService = ActivityService();
   final AnalyticsService _analyticsService = AnalyticsService();
   bool _isLoading = true;
   String _currentUserId = '';
@@ -211,14 +206,15 @@ class _SocialScreenState extends State<SocialScreen>
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFFD9D9D9),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Please log in to access social learning features and connect with other students.',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: Color(0xFF888888),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -304,388 +300,214 @@ class _SocialScreenState extends State<SocialScreen>
   }
 
   Widget _buildCompeteTab() {
-    // Show loading or error state if competitive service is not ready
-    if (_competitiveService == null) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading competitive features...'),
-          ],
-        ),
-      );
-    }
-
-    final stats = _competitiveService!.getCompetitiveOverview(_currentUserId);
-    final leaderboardSummary =
-        _competitiveService!.getLeaderboardSummary(_currentUserId);
-
+    // Coming Soon page for competitive features
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Competitive Stats
-          CompetitiveStatsWidget(stats: stats),
-          const SizedBox(height: 16),
-
-          // Quick Rankings
-          Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Your Rankings',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildQuickRankings(leaderboardSummary),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Active Competitions
-          Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Active Competitions',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                      ),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          // Navigate to full competitive screen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CompetitiveScreen(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'View All',
-                          style: TextStyle(color: Color(0xFF58A6FF)),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildActiveCompetitionsPreview(),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Recent Activity Section
-          Card(
-            color: const Color(0xFF21262D),
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: Colors.grey[800]!, width: 0.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Recent Activity',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.history,
-                        color: Colors.grey[400],
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildRecentActivity(),
-                ],
-              ),
-            ),
-          ),
+          const SizedBox(height: 60),
+          _buildAnimatedTrophy(),
+          const SizedBox(height: 48),
+          _buildComingSoonText(),
+          const SizedBox(height: 48),
+          _buildDescription(),
+          const SizedBox(height: 48),
+          _buildFeatureCards(),
+          const SizedBox(height: 60),
         ],
       ),
     );
   }
 
-  Widget _buildQuickRankings(Map<String, dynamic> leaderboardSummary) {
-    final weeklyRankings =
-        leaderboardSummary['weekly'] as Map<String, dynamic>? ?? {};
+  Widget _buildAnimatedTrophy() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [
+            const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+            const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+            Colors.transparent,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+            blurRadius: 30,
+            spreadRadius: 10,
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.emoji_events_outlined,
+        size: 100,
+        color: Color(0xFF6FB8E9),
+      ),
+    );
+  }
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 2.5,
-      crossAxisSpacing: 8,
-      mainAxisSpacing: 8,
+  Widget _buildComingSoonText() {
+    return Column(
       children: [
-        _buildRankCard('XP Gained', weeklyRankings['xpGained'] ?? 'N/A',
-            Icons.star, Colors.amber),
-        _buildRankCard('Study Time', weeklyRankings['studyTime'] ?? 'N/A',
-            Icons.access_time, Colors.blue),
-        _buildRankCard('Accuracy', weeklyRankings['accuracy'] ?? 'N/A',
-            Icons.gps_fixed, Colors.green),
-        _buildRankCard('Streaks', weeklyRankings['streaks'] ?? 'N/A',
-            Icons.local_fire_department, Colors.red),
+        Text(
+          'Coming Soon',
+          style: TextStyle(
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            foreground: Paint()
+              ..shader = const LinearGradient(
+                colors: [
+                  Color(0xFF6FB8E9),
+                  Color(0xFF5AA8D9),
+                  Color(0xFF6FB8E9),
+                ],
+              ).createShader(
+                const Rect.fromLTWH(0, 0, 300, 70),
+              ),
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Competitive Learning',
+          style: TextStyle(
+            fontSize: 24,
+            color: Color(0xFFD9D9D9),
+            letterSpacing: 2,
+            fontWeight: FontWeight.w300,
+          ),
+          textAlign: TextAlign.center,
+        ),
       ],
     );
   }
 
-  Widget _buildRankCard(
-      String title, dynamic rank, IconData icon, Color color) {
-    final rankText = rank is int ? '#$rank' : rank.toString();
-
+  Widget _buildDescription() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: const Color(0xFF2A3050).withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 5,
+          ),
+        ],
       ),
-      child: Row(
+      child: const Column(
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  rankText,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: color,
-                  ),
-                ),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.white70,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+          Text(
+            "We're building something amazing!",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFD9D9D9),
             ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 24),
+          Text(
+            'Get ready for an exciting competitive learning experience',
+            style: TextStyle(
+              fontSize: 16,
+              color: Color(0xFFD9D9D9),
+              height: 1.6,
+            ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActiveCompetitionsPreview() {
-    if (_competitiveService == null) {
-      return const Center(child: Text('Loading competitions...'));
-    }
+  Widget _buildFeatureCards() {
+    final features = [
+      {
+        'icon': Icons.leaderboard_outlined,
+        'title': 'Leaderboards',
+        'description': 'Compete with friends and track your rankings',
+      },
+      {
+        'icon': Icons.sports_score_outlined,
+        'title': 'Live Competitions',
+        'description': 'Join exciting challenges and win rewards',
+      },
+      {
+        'icon': Icons.analytics_outlined,
+        'title': 'Performance Tracking',
+        'description': 'Monitor your progress and achievements',
+      },
+      {
+        'icon': Icons.people_outline,
+        'title': 'Social Learning',
+        'description': 'Connect and compete with study partners',
+      },
+    ];
 
-    final competitions = _competitiveService!.getActiveCompetitions();
-
-    if (competitions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
+    return Column(
+      children: features.map((feature) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2A3050).withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Row(
             children: [
-              Icon(Icons.emoji_events, size: 48, color: Colors.grey[600]),
-              const SizedBox(height: 12),
-              Text(
-                'No active competitions',
-                style: TextStyle(color: Colors.grey[400]),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  feature['icon'] as IconData,
+                  color: const Color(0xFF6FB8E9),
+                  size: 32,
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Check back later for new challenges!',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                textAlign: TextAlign.center,
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      feature['title'] as String,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFD9D9D9),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      feature['description'] as String,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: const Color(0xFFD9D9D9).withValues(alpha: 0.7),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-      );
-    }
-
-    return Column(
-      children: competitions.take(3).map((competition) {
-        return CompetitionCard(
-          competition: competition,
-          isParticipating: competition.participants.contains(_currentUserId),
-          onViewDetails: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CompetitiveScreen(),
-              ),
-            );
-          },
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildRecentActivity() {
-    return StreamBuilder<List<Activity>>(
-      stream: _activityService.watchRecentActivities(limit: 5),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            height: 100,
-            child: Center(
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF58A6FF)),
-              ),
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return SizedBox(
-            height: 100,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 32,
-                    color: Colors.grey[600],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'No recent activity',
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        final activities = snapshot.data!;
-
-        return Column(
-          children: activities.map((activity) {
-            IconData icon;
-            Color color;
-
-            switch (activity.type) {
-              case ActivityType.friendAdded:
-                icon = Icons.person_add;
-                color = Colors.green;
-                break;
-              case ActivityType.groupCreated:
-              case ActivityType.groupJoined:
-                icon = Icons.group_add;
-                color = Colors.blue;
-                break;
-              case ActivityType.studySessionCompleted:
-                icon = Icons.check_circle;
-                color = Colors.purple;
-                break;
-              case ActivityType.quizCompleted:
-                icon = Icons.quiz;
-                color = Colors.orange;
-                break;
-              case ActivityType.achievementUnlocked:
-                icon = Icons.emoji_events;
-                color = Colors.amber;
-                break;
-              case ActivityType.levelUp:
-                icon = Icons.trending_up;
-                color = Colors.teal;
-                break;
-              case ActivityType.taskCompleted:
-                icon = Icons.task_alt;
-                color = Colors.indigo;
-                break;
-              default:
-                icon = Icons.info;
-                color = Colors.grey;
-            }
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundColor: color.withValues(alpha: 0.2),
-                    child: Icon(icon, color: color, size: 16),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          activity.description,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          activity.getTimeAgo(),
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        );
-      },
     );
   }
 
@@ -822,9 +644,12 @@ class _SocialScreenState extends State<SocialScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.inbox, size: 64, color: Colors.grey),
+                      Icon(Icons.inbox, size: 64, color: Color(0xFF888888)),
                       SizedBox(height: 16),
-                      Text('No friend requests'),
+                      Text(
+                        'No friend requests',
+                        style: TextStyle(color: Color(0xFFD9D9D9)),
+                      ),
                     ],
                   ),
                 )
@@ -891,7 +716,7 @@ class _SocialScreenState extends State<SocialScreen>
                     'Finding StudyPal users...',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: Color(0xFF888888),
                     ),
                   ),
                 ],
@@ -907,26 +732,26 @@ class _SocialScreenState extends State<SocialScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Color(0xFF888888),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'Failed to load users',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: Color(0xFFD9D9D9),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Please check your connection and try again',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[500],
+                      color: Color(0xFF888888),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -953,26 +778,26 @@ class _SocialScreenState extends State<SocialScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.people_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: Color(0xFF888888),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'No users found',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
+                      color: Color(0xFFD9D9D9),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Be the first to invite friends to StudyPals!',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[500],
+                      color: Color(0xFF888888),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -1033,9 +858,12 @@ class _SocialScreenState extends State<SocialScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.groups, size: 64, color: Colors.grey),
+            const Icon(Icons.groups, size: 64, color: Color(0xFF888888)),
             const SizedBox(height: 16),
-            const Text('No study groups yet'),
+            const Text(
+              'No study groups yet',
+              style: TextStyle(color: Color(0xFFD9D9D9)),
+            ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _createStudyGroup,
@@ -1078,9 +906,12 @@ class _SocialScreenState extends State<SocialScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error, size: 64, color: Colors.red),
+                const Icon(Icons.error, size: 64, color: Color(0xFF888888)),
                 const SizedBox(height: 16),
-                Text('Error loading groups: ${snapshot.error}'),
+                Text(
+                  'Error loading groups: ${snapshot.error}',
+                  style: const TextStyle(color: Color(0xFFD9D9D9)),
+                ),
               ],
             ),
           );
@@ -1093,10 +924,16 @@ class _SocialScreenState extends State<SocialScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.groups, size: 64, color: Colors.grey),
+                Icon(Icons.groups, size: 64, color: Color(0xFF888888)),
                 SizedBox(height: 16),
-                Text('No public groups available'),
-                Text('Be the first to create one!'),
+                Text(
+                  'No public groups available',
+                  style: TextStyle(color: Color(0xFFD9D9D9)),
+                ),
+                Text(
+                  'Be the first to create one!',
+                  style: TextStyle(color: Color(0xFF888888)),
+                ),
               ],
             ),
           );

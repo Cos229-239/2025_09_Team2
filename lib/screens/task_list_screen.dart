@@ -8,8 +8,8 @@ import 'package:studypals/providers/task_provider.dart';
 // Import AddTaskSheet widget for creating new tasks
 import 'package:studypals/widgets/common/add_task_sheet.dart';
 
-/// Screen displaying all tasks with filtering, sorting, and management capabilities
-/// Provides comprehensive task management beyond the dashboard preview
+/// Screen displaying tasks organized by time periods (Today, This Week, This Month)
+/// Follows the same styling pattern as the notes page
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
 
@@ -18,11 +18,6 @@ class TaskListScreen extends StatefulWidget {
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  TaskStatus? _filterStatus;
-  int? _filterPriority; // Priority is an int (1=low, 2=medium, 3=high)
-  String _searchQuery = '';
-  bool _showingCompletedTasks = false; // Track if we're viewing completed tasks
-
   @override
   void initState() {
     super.initState();
@@ -36,655 +31,442 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_showingCompletedTasks ? 'Completed Tasks' : 'All Tasks'),
-        backgroundColor: Colors.blue,
+        title: const Text('Tasks'),
+        backgroundColor: const Color(0xFF6FB8E9),
         foregroundColor: Colors.white,
-        actions: [
-          // Search button
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => _showSearchDialog(context),
-          ),
-          // Filter button
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () => _showFilterDialog(context),
-          ),
-          // Add task button
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showAddTaskSheet(context),
-          ),
-        ],
+        elevation: 0,
       ),
+      backgroundColor: const Color(0xFFF5F5F5),
       body: Consumer<TaskProvider>(
         builder: (context, taskProvider, child) {
-          if (taskProvider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(
-                color: Colors.blue,
-              ),
-            );
-          }
-
-          final allTasks = taskProvider.tasks;
-
-          final filteredTasks = _filterTasks(allTasks);
-
-          final completedTasks = allTasks
-              .where((task) => task.status == TaskStatus.completed)
-              .toList();
-          final pendingTasks = allTasks
-              .where((task) => task.status != TaskStatus.completed)
-              .toList();
-
-          if (allTasks.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.task_alt,
-                    size: 64,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No tasks yet',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Create your first task to get started',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddTaskSheet(context),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Task'),
-                  ),
-                ],
-              ),
-            );
-          }
-
           return Column(
             children: [
-              // Task summary header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: Colors.blue.shade200,
-                      width: 1,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Task Overview',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    color: Colors.blue.shade700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                        ),
-                        if (_filterStatus != null ||
-                            _filterPriority != null ||
-                            _searchQuery.isNotEmpty ||
-                            _showingCompletedTasks)
-                          TextButton(
-                            onPressed: _clearFilters,
-                            child: Text(_showingCompletedTasks
-                                ? 'Back to Active Tasks'
-                                : 'Clear Filters'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSummaryItem(
-                            context,
-                            'Total',
-                            '${allTasks.length}',
-                            Colors.blue,
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildSummaryItem(
-                            context,
-                            'Pending',
-                            '${pendingTasks.length}',
-                            Colors.orange,
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildSummaryItem(
-                            context,
-                            'Completed',
-                            '${completedTasks.length}',
-                            _showingCompletedTasks
-                                ? Colors.green.shade700
-                                : Colors.green,
-                            onTap: () {
-                              setState(() {
-                                _showingCompletedTasks =
-                                    !_showingCompletedTasks;
-                                // Clear other filters when switching between views
-                                if (_showingCompletedTasks) {
-                                  _filterStatus = null;
-                                  _filterPriority = null;
-                                  _searchQuery = '';
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                        Expanded(
-                          child: _buildSummaryItem(
-                            context,
-                            'Filtered',
-                            '${filteredTasks.length}',
-                            Colors.purple,
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (allTasks.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: LinearProgressIndicator(
-                          value: completedTasks.length / allTasks.length,
-                          backgroundColor: Colors.blue.shade200,
-                          valueColor:
-                              const AlwaysStoppedAnimation<Color>(Colors.blue),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-
-              // Active filters display
-              if (_filterStatus != null ||
-                  _filterPriority != null ||
-                  _searchQuery.isNotEmpty)
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: Colors.grey.shade100,
-                  child: Wrap(
-                    spacing: 8,
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (_searchQuery.isNotEmpty)
-                        Chip(
-                          label: Text('Search: "$_searchQuery"'),
-                          onDeleted: () => setState(() => _searchQuery = ''),
-                          deleteIcon: const Icon(Icons.close, size: 16),
-                        ),
-                      if (_filterStatus != null)
-                        Chip(
-                          label:
-                              Text('Status: ${_getStatusText(_filterStatus!)}'),
-                          onDeleted: () => setState(() => _filterStatus = null),
-                          deleteIcon: const Icon(Icons.close, size: 16),
-                        ),
-                      if (_filterPriority != null)
-                        Chip(
-                          label: Text(
-                              'Priority: ${_getPriorityText(_filterPriority!)}'),
-                          onDeleted: () =>
-                              setState(() => _filterPriority = null),
-                          deleteIcon: const Icon(Icons.close, size: 16),
-                        ),
+                      _buildTaskSection(
+                        title: "Today's Tasks",
+                        tasks: _getTodayTasks(taskProvider.tasks),
+                        icon: Icons.today,
+                        emptyMessage: "No tasks due today",
+                      ),
+                      const SizedBox(height: 24),
+                      _buildTaskSection(
+                        title: "This Week's Tasks",
+                        tasks: _getThisWeekTasks(taskProvider.tasks),
+                        icon: Icons.view_week,
+                        emptyMessage: "No tasks due this week",
+                      ),
+                      const SizedBox(height: 24),
+                      _buildTaskSection(
+                        title: "This Month's Tasks",
+                        tasks: _getThisMonthTasks(taskProvider.tasks),
+                        icon: Icons.calendar_month,
+                        emptyMessage: "No tasks due this month",
+                      ),
+                      const SizedBox(height: 80), // Space for floating button
                     ],
                   ),
                 ),
-
-              // Task list
-              Expanded(
-                child: filteredTasks.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 64,
-                              color: Colors.grey.shade400,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No tasks match your filters',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: Colors.grey,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Try adjusting your search or filters',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: filteredTasks.length,
-                        itemBuilder: (context, index) {
-                          final task = filteredTasks[index];
-                          return _buildDetailedTaskItem(
-                              context, task, taskProvider);
-                        },
+              ),
+              
+              // Create button at bottom matching notes page style
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showCreateTaskModal(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create New Task'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: const Color(0xFF6FB8E9),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                    ),
+                  ),
+                ),
               ),
             ],
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTaskSheet(context),
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
+    );
+  }
+
+  /// Get tasks due today
+  List<Task> _getTodayTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      return task.dueAt!.year == today.year &&
+          task.dueAt!.month == today.month &&
+          task.dueAt!.day == today.day;
+    }).toList();
+  }
+
+  /// Get tasks due this week
+  List<Task> _getThisWeekTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      // Exclude today's tasks as they're shown in the today section
+      final isToday = task.dueAt!.year == today.year &&
+          task.dueAt!.month == today.month &&
+          task.dueAt!.day == today.day;
+      if (isToday) return false;
+      
+      return task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  /// Get tasks due this month
+  List<Task> _getThisMonthTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final startOfMonth = DateTime(today.year, today.month, 1);
+    final endOfMonth = DateTime(today.year, today.month + 1, 0);
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      
+      // Exclude tasks already shown in today and this week sections
+      final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+      final endOfWeek = startOfWeek.add(const Duration(days: 6));
+      final isInCurrentWeek = task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+      if (isInCurrentWeek) return false;
+      
+      return task.dueAt!.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfMonth.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  /// Build a task section with header and task list
+  Widget _buildTaskSection({
+    required String title,
+    required List<Task> tasks,
+    required IconData icon,
+    required String emptyMessage,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF6FB8E9),
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF333333),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${tasks.length}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF6FB8E9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        
+        // Task list or empty message
+        if (tasks.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.task_alt,
+                  size: 48,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  emptyMessage,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...tasks.map((task) => _buildTaskCard(task)).toList(),
+      ],
+    );
+  }
+
+  /// Build individual task card matching notes page style
+  Widget _buildTaskCard(Task task) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _showTaskDetails(task),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Task status checkbox
+                GestureDetector(
+                  onTap: () => _toggleTaskStatus(task),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: task.status == TaskStatus.completed
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      color: task.status == TaskStatus.completed
+                          ? const Color(0xFF4CAF50)
+                          : Colors.transparent,
+                    ),
+                    child: task.status == TaskStatus.completed
+                        ? const Icon(
+                            Icons.check,
+                            size: 16,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Task content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          decoration: task.status == TaskStatus.completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: task.status == TaskStatus.completed
+                              ? Colors.grey[500]
+                              : const Color(0xFF333333),
+                        ),
+                      ),
+                      if (task.tags.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: task.tags.take(3).map((tag) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              tag,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6FB8E9),
+                              ),
+                            ),
+                          )).toList(),
+                        ),
+                      ],
+                      if (task.dueAt != null) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 16,
+                              color: Colors.grey[500],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatDueDate(task.dueAt!),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                
+                // More options menu
+                PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      _editTask(task);
+                    } else if (value == 'delete') {
+                      _deleteTask(task);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit, size: 18),
+                          SizedBox(width: 12),
+                          Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 18, color: Colors.red),
+                          SizedBox(width: 12),
+                          Text('Delete', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: Icon(
+                    Icons.more_vert,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  List<Task> _filterTasks(List<Task> tasks) {
-    var filtered = tasks;
+  /// Format due date for display
+  String _formatDueDate(DateTime dueDate) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final taskDate = DateTime(dueDate.year, dueDate.month, dueDate.day);
 
-    // Apply search filter (search in title since Task doesn't have description)
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered
-          .where((task) =>
-              task.title.toLowerCase().contains(_searchQuery.toLowerCase()))
-          .toList();
-    }
-
-    // Apply status filter
-    if (_filterStatus != null) {
-      filtered =
-          filtered.where((task) => task.status == _filterStatus).toList();
-    }
-
-    // Apply priority filter
-    if (_filterPriority != null) {
-      filtered =
-          filtered.where((task) => task.priority == _filterPriority).toList();
-    }
-
-    // Apply completed/active task filter based on current view mode
-    if (_showingCompletedTasks) {
-      // Show only completed tasks
-      filtered = filtered
-          .where((task) => task.status == TaskStatus.completed)
-          .toList();
+    if (taskDate == today) {
+      return 'Due today';
+    } else if (taskDate == tomorrow) {
+      return 'Due tomorrow';
+    } else if (taskDate.isBefore(today)) {
+      final diff = today.difference(taskDate).inDays;
+      return 'Overdue by $diff day${diff > 1 ? 's' : ''}';
     } else {
-      // Hide completed tasks (show only active tasks)
-      filtered = filtered
-          .where((task) => task.status != TaskStatus.completed)
-          .toList();
+      final diff = taskDate.difference(today).inDays;
+      return 'Due in $diff day${diff > 1 ? 's' : ''}';
     }
-
-    // Sort by priority (high to low) then by due date
-    filtered.sort((a, b) {
-      // First sort by completion status (incomplete first)
-      if (a.status != b.status) {
-        return a.status == TaskStatus.completed ? 1 : -1;
-      }
-      // Then by priority (high to low)
-      final priorityComparison = b.priority.compareTo(a.priority);
-      if (priorityComparison != 0) return priorityComparison;
-
-      // Finally by due date (earlier first)
-      if (a.dueAt != null && b.dueAt != null) {
-        return a.dueAt!.compareTo(b.dueAt!);
-      } else if (a.dueAt != null) {
-        return -1;
-      } else if (b.dueAt != null) {
-        return 1;
-      }
-      return 0;
-    });
-
-    return filtered;
   }
 
-  void _clearFilters() {
-    setState(() {
-      _filterStatus = null;
-      _filterPriority = null;
-      _searchQuery = '';
-      _showingCompletedTasks = false; // Reset to active tasks view
-    });
+  /// Show create task modal
+  void _showCreateTaskModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const AddTaskSheet(),
+    );
   }
 
-  void _showSearchDialog(BuildContext context) {
+  /// Toggle task completion status
+  void _toggleTaskStatus(Task task) {
+    final provider = Provider.of<TaskProvider>(context, listen: false);
+    final newStatus = task.status == TaskStatus.completed
+        ? TaskStatus.pending
+        : TaskStatus.completed;
+    
+    // Create updated task
+    final updatedTask = Task(
+      id: task.id,
+      title: task.title,
+      estMinutes: task.estMinutes,
+      dueAt: task.dueAt,
+      priority: task.priority,
+      tags: task.tags,
+      status: newStatus,
+      linkedNoteId: task.linkedNoteId,
+      linkedDeckId: task.linkedDeckId,
+    );
+    
+    provider.updateTask(updatedTask);
+  }
+
+  /// Show task details
+  void _showTaskDetails(Task task) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Search Tasks'),
-        content: TextField(
-          decoration: const InputDecoration(
-            hintText: 'Enter search terms...',
-            border: OutlineInputBorder(),
-          ),
-          onChanged: (value) => _searchQuery = value,
-          autofocus: true,
+        title: Text(task.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Estimated time: ${task.estMinutes} minutes'),
+            if (task.dueAt != null)
+              Text('Due: ${_formatDueDate(task.dueAt!)}'),
+            Text('Priority: ${_getPriorityText(task.priority)}'),
+            if (task.tags.isNotEmpty)
+              Text('Tags: ${task.tags.join(', ')}'),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {});
-              Navigator.of(context).pop();
-            },
-            child: const Text('Search'),
+            child: const Text('Close'),
           ),
         ],
       ),
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    TaskStatus? tempStatus = _filterStatus;
-    int? tempPriority = _filterPriority;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Filter Tasks'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Status:'),
-              DropdownButton<TaskStatus?>(
-                value: tempStatus,
-                isExpanded: true,
-                items: [
-                  const DropdownMenuItem(value: null, child: Text('All')),
-                  ...TaskStatus.values.map((status) => DropdownMenuItem(
-                        value: status,
-                        child: Text(_getStatusText(status)),
-                      )),
-                ],
-                onChanged: (value) => setDialogState(() => tempStatus = value),
-              ),
-              const SizedBox(height: 16),
-              const Text('Priority:'),
-              DropdownButton<int?>(
-                value: tempPriority,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(value: null, child: Text('All')),
-                  DropdownMenuItem(value: 1, child: Text('Low')),
-                  DropdownMenuItem(value: 2, child: Text('Medium')),
-                  DropdownMenuItem(value: 3, child: Text('High')),
-                ],
-                onChanged: (value) =>
-                    setDialogState(() => tempPriority = value),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _filterStatus = tempStatus;
-                  _filterPriority = tempPriority;
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Apply'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAddTaskSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => const AddTaskSheet(),
-    );
-  }
-
-  Widget _buildSummaryItem(
-    BuildContext context,
-    String label,
-    String value,
-    Color color, {
-    VoidCallback? onTap,
-  }) {
-    Widget content = Column(
-      children: [
-        Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-        ),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
-        ),
-      ],
-    );
-
-    if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: (label == 'Completed' && _showingCompletedTasks)
-                ? color.withAlpha(40) // Highlight when active
-                : Colors.transparent,
-            border: (label == 'Completed' && _showingCompletedTasks)
-                ? Border.all(color: color.withAlpha(100), width: 1)
-                : null,
-          ),
-          child: content,
-        ),
-      );
-    }
-
-    return content;
-  }
-
-  Widget _buildDetailedTaskItem(
-    BuildContext context,
-    Task task,
-    TaskProvider taskProvider,
-  ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: task.status == TaskStatus.completed
-                ? Colors.green
-                : _getPriorityColor(task.priority),
-            width: 2,
-          ),
-          color: task.status == TaskStatus.completed
-              ? Colors.green.shade50
-              : Colors.white,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Task header with checkbox, title, and priority
-            Row(
-              children: [
-                // Completion checkbox
-                Checkbox(
-                  value: task.status == TaskStatus.completed,
-                  onChanged: (value) async {
-                    if (value == true) {
-                      await taskProvider.completeTask(task.id);
-                    } else {
-                      // Update task status back to pending
-                      final updatedTask =
-                          task.copyWith(status: TaskStatus.pending);
-                      await taskProvider.updateTask(updatedTask);
-                    }
-                  },
-                  activeColor: Colors.green,
-                ),
-                // Task title
-                Expanded(
-                  child: Text(
-                    task.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          decoration: task.status == TaskStatus.completed
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                  ),
-                ),
-                // Priority indicator
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getPriorityColor(task.priority).withAlpha(50),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _getPriorityText(task.priority),
-                    style: TextStyle(
-                      color: _getPriorityColor(task.priority),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // Task details row
-            if (task.dueAt != null || task.estMinutes > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 8, left: 48),
-                child: Row(
-                  children: [
-                    if (task.dueAt != null) ...[
-                      Icon(
-                        Icons.schedule,
-                        size: 16,
-                        color: Colors.grey.shade600,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Due: ${_formatDate(task.dueAt!)}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
-                            ),
-                      ),
-                      if (task.estMinutes > 0) const SizedBox(width: 16),
-                    ],
-                    if (task.estMinutes > 0) ...[
-                      Icon(
-                        Icons.timer,
-                        size: 16,
-                        color: Colors.grey.shade600,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${task.estMinutes} min',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey.shade600,
-                            ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-
-            // Task status
-            Padding(
-              padding: const EdgeInsets.only(top: 8, left: 48),
-              child: Row(
-                children: [
-                  Icon(
-                    _getStatusIcon(task.status),
-                    size: 16,
-                    color: _getStatusColor(task.status),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _getStatusText(task.status),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: _getStatusColor(task.status),
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getPriorityColor(int priority) {
-    switch (priority) {
-      case 1:
-        return Colors.green;
-      case 2:
-        return Colors.orange;
-      case 3:
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
+  /// Get priority text
   String _getPriorityText(int priority) {
     switch (priority) {
       case 1:
@@ -698,58 +480,39 @@ class _TaskListScreenState extends State<TaskListScreen> {
     }
   }
 
-  Color _getStatusColor(TaskStatus status) {
-    switch (status) {
-      case TaskStatus.pending:
-        return Colors.orange;
-      case TaskStatus.inProgress:
-        return Colors.blue;
-      case TaskStatus.completed:
-        return Colors.green;
-      case TaskStatus.cancelled:
-        return Colors.red;
-    }
+  /// Edit task
+  void _editTask(Task task) {
+    // TODO: Implement task editing
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Task editing coming soon!')),
+    );
   }
 
-  IconData _getStatusIcon(TaskStatus status) {
-    switch (status) {
-      case TaskStatus.pending:
-        return Icons.schedule;
-      case TaskStatus.inProgress:
-        return Icons.play_circle;
-      case TaskStatus.completed:
-        return Icons.check_circle;
-      case TaskStatus.cancelled:
-        return Icons.cancel;
-    }
-  }
-
-  String _getStatusText(TaskStatus status) {
-    switch (status) {
-      case TaskStatus.pending:
-        return 'Pending';
-      case TaskStatus.inProgress:
-        return 'In Progress';
-      case TaskStatus.completed:
-        return 'Completed';
-      case TaskStatus.cancelled:
-        return 'Cancelled';
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final taskDate = DateTime(date.year, date.month, date.day);
-
-    if (taskDate == today) {
-      return 'Today';
-    } else if (taskDate == today.add(const Duration(days: 1))) {
-      return 'Tomorrow';
-    } else if (taskDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday';
-    } else {
-      return '${date.month}/${date.day}/${date.year}';
-    }
+  /// Delete task
+  void _deleteTask(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Task'),
+        content: Text('Are you sure you want to delete "${task.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<TaskProvider>(context, listen: false).deleteTask(task.id);
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Task deleted')),
+              );
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
   }
 }

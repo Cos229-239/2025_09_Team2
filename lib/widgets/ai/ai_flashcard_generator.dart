@@ -276,7 +276,15 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     return Consumer<StudyPalsAIProvider>(
       builder: (context, aiProvider, child) {
         if (!aiProvider.isAIEnabled) {
-          return Card(
+          return Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF242628), // Dashboard container color
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -284,20 +292,21 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                   Icon(
                     Icons.auto_awesome_outlined,
                     size: 48,
-                    color: Colors.grey.shade400,
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.7),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'AI Flashcard Generator',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: const Color(0xFFD9D9D9), // Dashboard text color
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'AI features are not available. Configure your AI settings to enable automatic flashcard generation.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey.shade600),
+                    style: const TextStyle(color: Color(0xFFB0B0B0)), // Dimmer text color
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
@@ -316,6 +325,10 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     },
                     icon: const Icon(Icons.settings),
                     label: const Text('Configure AI'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
+                      foregroundColor: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -323,7 +336,15 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
           );
         }
 
-        return Card(
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF242628), // Dashboard container color
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -334,7 +355,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                   children: [
                     Icon(
                       Icons.auto_awesome,
-                      color: Theme.of(context).primaryColor,
+                      color: const Color(0xFF6FB8E9), // Dashboard accent color
                       size: 28,
                     ),
                     const SizedBox(width: 8),
@@ -343,6 +364,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                       style:
                           Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                color: const Color(0xFFD9D9D9), // Dashboard text color
                               ),
                     ),
                   ],
@@ -352,11 +374,24 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                 // Topic input
                 TextField(
                   controller: _topicController,
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
+                  decoration: InputDecoration(
                     labelText: 'Topic or Subject',
+                    labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                     hintText: 'e.g., Photosynthesis, World War II, Calculus...',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.topic),
+                    hintStyle: const TextStyle(color: Color(0xFF808080)),
+                    filled: true,
+                    fillColor: const Color(0xFF1A1A1A),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                    ),
+                    prefixIcon: const Icon(Icons.topic, color: Color(0xFF6FB8E9)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -365,12 +400,25 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                 TextField(
                   controller: _textController,
                   maxLines: 4,
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
+                  decoration: InputDecoration(
                     labelText: 'Source Text (Optional)',
+                    labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                     hintText:
                         'Paste notes, textbook excerpts, or any material to generate flashcards from...',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.text_snippet),
+                    hintStyle: const TextStyle(color: Color(0xFF808080)),
+                    filled: true,
+                    fillColor: const Color(0xFF1A1A1A),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                    ),
+                    prefixIcon: const Icon(Icons.text_snippet, color: Color(0xFF6FB8E9)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -382,14 +430,27 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         initialValue: _selectedSubject,
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
+                        dropdownColor: const Color(0xFF242628), // Dashboard container color
+                        decoration: InputDecoration(
                           labelText: 'Subject',
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                          filled: true,
+                          fillColor: const Color(0xFF1A1A1A),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                          ),
                         ),
                         items: _subjects.map((subject) {
                           return DropdownMenuItem(
                             value: subject,
-                            child: Text(subject),
+                            child: Text(subject, style: const TextStyle(color: Color(0xFFD9D9D9))),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -407,15 +468,30 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         initialValue: _selectedLearningStyle,
-                        decoration: const InputDecoration(
+                        style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
+                        dropdownColor: const Color(0xFF242628), // Dashboard container color
+                        decoration: InputDecoration(
                           labelText: 'Learning Style',
-                          border: OutlineInputBorder(),
+                          labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                          filled: true,
+                          fillColor: const Color(0xFF1A1A1A),
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                          ),
                         ),
                         items: _learningStyles.map((style) {
                           return DropdownMenuItem(
                             value: style,
-                            child: Text(style.substring(0, 1).toUpperCase() +
-                                style.substring(1)),
+                            child: Text(
+                              style.substring(0, 1).toUpperCase() + style.substring(1),
+                              style: const TextStyle(color: Color(0xFFD9D9D9)),
+                            ),
                           );
                         }).toList(),
                         onChanged: (value) {
@@ -437,13 +513,17 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                   children: [
                     Text(
                       'Cards to Generate: $_cardCount',
-                      style: Theme.of(context).textTheme.labelMedium,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: const Color(0xFFD9D9D9), // Dashboard text color
+                      ),
                     ),
                     Slider(
                       value: _cardCount.toDouble(),
                       min: 3,
                       max: 15,
                       divisions: 12,
+                      activeColor: const Color(0xFF6FB8E9), // Dashboard accent color
+                      inactiveColor: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                       onChanged: (value) {
                         setState(() {
                           _cardCount = value.round();
@@ -459,18 +539,18 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     padding: const EdgeInsets.all(12),
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade50,
-                      border: Border.all(color: Colors.red.shade200),
+                      color: const Color(0xFFEF5350).withValues(alpha: 0.1), // Red with transparency
+                      border: Border.all(color: const Color(0xFFEF5350).withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.error_outline, color: Colors.red.shade600),
+                        const Icon(Icons.error_outline, color: Color(0xFFEF5350)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _generationError!,
-                            style: TextStyle(color: Colors.red.shade600),
+                            style: const TextStyle(color: Color(0xFFEF5350)),
                           ),
                         ),
                       ],
@@ -486,12 +566,17 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
                           )
                         : const Icon(Icons.auto_awesome),
                     label: Text(
                         isLoading ? 'Generating...' : 'Generate Flashcards'),
                     style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
@@ -506,6 +591,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     icon: const Icon(Icons.bug_report),
                     label: const Text('Debug AI Response'),
                     style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
+                      side: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                     ),
                   ),
@@ -516,26 +603,29 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard accent with transparency
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                      width: 1,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.lightbulb_outline,
                             size: 16,
-                            color: Theme.of(context).primaryColor,
+                            color: Color(0xFF6FB8E9), // Dashboard accent color
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Tips:',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
+                              color: Color(0xFF6FB8E9), // Dashboard accent color
                             ),
                           ),
                         ],
@@ -546,7 +636,10 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                         '• Paste text from notes or textbooks for targeted cards\n'
                         '• Choose the right subject to get relevant content\n'
                         '• Start with fewer cards and generate more if needed',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFD9D9D9), // Dashboard text color
+                        ),
                       ),
                     ],
                   ),

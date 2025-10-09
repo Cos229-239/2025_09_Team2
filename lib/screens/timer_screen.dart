@@ -112,6 +112,7 @@ class _TimerScreenState extends State<TimerScreen> {
   Timer? _timer;
   int _remainingSeconds = 0;
   bool _showPresets = true; // Toggle between sessions and custom timer
+  SavedTimer? _selectedTimerDetails; // Track selected timer for detailed view
 
   // Advanced session state
   TimerState _timerState = TimerState.idle;
@@ -125,11 +126,11 @@ class _TimerScreenState extends State<TimerScreen> {
   int _breakMinutes = 5;
   int _iterationCount = 1;
   final String _customTimerLabel = '';
-  bool _showCustomOptions = false;
+  final bool _showCustomOptions = false;
   final TextEditingController _labelController = TextEditingController();
 
   // Saved custom timers for quick selection (includes converted study techniques)
-  List<SavedTimer> _savedTimers = [
+  final List<SavedTimer> _savedTimers = [
     // Study Technique Presets converted to Saved Timers
     SavedTimer(
       label: 'Pomodoro Focus',
@@ -251,9 +252,13 @@ class _TimerScreenState extends State<TimerScreen> {
       FixedExtentScrollController();
 
   @override
-  @override
   void dispose() {
-    _timer?.cancel();
+    // Only cancel timer if it's idle (user has stopped it)
+    // This allows timer to continue running when navigating away
+    if (_timerState == TimerState.idle) {
+      _timer?.cancel();
+    }
+    
     _hoursController.dispose();
     _minutesController.dispose();
     _secondsController.dispose();
@@ -296,6 +301,7 @@ class _TimerScreenState extends State<TimerScreen> {
       _sessionCycle = 1;
       _remainingSeconds = session.phases[0].minutes * 60;
       _timerState = TimerState.running;
+      _showPresets = false; // Switch to Active Timer tab
     });
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -342,6 +348,7 @@ class _TimerScreenState extends State<TimerScreen> {
       _activeSession = null;
       _currentPhaseIndex = 0;
       _sessionCycle = 1;
+      // Stay in Custom Timer area when timer stops
     });
   }
 
@@ -396,7 +403,7 @@ class _TimerScreenState extends State<TimerScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A3050),
+        backgroundColor: const Color(0xFF242628), // Dashboard header color
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
@@ -457,7 +464,7 @@ class _TimerScreenState extends State<TimerScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A3050),
+        backgroundColor: const Color(0xFF242628), // Dashboard header color
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
@@ -499,7 +506,7 @@ class _TimerScreenState extends State<TimerScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF2A3050),
+        backgroundColor: const Color(0xFF242628), // Dashboard header color
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
@@ -764,7 +771,7 @@ class _TimerScreenState extends State<TimerScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A3050),
+        color: const Color(0xFF242628), // Dashboard header color
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isActive ? color : color.withValues(alpha: 0.3),
@@ -913,11 +920,11 @@ class _TimerScreenState extends State<TimerScreen> {
         mainAxisAlignment:
             MainAxisAlignment.start, // Changed from center to start
         children: [
-          // Toggle between presets and custom timer
+          // Toggle between presets and active/custom timer
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: const Color(0xFF2A3050),
+              color: const Color(0xFF242628), // Dashboard header color
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: const Color(0xFF6FB8E9),
@@ -962,7 +969,7 @@ class _TimerScreenState extends State<TimerScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Custom Timer',
+                        _timerState != TimerState.idle ? 'Current Timer' : 'Custom Timer',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: !_showPresets
@@ -978,11 +985,16 @@ class _TimerScreenState extends State<TimerScreen> {
             ),
           ),
 
+          // Add spacing whether timer is active or not
           const SizedBox(height: 30),
 
-          // Show presets or custom timer based on toggle - wrapped in Expanded
+          // Show presets or custom/current timer based on toggle and timer state
           Expanded(
-            child: _showPresets ? _buildStudyPresets() : _buildCustomTimer(),
+            child: _showPresets 
+              ? _buildStudyPresets() 
+              : (_timerState != TimerState.idle 
+                  ? _buildActiveTimer() 
+                  : _buildCustomTimer()),
           ),
         ],
       ),
@@ -1003,40 +1015,566 @@ class _TimerScreenState extends State<TimerScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Saved timer options displayed as horizontal scrolling cards
-        if (_savedTimers.isNotEmpty) ...[
-          Container(
-            height: 130, // Increased from 120 to prevent overflow
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _savedTimers.length,
-              itemBuilder: (context, index) {
-                final timer = _savedTimers[index];
-                return _buildSavedTimerPresetCard(timer, index);
-              },
+        // Show timer details if one is selected, otherwise show timer grid
+        if (_selectedTimerDetails != null) ...[
+          Expanded(
+            child: SingleChildScrollView(
+              child: _buildTimerDetailsView(_selectedTimerDetails!),
             ),
           ),
         ] else ...[
-          const Text(
-            'No saved timers yet. Create some in the Custom Timer section!',
-            style: TextStyle(
-              color: Color(0xFFB0B0B0),
+          // Saved timer options displayed as wrapped cards
+          if (_savedTimers.isNotEmpty) ...[
+            Wrap(
+              spacing: 16, // Horizontal spacing between cards
+              runSpacing: 16, // Vertical spacing between rows
+              children: _savedTimers.asMap().entries.map((entry) {
+                final index = entry.key;
+                final timer = entry.value;
+                return _buildSavedTimerPresetCard(timer, index);
+              }).toList(),
+            ),
+          ] else ...[
+            const Text(
+              'No saved timers yet. Create some in the Custom Timer section!',
+              style: TextStyle(
+                color: Color(0xFFB0B0B0),
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          const SizedBox(height: 30),
+        ],
+      ],
+    );
+  }
+
+  // Get study technique description for preset timers
+  String _getStudyTechniqueDescription(String timerLabel) {
+    switch (timerLabel) {
+      case 'Pomodoro Focus':
+        return 'The Pomodoro Technique involves working in focused 25-minute intervals followed by 5-minute breaks. This method helps maintain concentration, prevents burnout, and makes large tasks more manageable by breaking them into smaller, timed segments.';
+      case 'Deep Work Session':
+        return 'Deep Work sessions are extended periods (90+ minutes) of focused, cognitively demanding work without distractions. This technique is ideal for complex tasks requiring sustained attention and produces high-quality output in less time.';
+      case 'Time-Box Focus':
+        return 'Time-boxing allocates specific time periods to tasks, creating urgency and preventing perfectionism. This 45-minute focused session helps you work efficiently within constraints and maintain momentum without breaks.';
+      default:
+        return 'This is a custom timer you created. Adjust the study duration and break intervals to match your personal learning preferences and attention span.';
+    }
+  }
+
+  Widget _buildTimerDetailsView(SavedTimer timer) {
+    final bool isPresetTimer = ['Pomodoro Focus', 'Deep Work Session', 'Time-Box Focus'].contains(timer.label);
+    
+    return Container(
+      margin: const EdgeInsets.only(top: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF242628),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF6FB8E9), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with timer name and close button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  timer.label,
+                  style: const TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedTimerDetails = null;
+                  });
+                },
+                icon: const Icon(
+                  Icons.close,
+                  color: Color(0xFF6FB8E9),
+                  size: 24,
+                ),
+              ),
+            ],
+          ),
+          
+          if (isPresetTimer) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFF6FB8E9), width: 1),
+              ),
+              child: const Text(
+                'Study Technique',
+                style: TextStyle(
+                  color: Color(0xFF6FB8E9),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+          
+          const SizedBox(height: 20),
+          
+          // Timer specifications
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  'Study Time',
+                  timer.formattedTime,
+                  Icons.schedule,
+                ),
+              ),
+              if (timer.includeBreakTimer)
+                Expanded(
+                  child: _buildDetailItem(
+                    'Break Time',
+                    '${timer.breakMinutes} min',
+                    Icons.coffee,
+                  ),
+                ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          Row(
+            children: [
+              Expanded(
+                child: _buildDetailItem(
+                  'Cycles',
+                  '${timer.cycles}',
+                  Icons.repeat,
+                ),
+              ),
+              Expanded(
+                child: _buildDetailItem(
+                  'Total Time',
+                  timer.includeBreakTimer 
+                    ? _formatTotalTime(timer.totalSeconds + (timer.breakMinutes * 60 * timer.cycles))
+                    : timer.formattedTime,
+                  Icons.timer,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Description
+          Text(
+            isPresetTimer ? 'Study Technique Description:' : 'Description:',
+            style: const TextStyle(
+              color: Color(0xFF6FB8E9),
               fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _getStudyTechniqueDescription(timer.label),
+            style: const TextStyle(
+              color: Color(0xFFD9D9D9),
+              fontSize: 14,
+              height: 1.5,
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Action buttons
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Start the timer directly
+                    setState(() {
+                      _selectedHours = timer.hours;
+                      _selectedMinutes = timer.minutes;
+                      _selectedSeconds = timer.seconds;
+                      _includeBreakTimer = timer.includeBreakTimer;
+                      _breakMinutes = timer.breakMinutes;
+                      _iterationCount = timer.cycles;
+                      _labelController.text = timer.label;
+                      _selectedTimerDetails = null;
+                    });
+                    _startCustomTimer();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6FB8E9),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Start Timer',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    // Load timer settings and switch to custom timer view
+                    setState(() {
+                      _selectedHours = timer.hours;
+                      _selectedMinutes = timer.minutes;
+                      _selectedSeconds = timer.seconds;
+                      _includeBreakTimer = timer.includeBreakTimer;
+                      _breakMinutes = timer.breakMinutes;
+                      _iterationCount = timer.cycles;
+                      _labelController.text = timer.label;
+                      _selectedTimerDetails = null;
+                      _showPresets = false;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF6FB8E9),
+                    side: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Customize',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF16181A),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), width: 1),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: const Color(0xFF6FB8E9),
+            size: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFFB0B0B0),
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFFD9D9D9),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTotalTime(int totalSeconds) {
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else {
+      return '${minutes}m';
+    }
+  }
+
+  Widget _buildActiveTimer() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Timer title and status
+          Text(
+            _activeSession?.name ?? 'Custom Timer',
+            style: const TextStyle(
+              color: Color(0xFFD9D9D9),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
+          
+          if (_activeSession != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _activeSession!.phases[_currentPhaseIndex].name,
+              style: TextStyle(
+                color: _activeSession!.phases[_currentPhaseIndex].color,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          
+          const SizedBox(height: 40),
+          
+          // Large timer display
+          Container(
+            width: 280,
+            height: 280,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF242628),
+              border: Border.all(
+                color: const Color(0xFF6FB8E9),
+                width: 4,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _formatTime(_remainingSeconds),
+                    style: const TextStyle(
+                      color: Color(0xFFD9D9D9),
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _timerState == TimerState.paused ? 'PAUSED' : 'RUNNING',
+                    style: TextStyle(
+                      color: _timerState == TimerState.paused 
+                        ? const Color(0xFFFF9800) 
+                        : const Color(0xFF4CAF50),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 40),
+          
+          // Control buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              // Pause/Resume button
+              ElevatedButton(
+                onPressed: _timerState == TimerState.paused 
+                  ? _resumeTimer 
+                  : _pauseTimer,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6FB8E9),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _timerState == TimerState.paused 
+                        ? Icons.play_arrow 
+                        : Icons.pause,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _timerState == TimerState.paused ? 'Resume' : 'Pause',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Stop button
+              OutlinedButton(
+                onPressed: () {
+                  _stopTimer();
+                  setState(() {
+                    _timerState = TimerState.idle;
+                    _activeSession = null;
+                  });
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFEF5350),
+                  side: const BorderSide(color: Color(0xFFEF5350), width: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.stop, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Stop',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 30),
+          
+          // Session progress (if applicable)
+          if (_activeSession != null) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF242628),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'Session Progress',
+                    style: const TextStyle(
+                      color: Color(0xFF6FB8E9),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          Text(
+                            'Phase',
+                            style: const TextStyle(
+                              color: Color(0xFFB0B0B0),
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            '${_currentPhaseIndex + 1}/${_activeSession!.phases.length}',
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        width: 1,
+                        height: 30,
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            'Instructions',
+                            style: const TextStyle(
+                              color: Color(0xFFB0B0B0),
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            _activeSession!.phases[_currentPhaseIndex].instructions,
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
-        const SizedBox(height: 30),
-      ],
+      ),
     );
   }
 
   Widget _buildSavedTimerPresetCard(SavedTimer timer, int index) {
     return Container(
       width: 160,
-      margin: const EdgeInsets.only(right: 16),
+      height: 130, // Fixed height for consistent card sizing
       decoration: BoxDecoration(
-        color: const Color(0xFF2A3050),
+        color: const Color(0xFF242628), // Dashboard header color
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF6FB8E9), width: 2),
         boxShadow: [
@@ -1052,25 +1590,10 @@ class _TimerScreenState extends State<TimerScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            // Load the saved timer settings
+            // Show detailed view of the timer
             setState(() {
-              _selectedHours = timer.hours;
-              _selectedMinutes = timer.minutes;
-              _selectedSeconds = timer.seconds;
-              _includeBreakTimer = timer.includeBreakTimer;
-              _breakMinutes = timer.breakMinutes;
-              _iterationCount = timer.cycles;
-              _labelController.text = timer.label;
+              _selectedTimerDetails = timer;
             });
-            // Switch to custom timer tab to see the loaded settings
-            setState(() => _showPresets = false);
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Loaded timer "${timer.label}"'),
-                backgroundColor: const Color(0xFF4CAF50),
-              ),
-            );
           },
           onLongPress: () {
             // Remove timer from saved list
@@ -1172,7 +1695,7 @@ class _TimerScreenState extends State<TimerScreen> {
       width: 160,
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A3050),
+        color: const Color(0xFF242628), // Dashboard header color
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: session.primaryColor, width: 2),
         boxShadow: [
@@ -1298,7 +1821,7 @@ class _TimerScreenState extends State<TimerScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A3050),
+        color: const Color(0xFF242628), // Dashboard header color
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: const Color(0xFF6FB8E9),
@@ -1726,6 +2249,7 @@ class _TimerScreenState extends State<TimerScreen> {
       setState(() {
         _remainingSeconds = totalSeconds;
         _timerState = TimerState.running;
+        _showPresets = false; // Switch to Active Timer tab
       });
       _startTimer();
     }

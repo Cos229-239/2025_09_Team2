@@ -10,6 +10,7 @@ import '../providers/pet_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/app_state.dart';
 import '../widgets/visual_flashcard_widget.dart';
+import '../widgets/common/themed_background_wrapper.dart';
 import '../services/quiz_service.dart';
 import '../services/predictive_scheduling_service.dart' as scheduling;
 import '../widgets/schedule/schedule_prediction_widget.dart';
@@ -29,22 +30,23 @@ import 'deck_completion_screen.dart';
 // - No advanced card types (cloze deletion, image occlusion)
 // - Missing export/import functionality for study data
 
-/// Flashcard study interface for reviewing cards in a deck
-class FlashcardStudyScreen extends StatefulWidget {
+/// Flashcard detail interface for reviewing cards in a deck with dashboard colors
+class FlashcardDetailScreen extends StatefulWidget {
   final Deck deck;
   final bool startInQuizMode;
 
-  const FlashcardStudyScreen({
+  const FlashcardDetailScreen({
     super.key,
     required this.deck,
     this.startInQuizMode = false,
   });
 
   @override
-  State<FlashcardStudyScreen> createState() => _FlashcardStudyScreenState();
+  State<FlashcardDetailScreen> createState() => _FlashcardDetailScreenState();
 }
 
-class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
+class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
+    with SingleTickerProviderStateMixin {
   int _currentCardIndex = 0;
   bool _showAnswer = false;
   // Individual quiz mode removed - only deck-based quizzes are supported
@@ -64,6 +66,10 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   QuizSession? _currentQuizSession;
   String? _quizSessionId;
 
+  // Animation controller for flip effect
+  late AnimationController _flipController;
+  late Animation<double> _flipAnimation;
+
   FlashCard get _currentCard {
     // In deck quiz mode, get the current question card from the quiz session
     if (_isDeckQuizMode && _currentQuizSession != null) {
@@ -81,6 +87,16 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize flip animation
+    _flipController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
+    );
+    
     _loadCardState();
 
     // If starting in quiz mode, start a deck quiz
@@ -93,8 +109,11 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
   @override
   void dispose() {
-    // Mark current card as studied when leaving the screen
-    _markCardAsStudied(_currentCard);
+    _flipController.dispose();
+    // Mark current card as studied when leaving the screen, but only if widget is still mounted
+    if (mounted) {
+      _markCardAsStudied(_currentCard);
+    }
     super.dispose();
   }
 
@@ -120,6 +139,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       if (_currentCardIndex < widget.deck.cards.length - 1) {
         _currentCardIndex++;
         _showAnswer = false;
+        _flipController.reset(); // Reset flip animation for new card
         // Individual quiz mode removed
         _loadCardState(); // Load state for the new card
       } else {
@@ -139,6 +159,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       if (_currentCardIndex > 0) {
         _currentCardIndex--;
         _showAnswer = false;
+        _flipController.reset(); // Reset flip animation for new card
         // Individual quiz mode removed
         _loadCardState(); // Load state for the previous card
       }
@@ -146,6 +167,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   }
 
   void _toggleAnswer() {
+    // Trigger flip animation
+    if (_showAnswer) {
+      _flipController.reverse();
+    } else {
+      _flipController.forward();
+    }
+    
     setState(() {
       _showAnswer = !_showAnswer;
       // Individual quiz mode removed
@@ -159,6 +187,13 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
 
   /// Starts a deck-based quiz session with all quiz cards
   Future<void> _startDeckQuiz() async {
+    // Immediately set quiz mode to true to avoid showing flashcard interface
+    if (mounted) {
+      setState(() {
+        _isDeckQuizMode = true;
+      });
+    }
+
     // Initialize quiz service
     await _quizService.initialize();
 
@@ -173,7 +208,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(statusMessage),
-            backgroundColor: Colors.orange,
+            backgroundColor: const Color(0xFF6FB8E9),
           ),
         );
       }
@@ -241,7 +276,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           if (isSkipped) {
             message =
                 'Question skipped. Correct answer: ${currentCard.multipleChoiceOptions[correctIndex]}';
-            backgroundColor = Colors.orange;
+            backgroundColor = const Color(0xFF6FB8E9);
           } else if (isCorrect) {
             message = 'Correct! +$expEarned EXP';
             backgroundColor = Colors.green;
@@ -668,14 +703,24 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             vertical: 6,
           ),
           decoration: BoxDecoration(
-            color: _showAnswer ? Colors.green.shade100 : Colors.blue.shade100,
+            color: _showAnswer 
+              ? const Color(0xFF4CAF50).withValues(alpha: 0.2) // Green for answer
+              : const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent for question
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _showAnswer 
+                ? const Color(0xFF4CAF50) 
+                : const Color(0xFF6FB8E9),
+              width: 1,
+            ),
           ),
           child: Text(
             _showAnswer ? 'ANSWER' : 'QUESTION',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: _showAnswer ? Colors.green.shade700 : Colors.blue.shade700,
+              color: _showAnswer 
+                ? const Color(0xFF4CAF50) 
+                : const Color(0xFF6FB8E9),
             ),
           ),
         ),
@@ -719,6 +764,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       style: const TextStyle(
         fontSize: 20,
         height: 1.4,
+        color: Color(0xFFD9D9D9), // Dashboard text color
       ),
       textAlign: TextAlign.center,
     );
@@ -793,18 +839,24 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Score: '),
+            const Text(
+              'Score: ',
+              style: TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
+            ),
             Text(
               '${_currentQuizSession!.correctAnswers}/${_currentQuizSession!.questionsAnswered}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFD9D9D9), // Dashboard text color
+              ),
             ),
             if (_currentQuizSession!.questionsAnswered > 0) ...[
               Text(
                 ' (${(_currentQuizSession!.currentScore * 100).round()}%)',
                 style: TextStyle(
                   color: _currentQuizSession!.currentScore >= 0.8
-                      ? Colors.green
-                      : Colors.orange,
+                      ? const Color(0xFF4CAF50) // Green for good score
+                      : const Color(0xFF6FB8E9), // Blue for lower score
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -821,6 +873,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             fontSize: 18,
             fontWeight: FontWeight.w600,
             height: 1.4,
+            color: Color(0xFFD9D9D9), // Dashboard text color
           ),
           textAlign: TextAlign.center,
         ),
@@ -839,14 +892,24 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               final showResult = hasAnswered;
 
               Color? buttonColor;
+              Color? textColor;
               if (showResult) {
                 if (isSelected && isCorrect) {
-                  buttonColor = Colors.green;
+                  buttonColor = const Color(0xFF4CAF50); // Green for correct
+                  textColor = Colors.white;
                 } else if (isSelected && !isCorrect) {
-                  buttonColor = Colors.red;
+                  buttonColor = const Color(0xFFEF5350); // Red for incorrect
+                  textColor = Colors.white;
                 } else if (isCorrect) {
-                  buttonColor = Colors.green;
+                  buttonColor = const Color(0xFF4CAF50); // Green for correct answer
+                  textColor = Colors.white;
+                } else {
+                  buttonColor = const Color(0xFF242628); // Dashboard container color
+                  textColor = const Color(0xFFD9D9D9); // Dashboard text color
                 }
+              } else {
+                buttonColor = const Color(0xFF242628); // Dashboard container color
+                textColor = const Color(0xFFD9D9D9); // Dashboard text color
               }
 
               return Padding(
@@ -857,15 +920,24 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                       : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
-                    foregroundColor: buttonColor != null ? Colors.white : null,
+                    foregroundColor: textColor,
                     padding: const EdgeInsets.all(16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: showResult && isCorrect 
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
                   ),
                   child: Text(
                     '${String.fromCharCode(65 + index)}. $option',
-                    style: const TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: textColor,
+                    ),
                     textAlign: TextAlign.left,
                   ),
                 ),
@@ -880,7 +952,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           ElevatedButton(
             onPressed: _nextDeckQuizQuestion,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6FB8E9),
+              backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
@@ -895,8 +967,14 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: currentAnswer!.isCorrect
-                  ? Colors.green.shade100
-                  : Colors.red.shade100,
+                  ? const Color(0xFF4CAF50).withValues(alpha: 0.2) // Green with transparency
+                  : const Color(0xFFEF5350).withValues(alpha: 0.2), // Red with transparency
+              border: Border.all(
+                color: currentAnswer.isCorrect
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFEF5350),
+                width: 1,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -904,7 +982,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
               children: [
                 Icon(
                   currentAnswer.isCorrect ? Icons.check_circle : Icons.cancel,
-                  color: currentAnswer.isCorrect ? Colors.green : Colors.red,
+                  color: currentAnswer.isCorrect 
+                    ? const Color(0xFF4CAF50) 
+                    : const Color(0xFFEF5350),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -913,8 +993,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                       : 'Incorrect',
                   style: TextStyle(
                     color: currentAnswer.isCorrect
-                        ? Colors.green.shade700
-                        : Colors.red.shade700,
+                        ? const Color(0xFF4CAF50)
+                        : const Color(0xFFEF5350),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -938,10 +1018,12 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       if (!_studyModeCardIds.contains(card.id)) {
         _studyModeCardIds.add(card.id);
 
-        // Update daily quest progress for studying a card
-        final questProvider =
-            Provider.of<DailyQuestProvider>(context, listen: false);
-        questProvider.onCardStudied();
+        // Update daily quest progress for studying a card (only if widget is still mounted)
+        if (mounted) {
+          final questProvider =
+              Provider.of<DailyQuestProvider>(context, listen: false);
+          questProvider.onCardStudied();
+        }
 
         debugPrint(
             'Card studied in study mode: ${card.id} (Study quest progress: ${_studyModeCardIds.length})');
@@ -953,11 +1035,151 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
   }
 
   void _showCompletionDialog() {
-    // Navigate to the dedicated completion screen
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => DeckCompletionScreen(deck: widget.deck),
-      ),
+    // Show different completion dialog based on mode
+    if (widget.startInQuizMode) {
+      _showQuizCompletionDialog();
+    } else {
+      // Navigate to the dedicated completion screen for study mode
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => DeckCompletionScreen(deck: widget.deck),
+        ),
+      );
+    }
+  }
+
+  void _showQuizCompletionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF2A3050),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF6FB8E9),
+              width: 2,
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Success Icon
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.green,
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: Colors.green,
+                    size: 48,
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Title
+                Text(
+                  'Quiz Complete!',
+                  style: const TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Deck name
+                Text(
+                  widget.deck.title,
+                  style: const TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 16,
+                  ),
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Results summary
+                Text(
+                  'You completed all ${widget.deck.cards.length} cards',
+                  style: const TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 14,
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // Try Again Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close dialog
+                      // Reset the quiz
+                      setState(() {
+                        _currentCardIndex = 0;
+                        _showAnswer = false;
+                        _hasCompletedDeck = false;
+                      });
+                      // Restart quiz mode
+                      _startDeckQuiz();
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Back to Deck Selection Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close dialog
+                      Navigator.of(context).pop(); // Go back to learning screen
+                    },
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Back to Deck Selection'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2A3050),
+                      foregroundColor: const Color(0xFF6FB8E9),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -981,23 +1203,43 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF16181A),
-      appBar: AppBar(
-        title: Text(widget.deck.title),
-        backgroundColor: const Color(0xFF6FB8E9),
-        foregroundColor: Colors.white,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              '${_currentCardIndex + 1} / ${widget.deck.cards.length}',
-              style: const TextStyle(fontSize: 16),
+    return ThemedBackgroundWrapper(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+            tooltip: 'Back to decks',
+          ),
+          title: Text(
+            widget.deck.title,
+            style: const TextStyle(
+              color: Color(0xFFD9D9D9),
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
-      body: Padding(
+          backgroundColor: const Color(0xFF6FB8E9),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: const IconThemeData(
+            color: Colors.white,
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                '${_currentCardIndex + 1} / ${widget.deck.cards.length}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -1015,23 +1257,42 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             // Card display area
             Expanded(
               child: Center(
-                child: Card(
-                  elevation: 8,
-                  color: const Color(0xFF242628),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    child: _isDeckQuizMode
-                        ? _buildQuizInterface()
-                        : _buildCardInterface(),
-                  ),
+                child: AnimatedBuilder(
+                  animation: _flipAnimation,
+                  builder: (context, child) {
+                    final angle = _flipAnimation.value * math.pi;
+                    final isShowingBack = angle >= (math.pi / 2);
+                    
+                    // Apply additional 180-degree rotation to the back side to make text readable
+                    final correctedAngle = isShowingBack ? angle + math.pi : angle;
+                    
+                    final transform = Matrix4.identity()
+                      ..setEntry(3, 2, 0.001)
+                      ..rotateY(correctedAngle);
+                    
+                    return Transform(
+                      transform: transform,
+                      alignment: Alignment.center,
+                      child: GestureDetector(
+                        onTap: _isDeckQuizMode ? null : _toggleAnswer,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF242628),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          child: _isDeckQuizMode
+                              ? _buildQuizInterface()
+                              : _buildCardInterface(),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1050,7 +1311,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                     icon: const Icon(Icons.exit_to_app),
                     label: const Text('Exit Quiz'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade600,
+                      backgroundColor: const Color(0xFF6C7B7F), // Neutral gray
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1061,11 +1322,11 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: const Color(0xFF6FB8E9),
                         width: 1,
                       ),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       'Question ${math.min((_currentQuizSession?.currentQuestionIndex ?? 0) + 1, _currentQuizSession?.totalQuestions ?? 0)}/${_currentQuizSession?.totalQuestions ?? 0}',
@@ -1087,7 +1348,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                     icon: const Icon(Icons.skip_next),
                     label: const Text('Skip'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.shade600,
+                      backgroundColor: const Color(0xFF6FB8E9), // Blue for skip
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1118,7 +1379,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                           : Icons.visibility),
                       label: Text(_showAnswer ? 'Hide Answer' : 'Show Answer'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -1135,7 +1396,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                         ? 'Next'
                         : 'Finish'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FB8E9),
+                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1158,7 +1419,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                     icon: const Icon(Icons.quiz_outlined),
                     label: const Text('Start Deck Quiz'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FB8E9),
+                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -1170,8 +1431,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Quiz all ${widget.deck.cards.where((card) => card.multipleChoiceOptions.isNotEmpty).length} cards at once!',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
+                  style: const TextStyle(
+                    color: Color(0xFFB0B0B0), // Dashboard secondary text
                     fontSize: 12,
                   ),
                   textAlign: TextAlign.center,
@@ -1193,8 +1454,8 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: _currentCard.lastQuizCorrect == true
-                            ? Colors.green.shade100
-                            : Colors.orange.shade100,
+                            ? const Color(0xFF38A169).withValues(alpha: 0.2) // Success green with transparency
+                            : const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Blue with transparency
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -1206,16 +1467,16 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
                                 : Icons.schedule,
                             size: 16,
                             color: _currentCard.lastQuizCorrect == true
-                                ? Colors.green.shade700
-                                : Colors.orange.shade700,
+                                ? const Color(0xFF38A169) // Success green
+                                : const Color(0xFF6FB8E9), // Blue
                           ),
                           const SizedBox(width: 4),
                           Text(
                             _quizService.getQuizStatusDescription(_currentCard),
                             style: TextStyle(
                               color: _currentCard.lastQuizCorrect == true
-                                  ? Colors.green.shade700
-                                  : Colors.orange.shade700,
+                                  ? const Color(0xFF38A169) // Success green
+                                  : const Color(0xFF6FB8E9), // Blue
                               fontSize: 12,
                             ),
                           ),
@@ -1231,21 +1492,21 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
+                color: const Color(0xFF242628),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.shade200),
+                border: Border.all(color: const Color(0xFF6FB8E9)),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.lightbulb, color: Colors.amber.shade700),
+                  const Icon(Icons.lightbulb, color: Color(0xFF6FB8E9)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _currentCard.multipleChoiceOptions.isNotEmpty
                           ? 'Tip: Take the quiz to earn EXP for your pet!'
                           : 'Tip: Try to answer before revealing the solution!',
-                      style: TextStyle(
-                        color: Colors.amber.shade700,
+                      style: const TextStyle(
+                        color: Color(0xFFD9D9D9),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1256,6 +1517,6 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 }

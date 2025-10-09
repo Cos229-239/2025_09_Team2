@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
+import 'dart:convert';
 import 'package:studypals/providers/task_provider.dart';
 import 'package:studypals/providers/note_provider.dart';
 import 'package:studypals/providers/deck_provider.dart';
+import 'package:studypals/models/deck.dart';
+import 'package:studypals/models/note.dart';
 import 'package:studypals/screens/task_list_screen.dart';
-import 'package:studypals/screens/create_note_screen.dart';
-import 'package:studypals/screens/flashcard_study_screen.dart';
+import 'package:studypals/screens/note_detail_screen.dart';
+import 'package:studypals/screens/flashcard_detail_screen.dart';
 import 'package:studypals/models/task.dart';
+import 'package:studypals/widgets/ai/ai_flashcard_generator.dart';
+import 'package:studypals/widgets/notes/create_note_form_simple.dart' as simple;
 import '../widgets/common/themed_background_wrapper.dart';
 
 /// Custom scroll physics for single-page-at-a-time movement
@@ -82,16 +87,17 @@ class _LearningScreenState extends State<LearningScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late PageController _pageController;
-  final TextEditingController _flashcardSearchController = TextEditingController();
   final TextEditingController _noteSearchController = TextEditingController();
-  String _flashcardSearchQuery = '';
+  final TextEditingController _flashcardSearchController = TextEditingController();
   String _noteSearchQuery = '';
+  String _flashcardSearchQuery = '';
   int _currentPageIndex = 0;
   bool _isAnimating = false;
   double _startDragX = 0.0;
   bool _isDragging = false;
   DateTime? _lastPageChangeTime;
   static bool _globalPageChangeLock = false; // GLOBAL lock across all instances
+  bool _isCompletedTasksExpanded = false; // Track collapse/expand state for completed tasks
   
   // ENHANCED TRACKPAD GESTURE DETECTION SYSTEM
   // This system fixes the trackpad multi-page jumping issue by properly
@@ -134,9 +140,38 @@ class _LearningScreenState extends State<LearningScreen>
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _pageController.dispose();
-    _flashcardSearchController.dispose();
     _noteSearchController.dispose();
+    _flashcardSearchController.dispose();
     super.dispose();
+  }
+
+  /// Extract plain text from Quill Delta JSON
+  String _getPlainTextFromDelta(String content) {
+    if (content.isEmpty) return '';
+    
+    try {
+      // Try to parse as JSON (Quill Delta format)
+      final jsonData = jsonDecode(content);
+      
+      if (jsonData is List) {
+        // Extract text from delta operations
+        final StringBuffer buffer = StringBuffer();
+        for (var op in jsonData) {
+          if (op is Map && op.containsKey('insert')) {
+            final insert = op['insert'];
+            if (insert is String) {
+              buffer.write(insert);
+            }
+          }
+        }
+        return buffer.toString().trim();
+      }
+    } catch (e) {
+      // If parsing fails, return the content as-is (might be plain text)
+      return content;
+    }
+    
+    return content;
   }
 
   @override
@@ -468,601 +503,1772 @@ class _LearningScreenState extends State<LearningScreen>
     );
   }
 
-  /// Build flashcards tab with flashcards section  
+  /// Build flashcards tab with search bar, deck list, and create button  
   Widget _buildFlashcardsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildFlashcardsSection(),
-        ],
-      ),
+    return Consumer<DeckProvider>(
+      builder: (context, deckProvider, child) {
+        // Filter decks based on search query
+        final filteredDecks = deckProvider.decks.where((deck) {
+          return deck.title.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()) ||
+                 deck.tags.any((tag) => tag.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()));
+        }).toList();
+
+        // Sort decks by updated date (most recent first)
+        filteredDecks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        return Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _flashcardSearchController,
+                decoration: InputDecoration(
+                  hintText: 'Search flashcard decks...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _flashcardSearchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _flashcardSearchController.clear();
+                            setState(() {
+                              _flashcardSearchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: const Color(0xFF242628),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _flashcardSearchQuery = value;
+                  });
+                },
+              ),
+            ),
+            
+            // Deck list
+            Expanded(
+              child: filteredDecks.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.style_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _flashcardSearchQuery.isEmpty
+                                ? 'No flashcard decks yet'
+                                : 'No decks match your search',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _flashcardSearchQuery.isEmpty
+                                ? 'Create your first deck to get started'
+                                : 'Try a different search term',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: filteredDecks.length,
+                      itemBuilder: (context, index) {
+                        final deck = filteredDecks[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          elevation: 1,
+                          color: const Color(0xFF242628),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              _showDeckModeSelection(context, deck);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.style,
+                                      color: Colors.blue,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          deck.title,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        if (deck.tags.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 4,
+                                            children: deck.tags.take(3).map((tag) => Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                tag,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.blue,
+                                                ),
+                                              ),
+                                            )).toList(),
+                                          ),
+                                        ],
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.layers,
+                                              size: 16,
+                                              color: Colors.grey[500],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${deck.cards.length} cards',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 16),
+                                            Icon(
+                                              Icons.access_time,
+                                              size: 16,
+                                              color: Colors.grey[500],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _formatTimeAgo(deck.updatedAt),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showEditDeckDialog(context, deck, deckProvider);
+                                      } else if (value == 'delete') {
+                                        _showDeleteDeckDialog(context, deck, deckProvider);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit, size: 18),
+                                            SizedBox(width: 12),
+                                            Text('Edit'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete, size: 18, color: Colors.red),
+                                            SizedBox(width: 12),
+                                            Text('Delete', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    child: Icon(
+                                      Icons.more_vert,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            
+            // Create button at bottom with extra spacing above AI tutor
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    _showAIFlashcardGeneratorModal(context);
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create New Deck'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  /// Build notes tab with notes section
+  /// Build notes tab with search bar, note list, and create button  
   Widget _buildNotesTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildNotesSection(),
-        ],
-      ),
+    return Consumer<NoteProvider>(
+      builder: (context, noteProvider, child) {
+        // Filter notes based on search query
+        final filteredNotes = noteProvider.notes.where((note) {
+          final plainTextContent = _getPlainTextFromDelta(note.contentMd);
+          return note.title.toLowerCase().contains(_noteSearchQuery.toLowerCase()) ||
+                 plainTextContent.toLowerCase().contains(_noteSearchQuery.toLowerCase()) ||
+                 note.tags.any((tag) => tag.toLowerCase().contains(_noteSearchQuery.toLowerCase()));
+        }).toList();
+
+        // Sort notes by updated date (most recent first)
+        filteredNotes.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+        return Column(
+          children: [
+            // Search bar
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: TextField(
+                controller: _noteSearchController,
+                decoration: InputDecoration(
+                  hintText: 'Search notes...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _noteSearchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _noteSearchController.clear();
+                            setState(() {
+                              _noteSearchQuery = '';
+                            });
+                          },
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: const Color(0xFF242628),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _noteSearchQuery = value;
+                  });
+                },
+              ),
+            ),
+            
+            // Note list
+            Expanded(
+              child: filteredNotes.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.note_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _noteSearchQuery.isEmpty
+                                ? 'No notes yet'
+                                : 'No notes match your search',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _noteSearchQuery.isEmpty
+                                ? 'Create your first note to get started'
+                                : 'Try a different search term',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: filteredNotes.length,
+                      itemBuilder: (context, index) {
+                        final note = filteredNotes[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          elevation: 1,
+                          color: const Color(0xFF242628),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              _showNoteModeSelection(context, note);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.note,
+                                      color: Color(0xFF6FB8E9),
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          note.title,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        if (note.tags.isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Wrap(
+                                            spacing: 6,
+                                            runSpacing: 4,
+                                            children: note.tags.take(3).map((tag) => Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                tag,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xFF6FB8E9),
+                                                ),
+                                              ),
+                                            )).toList(),
+                                          ),
+                                        ],
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          note.contentMd.isEmpty 
+                                            ? 'No content' 
+                                            : _getPlainTextFromDelta(note.contentMd),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.access_time,
+                                              size: 16,
+                                              color: Colors.grey[500],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _formatTimeAgo(note.updatedAt),
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showEditNoteDialog(context, note, noteProvider);
+                                      } else if (value == 'delete') {
+                                        _showDeleteNoteDialog(context, note, noteProvider);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit, size: 18),
+                                            SizedBox(width: 12),
+                                            Text('Edit'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete, size: 18, color: Colors.red),
+                                            SizedBox(width: 12),
+                                            Text('Delete', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                    child: Icon(
+                                      Icons.more_vert,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            
+            // Create button at bottom with extra spacing above AI tutor
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    print('Create Note button clicked'); // Debug output
+                    _showCreateNoteModal(context);
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create New Note'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 64), // Extra spacing above AI tutor
+          ],
+        );
+      },
     );
   }
 
-  /// Build the learning tasks section with daily and weekly tasks
+  /// Build the learning tasks section with actual task content
   Widget _buildTasksSection() {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, child) {
-        final allTasks = taskProvider.tasks
-            .where((task) => task.status != TaskStatus.completed)
-            .toList();
-
-        // Filter tasks for today (daily tasks)
-        final today = DateTime.now();
-        final dailyTasks = allTasks.where((task) {
-          if (task.dueAt == null) return false;
-          return task.dueAt!.year == today.year &&
-              task.dueAt!.month == today.month &&
-              task.dueAt!.day == today.day;
-        }).toList();
-
-        // Filter tasks for this week (weekly tasks)
-        final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
-        final endOfWeek = startOfWeek.add(const Duration(days: 6));
-        final weeklyTasks = allTasks.where((task) {
-          if (task.dueAt == null) return false;
-          return task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-              task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
-        }).toList();
-
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Daily tasks
-            _buildTaskCard(
-              context,
-              title: 'daily tasks',
-              count: dailyTasks.length,
+            _buildTaskSectionInline(
+              title: "Today's Tasks",
+              tasks: _getTodayTasks(taskProvider.tasks),
               icon: Icons.today,
-              color: Colors.orange,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TaskListScreen(),
-                  ),
-                );
-              },
+              emptyMessage: "No tasks due today",
             ),
-            const SizedBox(height: 12),
-
-            // Weekly tasks
-            _buildTaskCard(
-              context,
-              title: 'Weekly tasks',
-              count: weeklyTasks.length,
-              icon: Icons.calendar_today,
-              color: Colors.purple,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TaskListScreen(),
-                  ),
-                );
-              },
+            const SizedBox(height: 24),
+            _buildTaskSectionInline(
+              title: "This Week's Tasks",
+              tasks: _getThisWeekTasks(taskProvider.tasks),
+              icon: Icons.view_week,
+              emptyMessage: "No tasks due this week",
             ),
+            const SizedBox(height: 24),
+            _buildTaskSectionInline(
+              title: "This Month's Tasks",
+              tasks: _getThisMonthTasks(taskProvider.tasks),
+              icon: Icons.calendar_month,
+              emptyMessage: "No tasks due this month",
+            ),
+            const SizedBox(height: 24),
+            _buildTaskSectionInline(
+              title: "Upcoming Tasks",
+              tasks: _getUpcomingTasks(taskProvider.tasks),
+              icon: Icons.schedule,
+              emptyMessage: "No upcoming tasks",
+            ),
+            const SizedBox(height: 24),
+            _buildCompletedTasksSection(taskProvider.tasks),
           ],
         );
       },
     );
   }
 
-  /// Build a task card with icon and count
-  Widget _buildTaskCard(
-    BuildContext context, {
-    required String title,
-    required int count,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$count ${count == 1 ? 'task' : 'tasks'}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-            ],
-          ),
-        ),
-      ),
-    );
+  /// Get tasks due today
+  List<Task> _getTodayTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      return task.dueAt!.year == today.year &&
+          task.dueAt!.month == today.month &&
+          task.dueAt!.day == today.day;
+    }).toList();
   }
 
-  /// Build the flashcards section with search, quiz mode, and study mode
-  Widget _buildFlashcardsSection() {
-    return Consumer<DeckProvider>(
-      builder: (context, deckProvider, child) {
-        final decks = deckProvider.decks;
-        final filteredDecks = _flashcardSearchQuery.isEmpty
-            ? decks
-            : decks.where((deck) {
-                return deck.title
-                        .toLowerCase()
-                        .contains(_flashcardSearchQuery.toLowerCase()) ||
-                    deck.tags.any((tag) => tag
-                        .toLowerCase()
-                        .contains(_flashcardSearchQuery.toLowerCase()));
-              }).toList();
+  /// Get tasks due this week
+  List<Task> _getThisWeekTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      // Exclude today's tasks as they're shown in the today section
+      final isToday = task.dueAt!.year == today.year &&
+          task.dueAt!.month == today.month &&
+          task.dueAt!.day == today.day;
+      if (isToday) return false;
+      
+      return task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+    }).toList();
+  }
 
-        return Column(
+  /// Get tasks due this month
+  List<Task> _getThisMonthTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final startOfMonth = DateTime(today.year, today.month, 1);
+    final endOfMonth = DateTime(today.year, today.month + 1, 0);
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      
+      // Exclude tasks already shown in today and this week sections
+      final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
+      final endOfWeek = startOfWeek.add(const Duration(days: 6));
+      final isInCurrentWeek = task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+      if (isInCurrentWeek) return false;
+      
+      return task.dueAt!.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+          task.dueAt!.isBefore(endOfMonth.add(const Duration(days: 1)));
+    }).toList();
+  }
+
+  /// Get completed tasks
+  List<Task> _getCompletedTasks(List<Task> allTasks) {
+    return allTasks.where((task) => task.status == TaskStatus.completed).toList()
+      ..sort((a, b) => (b.dueAt ?? DateTime.now()).compareTo(a.dueAt ?? DateTime.now()));
+  }
+
+  /// Get upcoming tasks (beyond this month)
+  List<Task> _getUpcomingTasks(List<Task> allTasks) {
+    final today = DateTime.now();
+    final endOfMonth = DateTime(today.year, today.month + 1, 0);
+    
+    return allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      
+      // Only include tasks due after this month
+      return task.dueAt!.isAfter(endOfMonth);
+    }).toList()
+      ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!)); // Sort by due date (earliest first)
+  }
+
+  /// Build a task section with header and task list inline
+  Widget _buildTaskSectionInline({
+    required String title,
+    required List<Task> tasks,
+    required IconData icon,
+    required String emptyMessage,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
           children: [
-            // Flash cards with search bar option
-            Card(
-              elevation: 2,
-              child: ExpansionTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.style, color: Colors.blue, size: 24),
-                ),
-                title: const Text(
-                  'flash cards with search bar option',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  '${decks.length} ${decks.length == 1 ? 'deck' : 'decks'}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Column(
-                      children: [
-                        // Search bar
-                        TextField(
-                          controller: _flashcardSearchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search flashcard decks...',
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            suffixIcon: _flashcardSearchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 20),
-                                    onPressed: () {
-                                      _flashcardSearchController.clear();
-                                      setState(() {
-                                        _flashcardSearchQuery = '';
-                                      });
-                                    },
-                                  )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _flashcardSearchQuery = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Deck list
-                        if (filteredDecks.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              _flashcardSearchQuery.isEmpty
-                                  ? 'No decks available'
-                                  : 'No decks found',
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredDecks.length,
-                            itemBuilder: (context, index) {
-                              final deck = filteredDecks[index];
-                              return ListTile(
-                                dense: true,
-                                leading: const Icon(Icons.style, size: 20),
-                                title: Text(
-                                  deck.title,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                                subtitle: Text(
-                                  '${deck.cards.length} cards',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                trailing: const Icon(Icons.arrow_forward_ios,
-                                    size: 14),
-                                onTap: () {
-                                  if (deck.cards.isNotEmpty) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            FlashcardStudyScreen(deck: deck),
-                                      ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Deck "${deck.title}" has no cards'),
-                                      ),
-                                    );
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
+            Icon(
+              icon,
+              color: const Color(0xFF6FB8E9),
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFD9D9D9), // Light text for dark theme
               ),
             ),
-            const SizedBox(height: 12),
-
-            // Quiz mode
-            _buildFlashcardModeCard(
-              context,
-              title: 'quiz mode',
-              icon: Icons.quiz,
-              color: Colors.green,
-              onTap: () {
-                _showDeckSelectionDialog(context, isQuizMode: true);
-              },
-            ),
-            const SizedBox(height: 12),
-
-            // Study mode
-            _buildFlashcardModeCard(
-              context,
-              title: 'Study mode',
-              icon: Icons.school,
-              color: Colors.indigo,
-              onTap: () {
-                _showDeckSelectionDialog(context, isQuizMode: false);
-              },
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${tasks.length}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF6FB8E9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  /// Build a flashcard mode card (quiz or study)
-  Widget _buildFlashcardModeCard(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+        ),
+        const SizedBox(height: 12),
+        
+        // Task list or empty message
+        if (tasks.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF242628), // Match dashboard header color
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.task_alt,
+                  size: 40,
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.7),
                 ),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  title,
+                const SizedBox(height: 8),
+                Text(
+                  emptyMessage,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
+                    color: Color(0xFFD9D9D9),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...tasks.take(3).map((task) => _buildInlineTaskCard(task)).toList(),
+        
+        // Show more button if there are more than 3 tasks
+        if (tasks.length > 3)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TaskListScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'View all ${tasks.length} tasks',
+                  style: const TextStyle(
+                    color: Color(0xFF6FB8E9),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
-            ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Build collapsible completed tasks section
+  Widget _buildCompletedTasksSection(List<Task> allTasks) {
+    final completedTasks = _getCompletedTasks(allTasks);
+    
+    if (completedTasks.isEmpty) {
+      return const SizedBox.shrink(); // Don't show section if no completed tasks
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Collapsible header
+        InkWell(
+          onTap: () {
+            setState(() {
+              _isCompletedTasksExpanded = !_isCompletedTasksExpanded;
+            });
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+            child: Row(
+              children: [
+                Icon(
+                  _isCompletedTasksExpanded ? Icons.expand_less : Icons.expand_more,
+                  color: const Color(0xFF6FB8E9),
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.check_circle,
+                  color: const Color(0xFF4CAF50),
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Completed Tasks',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFD9D9D9), // Light text for dark theme
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${completedTasks.length}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF4CAF50),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // Expanded task list
+        if (_isCompletedTasksExpanded) ...[
+          const SizedBox(height: 12),
+          ...completedTasks.map((task) => _buildInlineTaskCard(task)).toList(),
+        ],
+      ],
+    );
+  }
+
+  /// Build individual task card for inline display
+  Widget _buildInlineTaskCard(Task task) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Card(
+        elevation: 1,
+        color: const Color(0xFF242628), // Match dashboard header color
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: BorderSide(
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => _showTaskDetailsInline(task),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Task status checkbox
+                GestureDetector(
+                  onTap: () => _toggleTaskStatusInline(task),
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: task.status == TaskStatus.completed
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      color: task.status == TaskStatus.completed
+                          ? const Color(0xFF4CAF50)
+                          : Colors.transparent,
+                    ),
+                    child: task.status == TaskStatus.completed
+                        ? const Icon(
+                            Icons.check,
+                            size: 12,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                // Task content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          decoration: task.status == TaskStatus.completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: task.status == TaskStatus.completed
+                              ? const Color(0xFF888888)
+                              : const Color(0xFFD9D9D9), // Light text for dark theme
+                        ),
+                      ),
+                      if (task.dueAt != null) ...[
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 12,
+                              color: const Color(0xFF888888), // Lighter grey for dark theme
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatDueDateInline(task.dueAt!),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF888888), // Lighter grey for dark theme
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// Show dialog to select a deck for quiz or study mode
-  void _showDeckSelectionDialog(BuildContext context,
-      {required bool isQuizMode}) {
-    final deckProvider = Provider.of<DeckProvider>(context, listen: false);
-    final decks = deckProvider.decks;
+  /// Format due date for inline display
+  String _formatDueDateInline(DateTime dueDate) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final taskDate = DateTime(dueDate.year, dueDate.month, dueDate.day);
 
-    if (decks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No decks available')),
-      );
-      return;
+    if (taskDate == today) {
+      return 'Due today';
+    } else if (taskDate == tomorrow) {
+      return 'Due tomorrow';
+    } else if (taskDate.isBefore(today)) {
+      final diff = today.difference(taskDate).inDays;
+      return 'Overdue by $diff day${diff > 1 ? 's' : ''}';
+    } else {
+      final diff = taskDate.difference(today).inDays;
+      return 'Due in $diff day${diff > 1 ? 's' : ''}';
     }
+  }
+
+  /// Toggle task completion status inline
+  void _toggleTaskStatusInline(Task task) {
+    final provider = Provider.of<TaskProvider>(context, listen: false);
+    final newStatus = task.status == TaskStatus.completed
+        ? TaskStatus.pending
+        : TaskStatus.completed;
+    
+    // Create updated task
+    final updatedTask = Task(
+      id: task.id,
+      title: task.title,
+      estMinutes: task.estMinutes,
+      dueAt: task.dueAt,
+      priority: task.priority,
+      tags: task.tags,
+      status: newStatus,
+      linkedNoteId: task.linkedNoteId,
+      linkedDeckId: task.linkedDeckId,
+    );
+    
+    provider.updateTask(updatedTask);
+  }
+
+  /// Show task details inline
+  void _showTaskDetailsInline(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(task.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Estimated time: ${task.estMinutes} minutes'),
+            if (task.dueAt != null)
+              Text('Due: ${_formatDueDateInline(task.dueAt!)}'),
+            Text('Priority: ${_getPriorityTextInline(task.priority)}'),
+            if (task.tags.isNotEmpty)
+              Text('Tags: ${task.tags.join(', ')}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get priority text inline
+  String _getPriorityTextInline(int priority) {
+    switch (priority) {
+      case 1:
+        return 'Low';
+      case 2:
+        return 'Medium';
+      case 3:
+        return 'High';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  /// Format time ago for display (e.g., "2 hours ago", "3 days ago")
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  /// Show AI flashcard generator as a modal overlay
+  void _showAIFlashcardGeneratorModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF242628),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF6FB8E9),
+              width: 2,
+            ),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(
+              maxWidth: 600,
+              maxHeight: 700,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF6FB8E9),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.auto_awesome,
+                          color: Color(0xFF6FB8E9),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AI Flashcard Generator',
+                              style: TextStyle(
+                                color: Color(0xFFD9D9D9),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Create flashcards using AI',
+                              style: TextStyle(
+                                color: Color(0xFFD9D9D9),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Color(0xFFD9D9D9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Content area with AI Flashcard Generator
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: const SingleChildScrollView(
+                      child: AIFlashcardGenerator(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Show mode selection dialog for note (view/edit)
+  void _showNoteModeSelection(BuildContext context, Note note) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF242628),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF6FB8E9),
+              width: 2,
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF6FB8E9),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.note,
+                        color: Color(0xFF6FB8E9),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            note.title,
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Updated ${_formatTimeAgo(note.updatedAt)}',
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+                
+                const Text(
+                  'Choose your action:',
+                  style: TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // View Mode Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoteDetailScreen(
+                            note: note,
+                            startInEditMode: false,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.visibility),
+                    label: const Text('View Note'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Edit Mode Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => NoteDetailScreen(
+                            note: note,
+                            startInEditMode: true,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.edit),
+                    label: const Text('Edit Note'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF242628),
+                      foregroundColor: const Color(0xFF6FB8E9),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Cancel Button
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFFD9D9D9),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Show create note modal dialog
+  void _showCreateNoteModal(BuildContext context) {
+    print('_showCreateNoteModal called'); // Debug output
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF242628),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF6FB8E9),
+              width: 2,
+            ),
+          ),
+          child: Container(
+            constraints: const BoxConstraints(
+              maxWidth: 600,
+              maxHeight: 700,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6FB8E9).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF6FB8E9),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.note_add,
+                          color: Color(0xFF6FB8E9),
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Create Note',
+                              style: TextStyle(
+                                color: Color(0xFFD9D9D9),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Create a new study note',
+                              style: TextStyle(
+                                color: Color(0xFFD9D9D9),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Color(0xFFD9D9D9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Content area with Create Note Form
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: simple.CreateNoteForm(
+                      onSaveNote: (Note note) {
+                        Provider.of<NoteProvider>(context, listen: false).addNote(note);
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Show dialog to edit an existing note
+  void _showEditNoteDialog(BuildContext context, Note note, NoteProvider noteProvider) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => NoteDetailScreen(
+          note: note,
+          startInEditMode: true,
+        ),
+      ),
+    );
+  }
+
+  /// Show delete confirmation dialog for note
+  void _showDeleteNoteDialog(BuildContext context, Note note, NoteProvider noteProvider) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF242628),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF6FB8E9),
+              width: 2,
+            ),
+          ),
+          title: const Text(
+            'Delete Note',
+            style: TextStyle(
+              color: Color(0xFFD9D9D9),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Text(
+            'Are you sure you want to delete "${note.title}"? This action cannot be undone.',
+            style: const TextStyle(
+              color: Color(0xFFD9D9D9),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFFD9D9D9),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                try {
+                  await noteProvider.deleteNote(note.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Note deleted successfully')),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error deleting note: $e')),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  void _showDeckModeSelection(BuildContext context, Deck deck) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: const Color(0xFF242628),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFF6FB8E9),
+              width: 2,
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF6FB8E9),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.style,
+                        color: Color(0xFF6FB8E9),
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            deck.title,
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '${deck.cards.length} cards',
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+                
+                Text(
+                  'Choose your study mode:',
+                  style: const TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
+                
+                // Study Mode Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FlashcardDetailScreen(
+                            deck: deck,
+                            startInQuizMode: false,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.school),
+                    label: const Text('Study Mode'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Quiz Mode Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FlashcardDetailScreen(
+                            deck: deck,
+                            startInQuizMode: true,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.quiz),
+                    label: const Text('Quiz Mode'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF242628),
+                      foregroundColor: const Color(0xFF6FB8E9),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Cancel Button
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFFD9D9D9),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Show dialog to edit an existing deck
+  void _showEditDeckDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+    final titleController = TextEditingController(text: deck.title);
+    final tagsController = TextEditingController(text: deck.tags.join(', '));
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Select Deck for ${isQuizMode ? 'Quiz' : 'Study'} Mode'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: decks.length,
-            itemBuilder: (context, index) {
-              final deck = decks[index];
-              return ListTile(
-                leading: const Icon(Icons.style),
-                title: Text(deck.title),
-                subtitle: Text('${deck.cards.length} cards'),
-                onTap: () {
-                  Navigator.pop(context);
-                  if (deck.cards.isNotEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FlashcardStudyScreen(
-                          deck: deck,
-                          startInQuizMode: isQuizMode,
-                        ),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Deck "${deck.title}" has no cards'),
-                      ),
-                    );
-                  }
-                },
-              );
-            },
+        backgroundColor: const Color(0xFF242628),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(
+            color: Color(0xFF6FB8E9),
+            width: 2,
           ),
+        ),
+        title: const Text(
+          'Edit Deck',
+          style: TextStyle(color: Color(0xFFD9D9D9)),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Deck Title',
+                hintText: 'Enter deck title',
+              ),
+              autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: tagsController,
+              decoration: const InputDecoration(
+                labelText: 'Tags (optional)',
+                hintText: 'Enter tags separated by commas',
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              if (titleController.text.trim().isNotEmpty) {
+                final tags = tagsController.text
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .where((tag) => tag.isNotEmpty)
+                    .toList();
+
+                final updatedDeck = deck.copyWith(
+                  title: titleController.text.trim(),
+                  tags: tags,
+                  updatedAt: DateTime.now(),
+                );
+
+                deckProvider.updateDeck(updatedDeck);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
+          ),
         ],
       ),
     );
   }
 
-  /// Build the notes section with search bar and create functionality
-  Widget _buildNotesSection() {
-    return Consumer<NoteProvider>(
-      builder: (context, noteProvider, child) {
-        final notes = noteProvider.notes;
-        final filteredNotes = _noteSearchQuery.isEmpty
-            ? notes
-            : notes.where((note) {
-                return note.title
-                        .toLowerCase()
-                        .contains(_noteSearchQuery.toLowerCase()) ||
-                    note.contentMd
-                        .toLowerCase()
-                        .contains(_noteSearchQuery.toLowerCase());
-              }).toList();
-
-        return Column(
-          children: [
-            // Notes still with search bar
-            Card(
-              elevation: 2,
-              child: ExpansionTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.note, color: Colors.amber, size: 24),
-                ),
-                title: const Text(
-                  'Notes still with search bar',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(
-                  '${notes.length} ${notes.length == 1 ? 'note' : 'notes'}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Column(
-                      children: [
-                        // Search bar
-                        TextField(
-                          controller: _noteSearchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search notes...',
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            suffixIcon: _noteSearchQuery.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear, size: 20),
-                                    onPressed: () {
-                                      _noteSearchController.clear();
-                                      setState(() {
-                                        _noteSearchQuery = '';
-                                      });
-                                    },
-                                  )
-                                : null,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _noteSearchQuery = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Notes list
-                        if (filteredNotes.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              _noteSearchQuery.isEmpty
-                                  ? 'No notes available'
-                                  : 'No notes found',
-                              style: TextStyle(color: Colors.grey[600]),
-                            ),
-                          )
-                        else
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: filteredNotes.length,
-                            itemBuilder: (context, index) {
-                              final note = filteredNotes[index];
-                              return ListTile(
-                                dense: true,
-                                leading: const Icon(Icons.note, size: 20),
-                                title: Text(
-                                  note.title,
-                                  style: const TextStyle(fontSize: 14),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Text(
-                                  note.contentMd,
-                                  style: const TextStyle(fontSize: 12),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                trailing: const Icon(Icons.arrow_forward_ios,
-                                    size: 14),
-                                onTap: () {
-                                  // Navigate to note details (can be enhanced later)
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Viewing: ${note.title}'),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+  /// Show dialog to confirm deck deletion
+  void _showDeleteDeckDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF242628),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(
+            color: Color(0xFF6FB8E9),
+            width: 2,
+          ),
+        ),
+        title: const Text(
+          'Delete Deck',
+          style: TextStyle(color: Color(0xFFD9D9D9)),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${deck.title}"? This action cannot be undone.',
+          style: const TextStyle(color: Color(0xFFD9D9D9)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              deckProvider.deleteDeck(deck.id);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
             ),
-            const SizedBox(height: 12),
-
-            // Create note button
-            Card(
-              elevation: 2,
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreateNoteScreen(),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.teal.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.add, color: Colors.teal, size: 28),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Text(
-                          'Create',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Icon(Icons.arrow_forward_ios,
-                          size: 16, color: Colors.grey[400]),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 }
