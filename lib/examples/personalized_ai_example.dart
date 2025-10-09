@@ -58,6 +58,8 @@ class _PersonalizedAIDemoState extends State<PersonalizedAIDemo> {
         totalQuizzesTaken: 15,
         currentStreak: 7,
         longestStreak: 12,
+        totalAnswersGiven: 435,
+        totalCorrectAnswers: 339,
         subjectPerformance: {
           'Computer Science': SubjectPerformance(
             subject: 'Computer Science',

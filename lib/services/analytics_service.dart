@@ -68,6 +68,8 @@ class AnalyticsService {
         totalQuizzesTaken: 0,
         currentStreak: 0,
         longestStreak: 0,
+        totalAnswersGiven: 0,
+        totalCorrectAnswers: 0,
         subjectPerformance: {},
         learningPatterns: LearningPatterns(
           preferredStudyHours: {},
