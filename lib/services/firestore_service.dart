@@ -2144,4 +2144,169 @@ class FirestoreService {
         .orderBy('startTime', descending: true)
         .snapshots();
   }
+
+  // ========================================
+  // Timer Management Methods
+  // ========================================
+
+  /// Collection reference for saved timers
+  CollectionReference get savedTimersCollection => _firestore.collection('savedTimers');
+
+  /// Save a custom timer to Firestore
+  Future<String?> saveTimer({
+    required String label,
+    required int hours,
+    required int minutes,
+    required int seconds,
+    required bool includeBreakTimer,
+    required int breakMinutes,
+    required int cycles,
+  }) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) {
+        if (kDebugMode) print('❌ No authenticated user');
+        return null;
+      }
+
+      final timerData = {
+        'userId': uid,
+        'label': label,
+        'hours': hours,
+        'minutes': minutes,
+        'seconds': seconds,
+        'includeBreakTimer': includeBreakTimer,
+        'breakMinutes': breakMinutes,
+        'cycles': cycles,
+        'savedAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final docRef = await savedTimersCollection.add(timerData);
+      
+      if (kDebugMode) {
+        print('✅ Timer saved successfully: ${docRef.id}');
+      }
+      
+      return docRef.id;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error saving timer: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Get all saved timers for the current user
+  Future<List<Map<String, dynamic>>> getSavedTimers() async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) {
+        if (kDebugMode) print('❌ No authenticated user');
+        return [];
+      }
+
+      final snapshot = await savedTimersCollection
+          .where('userId', isEqualTo: uid)
+          .get();
+
+      final timers = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id; // Add document ID
+        return data;
+      }).toList();
+
+      // Sort by savedAt in the app (descending - newest first)
+      timers.sort((a, b) {
+        final aTime = (a['savedAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+        final bTime = (b['savedAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+        return bTime.compareTo(aTime);
+      });
+
+      return timers;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error retrieving saved timers: $e');
+      }
+      return [];
+    }
+  }
+
+  /// Get real-time stream of saved timers
+  Stream<QuerySnapshot> getSavedTimersStream() {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) {
+      return const Stream.empty();
+    }
+
+    return savedTimersCollection
+        .where('userId', isEqualTo: uid)
+        .snapshots();
+  }
+
+  /// Update an existing saved timer
+  Future<bool> updateTimer({
+    required String timerId,
+    required String label,
+    required int hours,
+    required int minutes,
+    required int seconds,
+    required bool includeBreakTimer,
+    required int breakMinutes,
+    required int cycles,
+  }) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) {
+        if (kDebugMode) print('❌ No authenticated user');
+        return false;
+      }
+
+      await savedTimersCollection.doc(timerId).update({
+        'label': label,
+        'hours': hours,
+        'minutes': minutes,
+        'seconds': seconds,
+        'includeBreakTimer': includeBreakTimer,
+        'breakMinutes': breakMinutes,
+        'cycles': cycles,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        print('✅ Timer updated successfully: $timerId');
+      }
+      
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating timer: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Delete a saved timer
+  Future<bool> deleteTimer(String timerId) async {
+    try {
+      final uid = _auth.currentUser?.uid;
+      if (uid == null) {
+        if (kDebugMode) print('❌ No authenticated user');
+        return false;
+      }
+
+      await savedTimersCollection.doc(timerId).delete();
+      
+      if (kDebugMode) {
+        print('✅ Timer deleted successfully: $timerId');
+      }
+      
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error deleting timer: $e');
+      }
+      return false;
+    }
+  }
 }

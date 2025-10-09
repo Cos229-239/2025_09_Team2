@@ -1113,13 +1113,6 @@ class _LearningScreenState extends State<LearningScreen>
               emptyMessage: "No tasks due this month",
             ),
             const SizedBox(height: 24),
-            _buildTaskSectionInline(
-              title: "Upcoming Tasks",
-              tasks: _getUpcomingTasks(taskProvider.tasks),
-              icon: Icons.schedule,
-              emptyMessage: "No upcoming tasks",
-            ),
-            const SizedBox(height: 24),
             _buildCompletedTasksSection(taskProvider.tasks),
           ],
         );
@@ -1182,20 +1175,6 @@ class _LearningScreenState extends State<LearningScreen>
   List<Task> _getCompletedTasks(List<Task> allTasks) {
     return allTasks.where((task) => task.status == TaskStatus.completed).toList()
       ..sort((a, b) => (b.dueAt ?? DateTime.now()).compareTo(a.dueAt ?? DateTime.now()));
-  }
-
-  /// Get upcoming tasks (beyond this month)
-  List<Task> _getUpcomingTasks(List<Task> allTasks) {
-    final today = DateTime.now();
-    final endOfMonth = DateTime(today.year, today.month + 1, 0);
-    
-    return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
-      
-      // Only include tasks due after this month
-      return task.dueAt!.isAfter(endOfMonth);
-    }).toList()
-      ..sort((a, b) => a.dueAt!.compareTo(b.dueAt!)); // Sort by due date (earliest first)
   }
 
   /// Build a task section with header and task list inline
@@ -1308,10 +1287,6 @@ class _LearningScreenState extends State<LearningScreen>
   /// Build collapsible completed tasks section
   Widget _buildCompletedTasksSection(List<Task> allTasks) {
     final completedTasks = _getCompletedTasks(allTasks);
-    
-    if (completedTasks.isEmpty) {
-      return const SizedBox.shrink(); // Don't show section if no completed tasks
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1369,10 +1344,39 @@ class _LearningScreenState extends State<LearningScreen>
           ),
         ),
         
-        // Expanded task list
+        // Expanded task list or empty message
         if (_isCompletedTasksExpanded) ...[
           const SizedBox(height: 12),
-          ...completedTasks.map((task) => _buildInlineTaskCard(task)),
+          if (completedTasks.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF242628),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.task_alt,
+                    size: 40,
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'No completed tasks yet',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFFD9D9D9),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...completedTasks.map((task) => _buildInlineTaskCard(task)),
         ],
       ],
     );
