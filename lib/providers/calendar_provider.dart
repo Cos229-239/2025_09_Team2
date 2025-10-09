@@ -302,6 +302,33 @@ class CalendarProvider with ChangeNotifier {
     }
   }
 
+  /// Adds a flashcard study event to the calendar
+  /// This is a convenience method for adding flashcard study sessions
+  Future<CalendarEvent?> addFlashcardStudyEvent(CalendarEvent event) async {
+    if (event.type != CalendarEventType.flashcardStudy) {
+      _setError('Event must be of type flashcardStudy');
+      return null;
+    }
+
+    try {
+      _setLoading(true);
+
+      // Add to internal events map
+      _addEventToMap(event);
+
+      // Flashcard events don't need source objects created
+      // The deck is already stored in the event's sourceObject field
+
+      _updateFilteredEvents();
+      return event;
+    } catch (e) {
+      _setError('Failed to add flashcard study event: $e');
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   /// Updates an existing calendar event
   Future<CalendarEvent?> updateEvent(CalendarEvent event) async {
     try {
@@ -614,6 +641,9 @@ class CalendarProvider with ChangeNotifier {
         break;
       case CalendarEventType.studySession:
         // Create study session (implementation depends on study session provider)
+        break;
+      case CalendarEventType.flashcardStudy:
+        // Flashcard events don't need a source object - the Deck is already stored in sourceObject field
         break;
       default:
         // Other event types might not have source objects
