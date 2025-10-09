@@ -502,18 +502,18 @@ class SettingsScreen extends StatelessWidget {
   Future<bool> _getUserPetCareRemindersPreference() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return true;
+      if (user == null) return false; // Default to disabled
       
       final userProfile = await FirestoreService().getUserProfile(user.uid);
-      if (userProfile == null) return true;
+      if (userProfile == null) return false; // Default to disabled
       
       final preferences = userProfile['preferences'] as Map<String, dynamic>?;
-      if (preferences == null) return true;
+      if (preferences == null) return false; // Default to disabled
       
-      return preferences['petCareReminders'] as bool? ?? true;
+      return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
     } catch (e) {
       print('Error getting pet care reminders preference: $e');
-      return true;
+      return false; // Default to disabled
     }
   }
 

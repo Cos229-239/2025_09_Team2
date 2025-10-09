@@ -52,78 +52,7 @@ class NoteProvider extends ChangeNotifier {
 
       debugPrint('✅ Loaded ${_notes.length} notes from Firestore');
 
-      // If no notes found, add sample data for development
-      if (_notes.isEmpty) {
-        debugPrint('No notes found, adding sample notes');
-        _notes.addAll([
-          Note(
-            id: 'note_1',
-            title: 'JavaScript Fundamentals',
-            contentMd: '''# JavaScript Fundamentals
-
-## Variables and Data Types
-- `let` and `const` for variable declarations
-- String, Number, Boolean, Array, Object
-- Template literals for string interpolation
-
-## Functions
-- Function declarations vs expressions
-- Arrow functions
-- Scope and closures
-''',
-            tags: ['javascript', 'programming', 'fundamentals'],
-            createdAt: DateTime.now().subtract(const Duration(days: 2)),
-            updatedAt: DateTime.now().subtract(const Duration(hours: 6)),
-          ),
-          Note(
-            id: 'note_2',
-            title: 'React Hooks Study Guide',
-            contentMd: '''# React Hooks
-
-## useState
-- Managing component state
-- State updates are asynchronous
-- Functional updates for complex state
-
-## useEffect
-- Side effects in functional components
-- Dependency arrays
-- Cleanup functions
-
-## Custom Hooks
-- Reusable state logic
-- Naming convention: start with "use"
-''',
-            tags: ['react', 'javascript', 'frontend'],
-            createdAt: DateTime.now().subtract(const Duration(days: 1)),
-            updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
-          ),
-          Note(
-            id: 'note_3',
-            title: 'Database Design Principles',
-            contentMd: '''# Database Design
-
-## Normalization
-- 1NF, 2NF, 3NF forms
-- Eliminating redundancy
-- Maintaining data integrity
-
-## Relationships
-- One-to-One
-- One-to-Many
-- Many-to-Many
-
-## Indexing
-- Primary keys
-- Foreign keys
-- Performance optimization
-''',
-            tags: ['database', 'sql', 'design'],
-            createdAt: DateTime.now().subtract(const Duration(hours: 12)),
-            updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
-          ),
-        ]);
-      }
+      // Sample notes removed - users start with a clean slate
     } catch (e) {
       // Log any errors that occur during note loading for debugging
       developer.log('Error loading notes: $e', name: 'NoteProvider');

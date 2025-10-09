@@ -104,18 +104,18 @@ class CalendarProvider with ChangeNotifier {
   Future<bool> _arePetCareRemindersEnabled() async {
     try {
       final user = _auth.currentUser;
-      if (user == null) return true; // Default to enabled for guest users
+      if (user == null) return false; // Default to disabled for guest users
       
       final userProfile = await _firestoreService.getUserProfile(user.uid);
-      if (userProfile == null) return true; // Default to enabled if no profile
+      if (userProfile == null) return false; // Default to disabled if no profile
       
       final preferences = userProfile['preferences'] as Map<String, dynamic>?;
-      if (preferences == null) return true; // Default to enabled if no preferences
+      if (preferences == null) return false; // Default to disabled if no preferences
       
-      return preferences['petCareReminders'] as bool? ?? true; // Default to enabled
+      return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
     } catch (e) {
       print('Error checking pet care reminders preference: $e');
-      return true; // Default to enabled on error
+      return false; // Default to disabled on error
     }
   }
 

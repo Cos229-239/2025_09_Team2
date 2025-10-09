@@ -418,7 +418,7 @@ class UserPreferences {
     this.studyReminders = true,
     this.achievementNotifications = true,
     this.socialNotifications = true,
-    this.petCareReminders = true, // Enable pet care reminders by default
+    this.petCareReminders = false, // Disable pet care reminders by default
     this.emailDigest = false,
     this.reminderTime = '09:00',
 
@@ -507,7 +507,7 @@ class UserPreferences {
         achievementNotifications:
             json['achievementNotifications'] as bool? ?? true,
         socialNotifications: json['socialNotifications'] as bool? ?? true,
-        petCareReminders: json['petCareReminders'] as bool? ?? true,
+        petCareReminders: json['petCareReminders'] as bool? ?? false, // Default to disabled
         emailDigest: json['emailDigest'] as bool? ?? false,
         reminderTime: json['reminderTime'] as String? ?? '09:00',
 
