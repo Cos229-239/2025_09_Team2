@@ -214,7 +214,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
               if (!success) {
                 debugPrint('❌ Failed to answer call');
-                if (mounted) {
+                if (mounted && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Failed to answer call. Please check your camera and microphone permissions.'),
@@ -232,10 +232,10 @@ class _ChatScreenState extends State<ChatScreen> {
               // 1. Dialog animation is complete
               // 2. Media tracks are properly established
               // 3. Widget tree is in a stable state
-              if (mounted) {
+              if (mounted && context.mounted) {
                 await Future.delayed(const Duration(milliseconds: 100));
                 
-                if (mounted) {
+                if (mounted && context.mounted) {
                   debugPrint('🧭 Navigating to CallScreen...');
                   
                   // Navigate to call screen with the answered call
@@ -541,7 +541,7 @@ class _ChatScreenState extends State<ChatScreen> {
           if (_isUploading)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               child: Row(
                 children: [
                   SizedBox(
@@ -600,7 +600,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
@@ -784,7 +784,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                       .withValues(alpha: 0.2)
                                   : Theme.of(context)
                                       .colorScheme
-                                      .surfaceVariant,
+                                      .surfaceContainerHighest,
                               border: hasReacted
                                   ? Border.all(
                                       color:
@@ -990,7 +990,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     messageId: messageId,
                     emoji: emoji.emoji,
                   );
-                  if (mounted) Navigator.pop(context);
+                  if (mounted && context.mounted) Navigator.pop(context);
                 },
                 config: const Config(),
               ),
@@ -1520,7 +1520,7 @@ class _MessageBubbleWithHoverState extends State<_MessageBubbleWithHover> {
                 decoration: BoxDecoration(
                   color: widget.isMe
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.surfaceVariant,
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),

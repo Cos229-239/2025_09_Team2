@@ -209,9 +209,11 @@ class _AchievementScreenState extends State<AchievementScreen>
               icon: const Icon(Icons.sync),
               onPressed: () async {
                 await _gamificationService!.forceSync();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Synced successfully!')),
-                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Synced successfully!')),
+                  );
+                }
               },
               tooltip: 'Sync Data',
             ),
