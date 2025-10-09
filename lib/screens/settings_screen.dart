@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../providers/app_state.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/calendar_provider.dart';
+import '../../services/firestore_service.dart';
 import '../../widgets/ai/ai_settings_widget.dart';
 import '../../widgets/notifications/notification_panel.dart'; // Import for custom bell icon
 import 'spotify_integration_screen.dart';
@@ -284,6 +287,7 @@ class SettingsScreen extends StatelessWidget {
                           // Future: Quest notification preferences
                         },
                       ),
+                      _buildPetCareRemindersSetting(context),
                     ],
                   ),
                 ),
@@ -473,5 +477,95 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Build the pet care reminders setting widget
+  Widget _buildPetCareRemindersSetting(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _getUserPetCareRemindersPreference(),
+      builder: (context, snapshot) {
+        final isEnabled = snapshot.data ?? true; // Default to enabled
+        
+        return SwitchListTile(
+          title: const Text('Pet Care Reminders'),
+          subtitle: const Text('Show automatic pet care events in calendar'),
+          value: isEnabled,
+          onChanged: snapshot.connectionState == ConnectionState.waiting
+              ? null // Disable while loading
+              : (value) => _updatePetCareRemindersPreference(context, value),
+        );
+      },
+    );
+  }
+
+  /// Get the current pet care reminders preference from Firestore
+  Future<bool> _getUserPetCareRemindersPreference() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return true;
+      
+      final userProfile = await FirestoreService().getUserProfile(user.uid);
+      if (userProfile == null) return true;
+      
+      final preferences = userProfile['preferences'] as Map<String, dynamic>?;
+      if (preferences == null) return true;
+      
+      return preferences['petCareReminders'] as bool? ?? true;
+    } catch (e) {
+      print('Error getting pet care reminders preference: $e');
+      return true;
+    }
+  }
+
+  /// Update the pet care reminders preference in Firestore
+  Future<void> _updatePetCareRemindersPreference(BuildContext context, bool value) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please log in to change settings')),
+        );
+        return;
+      }
+
+      // Get current user profile to update preferences properly
+      final userProfile = await FirestoreService().getUserProfile(user.uid);
+      if (userProfile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load user profile')),
+        );
+        return;
+      }
+
+      // Get current preferences and update the pet care setting
+      final currentPreferences = userProfile['preferences'] as Map<String, dynamic>? ?? {};
+      final updatedPreferences = Map<String, dynamic>.from(currentPreferences);
+      updatedPreferences['petCareReminders'] = value;
+
+      // Update the preference in Firestore
+      await FirestoreService().updateUserProfile(user.uid, {
+        'preferences': updatedPreferences,
+      });
+
+      // Refresh calendar events to apply the new setting
+      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      await calendarProvider.refreshAllEvents();
+
+      // Show feedback to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            value 
+                ? 'Pet care reminders enabled' 
+                : 'Pet care reminders disabled'
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error updating pet care reminders preference: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update setting')),
+      );
+    }
   }
 }
