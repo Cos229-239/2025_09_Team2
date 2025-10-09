@@ -89,6 +89,7 @@ import 'providers/social_session_provider.dart';
 import 'providers/calendar_provider.dart';
 import 'providers/planner_provider.dart';
 import 'providers/enhanced_ai_tutor_provider.dart';
+import 'providers/timer_provider.dart';
 
 // Import services
 import 'services/social_learning_service.dart';
@@ -182,6 +183,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SocialSessionProvider()),
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
         ChangeNotifierProvider(create: (_) => PlannerProvider()),
+        ChangeNotifierProvider(create: (_) => TimerProvider()),
 
         // Services
         Provider(create: (_) => SocialLearningService()),
