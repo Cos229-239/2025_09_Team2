@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/social_learning_service.dart';
 import '../services/gif_service.dart';
 import '../services/webrtc_service.dart';
@@ -926,8 +927,34 @@ class _ChatScreenState extends State<ChatScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     TextButton(
-                      onPressed: () {
-                        // TODO: Open file in browser
+                      onPressed: () async {
+                        try {
+                          final uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          } else {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Cannot open this file'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error opening file: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
                       },
                       child: const Text('Download'),
                     ),
@@ -1238,19 +1265,242 @@ class _ChatScreenState extends State<ChatScreen> {
               title: const Text('Clear Chat'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Implement clear chat
+                _showClearChatDialog();
               },
             ),
             ListTile(
-              leading: const Icon(Icons.block),
+              leading: const Icon(Icons.person_remove, color: Colors.orange),
+              title: const Text('Remove Friend'),
+              onTap: () {
+                Navigator.pop(context);
+                _showRemoveFriendDialog();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.block, color: Colors.red),
               title: const Text('Block User'),
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Implement block user
+                _showBlockUserDialog();
               },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Show confirmation dialog for clearing chat
+  void _showClearChatDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Chat'),
+        content: Text(
+          'Are you sure you want to delete all messages with ${widget.otherUser.displayName}? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              
+              navigator.pop();
+              
+              // Show loading indicator
+              if (mounted) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 16),
+                        Text('Clearing chat...'),
+                      ],
+                    ),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+
+              // Clear chat
+              final success = await widget.socialService.clearChat(widget.otherUser.id);
+
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Chat cleared successfully'
+                          : 'Failed to clear chat',
+                    ),
+                    backgroundColor: success ? Colors.green : Colors.red,
+                  ),
+                );
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show confirmation dialog for removing friend
+  void _showRemoveFriendDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Friend'),
+        content: Text(
+          'Are you sure you want to remove ${widget.otherUser.displayName} from your friends list? You can still chat but won\'t see each other in your friends list.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              
+              navigator.pop();
+
+              // Show loading indicator
+              if (mounted) {
+                messenger.showSnackBar(
+                  const SnackBar(
+                    content: Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 16),
+                        Text('Removing friend...'),
+                      ],
+                    ),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+
+              // Remove friend
+              final success = await widget.socialService.removeFriend(widget.otherUser.id);
+
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? 'Friend removed successfully'
+                          : 'Failed to remove friend',
+                    ),
+                    backgroundColor: success ? Colors.green : Colors.red,
+                  ),
+                );
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Show confirmation dialog for blocking user
+  void _showBlockUserDialog() async {
+    // Check if user is already blocked
+    final isBlocked = await widget.socialService.isUserBlocked(widget.otherUser.id);
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isBlocked ? 'Unblock User' : 'Block User'),
+        content: Text(
+          isBlocked
+              ? 'Are you sure you want to unblock ${widget.otherUser.displayName}? They will be able to send you messages again.'
+              : 'Are you sure you want to block ${widget.otherUser.displayName}? You won\'t receive any messages from them and they will be removed from your friends list.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              
+              navigator.pop();
+
+              // Show loading indicator
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 16),
+                        Text(isBlocked ? 'Unblocking user...' : 'Blocking user...'),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+
+              // Block/unblock user
+              final success = isBlocked
+                  ? await widget.socialService.unblockUser(widget.otherUser.id)
+                  : await widget.socialService.blockUser(widget.otherUser.id);
+
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      success
+                          ? (isBlocked
+                              ? 'User unblocked successfully'
+                              : 'User blocked successfully')
+                          : (isBlocked
+                              ? 'Failed to unblock user'
+                              : 'Failed to block user'),
+                    ),
+                    backgroundColor: success ? Colors.green : Colors.red,
+                  ),
+                );
+
+                // If blocked successfully, navigate back
+                if (success && !isBlocked) {
+                  navigator.pop();
+                }
+              }
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: isBlocked ? Colors.green : Colors.red,
+            ),
+            child: Text(isBlocked ? 'Unblock' : 'Block'),
+          ),
+        ],
       ),
     );
   }

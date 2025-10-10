@@ -2798,4 +2798,181 @@ class SocialLearningService {
       return false;
     }
   }
+
+  /// Clear all messages in a chat
+  Future<bool> clearChat(String otherUserId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot clear chat: Not authenticated');
+        return false;
+      }
+
+      final chatId = getChatId(currentUser.uid, otherUserId);
+      debugPrint('🗑️ Clearing chat: $chatId');
+
+      // Get all messages in the chat
+      final messagesSnapshot = await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .get();
+
+      // Delete all messages in batch
+      final batch = FirebaseFirestore.instance.batch();
+      for (final doc in messagesSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      debugPrint('✅ Chat cleared successfully (${messagesSnapshot.docs.length} messages deleted)');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error clearing chat: $e');
+      return false;
+    }
+  }
+
+  /// Block a user
+  Future<bool> blockUser(String userId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot block user: Not authenticated');
+        return false;
+      }
+
+      // Add to blocked users list in Firestore
+      await _firestoreService.usersCollection.doc(currentUser.uid).update({
+        'blockedUsers': FieldValue.arrayUnion([userId]),
+      });
+
+      // Remove friendship if exists - check both directions
+      final friendshipsToDelete = <String>[];
+      
+      // Check where current user is userId and other is friendId
+      final friendships1 = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: currentUser.uid)
+          .where('friendId', isEqualTo: userId)
+          .get();
+      
+      for (final doc in friendships1.docs) {
+        friendshipsToDelete.add(doc.id);
+      }
+      
+      // Check where other user is userId and current is friendId
+      final friendships2 = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: userId)
+          .where('friendId', isEqualTo: currentUser.uid)
+          .get();
+      
+      for (final doc in friendships2.docs) {
+        friendshipsToDelete.add(doc.id);
+      }
+
+      // Delete all found friendships
+      for (final friendshipId in friendshipsToDelete) {
+        await _firestoreService.friendshipsCollection.doc(friendshipId).delete();
+        debugPrint('🗑️ Deleted friendship: $friendshipId');
+        
+        // Also remove from local cache
+        _friendships.removeWhere((f) => f.id == friendshipId);
+      }
+
+      await _saveUserData();
+      debugPrint('✅ User blocked successfully: $userId (removed ${friendshipsToDelete.length} friendship(s))');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error blocking user: $e');
+      return false;
+    }
+  }
+
+  /// Remove a friend without blocking them
+  Future<bool> removeFriend(String userId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot remove friend: Not authenticated');
+        return false;
+      }
+
+      final friendshipsToDelete = <String>[];
+      
+      // Check where current user is userId and other is friendId
+      final friendships1 = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: currentUser.uid)
+          .where('friendId', isEqualTo: userId)
+          .get();
+      
+      for (final doc in friendships1.docs) {
+        friendshipsToDelete.add(doc.id);
+      }
+      
+      // Check where other user is userId and current is friendId
+      final friendships2 = await _firestoreService.friendshipsCollection
+          .where('userId', isEqualTo: userId)
+          .where('friendId', isEqualTo: currentUser.uid)
+          .get();
+      
+      for (final doc in friendships2.docs) {
+        friendshipsToDelete.add(doc.id);
+      }
+
+      // Delete all found friendships
+      for (final friendshipId in friendshipsToDelete) {
+        await _firestoreService.friendshipsCollection.doc(friendshipId).delete();
+        debugPrint('🗑️ Deleted friendship: $friendshipId');
+        
+        // Also remove from local cache
+        _friendships.removeWhere((f) => f.id == friendshipId);
+      }
+
+      await _saveUserData();
+      debugPrint('✅ Friend removed successfully: $userId (removed ${friendshipsToDelete.length} friendship(s))');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error removing friend: $e');
+      return false;
+    }
+  }
+
+  /// Unblock a user
+  Future<bool> unblockUser(String userId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint('❌ Cannot unblock user: Not authenticated');
+        return false;
+      }
+
+      // Remove from blocked users list
+      await _firestoreService.usersCollection.doc(currentUser.uid).update({
+        'blockedUsers': FieldValue.arrayRemove([userId]),
+      });
+
+      debugPrint('✅ User unblocked successfully: $userId');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error unblocking user: $e');
+      return false;
+    }
+  }
+
+  /// Check if a user is blocked
+  Future<bool> isUserBlocked(String userId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return false;
+
+      final userDoc = await _firestoreService.usersCollection.doc(currentUser.uid).get();
+      final data = userDoc.data() as Map<String, dynamic>?;
+      final blockedUsers = List<String>.from(data?['blockedUsers'] ?? []);
+
+      return blockedUsers.contains(userId);
+    } catch (e) {
+      debugPrint('❌ Error checking if user is blocked: $e');
+      return false;
+    }
+  }
 }
