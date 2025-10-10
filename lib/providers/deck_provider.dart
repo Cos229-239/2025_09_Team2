@@ -288,12 +288,30 @@ class DeckProvider extends ChangeNotifier {
     }
   }
 
-  /// Removes a deck from the collection by ID
+  /// Removes a deck from the collection by ID and deletes from Firestore
   /// @param deckId - The ID of the deck to remove
-  void deleteDeck(String deckId) {
-    // Remove all decks with matching ID (should be only one)
-    _decks.removeWhere((deck) => deck.id == deckId);
-    notifyListeners(); // Notify UI of the removal
+  Future<bool> deleteDeck(String deckId) async {
+    try {
+      // Delete from Firestore first
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        final success = await _firestoreService.deleteDeck(deckId, currentUser.uid);
+        if (!success) {
+          debugPrint('❌ Failed to delete deck from Firestore');
+          return false;
+        }
+      }
+
+      // Remove from local list
+      _decks.removeWhere((deck) => deck.id == deckId);
+      notifyListeners(); // Notify UI of the removal
+      
+      debugPrint('✅ Deck deleted successfully');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Error deleting deck: $e');
+      return false;
+    }
   }
 
   /// Adds a new flashcard to a specific deck

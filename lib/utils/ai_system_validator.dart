@@ -129,6 +129,8 @@ class AISystemValidator {
       totalQuizzesTaken: 25,
       currentStreak: 8,
       longestStreak: 15,
+      totalAnswersGiven: 220,
+      totalCorrectAnswers: 180,
       subjectPerformance: {
         'Computer Science': SubjectPerformance(
           subject: 'Computer Science',

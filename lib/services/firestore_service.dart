@@ -365,6 +365,52 @@ class FirestoreService {
     }
   }
 
+  /// Delete a deck from Firestore
+  Future<bool> deleteDeck(String deckId, [String? userId]) async {
+    try {
+      final uid = userId ?? _auth.currentUser?.uid;
+      if (uid == null) {
+        if (kDebugMode) {
+          print('❌ Cannot delete deck: No user authenticated');
+        }
+        return false;
+      }
+
+      // Verify the deck belongs to the user before deleting
+      final deckDoc = await decksCollection.doc(deckId).get();
+      if (!deckDoc.exists) {
+        if (kDebugMode) {
+          print('❌ Deck not found: $deckId');
+        }
+        return false;
+      }
+
+      final deckData = deckDoc.data() as Map<String, dynamic>;
+      if (deckData['uid'] != uid) {
+        if (kDebugMode) {
+          print('❌ Cannot delete deck: User does not own this deck');
+        }
+        return false;
+      }
+
+      // Delete the deck
+      await decksCollection.doc(deckId).delete();
+      
+      // Also remove any deck cooldowns
+      await removeDeckCooldown(deckId, uid);
+      
+      if (kDebugMode) {
+        print('✅ Deleted deck: $deckId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error deleting deck: $e');
+      }
+      return false;
+    }
+  }
+
   /// Create a new task for user
   Future<String?> createTask({
     required String uid,

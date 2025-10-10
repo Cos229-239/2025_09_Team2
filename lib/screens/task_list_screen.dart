@@ -482,9 +482,160 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
   /// Edit task
   void _editTask(Task task) {
-    // TODO: Implement task editing
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Task editing coming soon!')),
+    final titleController = TextEditingController(text: task.title);
+    final estMinutesController = TextEditingController(text: task.estMinutes.toString());
+    final tagsController = TextEditingController(text: task.tags.join(', '));
+    DateTime? selectedDueDate = task.dueAt;
+    int selectedPriority = task.priority;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Edit Task'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Task Title',
+                    hintText: 'Enter task description',
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: estMinutesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Estimated Minutes',
+                    hintText: 'Enter time estimate',
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: tagsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Tags (optional)',
+                    hintText: 'Enter tags separated by commas',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Priority selector
+                DropdownButtonFormField<int>(
+                  initialValue: selectedPriority,
+                  decoration: const InputDecoration(
+                    labelText: 'Priority',
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text('Low')),
+                    DropdownMenuItem(value: 2, child: Text('Medium')),
+                    DropdownMenuItem(value: 3, child: Text('High')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        selectedPriority = value;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Due date selector
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    selectedDueDate == null
+                        ? 'No due date'
+                        : 'Due: ${_formatDueDate(selectedDueDate!)}',
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (selectedDueDate != null)
+                        IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            setState(() {
+                              selectedDueDate = null;
+                            });
+                          },
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.calendar_today),
+                        onPressed: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDueDate ?? DateTime.now(),
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (date != null) {
+                            setState(() {
+                              selectedDueDate = date;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (titleController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a task title')),
+                  );
+                  return;
+                }
+
+                final estMinutes = int.tryParse(estMinutesController.text.trim());
+                if (estMinutes == null || estMinutes <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a valid time estimate')),
+                  );
+                  return;
+                }
+
+                final tags = tagsController.text
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .where((tag) => tag.isNotEmpty)
+                    .toList();
+
+                final updatedTask = task.copyWith(
+                  title: titleController.text.trim(),
+                  estMinutes: estMinutes,
+                  tags: tags,
+                  priority: selectedPriority,
+                  dueAt: selectedDueDate,
+                );
+
+                Provider.of<TaskProvider>(context, listen: false).updateTask(updatedTask);
+                Navigator.pop(context);
+                
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Task updated successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
