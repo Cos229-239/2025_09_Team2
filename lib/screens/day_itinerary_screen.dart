@@ -529,32 +529,29 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
   }
 
   void _createNewEvent(BuildContext context) {
-    // TODO: Implement event creation dialog
-    // This should open the same event creation dialog used in the calendar
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Event creation coming soon!'),
-        duration: Duration(seconds: 2),
+    showDialog(
+      context: context,
+      builder: (context) => _EventFormDialog(
+        selectedDate: widget.selectedDate,
+        isEditMode: false,
       ),
     );
   }
 
   void _showEventDetails(BuildContext context, CalendarEvent event) {
-    // TODO: Implement event details dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Showing details for: ${event.title}'),
-        duration: const Duration(seconds: 2),
-      ),
+    showDialog(
+      context: context,
+      builder: (context) => _EventDetailsDialog(event: event),
     );
   }
 
   void _editEvent(BuildContext context, CalendarEvent event) {
-    // TODO: Implement event editing
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Editing: ${event.title}'),
-        duration: const Duration(seconds: 2),
+    showDialog(
+      context: context,
+      builder: (context) => _EventFormDialog(
+        selectedDate: widget.selectedDate,
+        isEditMode: true,
+        existingEvent: event,
       ),
     );
   }
@@ -600,5 +597,805 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
         ],
       ),
     );
+  }
+}
+
+/// Event creation/editing form dialog
+class _EventFormDialog extends StatefulWidget {
+  final DateTime selectedDate;
+  final bool isEditMode;
+  final CalendarEvent? existingEvent;
+
+  const _EventFormDialog({
+    required this.selectedDate,
+    required this.isEditMode,
+    this.existingEvent,
+  });
+
+  @override
+  State<_EventFormDialog> createState() => _EventFormDialogState();
+}
+
+class _EventFormDialogState extends State<_EventFormDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+  late TextEditingController _locationController;
+  late TextEditingController _estimatedMinutesController;
+
+  late DateTime _startTime;
+  late DateTime? _endTime;
+  late CalendarEventType _selectedType;
+  late int _priority;
+  late bool _isAllDay;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize controllers and values
+    if (widget.isEditMode && widget.existingEvent != null) {
+      final event = widget.existingEvent!;
+      _titleController = TextEditingController(text: event.title);
+      _descriptionController = TextEditingController(text: event.description);
+      _locationController = TextEditingController(text: event.location ?? '');
+      _estimatedMinutesController = TextEditingController(
+        text: event.estimatedMinutes?.toString() ?? '',
+      );
+      _startTime = event.startTime;
+      _endTime = event.endTime;
+      _selectedType = event.type;
+      _priority = event.priority;
+      _isAllDay = event.isAllDay;
+    } else {
+      _titleController = TextEditingController();
+      _descriptionController = TextEditingController();
+      _locationController = TextEditingController();
+      _estimatedMinutesController = TextEditingController();
+      _startTime = DateTime(
+        widget.selectedDate.year,
+        widget.selectedDate.month,
+        widget.selectedDate.day,
+        9, // Default to 9 AM
+        0,
+      );
+      _endTime = null;
+      _selectedType = CalendarEventType.custom;
+      _priority = 1;
+      _isAllDay = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    _estimatedMinutesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Icon(
+                      widget.isEditMode ? Icons.edit : Icons.add_circle,
+                      color: Theme.of(context).primaryColor,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        widget.isEditMode ? 'Edit Event' : 'Create Event',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Title field
+                TextFormField(
+                  controller: _titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Event Title *',
+                    hintText: 'Enter event title',
+                    prefixIcon: Icon(Icons.title),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter a title';
+                    }
+                    return null;
+                  },
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 16),
+
+                // Description field
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description',
+                    hintText: 'Add details about this event',
+                    prefixIcon: Icon(Icons.description),
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 16),
+
+                // Event type dropdown
+                DropdownButtonFormField<CalendarEventType>(
+                  initialValue: _selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'Event Type *',
+                    prefixIcon: Icon(Icons.category),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: CalendarEventType.values.map((type) {
+                    return DropdownMenuItem(
+                      value: type,
+                      child: Row(
+                        children: [
+                          Icon(type.defaultIcon, size: 18, color: type.defaultColor),
+                          const SizedBox(width: 8),
+                          Text(type.displayName),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedType = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // All-day toggle
+                SwitchListTile(
+                  title: const Text('All-day event'),
+                  subtitle: const Text('This event lasts the entire day'),
+                  value: _isAllDay,
+                  onChanged: (value) {
+                    setState(() => _isAllDay = value);
+                  },
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 16),
+
+                // Start time picker
+                InkWell(
+                  onTap: () => _selectStartTime(context),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Start Time *',
+                      prefixIcon: Icon(Icons.access_time),
+                      border: OutlineInputBorder(),
+                    ),
+                    child: Text(
+                      _isAllDay
+                          ? DateFormat('MMM d, y').format(_startTime)
+                          : DateFormat('MMM d, y • h:mm a').format(_startTime),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // End time picker (optional)
+                if (!_isAllDay)
+                  InkWell(
+                    onTap: () => _selectEndTime(context),
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'End Time (Optional)',
+                        prefixIcon: const Icon(Icons.access_time),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: _endTime != null
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  setState(() => _endTime = null);
+                                },
+                              )
+                            : null,
+                      ),
+                      child: Text(
+                        _endTime != null
+                            ? DateFormat('MMM d, y • h:mm a').format(_endTime!)
+                            : 'Not set',
+                        style: TextStyle(
+                          color: _endTime != null ? null : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (!_isAllDay) const SizedBox(height: 16),
+
+                // Estimated duration (for tasks and custom events)
+                if (_selectedType == CalendarEventType.task ||
+                    _selectedType == CalendarEventType.custom)
+                  TextFormField(
+                    controller: _estimatedMinutesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Estimated Duration (minutes)',
+                      hintText: 'e.g., 30',
+                      prefixIcon: Icon(Icons.timer),
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                if (_selectedType == CalendarEventType.task ||
+                    _selectedType == CalendarEventType.custom)
+                  const SizedBox(height: 16),
+
+                // Priority selector
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Priority',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildPriorityChip(1, 'Low', Colors.green),
+                        const SizedBox(width: 8),
+                        _buildPriorityChip(2, 'Medium', Colors.orange),
+                        const SizedBox(width: 8),
+                        _buildPriorityChip(3, 'High', Colors.red),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // Location (for meetings and sessions)
+                if (_selectedType == CalendarEventType.socialSession ||
+                    _selectedType == CalendarEventType.custom)
+                  TextFormField(
+                    controller: _locationController,
+                    decoration: const InputDecoration(
+                      labelText: 'Location / Meeting Link',
+                      hintText: 'Enter location or link',
+                      prefixIcon: Icon(Icons.location_on),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                if (_selectedType == CalendarEventType.socialSession ||
+                    _selectedType == CalendarEventType.custom)
+                  const SizedBox(height: 24),
+
+                // Action buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: _saveEvent,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: Text(widget.isEditMode ? 'Update' : 'Create'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriorityChip(int priority, String label, Color color) {
+    final isSelected = _priority == priority;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _priority = priority),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withValues(alpha: 0.2) : Colors.grey[200],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected ? color : Colors.grey[300]!,
+              width: 2,
+            ),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? color : Colors.grey[600],
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectStartTime(BuildContext context) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _startTime,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (date != null && mounted) {
+      if (_isAllDay) {
+        setState(() {
+          _startTime = DateTime(date.year, date.month, date.day);
+        });
+      } else {
+        if (!mounted) return;
+        
+        final time = await showTimePicker(
+          context: this.context, // Use State's context
+          initialTime: TimeOfDay.fromDateTime(_startTime),
+        );
+
+        if (time != null && mounted) {
+          setState(() {
+            _startTime = DateTime(
+              date.year,
+              date.month,
+              date.day,
+              time.hour,
+              time.minute,
+            );
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _selectEndTime(BuildContext context) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _endTime ?? _startTime.add(const Duration(hours: 1)),
+      firstDate: _startTime,
+      lastDate: DateTime(2030),
+    );
+
+    if (date != null && mounted) {
+      if (!mounted) return;
+      
+      final time = await showTimePicker(
+        context: this.context, // Use State's context
+        initialTime: _endTime != null
+            ? TimeOfDay.fromDateTime(_endTime!)
+            : TimeOfDay.fromDateTime(_startTime.add(const Duration(hours: 1))),
+      );
+
+      if (time != null && mounted) {
+        setState(() {
+          _endTime = DateTime(
+            date.year,
+            date.month,
+            date.day,
+            time.hour,
+            time.minute,
+          );
+        });
+      }
+    }
+  }
+
+  Future<void> _saveEvent() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final provider = Provider.of<CalendarProvider>(context, listen: false);
+
+    try {
+      int? estimatedMinutes;
+      if (_estimatedMinutesController.text.isNotEmpty) {
+        estimatedMinutes = int.tryParse(_estimatedMinutesController.text);
+      }
+
+      if (widget.isEditMode && widget.existingEvent != null) {
+        // Update existing event
+        final updatedEvent = widget.existingEvent!.copyWith(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          type: _selectedType,
+          startTime: _startTime,
+          endTime: _endTime,
+          isAllDay: _isAllDay,
+          priority: _priority,
+          estimatedMinutes: estimatedMinutes,
+          location: _locationController.text.trim().isEmpty
+              ? null
+              : _locationController.text.trim(),
+          updatedAt: DateTime.now(),
+        );
+
+        final result = await provider.updateEvent(updatedEvent);
+        
+        if (result != null && navigator.mounted) {
+          navigator.pop();
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Event updated successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (navigator.mounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update event'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        // Create new event
+        final result = await provider.createEvent(
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim(),
+          type: _selectedType,
+          startTime: _startTime,
+          endTime: _endTime,
+          isAllDay: _isAllDay,
+          priority: _priority,
+          estimatedMinutes: estimatedMinutes,
+          location: _locationController.text.trim().isEmpty
+              ? null
+              : _locationController.text.trim(),
+        );
+
+        if (result != null && navigator.mounted) {
+          navigator.pop();
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Event created successfully'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else if (navigator.mounted) {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Failed to create event'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (navigator.mounted) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}
+
+/// Event details view dialog
+class _EventDetailsDialog extends StatelessWidget {
+  final CalendarEvent event;
+
+  const _EventDetailsDialog({required this.event});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header with event color
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: event.color.withValues(alpha: 0.1),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(event.icon, color: event.color, size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          event.title,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildStatusChip(context),
+                ],
+              ),
+            ),
+
+            // Event details
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (event.description.isNotEmpty && event.description != event.title) ...[
+                    _buildDetailRow(
+                      Icons.description,
+                      'Description',
+                      event.description,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  _buildDetailRow(
+                    Icons.event,
+                    'Type',
+                    event.type.displayName,
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildDetailRow(
+                    Icons.access_time,
+                    'Time',
+                    event.isAllDay
+                        ? 'All day - ${DateFormat('MMM d, y').format(event.startTime)}'
+                        : event.formattedTime,
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (event.estimatedMinutes != null) ...[
+                    _buildDetailRow(
+                      Icons.timer,
+                      'Duration',
+                      '${event.estimatedMinutes} minutes',
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  _buildDetailRow(
+                    Icons.flag,
+                    'Priority',
+                    _getPriorityText(event.priority),
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (event.location != null && event.location!.isNotEmpty) ...[
+                    _buildDetailRow(
+                      Icons.location_on,
+                      'Location',
+                      event.location!,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  if (event.tags.isNotEmpty) ...[
+                    _buildDetailRow(
+                      Icons.label,
+                      'Tags',
+                      event.tags.join(', '),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
+                  _buildDetailRow(
+                    Icons.calendar_today,
+                    'Created',
+                    DateFormat('MMM d, y • h:mm a').format(event.createdAt),
+                  ),
+
+                  if (event.createdAt != event.updatedAt) ...[
+                    const SizedBox(height: 16),
+                    _buildDetailRow(
+                      Icons.update,
+                      'Last Updated',
+                      DateFormat('MMM d, y • h:mm a').format(event.updatedAt),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Action buttons
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (event.isEditable)
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context); // Close details
+                        // Open edit dialog
+                        showDialog(
+                          context: context,
+                          builder: (context) => _EventFormDialog(
+                            selectedDate: event.startTime,
+                            isEditMode: true,
+                            existingEvent: event,
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit'),
+                    ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(BuildContext context) {
+    Color statusColor;
+    switch (event.status) {
+      case CalendarEventStatus.completed:
+        statusColor = Colors.green;
+        break;
+      case CalendarEventStatus.inProgress:
+        statusColor = Colors.orange;
+        break;
+      case CalendarEventStatus.cancelled:
+        statusColor = Colors.red;
+        break;
+      case CalendarEventStatus.expired:
+        statusColor = Colors.grey;
+        break;
+      case CalendarEventStatus.postponed:
+        statusColor = Colors.amber;
+        break;
+      default:
+        statusColor = Colors.blue;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: statusColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _getStatusIcon(event.status),
+            size: 16,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            event.status.toString().split('.').last.toUpperCase(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getStatusIcon(CalendarEventStatus status) {
+    switch (status) {
+      case CalendarEventStatus.completed:
+        return Icons.check_circle;
+      case CalendarEventStatus.inProgress:
+        return Icons.play_circle;
+      case CalendarEventStatus.cancelled:
+        return Icons.cancel;
+      case CalendarEventStatus.expired:
+        return Icons.history;
+      case CalendarEventStatus.postponed:
+        return Icons.schedule;
+      default:
+        return Icons.event;
+    }
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Colors.grey[600]),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getPriorityText(int priority) {
+    switch (priority) {
+      case 1:
+        return 'Low';
+      case 2:
+        return 'Medium';
+      case 3:
+        return 'High';
+      default:
+        return 'Normal';
+    }
   }
 }
