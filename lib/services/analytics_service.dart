@@ -7,9 +7,11 @@ import 'package:flutter/foundation.dart';
 import '../models/study_analytics.dart';
 import '../models/review.dart';
 import '../models/quiz_session.dart';
+import 'firestore_service.dart';
 
 class AnalyticsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirestoreService _firestoreService = FirestoreService();
   static const String _analyticsCollection = 'study_analytics';
   static const String _sessionsCollection = 'study_sessions';
 
@@ -172,9 +174,7 @@ class AnalyticsService {
   /// Get user's quiz sessions for analytics
   Future<List<QuizSession>> _getUserQuizSessions(String userId) async {
     try {
-      // TODO: Implement actual quiz session query
-      // This would need to be implemented based on your quiz session storage
-      return [];
+      return await _firestoreService.getQuizSessions(userId);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('AnalyticsService: Error fetching quiz sessions: $e');
@@ -186,9 +186,7 @@ class AnalyticsService {
   /// Get user's reviews for analytics
   Future<List<Review>> _getUserReviews(String userId) async {
     try {
-      // TODO: Implement actual review query
-      // This would need to be implemented based on your review storage
-      return [];
+      return await _firestoreService.getUserReviews(userId);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('AnalyticsService: Error fetching reviews: $e');
