@@ -594,7 +594,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Failed to delete event'),
-                    backgroundColor: const Color(0xFFEF5350),
+                    backgroundColor:  Color(0xFFEF5350),
                   ),
                 );
               }

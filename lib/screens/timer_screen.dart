@@ -934,7 +934,7 @@ class _TimerScreenState extends State<TimerScreen> {
         if (_selectedTimerDetails != null)
           Positioned.fill(
             child: Container(
-              color: const Color(0xFF1A1A1A).withOpacity(0.95), // Semi-transparent dark background
+              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95), // Semi-transparent dark background
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: _buildTimerDetailsView(_selectedTimerDetails!),
@@ -1231,7 +1231,10 @@ class _TimerScreenState extends State<TimerScreen> {
                             ),
                             TextButton(
                               onPressed: () async {
-                                Navigator.of(context).pop();
+                                final navigator = Navigator.of(context);
+                                final messenger = ScaffoldMessenger.of(context);
+                                
+                                navigator.pop();
                                 if (timerIndex != -1) {
                                   // Only delete from Firebase if it has an ID (not a preset)
                                   if (timer.id != null) {
@@ -1243,14 +1246,14 @@ class _TimerScreenState extends State<TimerScreen> {
                                         _savedTimers.removeAt(timerIndex);
                                         _selectedTimerDetails = null;
                                       });
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      messenger.showSnackBar(
                                         SnackBar(
                                           content: Text('Deleted timer "${timer.label}"'),
                                           backgroundColor: const Color(0xFFEF5350),
                                         ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      messenger.showSnackBar(
                                         const SnackBar(
                                           content: Text('Failed to delete timer. Please try again.'),
                                           backgroundColor: Colors.red,
@@ -1259,7 +1262,7 @@ class _TimerScreenState extends State<TimerScreen> {
                                     }
                                   } else {
                                     // Can't delete preset timers
-                                    ScaffoldMessenger.of(context).showSnackBar(
+                                    messenger.showSnackBar(
                                       const SnackBar(
                                         content: Text('Cannot delete preset timers'),
                                         backgroundColor: Colors.orange,
@@ -2301,6 +2304,7 @@ class _TimerScreenState extends State<TimerScreen> {
     final label = _labelController.text.trim();
     final timerLabel = label.isEmpty ? 'Custom Timer ${_savedTimers.where((t) => t.id != null).length + 1}' : label;
     final firestoreService = FirestoreService();
+    final messenger = ScaffoldMessenger.of(context);
     
     // Check if we're editing an existing timer or creating a new one
     if (_editingTimerId != null) {
@@ -2322,7 +2326,7 @@ class _TimerScreenState extends State<TimerScreen> {
         // Reload timers from Firebase to ensure consistency
         await _loadSavedTimers();
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Timer "$timerLabel" updated!'),
             backgroundColor: const Color(0xFF6FB8E9),
@@ -2333,7 +2337,7 @@ class _TimerScreenState extends State<TimerScreen> {
         _resetCustomTimerSettings();
       } else {
         debugPrint('❌ Failed to update timer in Firebase');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Failed to update timer. Please try again.'),
             backgroundColor: Colors.red,
@@ -2358,7 +2362,7 @@ class _TimerScreenState extends State<TimerScreen> {
         // Reload timers from Firebase to ensure consistency
         await _loadSavedTimers();
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Timer "$timerLabel" saved!'),
             backgroundColor: const Color(0xFF6FB8E9),
@@ -2369,7 +2373,7 @@ class _TimerScreenState extends State<TimerScreen> {
         _resetCustomTimerSettings();
       } else {
         debugPrint('❌ Failed to save timer to Firebase');
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Failed to save timer. Please try again.'),
             backgroundColor: Colors.red,
