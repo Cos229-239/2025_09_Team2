@@ -65,12 +65,14 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
               padding: const EdgeInsets.all(16.0),
               child: TextField(
                 controller: _searchController,
+                style: const TextStyle(color: Color(0xFFD9D9D9)),
                 decoration: InputDecoration(
                   hintText: 'Search flashcard decks...',
-                  prefixIcon: const Icon(Icons.search),
+                  hintStyle: const TextStyle(color: Color(0xFF888888)),
+                  prefixIcon: const Icon(Icons.search, color: Color(0xFF6FB8E9)),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear),
+                          icon: const Icon(Icons.clear, color: Color(0xFF888888)),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {
@@ -81,9 +83,25 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                       : null,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2,
+                    ),
                   ),
                   filled: true,
-                  fillColor: Theme.of(context).cardColor,
+                  fillColor: const Color(0xFF242628),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -119,28 +137,31 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.style_outlined,
                             size: 80,
-                            color: Colors.grey[400],
+                            color: Color(0xFF888888),
                           ),
                           const SizedBox(height: 16),
                           Text(
                             _searchQuery.isEmpty
                                 ? 'No flash cards yet'
                                 : 'No decks found',
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 24,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             _searchQuery.isEmpty
                                 ? 'Create your first deck to get started'
                                 : 'Try adjusting your search terms',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.grey[500],
-                                ),
+                            style: const TextStyle(
+                              color: Color(0xFF888888),
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
@@ -167,9 +188,14 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
   Widget _buildDeckCard(Deck deck) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+      color: const Color(0xFF242628),
+      elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -190,12 +216,12 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.style,
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF6FB8E9),
                   size: 28,
                 ),
               ),
@@ -209,18 +235,21 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                   children: [
                     Text(
                       deck.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                      style: const TextStyle(
+                        color: Color(0xFFD9D9D9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${deck.cards.length} cards',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: const TextStyle(
+                        color: Color(0xFF888888),
+                        fontSize: 12,
+                      ),
                     ),
                     if (deck.tags.isNotEmpty) ...[
                       const SizedBox(height: 8),
@@ -234,15 +263,19 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              ),
                             ),
                             child: Text(
                               tag,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context).primaryColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              style: const TextStyle(
+                                color: Color(0xFF6FB8E9),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -251,15 +284,20 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Last reviewed: ${_formatLastReviewed(deck.updatedAt)}',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Colors.grey[500],
-                          ),
+                      style: const TextStyle(
+                        color: Color(0xFF888888),
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
               ),
               
               const SizedBox(width: 16),
+              
+              // Quiz grade circular chart (always show - 0% if no quiz taken)
+              _buildGradeCircularChart(deck.lastQuizGrade ?? 0.0),
+              const SizedBox(width: 12),
               
               // More options menu button (three dots)
               InkWell(
@@ -270,19 +308,71 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: const Color(0xFF242628),
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.more_vert,
                     size: 20,
-                    color: Colors.grey[600],
+                    color: Color(0xFF888888),
                   ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGradeCircularChart(double grade) {
+    final gradeColor = grade > 0 ? _getGradeColor(grade) : const Color(0xFF888888);
+    final percentage = (grade * 100).round();
+    final displayText = grade > 0 ? '$percentage%' : '—';
+    
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background circle
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: 4,
+              backgroundColor: Colors.transparent,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF242628),
+              ),
+            ),
+          ),
+          // Progress circle
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(
+              value: grade,
+              strokeWidth: 4,
+              backgroundColor: const Color(0xFF242628),
+              valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
+            ),
+          ),
+          // Percentage text or dash if no quiz taken
+          Text(
+            displayText,
+            style: TextStyle(
+              color: gradeColor,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -311,6 +401,21 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
     } else {
       final months = (difference.inDays / 30).floor();
       return '${months}mo ago';
+    }
+  }
+
+  Color _getGradeColor(double grade) {
+    // Return color based on grade percentage (0.0 to 1.0)
+    if (grade >= 0.9) {
+      return const Color(0xFF4CAF50); // Excellent - Green
+    } else if (grade >= 0.8) {
+      return const Color(0xFF6FB8E9); // Great - Blue
+    } else if (grade >= 0.7) {
+      return const Color(0xFFFFB74D); // Good - Amber
+    } else if (grade >= 0.6) {
+      return const Color(0xFFFF9800); // Fair - Orange
+    } else {
+      return const Color(0xFFEF5350); // Needs Improvement - Red
     }
   }
 

@@ -89,6 +89,15 @@ class SettingsScreen extends StatelessWidget {
 
               // Spotify Integration Card
               Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -98,7 +107,7 @@ class SettingsScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.music_note,
-                            color: Theme.of(context).primaryColor,
+                            color: const Color(0xFF6FB8E9),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -156,6 +165,15 @@ class SettingsScreen extends StatelessWidget {
 
               // Theme Settings
               Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -165,7 +183,7 @@ class SettingsScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.palette,
-                            color: Theme.of(context).primaryColor,
+                            color: const Color(0xFF6FB8E9),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -238,6 +256,15 @@ class SettingsScreen extends StatelessWidget {
 
               // Notification Settings
               Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -297,6 +324,15 @@ class SettingsScreen extends StatelessWidget {
 
               // Data Management
               Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -306,7 +342,7 @@ class SettingsScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.storage,
-                            color: Theme.of(context).primaryColor,
+                            color: const Color(0xFF6FB8E9),
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -382,6 +418,15 @@ class SettingsScreen extends StatelessWidget {
 
               // Account Settings
               Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -391,7 +436,7 @@ class SettingsScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.account_circle,
-                            color: Theme.of(context).primaryColor,
+                            color: const Color(0xFF6FB8E9),
                           ),
                           const SizedBox(width: 8),
                           Text(

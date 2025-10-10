@@ -21,13 +21,14 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
         title: Text(
           DateFormat('EEEE, MMMM d, y').format(widget.selectedDate),
         ),
         centerTitle: true,
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF242628),
+        foregroundColor: const Color(0xFFD9D9D9),
         elevation: 0,
       ),
       body: Consumer<CalendarProvider>(
@@ -53,7 +54,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _createNewEvent(context),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: const Color(0xFF6FB8E9),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -70,15 +71,8 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withValues(alpha: 0.8),
-          ],
-        ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF242628),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,13 +150,16 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.2),
+        color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+        border: Border.all(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 16),
+          const Icon(Icons.event_note, color: Color(0xFF6FB8E9), size: 16),
           const SizedBox(width: 6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,7 +167,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
               Text(
                 value,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFFD9D9D9),
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -178,7 +175,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
               Text(
                 label,
                 style: const TextStyle(
-                  color: Colors.white70,
+                  color: Color(0xFF888888),
                   fontSize: 10,
                 ),
               ),
@@ -201,15 +198,15 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
         children: [
           CircularProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white.withValues(alpha: 0.3),
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+            valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6FB8E9)),
             strokeWidth: 4,
           ),
           Center(
             child: Text(
               '${(progress * 100).round()}%',
               style: const TextStyle(
-                color: Colors.white,
+                color: Color(0xFFD9D9D9),
                 fontWeight: FontWeight.bold,
                 fontSize: 12,
               ),
@@ -227,25 +224,27 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.event_available,
               size: 80,
-              color: Colors.grey[400],
+              color: Color(0xFF888888),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'No events scheduled',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
+              style: TextStyle(
+                color: Color(0xFFD9D9D9),
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'This day is free! Tap the + button to add an event.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
+              style: TextStyle(
+                color: Color(0xFF888888),
+                fontSize: 14,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -254,7 +253,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Add Event'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
+                backgroundColor: const Color(0xFF6FB8E9),
                 foregroundColor: Colors.white,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -297,10 +296,10 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: event.color.withValues(alpha: 0.08),
+          color: const Color(0xFF242628),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: event.color.withValues(alpha: 0.2),
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -311,7 +310,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
               width: 4,
               height: 48,
               decoration: BoxDecoration(
-                color: event.color,
+                color: const Color(0xFF6FB8E9),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -320,7 +319,7 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
             // Event icon
             Icon(
               event.icon,
-              color: event.color,
+              color: const Color(0xFF6FB8E9),
               size: 24,
             ),
             const SizedBox(width: 16),
@@ -332,41 +331,44 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                 children: [
                   Text(
                     event.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                    style: const TextStyle(
+                      color: Color(0xFFD9D9D9),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.access_time,
                         size: 14,
-                        color: Colors.grey[600],
+                        color: Color(0xFF888888),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         event.formattedTime,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
+                        style: const TextStyle(
+                          color: Color(0xFF888888),
+                          fontSize: 12,
+                        ),
                       ),
                       if (event.estimatedMinutes != null) ...[
                         const SizedBox(width: 12),
-                        Icon(
+                        const Icon(
                           Icons.timer,
                           size: 14,
-                          color: Colors.grey[600],
+                          color: Color(0xFF888888),
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${event.estimatedMinutes}min',
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
+                          style: const TextStyle(
+                            color: Color(0xFF888888),
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ],
@@ -376,9 +378,10 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                     const SizedBox(height: 6),
                     Text(
                       event.description,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[700],
-                          ),
+                      style: const TextStyle(
+                        color: Color(0xFF888888),
+                        fontSize: 12,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -411,9 +414,10 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
 
                 // Action menu
                 PopupMenuButton(
-                  icon: Icon(
+                  color: const Color(0xFF242628),
+                  icon: const Icon(
                     Icons.more_vert,
-                    color: Colors.grey[600],
+                    color: Color(0xFF888888),
                     size: 18,
                   ),
                   itemBuilder: (context) => [
@@ -421,9 +425,9 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                       value: 'view',
                       child: Row(
                         children: [
-                          Icon(Icons.visibility, size: 16),
-                          SizedBox(width: 8),
-                          Text('View Details'),
+                          const Icon(Icons.visibility, size: 16, color: Color(0xFF6FB8E9)),
+                          const SizedBox(width: 8),
+                          const Text('View Details', style: TextStyle(color: Color(0xFFD9D9D9))),
                         ],
                       ),
                     ),
@@ -432,9 +436,9 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, size: 16),
-                            SizedBox(width: 8),
-                            Text('Edit'),
+                            const Icon(Icons.edit, size: 16, color: Color(0xFF6FB8E9)),
+                            const SizedBox(width: 8),
+                            const Text('Edit', style: TextStyle(color: Color(0xFFD9D9D9))),
                           ],
                         ),
                       ),
@@ -442,9 +446,9 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                       value: 'delete',
                       child: Row(
                         children: [
-                          Icon(Icons.delete, size: 16, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: Colors.red)),
+                          const Icon(Icons.delete, size: 16, color: Color(0xFFEF5350)),
+                          const SizedBox(width: 8),
+                          const Text('Delete', style: TextStyle(color: Color(0xFFEF5350))),
                         ],
                       ),
                     ),
@@ -474,17 +478,17 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
   Color _getStatusColor(CalendarEventStatus status) {
     switch (status) {
       case CalendarEventStatus.scheduled:
-        return Colors.blue;
+        return const Color(0xFF6FB8E9);
       case CalendarEventStatus.inProgress:
-        return Colors.orange;
+        return const Color(0xFFFF9800);
       case CalendarEventStatus.completed:
-        return Colors.green;
+        return const Color(0xFF4CAF50);
       case CalendarEventStatus.cancelled:
-        return Colors.red;
+        return const Color(0xFFEF5350);
       case CalendarEventStatus.expired:
-        return Colors.grey;
+        return const Color(0xFF888888);
       case CalendarEventStatus.postponed:
-        return Colors.amber;
+        return const Color(0xFFFFB74D);
     }
   }
 
@@ -563,12 +567,16 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Event'),
-        content: Text('Are you sure you want to delete "${event.title}"?'),
+        backgroundColor: const Color(0xFF242628),
+        title: const Text('Delete Event', style: TextStyle(color: Color(0xFFD9D9D9))),
+        content: Text(
+          'Are you sure you want to delete "${event.title}"?',
+          style: const TextStyle(color: Color(0xFF888888)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6FB8E9))),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -582,20 +590,20 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Deleted: ${event.title}'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: const Color(0xFFEF5350),
                   ),
                 );
               } else if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Failed to delete event'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: const Color(0xFFEF5350),
                   ),
                 );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF5350)),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

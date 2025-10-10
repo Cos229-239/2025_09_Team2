@@ -321,6 +321,18 @@ class _TimerScreenState extends State<TimerScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    
+    // Check if timer is running and switch to active timer view
+    final timerProvider = Provider.of<TimerProvider>(context, listen: false);
+    if (timerProvider.timerState != TimerState.idle) {
+      // Timer is running, switch to active timer view
+      if (_showPresets) {
+        setState(() {
+          _showPresets = false;
+        });
+      }
+    }
+    
     // Reload timers every time the screen becomes active
     // This ensures timers are refreshed when navigating back from another screen
     if (!_hasLoadedTimers || ModalRoute.of(context)?.isCurrent == true) {
@@ -514,8 +526,12 @@ class _TimerScreenState extends State<TimerScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
+              // Keep the saved timer flag if it was originally from saved timers
+              final wasFromSavedTimers = _timerStartedFromSavedTimers;
               // Start another session of the same type
               _startSession(activeSession);
+              // Restore the flag so completion returns to saved timers
+              _timerStartedFromSavedTimers = wasFromSavedTimers;
             },
             child: const Text(
               'Start Another',
@@ -563,6 +579,11 @@ class _TimerScreenState extends State<TimerScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
+              // Reset the flag and return to Saved Timers tab after completing a timer
+              _timerStartedFromSavedTimers = false;
+              setState(() {
+                _showPresets = true;
+              });
             },
             child: const Text(
               'OK',
@@ -829,65 +850,61 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   Widget _buildStudyPresets() {
-    return Column(
+    return Stack(
       children: [
-        // Section header
-        const Text(
-          'Study Techniques',
-          style: TextStyle(
-            color: Color(0xFFD9D9D9),
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Centered row of study technique cards
-        Center(
-          child: Wrap(
-            spacing: 16, // Horizontal spacing between cards
-            runSpacing: 16, // Vertical spacing if cards wrap
-            alignment: WrapAlignment.center,
-            children: _timerSessions.map((session) {
-              return _buildHorizontalSessionCard(session);
-            }).toList(),
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // Section header for saved timers
-        const Text(
-          'Saved Timer Presets',
-          style: TextStyle(
-            color: Color(0xFFD9D9D9),
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Show timer details if one is selected, otherwise show timer grid
-        if (_selectedTimerDetails != null) ...[
-          Expanded(
-            child: SingleChildScrollView(
-              child: _buildTimerDetailsView(_selectedTimerDetails!),
+        // Main content - always visible
+        Column(
+          children: [
+            // Section header
+            const Text(
+              'Study Techniques',
+              style: TextStyle(
+                color: Color(0xFFD9D9D9),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ),
-        ] else ...[
-          // Saved timer options displayed as wrapped cards
-          // Filter out preset timers that are shown in Study Techniques section
-          if (_savedTimers.where((timer) => 
-              timer.label != 'Pomodoro Focus' && 
-              timer.label != 'Deep Work Session' && 
-              timer.label != 'Time-Box Focus').isNotEmpty) ...[
-            Wrap(
-              spacing: 16, // Horizontal spacing between cards
-              runSpacing: 16, // Vertical spacing between rows
-              children: _savedTimers
-                  .where((timer) => 
-                      timer.label != 'Pomodoro Focus' && 
-                      timer.label != 'Deep Work Session' && 
+            const SizedBox(height: 16),
+
+            // Centered row of study technique cards
+            Center(
+              child: Wrap(
+                spacing: 16, // Horizontal spacing between cards
+                runSpacing: 16, // Vertical spacing if cards wrap
+                alignment: WrapAlignment.center,
+                children: _timerSessions.map((session) {
+                  return _buildHorizontalSessionCard(session);
+                }).toList(),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Section header for saved timers
+            const Text(
+              'Saved Timer Presets',
+              style: TextStyle(
+                color: Color(0xFFD9D9D9),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Saved timer options displayed as wrapped cards (only show when details NOT selected)
+            // Filter out preset timers that are shown in Study Techniques section
+            if (_selectedTimerDetails == null) ...[
+              if (_savedTimers.where((timer) => 
+                  timer.label != 'Pomodoro Focus' && 
+                  timer.label != 'Deep Work Session' && 
+                  timer.label != 'Time-Box Focus').isNotEmpty) ...[
+                Wrap(
+                  spacing: 16, // Horizontal spacing between cards
+                  runSpacing: 16, // Vertical spacing between rows
+                  children: _savedTimers
+                      .where((timer) => 
+                          timer.label != 'Pomodoro Focus' && 
+                          timer.label != 'Deep Work Session' && 
                       timer.label != 'Time-Box Focus')
                   .toList()
                   .asMap()
@@ -909,7 +926,21 @@ class _TimerScreenState extends State<TimerScreen> {
             ),
           ],
           const SizedBox(height: 30),
-        ],
+            ],
+          ],
+        ),
+        
+        // Overlay: Timer details view (shows on top when a timer is selected)
+        if (_selectedTimerDetails != null)
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xFF1A1A1A).withOpacity(0.95), // Semi-transparent dark background
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: _buildTimerDetailsView(_selectedTimerDetails!),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -1615,7 +1646,7 @@ class _TimerScreenState extends State<TimerScreen> {
                   
                   const SizedBox(width: 12),
                   
-                  // Stop button
+                  // Cancel button
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _stopTimer,
@@ -1630,10 +1661,10 @@ class _TimerScreenState extends State<TimerScreen> {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.stop, size: 20),
+                          Icon(Icons.cancel_outlined, size: 20),
                           SizedBox(width: 8),
                           Text(
-                            'Stop',
+                            'Cancel',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
