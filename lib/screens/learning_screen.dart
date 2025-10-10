@@ -7,6 +7,7 @@ import 'package:studypals/providers/note_provider.dart';
 import 'package:studypals/providers/deck_provider.dart';
 import 'package:studypals/providers/calendar_provider.dart';
 import 'package:studypals/models/deck.dart';
+import 'package:studypals/models/card.dart';
 import 'package:studypals/models/note.dart';
 import 'package:studypals/models/calendar_event.dart';
 import 'package:studypals/screens/task_list_screen.dart';
@@ -720,6 +721,8 @@ class _LearningScreenState extends State<LearningScreen>
                                         _showDeleteDeckDialog(context, deck, deckProvider);
                                       } else if (value == 'calendar') {
                                         _showAddToCalendarDialog(context, deck);
+                                      } else if (value == 'add_cards') {
+                                        _showAddCardsDialog(context, deck, deckProvider);
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -730,6 +733,16 @@ class _LearningScreenState extends State<LearningScreen>
                                             Icon(Icons.edit, size: 18),
                                             SizedBox(width: 12),
                                             Text('Edit'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'add_cards',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.add_circle, size: 18),
+                                            SizedBox(width: 12),
+                                            Text('Add Cards'),
                                           ],
                                         ),
                                       ),
@@ -2348,6 +2361,14 @@ class _LearningScreenState extends State<LearningScreen>
     );
   }
 
+  /// Show dialog to add cards to an existing deck
+  void _showAddCardsDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddCardsDialog(deck: deck, deckProvider: deckProvider),
+    );
+  }
+
   /// Show dialog to add deck to calendar
   void _showAddToCalendarDialog(BuildContext context, Deck deck) {
     // Default to tomorrow at 10 AM
@@ -2816,5 +2837,355 @@ class _LearningScreenState extends State<LearningScreen>
         );
       }
     }
+  }
+}
+
+/// Dialog for adding multiple cards to a deck
+class _AddCardsDialog extends StatefulWidget {
+  final Deck deck;
+  final DeckProvider deckProvider;
+
+  const _AddCardsDialog({required this.deck, required this.deckProvider});
+
+  @override
+  State<_AddCardsDialog> createState() => _AddCardsDialogState();
+}
+
+class _AddCardsDialogState extends State<_AddCardsDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _frontController = TextEditingController();
+  final _backController = TextEditingController();
+  final _option1Controller = TextEditingController();
+  final _option2Controller = TextEditingController();
+  final _option3Controller = TextEditingController();
+  final _option4Controller = TextEditingController();
+  
+  CardType _selectedType = CardType.basic;
+  int _difficulty = 3;
+  int _correctAnswerIndex = 0;
+  int _cardsAdded = 0;
+
+  @override
+  void dispose() {
+    _frontController.dispose();
+    _backController.dispose();
+    _option1Controller.dispose();
+    _option2Controller.dispose();
+    _option3Controller.dispose();
+    _option4Controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF242628),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(
+          color: Color(0xFF6FB8E9),
+          width: 2,
+        ),
+      ),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Add Cards to "${widget.deck.title}"',
+            style: const TextStyle(color: Color(0xFFD9D9D9)),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Cards added: $_cardsAdded',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Card Type Selector
+              DropdownButtonFormField<CardType>(
+                initialValue: _selectedType,
+                decoration: const InputDecoration(
+                  labelText: 'Card Type',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: CardType.basic,
+                    child: Row(
+                      children: [
+                        Icon(Icons.article, size: 20),
+                        SizedBox(width: 8),
+                        Text('Basic (Front/Back)'),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: CardType.multipleChoice,
+                    child: Row(
+                      children: [
+                        Icon(Icons.quiz, size: 20),
+                        SizedBox(width: 8),
+                        Text('Multiple Choice'),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (CardType? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedType = newValue;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // Front/Question
+              TextFormField(
+                controller: _frontController,
+                decoration: InputDecoration(
+                  labelText: _selectedType == CardType.multipleChoice
+                      ? 'Question *'
+                      : 'Front (Question) *',
+                  hintText: 'Enter the question or prompt',
+                  border: const OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter the front content';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              if (_selectedType == CardType.basic) ...[
+                // Back/Answer for basic cards
+                TextFormField(
+                  controller: _backController,
+                  decoration: const InputDecoration(
+                    labelText: 'Back (Answer) *',
+                    hintText: 'Enter the answer',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter the back content';
+                    }
+                    return null;
+                  },
+                ),
+              ] else if (_selectedType == CardType.multipleChoice) ...[
+                // Multiple choice options
+                Text(
+                  'Answer Options',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                
+                _buildOptionField(_option1Controller, 'Option 1 *', 0),
+                const SizedBox(height: 8),
+                _buildOptionField(_option2Controller, 'Option 2 *', 1),
+                const SizedBox(height: 8),
+                _buildOptionField(_option3Controller, 'Option 3 *', 2),
+                const SizedBox(height: 8),
+                _buildOptionField(_option4Controller, 'Option 4 *', 3),
+                const SizedBox(height: 16),
+                
+                // Correct answer selector
+                Text(
+                  'Correct Answer: Option ${_correctAnswerIndex + 1}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              
+              // Difficulty Selector
+              Text(
+                'Difficulty',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: List.generate(5, (index) {
+                  final difficulty = index + 1;
+                  final isSelected = _difficulty == difficulty;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: index < 4 ? 4 : 0,
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _difficulty = difficulty;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$difficulty',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(_cardsAdded > 0 ? 'Done' : 'Cancel'),
+        ),
+        if (_cardsAdded > 0)
+          TextButton(
+            onPressed: _addAnotherCard,
+            child: const Text('Add Another'),
+          ),
+        ElevatedButton(
+          onPressed: _saveCard,
+          child: Text(_cardsAdded > 0 ? 'Add & Continue' : 'Add Card'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOptionField(TextEditingController controller, String label, int index) {
+    final isCorrect = _correctAnswerIndex == index;
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: isCorrect ? Colors.green : Colors.grey,
+                  width: isCorrect ? 2 : 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: isCorrect ? Colors.green : Colors.grey,
+                  width: isCorrect ? 2 : 1,
+                ),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Required';
+              }
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: Icon(
+            isCorrect ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: isCorrect ? Colors.green : Colors.grey,
+          ),
+          onPressed: () {
+            setState(() {
+              _correctAnswerIndex = index;
+            });
+          },
+          tooltip: 'Mark as correct answer',
+        ),
+      ],
+    );
+  }
+
+  void _saveCard() {
+    if (!_formKey.currentState!.validate()) return;
+
+    // Create the new card
+    final newCard = FlashCard(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      deckId: widget.deck.id,
+      type: _selectedType,
+      front: _frontController.text.trim(),
+      back: _selectedType == CardType.basic
+          ? _backController.text.trim()
+          : _option1Controller.text.trim(), // Use first option as back for MC
+      multipleChoiceOptions: _selectedType == CardType.multipleChoice
+          ? [
+              _option1Controller.text.trim(),
+              _option2Controller.text.trim(),
+              _option3Controller.text.trim(),
+              _option4Controller.text.trim(),
+            ]
+          : [],
+      correctAnswerIndex: _selectedType == CardType.multipleChoice ? _correctAnswerIndex : 0,
+      difficulty: _difficulty,
+    );
+
+    // Add card to deck
+    widget.deckProvider.addCardToDeck(widget.deck.id, newCard);
+
+    setState(() {
+      _cardsAdded++;
+    });
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Card added! Total: $_cardsAdded'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    // Clear form for next card
+    _clearForm();
+  }
+
+  void _addAnotherCard() {
+    _clearForm();
+  }
+
+  void _clearForm() {
+    _frontController.clear();
+    _backController.clear();
+    _option1Controller.clear();
+    _option2Controller.clear();
+    _option3Controller.clear();
+    _option4Controller.clear();
+    setState(() {
+      _difficulty = 3;
+      _correctAnswerIndex = 0;
+    });
   }
 }

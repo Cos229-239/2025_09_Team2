@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/deck.dart';
+import '../models/card.dart';
 import '../models/calendar_event.dart';
 import '../providers/deck_provider.dart';
 import '../providers/calendar_provider.dart';
@@ -47,14 +48,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
           actions: [
             IconButton(
               icon: const Icon(Icons.add),
-              onPressed: () {
-                // TODO: Navigate to create new deck screen
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Create new deck feature coming soon!'),
-                  ),
-                );
-              },
+              onPressed: () => _showDeckFormDialog(),
             ),
           ],
         ),
@@ -336,7 +330,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                'Edit "${deck.title}"',
+                'Options for "${deck.title}"',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -347,25 +341,16 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 title: const Text('Edit Deck'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to edit deck screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Edit deck feature coming soon!'),
-                    ),
-                  );
+                  _showDeckFormDialog(existingDeck: deck);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.add),
+                leading: const Icon(Icons.add_circle),
                 title: const Text('Add Cards'),
+                subtitle: const Text('Add flashcards to this deck'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Navigate to add cards screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Add cards feature coming soon!'),
-                    ),
-                  );
+                  _showAddCardsDialog(deck);
                 },
               ),
               ListTile(
@@ -609,14 +594,9 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                // TODO: Implement deck deletion
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Deleted "${deck.title}"'),
-                  ),
-                );
+                await _deleteDeck(deck);
               },
               child: const Text('Delete', style: TextStyle(color: Colors.red)),
             ),
@@ -624,5 +604,509 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
         );
       },
     );
+  }
+
+  Future<void> _deleteDeck(Deck deck) async {
+    final deckProvider = Provider.of<DeckProvider>(context, listen: false);
+    
+    // Delete the deck
+    final success = await deckProvider.deleteDeck(deck.id);
+    
+    if (!mounted) return;
+    
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deleted "${deck.title}"'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete "${deck.title}"'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /// Shows dialog for creating new deck or editing existing deck
+  void _showDeckFormDialog({Deck? existingDeck}) {
+    final isEditMode = existingDeck != null;
+    final titleController = TextEditingController(text: existingDeck?.title ?? '');
+    final tagsController = TextEditingController(
+      text: existingDeck?.tags.join(', ') ?? '',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(isEditMode ? 'Edit Deck' : 'Create New Deck'),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title Field
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Deck Title *',
+                      hintText: 'e.g., Biology Chapter 5',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a title';
+                      }
+                      return null;
+                    },
+                    autofocus: !isEditMode,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Tags Field
+                  TextFormField(
+                    controller: tagsController,
+                    decoration: const InputDecoration(
+                      labelText: 'Tags (optional)',
+                      hintText: 'e.g., biology, science, exam',
+                      helperText: 'Separate multiple tags with commas',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  Text(
+                    isEditMode
+                        ? 'Deck has ${existingDeck.cards.length} cards'
+                        : 'You can add cards after creating the deck',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                titleController.dispose();
+                tagsController.dispose();
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+
+                // Parse tags
+                final tagsList = tagsController.text
+                    .split(',')
+                    .map((tag) => tag.trim())
+                    .where((tag) => tag.isNotEmpty)
+                    .toList();
+
+                // Capture context-dependent objects before async operations
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
+                final deckProvider = Provider.of<DeckProvider>(context, listen: false);
+
+                if (isEditMode) {
+                  // Update existing deck
+                  final updatedDeck = existingDeck.copyWith(
+                    title: titleController.text.trim(),
+                    tags: tagsList,
+                    updatedAt: DateTime.now(),
+                  );
+                  deckProvider.updateDeck(updatedDeck);
+                } else {
+                  // Create new deck
+                  final newDeck = Deck(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    title: titleController.text.trim(),
+                    tags: tagsList,
+                    cards: [],
+                  );
+                  await deckProvider.addDeck(newDeck);
+                }
+
+                titleController.dispose();
+                tagsController.dispose();
+
+                if (!mounted) return;
+                navigator.pop();
+
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      isEditMode ? 'Deck updated successfully' : 'Deck created successfully',
+                    ),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              },
+              child: Text(isEditMode ? 'Update' : 'Create'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Shows dialog for adding cards to a deck
+  void _showAddCardsDialog(Deck deck) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddCardsDialog(deck: deck),
+    );
+  }
+}
+
+/// Dialog for adding multiple cards to a deck
+class _AddCardsDialog extends StatefulWidget {
+  final Deck deck;
+
+  const _AddCardsDialog({required this.deck});
+
+  @override
+  State<_AddCardsDialog> createState() => _AddCardsDialogState();
+}
+
+class _AddCardsDialogState extends State<_AddCardsDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _frontController = TextEditingController();
+  final _backController = TextEditingController();
+  final _option1Controller = TextEditingController();
+  final _option2Controller = TextEditingController();
+  final _option3Controller = TextEditingController();
+  final _option4Controller = TextEditingController();
+  
+  CardType _selectedType = CardType.basic;
+  int _difficulty = 3;
+  int _correctAnswerIndex = 0;
+  int _cardsAdded = 0;
+
+  @override
+  void dispose() {
+    _frontController.dispose();
+    _backController.dispose();
+    _option1Controller.dispose();
+    _option2Controller.dispose();
+    _option3Controller.dispose();
+    _option4Controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Add Cards to "${widget.deck.title}"'),
+          const SizedBox(height: 4),
+          Text(
+            'Cards added: $_cardsAdded',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Card Type Selector
+              DropdownButtonFormField<CardType>(
+                initialValue: _selectedType,
+                decoration: const InputDecoration(
+                  labelText: 'Card Type',
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  DropdownMenuItem(
+                    value: CardType.basic,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.article, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Basic (Front/Back)'),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: CardType.multipleChoice,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.quiz, size: 20),
+                        const SizedBox(width: 8),
+                        const Text('Multiple Choice'),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (CardType? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      _selectedType = newValue;
+                    });
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              // Front/Question
+              TextFormField(
+                controller: _frontController,
+                decoration: InputDecoration(
+                  labelText: _selectedType == CardType.multipleChoice
+                      ? 'Question *'
+                      : 'Front (Question) *',
+                  hintText: 'Enter the question or prompt',
+                  border: const OutlineInputBorder(),
+                ),
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter the front content';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              
+              if (_selectedType == CardType.basic) ...[
+                // Back/Answer for basic cards
+                TextFormField(
+                  controller: _backController,
+                  decoration: const InputDecoration(
+                    labelText: 'Back (Answer) *',
+                    hintText: 'Enter the answer',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter the back content';
+                    }
+                    return null;
+                  },
+                ),
+              ] else if (_selectedType == CardType.multipleChoice) ...[
+                // Multiple choice options
+                Text(
+                  'Answer Options',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                
+                _buildOptionField(_option1Controller, 'Option 1 *', 0),
+                const SizedBox(height: 8),
+                _buildOptionField(_option2Controller, 'Option 2 *', 1),
+                const SizedBox(height: 8),
+                _buildOptionField(_option3Controller, 'Option 3 *', 2),
+                const SizedBox(height: 8),
+                _buildOptionField(_option4Controller, 'Option 4 *', 3),
+                const SizedBox(height: 16),
+                
+                // Correct answer selector
+                Text(
+                  'Correct Answer: Option ${_correctAnswerIndex + 1}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              
+              // Difficulty Selector
+              Text(
+                'Difficulty',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: List.generate(5, (index) {
+                  final difficulty = index + 1;
+                  final isSelected = _difficulty == difficulty;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: index < 4 ? 4 : 0,
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _difficulty = difficulty;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Theme.of(context).primaryColor
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$difficulty',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(_cardsAdded > 0 ? 'Done' : 'Cancel'),
+        ),
+        if (_cardsAdded > 0)
+          TextButton(
+            onPressed: _addAnotherCard,
+            child: const Text('Add Another'),
+          ),
+        ElevatedButton(
+          onPressed: _saveCard,
+          child: Text(_cardsAdded > 0 ? 'Add & Continue' : 'Add Card'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOptionField(TextEditingController controller, String label, int index) {
+    final isCorrect = _correctAnswerIndex == index;
+    return Row(
+      children: [
+        Expanded(
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: isCorrect ? Colors.green : Colors.grey,
+                  width: isCorrect ? 2 : 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: isCorrect ? Colors.green : Colors.grey,
+                  width: isCorrect ? 2 : 1,
+                ),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Required';
+              }
+              return null;
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          icon: Icon(
+            isCorrect ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: isCorrect ? Colors.green : Colors.grey,
+          ),
+          onPressed: () {
+            setState(() {
+              _correctAnswerIndex = index;
+            });
+          },
+          tooltip: 'Mark as correct answer',
+        ),
+      ],
+    );
+  }
+
+  void _saveCard() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final deckProvider = Provider.of<DeckProvider>(context, listen: false);
+
+    // Create the new card
+    final newCard = FlashCard(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      deckId: widget.deck.id,
+      type: _selectedType,
+      front: _frontController.text.trim(),
+      back: _selectedType == CardType.basic
+          ? _backController.text.trim()
+          : _option1Controller.text.trim(), // Use first option as back for MC
+      multipleChoiceOptions: _selectedType == CardType.multipleChoice
+          ? [
+              _option1Controller.text.trim(),
+              _option2Controller.text.trim(),
+              _option3Controller.text.trim(),
+              _option4Controller.text.trim(),
+            ]
+          : [],
+      correctAnswerIndex: _selectedType == CardType.multipleChoice ? _correctAnswerIndex : 0,
+      difficulty: _difficulty,
+    );
+
+    // Add card to deck
+    deckProvider.addCardToDeck(widget.deck.id, newCard);
+
+    setState(() {
+      _cardsAdded++;
+    });
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Card added! Total: $_cardsAdded'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    // Clear form for next card
+    _clearForm();
+  }
+
+  void _addAnotherCard() {
+    _clearForm();
+  }
+
+  void _clearForm() {
+    _frontController.clear();
+    _backController.clear();
+    _option1Controller.clear();
+    _option2Controller.clear();
+    _option3Controller.clear();
+    _option4Controller.clear();
+    setState(() {
+      _difficulty = 3;
+      _correctAnswerIndex = 0;
+    });
   }
 }

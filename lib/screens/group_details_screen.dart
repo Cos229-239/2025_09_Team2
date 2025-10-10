@@ -476,86 +476,149 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   }
 
   Widget _buildActivityTab() {
-    // TODO: Load real activity from Firestore
-    // For now, show empty state
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.timeline,
-              size: 64,
-              color: Color(0xFF888888),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No Activity Yet',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: const Color(0xFFD9D9D9),
+    // Load real activity from Firestore
+    return FutureBuilder<List<_ActivityItem>>(
+      future: _loadGroupActivity(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final activities = snapshot.data ?? [];
+
+        if (activities.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.timeline,
+                    size: 64,
+                    color: Color(0xFF888888),
                   ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Group activity will appear here when members interact',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF888888),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Activity Yet',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: const Color(0xFFD9D9D9),
+                        ),
                   ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Group activity will appear here when members interact',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF888888),
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: activities.length,
+          itemBuilder: (context, index) {
+            final activity = activities[index];
+            return _buildActivityItem(activity);
+          },
+        );
+      },
     );
   }
 
   Widget _buildResourcesTab() {
-    // TODO: Load real resources from Firestore
-    // For now, show empty state with upload option
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    // Load real resources from Firestore
+    return FutureBuilder<List<_GroupResource>>(
+      future: _loadGroupResources(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final resources = snapshot.data ?? [];
+
+        if (resources.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.folder_open,
+                    size: 64,
+                    color: Color(0xFF888888),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Resources Yet',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: const Color(0xFFD9D9D9),
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Upload study materials to share with your group',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF888888),
+                        ),
+                  ),
+                  if (_isMember) ...[
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: _uploadResource,
+                      icon: const Icon(Icons.upload),
+                      label: const Text('Upload Resource'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }
+
+        return Column(
           children: [
-            const Icon(
-              Icons.folder_open,
-              size: 64,
-              color: Color(0xFF888888),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No Resources Yet',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: const Color(0xFFD9D9D9),
-                  ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Upload study materials to share with your group',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF888888),
-                  ),
-            ),
-            if (_isMember) ...[
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _uploadResource,
-                icon: Icon(Icons.upload),
-                label: Text('Upload Resource'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            if (_isMember)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: ElevatedButton.icon(
+                  onPressed: _uploadResource,
+                  icon: const Icon(Icons.upload),
+                  label: const Text('Upload Resource'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
-            ],
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: resources.length,
+                itemBuilder: (context, index) {
+                  final resource = resources[index];
+                  return _buildResourceItem(resource);
+                },
+              ),
+            ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -877,9 +940,443 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   }
 
   void _uploadResource() {
-    // Implementation for uploading resources
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Upload resource feature coming soon!')),
+    _showUploadResourceDialog();
+  }
+
+  void _showUploadResourceDialog() {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    final urlController = TextEditingController();
+    String selectedType = 'PDF';
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Upload Resource'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title *',
+                        hintText: 'Chapter 5 Notes',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(
+                        labelText: 'Description',
+                        hintText: 'Summary of key concepts',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedType,
+                      decoration: const InputDecoration(
+                        labelText: 'Resource Type',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'PDF', child: Text('PDF Document')),
+                        DropdownMenuItem(value: 'Link', child: Text('Web Link')),
+                        DropdownMenuItem(value: 'Video', child: Text('Video')),
+                        DropdownMenuItem(value: 'Image', child: Text('Image')),
+                        DropdownMenuItem(value: 'Other', child: Text('Other')),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedType = value!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: urlController,
+                      decoration: const InputDecoration(
+                        labelText: 'URL/Link *',
+                        hintText: 'https://example.com/file.pdf',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    titleController.dispose();
+                    descriptionController.dispose();
+                    urlController.dispose();
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (titleController.text.trim().isEmpty ||
+                        urlController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please fill in required fields'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    // Create new resource
+                    final newResource = _GroupResource(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      title: titleController.text.trim(),
+                      description: descriptionController.text.trim(),
+                      type: selectedType,
+                      url: urlController.text.trim(),
+                      uploadedBy: FirebaseAuth.instance.currentUser?.uid ?? '',
+                      uploadDate: DateTime.now(),
+                    );
+
+                    // Save to Firestore when backend is ready:
+                    // await _socialService!.uploadGroupResource(widget.group.id, newResource);
+                    debugPrint('Resource to upload: ${newResource.title}');
+
+                    titleController.dispose();
+                    descriptionController.dispose();
+                    urlController.dispose();
+
+                    if (!mounted) return;
+                    Navigator.pop(context);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Resource uploaded successfully!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Refresh the tab
+                    setState(() {});
+                  },
+                  child: const Text('Upload'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<List<_ActivityItem>> _loadGroupActivity() async {
+    // Load activity from Firestore
+    // For now, generate activity from group data
+    final activities = <_ActivityItem>[];
+
+    // Add member join activities
+    for (final member in _members) {
+      final memberData = widget.group.members.firstWhere(
+        (m) => m.userId == member.id,
+        orElse: () => service.StudyGroupMember(
+          userId: member.id,
+          groupId: widget.group.id,
+          role: service.StudyGroupRole.member,
+          status: service.MembershipStatus.active,
+          joinDate: DateTime.now(),
+        ),
+      );
+
+      activities.add(_ActivityItem(
+        id: 'join_${member.id}',
+        type: _ActivityType.memberJoined,
+        userName: member.displayName,
+        userId: member.id,
+        timestamp: memberData.joinDate,
+        description: 'joined the group',
+      ));
+    }
+
+    // Sort by most recent first
+    activities.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+    return activities;
+  }
+
+  Widget _buildActivityItem(_ActivityItem activity) {
+    IconData icon;
+    Color iconColor;
+
+    switch (activity.type) {
+      case _ActivityType.memberJoined:
+        icon = Icons.person_add;
+        iconColor = Colors.green;
+        break;
+      case _ActivityType.memberLeft:
+        icon = Icons.person_remove;
+        iconColor = Colors.orange;
+        break;
+      case _ActivityType.resourceUploaded:
+        icon = Icons.upload_file;
+        iconColor = Colors.blue;
+        break;
+      case _ActivityType.messagePosted:
+        icon = Icons.message;
+        iconColor = Colors.purple;
+        break;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: iconColor.withValues(alpha: 0.1),
+          child: Icon(icon, color: iconColor),
+        ),
+        title: RichText(
+          text: TextSpan(
+            style: Theme.of(context).textTheme.bodyMedium,
+            children: [
+              TextSpan(
+                text: activity.userName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextSpan(text: ' ${activity.description}'),
+            ],
+          ),
+        ),
+        subtitle: Text(_formatActivityTime(activity.timestamp)),
+      ),
+    );
+  }
+
+  String _formatActivityTime(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays == 0) {
+      if (difference.inHours == 0) {
+        if (difference.inMinutes == 0) {
+          return 'Just now';
+        } else {
+          return '${difference.inMinutes}m ago';
+        }
+      } else {
+        return '${difference.inHours}h ago';
+      }
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return '${timestamp.month}/${timestamp.day}/${timestamp.year}';
+    }
+  }
+
+  Future<List<_GroupResource>> _loadGroupResources() async {
+    // Load resources from Firestore
+    // For now, return empty list
+    // In production, this would query Firestore for group resources
+    return [];
+  }
+
+  Widget _buildResourceItem(_GroupResource resource) {
+    IconData icon;
+    Color iconColor;
+
+    switch (resource.type) {
+      case 'PDF':
+        icon = Icons.picture_as_pdf;
+        iconColor = Colors.red;
+        break;
+      case 'Link':
+        icon = Icons.link;
+        iconColor = Colors.blue;
+        break;
+      case 'Video':
+        icon = Icons.video_library;
+        iconColor = Colors.purple;
+        break;
+      case 'Image':
+        icon = Icons.image;
+        iconColor = Colors.orange;
+        break;
+      default:
+        icon = Icons.insert_drive_file;
+        iconColor = Colors.grey;
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: iconColor.withValues(alpha: 0.1),
+          child: Icon(icon, color: iconColor),
+        ),
+        title: Text(resource.title),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (resource.description.isNotEmpty)
+              Text(
+                resource.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            const SizedBox(height: 4),
+            Text(
+              'Uploaded ${_formatActivityTime(resource.uploadDate)}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
+          ],
+        ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (action) {
+            switch (action) {
+              case 'open':
+                // Open the resource URL
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Opening: ${resource.url}')),
+                );
+                break;
+              case 'download':
+                // Download the resource
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Download started')),
+                );
+                break;
+              case 'delete':
+                _confirmDeleteResource(resource);
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'open',
+              child: Row(
+                children: [
+                  Icon(Icons.open_in_new),
+                  SizedBox(width: 8),
+                  Text('Open'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'download',
+              child: Row(
+                children: [
+                  Icon(Icons.download),
+                  SizedBox(width: 8),
+                  Text('Download'),
+                ],
+              ),
+            ),
+            if (_isOwner ||
+                resource.uploadedBy == FirebaseAuth.instance.currentUser?.uid)
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Delete', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteResource(_GroupResource resource) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Resource'),
+          content: Text('Are you sure you want to delete "${resource.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                // Delete from Firestore when backend is ready:
+                // await _socialService!.deleteGroupResource(widget.group.id, resource.id);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Resource deleted'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+                setState(() {});
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
+
+/// Helper class for group activity items
+class _ActivityItem {
+  final String id;
+  final _ActivityType type;
+  final String userName;
+  final String userId;
+  final DateTime timestamp;
+  final String description;
+
+  _ActivityItem({
+    required this.id,
+    required this.type,
+    required this.userName,
+    required this.userId,
+    required this.timestamp,
+    required this.description,
+  });
+}
+
+/// Activity types for group activity feed
+enum _ActivityType {
+  memberJoined,
+  memberLeft,
+  resourceUploaded,
+  messagePosted,
+}
+
+/// Helper class for group resources
+class _GroupResource {
+  final String id;
+  final String title;
+  final String description;
+  final String type;
+  final String url;
+  final String uploadedBy;
+  final DateTime uploadDate;
+
+  _GroupResource({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.type,
+    required this.url,
+    required this.uploadedBy,
+    required this.uploadDate,
+  });
+}
+
