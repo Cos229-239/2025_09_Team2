@@ -509,11 +509,16 @@ class _LearningScreenState extends State<LearningScreen>
   Widget _buildFlashcardsTab() {
     return Consumer<DeckProvider>(
       builder: (context, deckProvider, child) {
+        debugPrint('🔍 FlashcardsTab - Total decks: ${deckProvider.decks.length}');
+        debugPrint('🔍 FlashcardsTab - Is loading: ${deckProvider.isLoading}');
+        
         // Filter decks based on search query
         final filteredDecks = deckProvider.decks.where((deck) {
           return deck.title.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()) ||
                  deck.tags.any((tag) => tag.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()));
         }).toList();
+        
+        debugPrint('🔍 FlashcardsTab - Filtered decks: ${filteredDecks.length}');
 
         // Sort decks by updated date (most recent first)
         filteredDecks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
@@ -712,7 +717,15 @@ class _LearningScreenState extends State<LearningScreen>
                                       ],
                                     ),
                                   ),
+                                  const SizedBox(width: 12),
+                                  // Quiz grade circular chart (always show - 0% if no quiz taken)
+                                  _buildGradeCircularChart(deck.lastQuizGrade ?? 0.0),
+                                  const SizedBox(width: 8),
                                   PopupMenuButton<String>(
+                                    icon: const Icon(
+                                      Icons.more_vert,
+                                      color: Color(0xFF888888),
+                                    ),
                                     onSelected: (value) {
                                       if (value == 'edit') {
                                         _showEditDeckDialog(context, deck, deckProvider);
@@ -754,10 +767,6 @@ class _LearningScreenState extends State<LearningScreen>
                                         ),
                                       ),
                                     ],
-                                    child: Icon(
-                                      Icons.more_vert,
-                                      color: Colors.grey[600],
-                                    ),
                                   ),
                                 ],
                               ),
@@ -1579,6 +1588,72 @@ class _LearningScreenState extends State<LearningScreen>
       return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
     } else {
       return 'Just now';
+    }
+  }
+
+  /// Build circular chart showing quiz grade percentage
+  Widget _buildGradeCircularChart(double grade) {
+    final gradeColor = grade > 0 ? _getGradeColor(grade) : const Color(0xFF888888);
+    final percentage = (grade * 100).round();
+    final displayText = '$percentage%';
+    
+    return SizedBox(
+      width: 48,
+      height: 48,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Background circle
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: 4,
+              backgroundColor: Colors.transparent,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF242628),
+              ),
+            ),
+          ),
+          // Progress circle
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: CircularProgressIndicator(
+              value: grade,
+              strokeWidth: 4,
+              backgroundColor: const Color(0xFF242628),
+              valueColor: AlwaysStoppedAnimation<Color>(gradeColor),
+            ),
+          ),
+          // Percentage text or dash if no quiz taken
+          Text(
+            displayText,
+            style: TextStyle(
+              color: gradeColor,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Get color based on grade percentage
+  Color _getGradeColor(double grade) {
+    // Return color based on grade percentage (0.0 to 1.0)
+    if (grade >= 0.9) {
+      return const Color(0xFF4CAF50); // Excellent - Green
+    } else if (grade >= 0.8) {
+      return const Color(0xFF6FB8E9); // Great - Blue
+    } else if (grade >= 0.7) {
+      return const Color(0xFFFFB74D); // Good - Amber
+    } else if (grade >= 0.6) {
+      return const Color(0xFFFF9800); // Fair - Orange
+    } else {
+      return const Color(0xFFEF5350); // Needs Improvement - Red
     }
   }
 

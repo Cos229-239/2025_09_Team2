@@ -310,19 +310,56 @@ class FirestoreService {
   /// Get user's decks
   Future<List<Map<String, dynamic>>> getUserDecks(String uid) async {
     try {
-      final querySnapshot = await decksCollection
-          .where('uid', isEqualTo: uid)
-          .orderBy('updatedAt', descending: true)
-          .get();
+      debugPrint('🔍 FirestoreService: getUserDecks called for uid: $uid');
+      
+      // Try with orderBy first (requires composite index)
+      try {
+        final querySnapshot = await decksCollection
+            .where('uid', isEqualTo: uid)
+            .orderBy('updatedAt', descending: true)
+            .get();
 
-      return querySnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
-        return data;
-      }).toList();
+        debugPrint('🔍 FirestoreService: Query with orderBy returned ${querySnapshot.docs.length} documents');
+
+        final results = querySnapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id;
+          debugPrint('🔍 FirestoreService: Deck doc ${doc.id}: ${data['title']}');
+          return data;
+        }).toList();
+        
+        debugPrint('🔍 FirestoreService: Returning ${results.length} decks');
+        return results;
+      } catch (indexError) {
+        // If index error, fall back to query without orderBy
+        debugPrint('⚠️ FirestoreService: Index error, trying without orderBy: $indexError');
+        
+        final querySnapshot = await decksCollection
+            .where('uid', isEqualTo: uid)
+            .get();
+
+        debugPrint('🔍 FirestoreService: Query without orderBy returned ${querySnapshot.docs.length} documents');
+
+        final results = querySnapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id;
+          debugPrint('🔍 FirestoreService: Deck doc ${doc.id}: ${data['title']}');
+          return data;
+        }).toList();
+        
+        // Sort in memory if needed
+        results.sort((a, b) {
+          final aTime = a['updatedAt']?.toDate() ?? DateTime.now();
+          final bTime = b['updatedAt']?.toDate() ?? DateTime.now();
+          return bTime.compareTo(aTime);
+        });
+        
+        debugPrint('🔍 FirestoreService: Returning ${results.length} decks (sorted in memory)');
+        return results;
+      }
     } catch (e) {
       if (kDebugMode) {
-        print('Error getting user decks: $e');
+        print('❌ Error getting user decks: $e');
       }
       return [];
     }

@@ -157,10 +157,29 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
             TextFormField(
               controller: _displayNameController,
-              decoration: const InputDecoration(
+              style: const TextStyle(color: Color(0xFFD9D9D9)),
+              decoration: InputDecoration(
                 labelText: 'Display Name',
+                labelStyle: const TextStyle(color: Color(0xFF888888)),
                 hintText: 'Enter your display name',
-                border: OutlineInputBorder(),
+                hintStyle: const TextStyle(color: Color(0xFF888888)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                ),
+                filled: true,
+                fillColor: const Color(0xFF242628),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -177,10 +196,29 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
             TextFormField(
               controller: _usernameController,
-              decoration: const InputDecoration(
+              style: const TextStyle(color: Color(0xFFD9D9D9)),
+              decoration: InputDecoration(
                 labelText: 'Username',
+                labelStyle: const TextStyle(color: Color(0xFF888888)),
                 hintText: 'Enter your username',
-                border: OutlineInputBorder(),
+                hintStyle: const TextStyle(color: Color(0xFF888888)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                ),
+                filled: true,
+                fillColor: const Color(0xFF242628),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -200,10 +238,29 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
             TextFormField(
               controller: _bioController,
-              decoration: const InputDecoration(
+              style: const TextStyle(color: Color(0xFFD9D9D9)),
+              decoration: InputDecoration(
                 labelText: 'Bio',
+                labelStyle: const TextStyle(color: Color(0xFF888888)),
                 hintText: 'Tell others about yourself...',
-                border: OutlineInputBorder(),
+                hintStyle: const TextStyle(color: Color(0xFF888888)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                ),
+                filled: true,
+                fillColor: const Color(0xFF242628),
               ),
               maxLines: 3,
               validator: (value) {
@@ -315,8 +372,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 bottom: 0,
                 right: 0,
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF6FB8E9),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -393,6 +450,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     ValueChanged<PrivacyLevel> onChanged,
   ) {
     return Card(
+      elevation: 1,
+      color: const Color(0xFF242628),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -454,6 +520,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     final color = isDestructive ? Theme.of(context).colorScheme.error : null;
 
     return Card(
+      elevation: 1,
+      color: const Color(0xFF242628),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: ListTile(
         leading: Icon(icon, color: color),
         title: Text(

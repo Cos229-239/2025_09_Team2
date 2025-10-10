@@ -144,7 +144,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
           ? MediaQuery.of(context).size.height * 0.8
           : null,
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: const Color(0xFF1A1A1A),
         borderRadius: widget.isBottomSheet
             ? const BorderRadius.vertical(top: Radius.circular(20))
             : null,
@@ -198,10 +198,10 @@ class _ProfilePanelState extends State<ProfilePanel> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+        color: const Color(0xFF242628),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).dividerColor,
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -353,6 +353,15 @@ class _ProfilePanelState extends State<ProfilePanel> {
 
   Widget _buildPrivacySection() {
     return Card(
+      elevation: 1,
+      color: const Color(0xFF242628),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -403,6 +412,15 @@ class _ProfilePanelState extends State<ProfilePanel> {
 
   Widget _buildAccountSection() {
     return Card(
+      elevation: 1,
+      color: const Color(0xFF242628),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -515,7 +533,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Theme.of(context).primaryColor,
+                  color: const Color(0xFF6FB8E9),
                   width: 3,
                 ),
               ),
@@ -562,7 +580,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
           'Featured Badges',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).primaryColor,
+                color: const Color(0xFF6FB8E9),
               ),
         ),
         const SizedBox(height: 12),
@@ -585,19 +603,17 @@ class _ProfilePanelState extends State<ProfilePanel> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .primaryColor
-                                .withValues(alpha: 0.1),
+                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                             border: Border.all(
-                                color: Theme.of(context).primaryColor),
+                                color: const Color(0xFF6FB8E9)),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Text(
                             _selectedBadges[index],
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: Theme.of(context).primaryColor,
+                              color: Color(0xFF6FB8E9),
                             ),
                           ),
                         )
@@ -708,9 +724,27 @@ class _ProfilePanelState extends State<ProfilePanel> {
         const SizedBox(height: 16),
         TextFormField(
           controller: _displayNameController,
-          decoration: const InputDecoration(
+          style: const TextStyle(color: Color(0xFFD9D9D9)),
+          decoration: InputDecoration(
             labelText: 'Display Name',
-            border: OutlineInputBorder(),
+            labelStyle: const TextStyle(color: Color(0xFF888888)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+            ),
+            filled: true,
+            fillColor: const Color(0xFF242628),
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -722,10 +756,29 @@ class _ProfilePanelState extends State<ProfilePanel> {
         const SizedBox(height: 16),
         TextFormField(
           controller: _usernameController,
-          decoration: const InputDecoration(
+          style: const TextStyle(color: Color(0xFFD9D9D9)),
+          decoration: InputDecoration(
             labelText: 'Username',
-            border: OutlineInputBorder(),
+            labelStyle: const TextStyle(color: Color(0xFF888888)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+            ),
+            filled: true,
+            fillColor: const Color(0xFF242628),
             prefixText: '@',
+            prefixStyle: const TextStyle(color: Color(0xFF6FB8E9)),
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
@@ -754,9 +807,27 @@ class _ProfilePanelState extends State<ProfilePanel> {
         const SizedBox(height: 16),
         TextFormField(
           controller: _bioController,
-          decoration: const InputDecoration(
+          style: const TextStyle(color: Color(0xFFD9D9D9)),
+          decoration: InputDecoration(
             labelText: 'Tell us about yourself',
-            border: OutlineInputBorder(),
+            labelStyle: const TextStyle(color: Color(0xFF888888)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+            ),
+            filled: true,
+            fillColor: const Color(0xFF242628),
             alignLabelWithHint: true,
           ),
           maxLines: 3,
@@ -782,11 +853,24 @@ class _ProfilePanelState extends State<ProfilePanel> {
           runSpacing: 8,
           children: [
             ..._interests.map((interest) => Chip(
-                  label: Text(interest),
+                  label: Text(
+                    interest,
+                    style: const TextStyle(color: Color(0xFFD9D9D9)),
+                  ),
+                  backgroundColor: const Color(0xFF242628),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.5),
+                  ),
+                  deleteIconColor: const Color(0xFF6FB8E9),
                   onDeleted: () => _removeInterest(interest),
                 )),
             ActionChip(
-              label: const Text('+ Add Interest'),
+              label: const Text(
+                '+ Add Interest',
+                style: TextStyle(color: Color(0xFF6FB8E9)),
+              ),
+              backgroundColor: const Color(0xFF242628),
+              side: const BorderSide(color: Color(0xFF6FB8E9)),
               onPressed: _showAddInterestDialog,
             ),
           ],
@@ -801,15 +885,21 @@ class _ProfilePanelState extends State<ProfilePanel> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : _saveProfile,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor,
+          backgroundColor: const Color(0xFF6FB8E9),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
         child: _isLoading
             ? const SizedBox(
                 height: 20,
                 width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               )
             : const Text(
                 'Save Changes',

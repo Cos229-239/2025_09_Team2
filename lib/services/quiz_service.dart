@@ -131,6 +131,7 @@ class QuizService {
     required int correctOptionIndex,
     required Deck deck,
     required PetProvider petProvider,
+    dynamic deckProvider, // Optional DeckProvider to update deck with quiz grade
   }) async {
     final session = _activeSessions[sessionId];
     if (session == null || session.isCompleted) {
@@ -161,7 +162,7 @@ class QuizService {
     // Check if quiz is completed
     if (updatedSession.currentQuestionIndex >= updatedSession.totalQuestions) {
       final completedSession =
-          await _completeQuizSession(updatedSession, petProvider);
+          await _completeQuizSession(updatedSession, petProvider, deck, deckProvider);
       _activeSessions[sessionId] = completedSession;
     } else {
       _activeSessions[sessionId] = updatedSession;
@@ -174,7 +175,11 @@ class QuizService {
 
   /// Completes a quiz session and calculates final results
   Future<QuizSession> _completeQuizSession(
-      QuizSession session, PetProvider petProvider) async {
+      QuizSession session, 
+      PetProvider petProvider,
+      Deck deck,
+      dynamic deckProvider,
+  ) async {
     final correctAnswers = session.correctAnswers;
     final totalQuestions = session.totalQuestions;
     final finalScore = correctAnswers / totalQuestions;
@@ -195,6 +200,17 @@ class QuizService {
       lastAttemptTime: DateTime.now(),
       canRetake: finalScore < 0.8, // Can retake if score is below 80%
     );
+
+    // Update deck with last quiz grade
+    if (deckProvider != null) {
+      try {
+        final updatedDeck = deck.copyWith(lastQuizGrade: finalScore);
+        deckProvider.updateDeck(updatedDeck);
+        debugPrint('Updated deck ${deck.id} with quiz grade: ${(finalScore * 100).round()}%');
+      } catch (e) {
+        debugPrint('Failed to update deck with quiz grade: $e');
+      }
+    }
 
     // Award total EXP to pet only if not on XP cooldown
     if (canEarnXP && totalExpEarned > 0) {

@@ -36,20 +36,36 @@ class DeckProvider extends ChangeNotifier {
   /// Loads all flashcard decks from persistent storage (database)
   /// Sets loading state and handles errors gracefully with logging
   Future<void> loadDecks() async {
+    debugPrint('🔍 DeckProvider: Starting loadDecks()');
     _isLoading = true; // Set loading state to true
     notifyListeners(); // Notify UI to show loading indicators
 
     try {
       final currentUser = _auth.currentUser;
+      debugPrint('🔍 DeckProvider: Current user = ${currentUser?.uid}');
+      
       if (currentUser == null) {
-        debugPrint('No user logged in, cannot load decks');
+        debugPrint('❌ No user logged in, cannot load decks');
         _decks = [];
         return;
       }
 
       // Load decks from Firestore
+      debugPrint('🔍 DeckProvider: Calling getUserDecks()...');
       final deckData = await _firestoreService.getUserDecks(currentUser.uid);
-      _decks = deckData.map((data) => _convertFirestoreToDeck(data)).toList();
+      debugPrint('🔍 DeckProvider: Got ${deckData.length} deck documents from Firestore');
+      
+      // Convert each deck with error handling
+      _decks = [];
+      for (var data in deckData) {
+        try {
+          final deck = _convertFirestoreToDeck(data);
+          _decks.add(deck);
+          debugPrint('✅ Converted deck: ${deck.title} with ${deck.cards.length} cards');
+        } catch (e) {
+          debugPrint('❌ Error converting deck ${data['id']}: $e');
+        }
+      }
 
       debugPrint('✅ Loaded ${_decks.length} decks from Firestore');
 
@@ -127,9 +143,11 @@ class DeckProvider extends ChangeNotifier {
           ),
         ];
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Log any errors that occur during deck loading for debugging
-      developer.log('Error loading decks: $e', name: 'DeckProvider');
+      debugPrint('❌❌❌ CRITICAL ERROR loading decks: $e');
+      debugPrint('Stack trace: $stackTrace');
+      developer.log('Error loading decks: $e\n$stackTrace', name: 'DeckProvider');
       _decks = []; // Set empty list on error
     } finally {
       _isLoading = false; // Always clear loading state
@@ -139,18 +157,39 @@ class DeckProvider extends ChangeNotifier {
 
   /// Convert Firestore document data to Deck object
   Deck _convertFirestoreToDeck(Map<String, dynamic> data) {
-    final cardsData = data['cards'] as List<dynamic>? ?? [];
-    final cards =
-        cardsData.map((cardData) => _convertFirestoreToCard(cardData)).toList();
+    try {
+      final cardsData = data['cards'] as List<dynamic>? ?? [];
+      final cards = <FlashCard>[];
+      
+      for (var cardData in cardsData) {
+        try {
+          final card = _convertFirestoreToCard(cardData as Map<String, dynamic>);
+          cards.add(card);
+        } catch (e) {
+          debugPrint('⚠️ Skipping invalid card in deck ${data['id']}: $e');
+        }
+      }
 
-    return Deck(
-      id: data['id'] ?? '',
-      title: data['title'] ?? 'Untitled Deck',
-      tags: List<String>.from(data['tags'] ?? []),
-      cards: cards,
-      createdAt: data['createdAt']?.toDate() ?? DateTime.now(),
-      updatedAt: data['updatedAt']?.toDate() ?? DateTime.now(),
-    );
+      // Helper function to parse date from either Timestamp or String
+      DateTime parseDate(dynamic dateValue) {
+        if (dateValue == null) return DateTime.now();
+        if (dateValue is String) return DateTime.parse(dateValue);
+        return dateValue.toDate(); // Firestore Timestamp
+      }
+
+      return Deck(
+        id: data['id'] ?? '',
+        title: data['title'] ?? 'Untitled Deck',
+        tags: List<String>.from(data['tags'] ?? []),
+        cards: cards,
+        createdAt: parseDate(data['createdAt']),
+        updatedAt: parseDate(data['updatedAt']),
+        lastQuizGrade: data['lastQuizGrade']?.toDouble(),
+      );
+    } catch (e) {
+      debugPrint('❌ Error converting deck ${data['id']}: $e');
+      rethrow;
+    }
   }
 
   /// Convert Firestore card data to FlashCard object

@@ -7,6 +7,7 @@ import '../models/card.dart';
 import '../models/quiz_session.dart';
 import '../models/study_pal_persona.dart';
 import '../providers/pet_provider.dart';
+import '../providers/deck_provider.dart';
 import '../providers/daily_quest_provider.dart';
 import '../providers/app_state.dart';
 import '../widgets/visual_flashcard_widget.dart';
@@ -206,6 +207,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     final correctIndex = currentCard.correctAnswerIndex;
 
     final petProvider = Provider.of<PetProvider>(context, listen: false);
+    final deckProvider = Provider.of<DeckProvider>(context, listen: false);
 
     // Record answer in quiz session
     final updatedSession = await _quizService.recordAnswer(
@@ -215,6 +217,7 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
       correctOptionIndex: correctIndex,
       deck: widget.deck,
       petProvider: petProvider,
+      deckProvider: deckProvider,
     );
 
     if (updatedSession == null) return;

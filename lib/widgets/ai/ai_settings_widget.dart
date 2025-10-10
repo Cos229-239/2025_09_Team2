@@ -109,6 +109,15 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
     return Consumer<StudyPalsAIProvider>(
       builder: (context, aiProvider, child) {
         return Card(
+          elevation: 1,
+          color: const Color(0xFF242628),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: BorderSide(
+              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -119,7 +128,7 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                   children: [
                     Icon(
                       Icons.settings,
-                      color: Theme.of(context).primaryColor,
+                      color: const Color(0xFF6FB8E9),
                       size: 24,
                     ),
                     const SizedBox(width: 8),
@@ -139,12 +148,12 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: aiProvider.isAIEnabled
-                        ? Colors.green.shade50
-                        : Colors.orange.shade50,
+                        ? const Color(0xFF1A3A1A) // Dark green
+                        : const Color(0xFF3A2A1A), // Dark orange
                     border: Border.all(
                       color: aiProvider.isAIEnabled
-                          ? Colors.green.shade200
-                          : Colors.orange.shade200,
+                          ? const Color(0xFF4CAF50) // Bright green
+                          : const Color(0xFFFF9800), // Bright orange
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -155,8 +164,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                             ? Icons.check_circle_outline
                             : Icons.warning_outlined,
                         color: aiProvider.isAIEnabled
-                            ? Colors.green.shade600
-                            : Colors.orange.shade600,
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFFFF9800),
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -165,8 +174,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                             : 'AI features need configuration',
                         style: TextStyle(
                           color: aiProvider.isAIEnabled
-                              ? Colors.green.shade600
-                              : Colors.orange.shade600,
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFFFF9800),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -178,10 +187,29 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                 // Provider selection
                 DropdownButtonFormField<String>(
                   initialValue: _selectedProvider,
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Color(0xFFD9D9D9)),
+                  dropdownColor: const Color(0xFF242628),
+                  decoration: InputDecoration(
                     labelText: 'AI Provider',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.cloud),
+                    labelStyle: const TextStyle(color: Color(0xFF888888)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF242628),
+                    prefixIcon: const Icon(Icons.cloud, color: Color(0xFF6FB8E9)),
                   ),
                   items: _aiProviders.map((provider) {
                     return DropdownMenuItem(
@@ -203,12 +231,31 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                 TextField(
                   controller: _apiKeyController,
                   obscureText: true,
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Color(0xFFD9D9D9)),
+                  decoration: InputDecoration(
                     labelText: 'API Key',
+                    labelStyle: const TextStyle(color: Color(0xFF888888)),
                     hintText: 'Enter your API key...',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.key),
-                    suffixIcon: Icon(Icons.visibility_off),
+                    hintStyle: const TextStyle(color: Color(0xFF888888)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF242628),
+                    prefixIcon: const Icon(Icons.key, color: Color(0xFF6FB8E9)),
+                    suffixIcon: const Icon(Icons.visibility_off, color: Color(0xFF888888)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -220,12 +267,12 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: _connectionStatus!.contains('successful')
-                          ? Colors.green.shade50
-                          : Colors.red.shade50,
+                          ? const Color(0xFF1A3A1A) // Dark green
+                          : const Color(0xFF3A1A1A), // Dark red
                       border: Border.all(
                         color: _connectionStatus!.contains('successful')
-                            ? Colors.green.shade200
-                            : Colors.red.shade200,
+                            ? const Color(0xFF4CAF50) // Bright green
+                            : const Color(0xFFEF5350), // Bright red
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -236,8 +283,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                               ? Icons.check_circle_outline
                               : Icons.error_outline,
                           color: _connectionStatus!.contains('successful')
-                              ? Colors.green.shade600
-                              : Colors.red.shade600,
+                              ? const Color(0xFF4CAF50)
+                              : const Color(0xFFEF5350),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -245,8 +292,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                             _connectionStatus!,
                             style: TextStyle(
                               color: _connectionStatus!.contains('successful')
-                                  ? Colors.green.shade600
-                                  : Colors.red.shade600,
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFFEF5350),
                             ),
                           ),
                         ),
@@ -266,12 +313,22 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                                 width: 16,
                                 height: 16,
                                 child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                    CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
                               )
                             : const Icon(Icons.wifi_protected_setup),
                         label: Text(_isTestingConnection
                             ? 'Testing...'
                             : 'Test Connection'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6FB8E9),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -288,6 +345,13 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                         },
                         icon: const Icon(Icons.save),
                         label: const Text('Save Settings'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF6FB8E9),
+                          side: const BorderSide(color: Color(0xFF6FB8E9)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -298,8 +362,10 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    color: const Color(0xFF242628),
+                    border: Border.all(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
@@ -307,17 +373,17 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     children: [
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.info_outline,
                             size: 16,
-                            color: Theme.of(context).primaryColor,
+                            color: Color(0xFF6FB8E9),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             'Getting Started:',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
+                              color: Color(0xFF6FB8E9),
                             ),
                           ),
                         ],
@@ -328,7 +394,10 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                         '2. Get an API key from the provider\'s website\n'
                         '3. Enter the API key and test the connection\n'
                         '4. Once connected, AI features will be available!',
-                        style: TextStyle(fontSize: 12),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFFD9D9D9),
+                        ),
                       ),
                     ],
                   ),
