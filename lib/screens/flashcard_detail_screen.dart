@@ -66,6 +66,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
   bool _isDeckQuizMode = false;
   QuizSession? _currentQuizSession;
   String? _quizSessionId;
+  int _lastDisplayedXP = 0; // Track last XP amount shown for fade animation
+  double _xpOpacity = 0.0; // Opacity for XP fade animation
+  Timer? _xpFadeTimer; // Timer for XP fade out
 
   // Animation controller for flip effect
   late AnimationController _flipController;
@@ -111,6 +114,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
   @override
   void dispose() {
     _flipController.dispose();
+    _xpFadeTimer?.cancel(); // Clean up XP fade timer
     // Mark current card as studied when leaving the screen, but only if widget is still mounted
     if (mounted) {
       _markCardAsStudied(_currentCard);
@@ -231,8 +235,12 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
         _currentQuizSession = session;
         _quizSessionId = session.id;
         _currentCardIndex = 0;
+        _lastDisplayedXP = 0; // Reset last displayed XP
+        _xpOpacity = 0.0; // Reset opacity
       });
 
+      _xpFadeTimer?.cancel(); // Cancel any existing timer
+      
       debugPrint('Started deck quiz with ${session.totalQuestions} questions');
     }
   }
@@ -265,8 +273,31 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
 
     if (updatedSession == null) return;
 
+    // Calculate XP earned for this answer
     final isCorrect = !isSkipped && selectedIndex == correctIndex;
-    final expEarned = isCorrect ? currentCard.calculateExpReward() : 0;
+    if (isCorrect) {
+      final expEarned = currentCard.calculateExpReward();
+      _lastDisplayedXP = expEarned;
+      
+      // Show XP with fade animation
+      if (mounted) {
+        setState(() {
+          _xpOpacity = 1.0; // Fade in
+        });
+        
+        // Cancel any existing timer
+        _xpFadeTimer?.cancel();
+        
+        // Start fade out timer after 2 seconds
+        _xpFadeTimer = Timer(const Duration(seconds: 2), () {
+          if (mounted) {
+            setState(() {
+              _xpOpacity = 0.0; // Fade out
+            });
+          }
+        });
+      }
+    }
 
     if (mounted) {
       setState(() {
@@ -276,37 +307,6 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
 
     // Note: Quest progress is updated when the entire quiz session completes,
     // not for each individual question
-
-    // Show immediate feedback
-    if (mounted) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          String message;
-          Color backgroundColor;
-
-          if (isSkipped) {
-            message =
-                'Question skipped. Correct answer: ${currentCard.multipleChoiceOptions[correctIndex]}';
-            backgroundColor = const Color(0xFF6FB8E9);
-          } else if (isCorrect) {
-            message = 'Correct! +$expEarned EXP';
-            backgroundColor = Colors.green;
-          } else {
-            message =
-                'Incorrect. The correct answer was ${currentCard.multipleChoiceOptions[correctIndex]}';
-            backgroundColor = Colors.red;
-          }
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-              backgroundColor: backgroundColor,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      });
-    }
 
     // Auto-advance to next question after delay
     Future.delayed(const Duration(seconds: 2), () {
@@ -491,11 +491,16 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
 
   /// Exits deck quiz mode and returns to normal study mode
   void _exitDeckQuizMode() {
+    _xpFadeTimer?.cancel(); // Cancel any existing timer
     setState(() {
       _isDeckQuizMode = false;
       _currentQuizSession = null;
       _quizSessionId = null;
       _currentCardIndex = 0;
+      _showAnswer = false; // Reset to show question side
+      _flipController.reset(); // Reset flip animation
+      _lastDisplayedXP = 0; // Reset last displayed XP
+      _xpOpacity = 0.0; // Reset opacity
     });
   }
 
@@ -872,6 +877,20 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                 ),
               ),
             ],
+            // Fixed-width space for XP to prevent repositioning
+            const SizedBox(width: 12),
+            // Animated XP display with fade effect
+            AnimatedOpacity(
+              opacity: _xpOpacity,
+              duration: const Duration(milliseconds: 500),
+              child: Text(
+                _lastDisplayedXP > 0 ? '+$_lastDisplayedXP XP' : '',
+                style: const TextStyle(
+                  color: Color(0xFF4CAF50), // Green for XP
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         ),
 
@@ -957,19 +976,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
           ),
         ),
 
-        // Next question button for deck quiz
-        if (hasAnswered && _currentQuizSession!.hasMoreQuestions) ...[
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _nextDeckQuizQuestion,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Text('Next Question'),
-          ),
-        ],
+        // Auto-advance after 2 seconds - no manual next button
 
         // Result feedback
         if (hasAnswered) ...[
@@ -1046,8 +1053,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
   }
 
   void _showCompletionDialog() {
-    // Show different completion dialog based on mode
-    if (widget.startInQuizMode) {
+    // Show different completion dialog based on current mode (not starting mode)
+    if (_isDeckQuizMode) {
       _showQuizCompletionDialog();
     } else {
       // Navigate to the dedicated completion screen for study mode
@@ -1254,16 +1261,21 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Progress indicator
-            LinearProgressIndicator(
-              value: (_currentCardIndex + 1) / widget.deck.cards.length,
-              backgroundColor: const Color(0xFF242628),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Color(0xFF6FB8E9),
+            // Progress indicator - only show in study mode, not quiz mode
+            if (!_isDeckQuizMode)
+              LinearProgressIndicator(
+                value: (_currentCardIndex + 1) / widget.deck.cards.length,
+                backgroundColor: const Color(0xFF242628),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  Color(0xFF6FB8E9),
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+            if (!_isDeckQuizMode)
+              const SizedBox(height: 24),
+
+            if (_isDeckQuizMode)
+              const SizedBox(height: 0), // No extra spacing in quiz mode
 
             // Card display area
             Expanded(
@@ -1316,14 +1328,18 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Exit quiz button
+                  // Return to Study button - goes back to beginning of deck
                   ElevatedButton.icon(
                     onPressed: _exitDeckQuizMode,
-                    icon: const Icon(Icons.exit_to_app),
-                    label: const Text('Exit Quiz'),
+                    icon: const Icon(Icons.school),
+                    label: const Text('Return to Study'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C7B7F), // Neutral gray
-                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: const Color(0xFF6FB8E9),
+                      side: const BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
                     ),
                   ),
 
@@ -1370,16 +1386,24 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Previous button
-                  ElevatedButton.icon(
-                    onPressed: _currentCardIndex > 0 ? _previousCard : null,
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Previous'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade600,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
+                  // Previous button (or invisible spacer to maintain layout)
+                  if (_currentCardIndex > 0)
+                    ElevatedButton.icon(
+                      onPressed: _previousCard,
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Previous'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: const Color(0xFF6FB8E9),
+                        side: const BorderSide(
+                          color: Color(0xFF6FB8E9),
+                          width: 2,
+                        ),
+                      ),
+                    )
+                  else
+                    // Invisible placeholder to maintain button positions
+                    const SizedBox(width: 120), // Approximate width of Previous button
 
                   // Show answer button (only in study mode, not quiz mode)
                   if (!_isDeckQuizMode)
