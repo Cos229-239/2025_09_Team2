@@ -1319,24 +1319,24 @@ class _DashboardHomeState extends State<DashboardHome>
                               label: 'Calendar Widget',
                               hint: 'Shows your upcoming events and tasks',
                               child: SizedBox(
-                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar),
+                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar) - ResponsiveSpacing.getVerticalSpacing(context) * 0.3,
                                 child: const CalendarDisplayWidget(),
                               ),
                             ),
 
-                            SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context)),
+                            const SizedBox(height: 0),
 
                             // Progress Graph Widget with responsive height
                             Semantics(
                               label: 'Progress Graph',
                               hint: 'Displays your study progress and statistics',
                               child: SizedBox(
-                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.graph),
+                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.graph) * 1.35 + ResponsiveSpacing.getVerticalSpacing(context) * 0.0,
                                 child: const ProgressGraphWidget(),
                               ),
                             ),
 
-                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context)),
+                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 0.7),
 
                           // Calendar and Progress buttons row with responsive spacing
                           Row(
@@ -1377,7 +1377,7 @@ class _DashboardHomeState extends State<DashboardHome>
                             ],
                           ),
 
-                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context)),
+                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 0.7),
 
                           // Pet Display Widget with responsive height
                           Semantics(
@@ -1550,7 +1550,10 @@ class _DashboardHomeState extends State<DashboardHome>
       stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
       builder: (context, snapshot) {
         final now = snapshot.data ?? DateTime.now();
-        final timeString = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+        // Convert to 12-hour format with AM/PM
+        final hour = now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
+        final period = now.hour >= 12 ? 'PM' : 'AM';
+        final timeString = '$hour:${now.minute.toString().padLeft(2, '0')}$period';
         
         return Container(
           height: 44, // Standard status bar height with notch consideration
