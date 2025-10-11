@@ -37,14 +37,14 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
-          const Color(0xFF16181A), // Solid background color from Figma
+          const Color(0xFF16181A), // Dark background matching login screen
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back_ios,
-            color: Theme.of(context).colorScheme.primary,
+            color: Color(0xFF6FB8E9), // Match learning screen accent color
           ),
           onPressed: () => Navigator.pop(context),
         ),
@@ -88,8 +88,8 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.secondary,
+                const Color(0xFF6FB8E9), // Match learning screen accent color
+                const Color(0xFF6FB8E9).withValues(alpha: 0.7),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -97,19 +97,16 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.3),
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: Icon(
+          child: const Icon(
             Icons.school,
             size: 40,
-            color: Theme.of(context).colorScheme.onPrimary,
+            color: Colors.white,
           ),
         ),
         const SizedBox(height: 24),
@@ -119,7 +116,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
           'Join StudyPals',
           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
+                color: const Color(0xFF6FB8E9), // Match learning screen accent color
               ),
         ),
         const SizedBox(height: 8),
@@ -128,10 +125,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
         Text(
           'Start your AI-powered learning journey',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.7),
+                color: const Color(0xFFD9D9D9).withValues(alpha: 0.7), // Match learning screen text
               ),
           textAlign: TextAlign.center,
         ),
@@ -141,7 +135,15 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
 
   Widget _buildSignupCard(BuildContext context) {
     return Card(
-      elevation: 8,
+      elevation: 1,
+      color: const Color(0xFF242628), // Match learning screen task card background
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Match learning screen border
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -153,6 +155,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                 'Create Account',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFFD9D9D9), // Match learning screen text color
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -160,10 +163,7 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               Text(
                 'Fill in your details to get started',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.7),
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.7), // Match learning screen text
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -173,26 +173,34 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               TextFormField(
                 controller: _nameController,
                 textCapitalization: TextCapitalization.words,
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Full Name',
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Enter your full name',
-                  prefixIcon: Icon(
+                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
                     Icons.person_outline,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -213,26 +221,34 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Email',
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Enter your email address',
-                  prefixIcon: Icon(
+                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
                     Icons.email_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -253,19 +269,22 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Password',
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Create a strong password',
-                  prefixIcon: Icon(
+                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
                     Icons.lock_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: const Color(0xFF6FB8E9), // Match learning screen accent color
                     ),
                     onPressed: () {
                       setState(() {
@@ -273,19 +292,24 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                       });
                     },
                   ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -310,19 +334,22 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
               TextFormField(
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Confirm Password',
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Re-enter your password',
-                  prefixIcon: Icon(
+                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
                     Icons.lock_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirmPassword
                           ? Icons.visibility_outlined
                           : Icons.visibility_off_outlined,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: const Color(0xFF6FB8E9), // Match learning screen accent color
                     ),
                     onPressed: () {
                       setState(() {
@@ -330,19 +357,24 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                       });
                     },
                   ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -370,7 +402,8 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                         _agreeToTerms = value ?? false;
                       });
                     },
-                    activeColor: Theme.of(context).colorScheme.primary,
+                    activeColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    checkColor: Colors.white,
                   ),
                   Expanded(
                     child: GestureDetector(
@@ -382,28 +415,25 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                       child: Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: RichText(
-                          text: TextSpan(
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withValues(alpha: 0.7),
-                                    ),
+                          text: const TextSpan(
+                            style: TextStyle(
+                              color: Color(0xFFD9D9D9), // Match learning screen text
+                              fontSize: 12,
+                            ),
                             children: [
-                              const TextSpan(text: 'I agree to the '),
+                              TextSpan(text: 'I agree to the '),
                               TextSpan(
                                 text: 'Terms of Service',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: Color(0xFF6FB8E9), // Match learning screen accent color
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              const TextSpan(text: ' and '),
+                              TextSpan(text: ' and '),
                               TextSpan(
                                 text: 'Privacy Policy',
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: Color(0xFF6FB8E9), // Match learning screen accent color
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -424,25 +454,22 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
                   onPressed:
                       (_isLoading || !_agreeToTerms) ? null : _handleSignup,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    backgroundColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    foregroundColor: Colors.white,
                     elevation: 4,
-                    shadowColor: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.4),
+                    shadowColor: const Color(0xFF6FB8E9).withValues(alpha: 0.4),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _isLoading
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.onPrimary,
+                              Colors.white,
                             ),
                           ),
                         )
@@ -476,32 +503,27 @@ class _SignupScreenNewState extends State<SignupScreenNew> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
+        const Text(
           'Already have an account? ',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.7),
-              ),
+          style: TextStyle(
+            color: Color(0xFFD9D9D9), // Match learning screen text
+          ),
         ),
         TextButton(
           onPressed: () {
             Navigator.pop(context);
           },
-          child: Text(
+          child: const Text(
             'Sign In',
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+              color: Color(0xFF6FB8E9), // Match learning screen accent color
               fontWeight: FontWeight.w600,
             ),
           ),
         ),
       ],
     );
-  }
-
-  Future<void> _handleSignup() async {
+  }  Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {

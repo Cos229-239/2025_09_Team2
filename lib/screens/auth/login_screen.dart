@@ -220,7 +220,15 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildLoginCard(BuildContext context) {
     return Card(
-      elevation: 8,
+      elevation: 1,
+      color: const Color(0xFF242628), // Match learning screen task card background
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Match learning screen border
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Form(
@@ -232,6 +240,7 @@ class _LoginScreenState extends State<LoginScreen>
                 'Welcome Back!',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
+                      color: const Color(0xFFD9D9D9), // Match learning screen text color
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -239,10 +248,7 @@ class _LoginScreenState extends State<LoginScreen>
               Text(
                 'Sign in to continue your learning journey',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.7),
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.7), // Match learning screen text color
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -252,26 +258,34 @@ class _LoginScreenState extends State<LoginScreen>
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Email',
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Enter your email address',
-                  prefixIcon: Icon(
+                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
                     Icons.email_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -292,12 +306,15 @@ class _LoginScreenState extends State<LoginScreen>
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Password',
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Enter your password',
-                  prefixIcon: Icon(
+                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
                     Icons.lock_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
                   suffixIcon: IconButton(
                     icon: SizedBox(
@@ -312,12 +329,10 @@ class _LoginScreenState extends State<LoginScreen>
                         filterQuality: FilterQuality.low,
                         errorBuilder: (context, error, stackTrace) {
                           // Fallback to standard icon if Lottie fails
-                          return Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                          return const Icon(
+                            Icons.visibility_outlined,
                             size: 20,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Color(0xFF6FB8E9), // Match learning screen accent color
                           );
                         },
                       ),
@@ -337,19 +352,24 @@ class _LoginScreenState extends State<LoginScreen>
                       }
                     },
                   ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.outline,
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
+                    borderSide: const BorderSide(
+                      color: Color(0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -382,21 +402,22 @@ class _LoginScreenState extends State<LoginScreen>
                         debugPrint('🗑️ Remember Me disabled - credentials cleared');
                       }
                     },
-                    activeColor: Theme.of(context).colorScheme.primary,
+                    activeColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    checkColor: Colors.white,
                   ),
-                  Text(
+                  const Text(
                     'Remember me',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
+                    style: TextStyle(
+                      color: Color(0xFFD9D9D9), // Match learning screen text color
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Tooltip(
+                  const Tooltip(
                     message: 'Save your credentials securely for next time',
                     child: Icon(
                       Icons.info_outline,
                       size: 16,
-                      color: Theme.of(context).colorScheme.outline,
+                      color: Color(0xFFB0B0B0), // Lighter gray
                     ),
                   ),
                   const Spacer(),
@@ -408,15 +429,16 @@ class _LoginScreenState extends State<LoginScreen>
                                 Text('Forgot password feature coming soon!')),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                       'Forgot Password?',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Color(0xFF6FB8E9), // Match learning screen accent color
                       ),
                     ),
                   ),
                 ],
               ),
+
 
               const SizedBox(height: 24),
 
@@ -426,25 +448,22 @@ class _LoginScreenState extends State<LoginScreen>
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    backgroundColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    foregroundColor: Colors.white,
                     elevation: 4,
-                    shadowColor: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.4),
+                    shadowColor: const Color(0xFF6FB8E9).withValues(alpha: 0.4),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _isLoading
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.onPrimary,
+                              Colors.white,
                             ),
                           ),
                         )
@@ -475,9 +494,9 @@ class _LoginScreenState extends State<LoginScreen>
                 child: OutlinedButton(
                   onPressed: _isLoading ? null : _handleDemoLogin,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.primary,
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
+                    foregroundColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    side: const BorderSide(
+                      color: Color(0xFF6FB8E9), // Match learning screen accent color
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -515,14 +534,11 @@ class _LoginScreenState extends State<LoginScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               "Don't have an account? ",
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.7),
-                  ),
+              style: TextStyle(
+                color: Color(0xFFD9D9D9), // Match learning screen text color
+              ),
             ),
             TextButton(
               onPressed: () {
@@ -532,10 +548,10 @@ class _LoginScreenState extends State<LoginScreen>
                       builder: (context) => const SignupScreenNew()),
                 );
               },
-              child: Text(
+              child: const Text(
                 'Sign Up',
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Color(0xFF6FB8E9), // Match learning screen accent color
                   fontWeight: FontWeight.w600,
                 ),
               ),
