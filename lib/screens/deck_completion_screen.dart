@@ -46,13 +46,17 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.green.shade100,
+                color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: const Color(0xFF4CAF50),
+                  width: 2,
+                ),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.check_circle,
                 size: 80,
-                color: Colors.green.shade600,
+                color: Color(0xFF4CAF50),
               ),
             ),
 
@@ -61,10 +65,10 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
             // Completion message
             Text(
               'Congratulations!',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.green.shade700,
+                color: Color(0xFF4CAF50),
               ),
               textAlign: TextAlign.center,
             ),
@@ -103,13 +107,13 @@ class _DeckCompletionScreenState extends State<DeckCompletionScreen> {
                         'Cards Studied',
                         '${widget.deck.cards.length}',
                         Icons.style,
-                        Colors.blue,
+                        const Color(0xFF6FB8E9), // Use our standard blue
                       ),
                       _buildStatItem(
                         'Quiz Ready',
                         '$_quizEligibleCards',
                         Icons.quiz,
-                        Colors.purple,
+                        const Color(0xFF6FB8E9), // Use our standard blue
                       ),
                     ],
                   ),

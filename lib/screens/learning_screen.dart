@@ -189,10 +189,19 @@ class _LearningScreenState extends State<LearningScreen>
           bottom: TabBar(
             controller: _tabController,
             onTap: _onTabTapped, // Handle manual tab taps
-            tabs: const [
-              Tab(icon: Icon(Icons.assignment), text: 'Learning Tasks'),
-              Tab(icon: Icon(Icons.style), text: 'Flash Cards'),
-              Tab(icon: Icon(Icons.note), text: 'Notes'),
+            tabs: [
+              Tab(
+                icon: Icon(_currentPageIndex == 0 ? Icons.assignment : Icons.assignment_outlined),
+                text: 'Learning Tasks',
+              ),
+              Tab(
+                icon: Icon(_currentPageIndex == 1 ? Icons.style : Icons.style_outlined),
+                text: 'Flash Cards',
+              ),
+              Tab(
+                icon: Icon(_currentPageIndex == 2 ? Icons.note : Icons.note_outlined),
+                text: 'Notes',
+              ),
             ],
           ),
         ),
