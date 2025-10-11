@@ -641,12 +641,12 @@ class _LearningScreenState extends State<LearningScreen>
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Colors.blue.withValues(alpha: 0.1),
+                                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(
                                       Icons.style,
-                                      color: Colors.blue,
+                                      color: Color(0xFF6FB8E9),
                                       size: 24,
                                     ),
                                   ),
@@ -670,14 +670,14 @@ class _LearningScreenState extends State<LearningScreen>
                                             children: deck.tags.take(3).map((tag) => Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: Colors.blue.withValues(alpha: 0.1),
+                                                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
                                                 borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 tag,
                                                 style: const TextStyle(
                                                   fontSize: 12,
-                                                  color: Colors.blue,
+                                                  color: Color(0xFF6FB8E9),
                                                 ),
                                               ),
                                             )).toList(),
@@ -2351,18 +2351,60 @@ class _LearningScreenState extends State<LearningScreen>
           children: [
             TextField(
               controller: titleController,
-              decoration: const InputDecoration(
+              style: const TextStyle(color: Color(0xFFD9D9D9)),
+              decoration: InputDecoration(
                 labelText: 'Deck Title',
+                labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                 hintText: 'Enter deck title',
+                hintStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                filled: true,
+                fillColor: const Color(0xFF1A1A1A),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  ),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Color(0xFF6FB8E9),
+                    width: 2,
+                  ),
+                ),
               ),
               autofocus: true,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: tagsController,
-              decoration: const InputDecoration(
+              style: const TextStyle(color: Color(0xFFD9D9D9)),
+              decoration: InputDecoration(
                 labelText: 'Tags (optional)',
+                labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                 hintText: 'Enter tags separated by commas',
+                hintStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                filled: true,
+                fillColor: const Color(0xFF1A1A1A),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  ),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: Color(0xFF6FB8E9),
+                    width: 2,
+                  ),
+                ),
               ),
             ),
           ],
@@ -2370,6 +2412,9 @@ class _LearningScreenState extends State<LearningScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFD9D9D9),
+            ),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -2391,6 +2436,10 @@ class _LearningScreenState extends State<LearningScreen>
                 Navigator.pop(context);
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6FB8E9),
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Save'),
           ),
         ],
@@ -2422,6 +2471,9 @@ class _LearningScreenState extends State<LearningScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFD9D9D9),
+            ),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -2977,7 +3029,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
           Text(
             'Cards added: $_cardsAdded',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.green,
+                  color: const Color(0xFF4CAF50), // Use green from our palette
                   fontWeight: FontWeight.bold,
                 ),
           ),
@@ -2993,16 +3045,36 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
               // Card Type Selector
               DropdownButtonFormField<CardType>(
                 initialValue: _selectedType,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
+                dropdownColor: const Color(0xFF242628), // Match dialog background
+                decoration: InputDecoration(
                   labelText: 'Card Type',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2,
+                    ),
+                  ),
                 ),
                 items: const [
                   DropdownMenuItem(
                     value: CardType.basic,
                     child: Row(
                       children: [
-                        Icon(Icons.article, size: 20),
+                        Icon(Icons.article, size: 20, color: Color(0xFF6FB8E9)),
                         SizedBox(width: 8),
                         Text('Basic (Front/Back)'),
                       ],
@@ -3012,7 +3084,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                     value: CardType.multipleChoice,
                     child: Row(
                       children: [
-                        Icon(Icons.quiz, size: 20),
+                        Icon(Icons.quiz, size: 20, color: Color(0xFF6FB8E9)),
                         SizedBox(width: 8),
                         Text('Multiple Choice'),
                       ],
@@ -3032,12 +3104,32 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
               // Front/Question
               TextFormField(
                 controller: _frontController,
+                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: _selectedType == CardType.multipleChoice
                       ? 'Question *'
                       : 'Front (Question) *',
+                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                   hintText: 'Enter the question or prompt',
-                  border: const OutlineInputBorder(),
+                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Color(0xFF6FB8E9),
+                      width: 2,
+                    ),
+                  ),
                 ),
                 maxLines: 3,
                 validator: (value) {
@@ -3053,10 +3145,30 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 // Back/Answer for basic cards
                 TextFormField(
                   controller: _backController,
-                  decoration: const InputDecoration(
+                  style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
+                  decoration: InputDecoration(
                     labelText: 'Back (Answer) *',
+                    labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                     hintText: 'Enter the answer',
-                    border: OutlineInputBorder(),
+                    hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                    filled: true,
+                    fillColor: const Color(0xFF1A1A1A),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Color(0xFF6FB8E9),
+                        width: 2,
+                      ),
+                    ),
                   ),
                   maxLines: 3,
                   validator: (value) {
@@ -3070,7 +3182,9 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 // Multiple choice options
                 Text(
                   'Answer Options',
-                  style: Theme.of(context).textTheme.titleSmall,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: const Color(0xFFD9D9D9),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 
@@ -3088,7 +3202,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                   'Correct Answer: Option ${_correctAnswerIndex + 1}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: Colors.green,
+                        color: const Color(0xFF4CAF50), // Use green from our palette
                       ),
                 ),
               ],
@@ -3097,7 +3211,9 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
               // Difficulty Selector
               Text(
                 'Difficulty',
-                style: Theme.of(context).textTheme.titleSmall,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: const Color(0xFFD9D9D9),
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -3119,15 +3235,21 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? Theme.of(context).primaryColor
-                                : Colors.grey[200],
+                                ? const Color(0xFF6FB8E9) // Use our standard blue
+                                : const Color(0xFF1A1A1A), // Dark background
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF6FB8E9)
+                                  : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              width: isSelected ? 2 : 1,
+                            ),
                           ),
                           child: Text(
                             '$difficulty',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black87,
+                              color: isSelected ? Colors.white : const Color(0xFFD9D9D9),
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
@@ -3144,15 +3266,25 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFD9D9D9),
+          ),
           child: Text(_cardsAdded > 0 ? 'Done' : 'Cancel'),
         ),
         if (_cardsAdded > 0)
           TextButton(
             onPressed: _addAnotherCard,
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF6FB8E9),
+            ),
             child: const Text('Add Another'),
           ),
         ElevatedButton(
           onPressed: _saveCard,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6FB8E9),
+            foregroundColor: Colors.white,
+          ),
           child: Text(_cardsAdded > 0 ? 'Add & Continue' : 'Add Card'),
         ),
       ],
@@ -3166,18 +3298,28 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
         Expanded(
           child: TextFormField(
             controller: controller,
+            style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
             decoration: InputDecoration(
               labelText: label,
+              labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+              filled: true,
+              fillColor: const Color(0xFF1A1A1A),
               border: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: isCorrect ? Colors.green : Colors.grey,
+                  color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                   width: isCorrect ? 2 : 1,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: isCorrect ? Colors.green : Colors.grey,
+                  color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                   width: isCorrect ? 2 : 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFF6FB8E9),
+                  width: 2,
                 ),
               ),
             ),
@@ -3193,7 +3335,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
         IconButton(
           icon: Icon(
             isCorrect ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: isCorrect ? Colors.green : Colors.grey,
+            color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFFB0B0B0),
           ),
           onPressed: () {
             setState(() {
