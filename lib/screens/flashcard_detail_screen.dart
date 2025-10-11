@@ -171,18 +171,26 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     // Trigger flip animation
     if (_showAnswer) {
       _flipController.reverse();
+      // Change content at midpoint of animation (when card is perpendicular)
+      Future.delayed(Duration(milliseconds: (_flipController.duration!.inMilliseconds * 0.5).round()), () {
+        if (mounted) {
+          setState(() {
+            _showAnswer = !_showAnswer;
+          });
+        }
+      });
     } else {
       _flipController.forward();
-    }
-    
-    setState(() {
-      _showAnswer = !_showAnswer;
-      // Individual quiz mode removed
-    });
-
-    // If showing answer for the first time, count as studying a card
-    if (_showAnswer) {
-      _markCardAsStudied(_currentCard);
+      // Change content at midpoint of animation (when card is perpendicular)
+      Future.delayed(Duration(milliseconds: (_flipController.duration!.inMilliseconds * 0.5).round()), () {
+        if (mounted) {
+          setState(() {
+            _showAnswer = !_showAnswer;
+          });
+          // If showing answer for the first time, count as studying a card
+          _markCardAsStudied(_currentCard);
+        }
+      });
     }
   }
 
