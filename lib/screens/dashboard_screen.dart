@@ -38,7 +38,6 @@ import 'package:studypals/screens/pet_system_screen.dart'; // Complete pet inter
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
 import 'package:studypals/widgets/dashboard/progress_graph_widget.dart'; // Progress graph widget
-import 'package:studypals/widgets/dashboard/pet_display_widget.dart'; // Pet display widget
 import 'package:studypals/widgets/dashboard/calendar_display_widget.dart'; // Calendar display widget
 // Import custom icon widgets
 import 'package:studypals/widgets/icons/profile_icon.dart'; // Custom profile icon
@@ -1319,7 +1318,7 @@ class _DashboardHomeState extends State<DashboardHome>
                               label: 'Calendar Widget',
                               hint: 'Shows your upcoming events and tasks',
                               child: SizedBox(
-                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar) - ResponsiveSpacing.getVerticalSpacing(context) * 0.3,
+                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar),
                                 child: const CalendarDisplayWidget(),
                               ),
                             ),
@@ -1379,13 +1378,37 @@ class _DashboardHomeState extends State<DashboardHome>
 
                           SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 0.7),
 
-                          // Pet Display Widget with responsive height
-                          Semantics(
-                            label: 'Virtual Pet',
-                            hint: 'Your study companion pet, tap to interact',
-                            child: SizedBox(
-                              height: ResponsiveSpacing.getComponentHeight(context, ComponentType.pet),
-                              child: const PetDisplayWidget(),
+                          // Pets Coming Soon Container
+                          Container(
+                            height: 120,
+                            margin: const EdgeInsets.symmetric(horizontal: 0),
+                            decoration: BoxDecoration(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: const Color(0xFF6FB8E9), // Same blue border as graph container
+                                width: 2,
+                              ),
+                            ),
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.pets,
+                                    size: 48,
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Pets Coming Soon',
+                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
 
@@ -1881,71 +1904,12 @@ class _DashboardHomeState extends State<DashboardHome>
   Widget _buildHamburgerMenuContent(BuildContext context) {
     return Container(
       color: const Color(0xFF242628), // Same as header background
+      padding: const EdgeInsets.only(bottom: 100), // Add bottom padding to avoid bottom toolbar
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribute items evenly across full height
         children: [
 
         // Menu items
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.calendar_today,
-          title: 'Calendar',
-          color: Colors.blue,
-          onTap: () {
-            _closeAllPanels();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const UnifiedPlannerScreen(),
-              ),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.analytics,
-          title: 'Progress',
-          color: Colors.green,
-          onTap: () {
-            _closeAllPanels();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ProgressScreen(),
-              ),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.note,
-          title: 'Notes',
-          color: Colors.amber,
-          onTap: () {
-            _closeAllPanels();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const NotesScreen(),
-              ),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.style,
-          title: 'Flash Cards',
-          color: Colors.blue,
-          onTap: () {
-            _closeAllPanels();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const DecksScreen(),
-              ),
-            );
-          },
-        ),
         _buildHamburgerMenuItem(
           context,
           icon: Icons.emoji_events,

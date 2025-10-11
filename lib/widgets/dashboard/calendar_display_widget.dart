@@ -48,41 +48,41 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Month and year header with week navigation
-          Row(
-            children: [
-              Expanded(
-                child: _buildMonthYearHeader(context),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min, // Use minimum space needed
+      children: [
+        // Month and year header with week navigation
+        Row(
+          children: [
+            Expanded(
+              child: _buildMonthYearHeader(context),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
 
-          // Week day headers
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-                .map((day) => Expanded(
-                      child: Text(
-                        day,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: const Color(0xFF6FB8E9),
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 4),
+        // Week day headers
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+              .map((day) => Expanded(
+                    child: Text(
+                      day,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: const Color(0xFF6FB8E9),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ))
+              .toList(),
+        ),
+        const SizedBox(height: 3),
 
-          // Controlled calendar with hover and swipe detection
-          MouseRegion(
+        // Controlled calendar with hover and swipe detection
+        Flexible(
+          child: MouseRegion(
             onEnter: _handleMouseEnter,
             onExit: _handleMouseExit,
             child: Listener(
@@ -96,7 +96,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                 onTap: () {}, // Enable tap detection for better gesture recognition
                 behavior: HitTestBehavior.translucent, // Allow gestures to pass through to children
                 child: SizedBox(
-                  height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.9,
+                  height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.75,
                   width: double.infinity, // Ensure full width coverage
                   child: PageView.builder(
                     controller: _pageController,
@@ -108,8 +108,8 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -159,8 +159,8 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Container(
-                              height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.65,
-                              width: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.65,
+                              height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.55,
+                              width: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.55,
                               decoration: BoxDecoration(
                                 color: _isToday(date)
                                     ? const Color(0xFF6FB8E9)
@@ -181,15 +181,18 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                             ),
                             // Event indicator dot below the circle - always show space for consistent alignment
                             SizedBox(
-                              height: 10, // Fixed height for consistent spacing
+                              height: 8, // Reduced height to save space
                               child: events.isNotEmpty
-                                  ? Center(
-                                      child: Container(
-                                        width: 6,
-                                        height: 6,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF6FB8E9), // Always blue, regardless of selected date
-                                          shape: BoxShape.circle,
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(top: 1), // Minimal top padding
+                                      child: Center(
+                                        child: Container(
+                                          width: 5,
+                                          height: 5,
+                                          decoration: const BoxDecoration(
+                                            color: Color(0xFF6FB8E9), // Always blue, regardless of selected date
+                                            shape: BoxShape.circle,
+                                          ),
                                         ),
                                       ),
                                     )
