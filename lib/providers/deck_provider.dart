@@ -274,10 +274,24 @@ class DeckProvider extends ChangeNotifier {
     };
   }
 
+  /// Convert Deck to Firestore format
+  Map<String, dynamic> _convertDeckToFirestore(Deck deck) {
+    final cardsData = deck.cards.map((card) => _convertCardToFirestore(card)).toList();
+    return {
+      'title': deck.title,
+      'tags': deck.tags,
+      'cards': cardsData,
+      'cardCount': deck.cards.length,
+      'lastQuizGrade': deck.lastQuizGrade,
+      'createdAt': deck.createdAt.toIso8601String(),
+      'updatedAt': deck.updatedAt.toIso8601String(),
+    };
+  }
+
   /// Updates an existing deck in the collection by ID
   /// Finds deck by ID and replaces it with updated version
   /// @param deck - The updated Deck object with same ID
-  void updateDeck(Deck deck) {
+  Future<void> updateDeck(Deck deck) async {
     // Find the index of the deck to update by matching ID
     final index = _decks.indexWhere((d) => d.id == deck.id);
 
@@ -285,6 +299,22 @@ class DeckProvider extends ChangeNotifier {
       // If deck found
       _decks[index] = deck; // Replace with updated deck
       notifyListeners(); // Notify UI of the change
+
+      // Update in Firestore
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        try {
+          final deckData = _convertDeckToFirestore(deck);
+          await _firestoreService.updateDeck(
+            deckId: deck.id,
+            uid: currentUser.uid,
+            deckData: deckData,
+          );
+          debugPrint('✅ Deck updated in Firestore: ${deck.id}');
+        } catch (e) {
+          debugPrint('❌ Error updating deck in Firestore: $e');
+        }
+      }
     }
   }
 
@@ -318,7 +348,7 @@ class DeckProvider extends ChangeNotifier {
   /// Creates an updated deck with the new card and replaces the old one
   /// @param deckId - ID of the deck to add the card to
   /// @param card - The FlashCard object to add
-  void addCardToDeck(String deckId, FlashCard card) {
+  Future<void> addCardToDeck(String deckId, FlashCard card) async {
     // Find the index of the target deck by ID
     final deckIndex = _decks.indexWhere((d) => d.id == deckId);
 
@@ -328,8 +358,28 @@ class DeckProvider extends ChangeNotifier {
       // Create new card list with the added card (immutable update)
       final updatedCards = List<FlashCard>.from(deck.cards)..add(card);
       // Replace deck with updated version containing new card
-      _decks[deckIndex] = deck.copyWith(cards: updatedCards);
+      final updatedDeck = deck.copyWith(
+        cards: updatedCards,
+        updatedAt: DateTime.now(),
+      );
+      _decks[deckIndex] = updatedDeck;
       notifyListeners(); // Notify UI of the change
+
+      // Update in Firestore
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        try {
+          final deckData = _convertDeckToFirestore(updatedDeck);
+          await _firestoreService.updateDeck(
+            deckId: deckId,
+            uid: currentUser.uid,
+            deckData: deckData,
+          );
+          debugPrint('✅ Card added to deck in Firestore: ${card.id}');
+        } catch (e) {
+          debugPrint('❌ Error adding card to deck in Firestore: $e');
+        }
+      }
     }
   }
 
@@ -337,7 +387,7 @@ class DeckProvider extends ChangeNotifier {
   /// Creates an updated deck without the specified card
   /// @param deckId - ID of the deck containing the card
   /// @param cardId - ID of the card to remove
-  void removeCardFromDeck(String deckId, String cardId) {
+  Future<void> removeCardFromDeck(String deckId, String cardId) async {
     // Find the index of the target deck by ID
     final deckIndex = _decks.indexWhere((d) => d.id == deckId);
 
@@ -347,8 +397,28 @@ class DeckProvider extends ChangeNotifier {
       // Create new card list without the specified card (immutable update)
       final updatedCards = deck.cards.where((c) => c.id != cardId).toList();
       // Replace deck with updated version without the removed card
-      _decks[deckIndex] = deck.copyWith(cards: updatedCards);
+      final updatedDeck = deck.copyWith(
+        cards: updatedCards,
+        updatedAt: DateTime.now(),
+      );
+      _decks[deckIndex] = updatedDeck;
       notifyListeners(); // Notify UI of the change
+
+      // Update in Firestore
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        try {
+          final deckData = _convertDeckToFirestore(updatedDeck);
+          await _firestoreService.updateDeck(
+            deckId: deckId,
+            uid: currentUser.uid,
+            deckData: deckData,
+          );
+          debugPrint('✅ Card removed from deck in Firestore: $cardId');
+        } catch (e) {
+          debugPrint('❌ Error removing card from deck in Firestore: $e');
+        }
+      }
     }
   }
 

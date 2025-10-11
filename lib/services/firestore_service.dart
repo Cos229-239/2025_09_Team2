@@ -411,6 +411,46 @@ class FirestoreService {
     }
   }
 
+  /// Update an existing deck in Firestore
+  Future<bool> updateDeck({
+    required String deckId,
+    required String uid,
+    required Map<String, dynamic> deckData,
+  }) async {
+    try {
+      // Verify the deck belongs to the user
+      final deckDoc = await decksCollection.doc(deckId).get();
+      if (!deckDoc.exists) {
+        if (kDebugMode) {
+          print('❌ Deck not found: $deckId');
+        }
+        return false;
+      }
+
+      final existingData = deckDoc.data() as Map<String, dynamic>;
+      if (existingData['uid'] != uid) {
+        if (kDebugMode) {
+          print('❌ Cannot update deck: User does not own this deck');
+        }
+        return false;
+      }
+
+      // Update the deck with new data
+      deckData['updatedAt'] = FieldValue.serverTimestamp();
+      await decksCollection.doc(deckId).update(deckData);
+      
+      if (kDebugMode) {
+        print('✅ Updated deck: $deckId');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error updating deck: $e');
+      }
+      return false;
+    }
+  }
+
   /// Create a new task for user
   Future<String?> createTask({
     required String uid,
