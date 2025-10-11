@@ -61,7 +61,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
           // Week day headers
           Row(
@@ -79,7 +79,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                     ))
                 .toList(),
           ),
-          SizedBox(height: ResponsiveSpacing.getSmallSpacing(context) * 0.5),
+          const SizedBox(height: 4),
 
           // Controlled calendar with hover and swipe detection
           MouseRegion(
@@ -96,7 +96,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                 onTap: () {}, // Enable tap detection for better gesture recognition
                 behavior: HitTestBehavior.translucent, // Allow gestures to pass through to children
                 child: SizedBox(
-                  height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.8,
+                  height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.9,
                   width: double.infinity, // Ensure full width coverage
                   child: PageView.builder(
                     controller: _pageController,
@@ -154,17 +154,20 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                       final events = provider.getEventsForDay(date);
                       return GestureDetector(
                         onTap: () => _onDayTapped(context, date),
-                        child: Container(
-                          height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.8,
-                          decoration: BoxDecoration(
-                            color: _isToday(date)
-                                ? const Color(0xFF6FB8E9)
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Stack(
-                            children: [
-                              Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Container(
+                              height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.65,
+                              width: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.65,
+                              decoration: BoxDecoration(
+                                color: _isToday(date)
+                                    ? const Color(0xFF6FB8E9)
+                                    : Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
                                 child: Text(
                                   '${date.day}',
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -175,30 +178,24 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                                       ),
                                 ),
                               ),
-                              // Event indicator dots
-                              if (events.isNotEmpty)
-                                Positioned(
-                                  bottom: 4,
-                                  left: 0,
-                                  right: 0,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
+                            ),
+                            // Event indicator dot below the circle - always show space for consistent alignment
+                            SizedBox(
+                              height: 10, // Fixed height for consistent spacing
+                              child: events.isNotEmpty
+                                  ? Center(
+                                      child: Container(
                                         width: 6,
                                         height: 6,
-                                        decoration: BoxDecoration(
-                                          color: _isToday(date) 
-                                              ? Colors.white 
-                                              : const Color(0xFF6FB8E9),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF6FB8E9), // Always blue, regardless of selected date
                                           shape: BoxShape.circle,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
+                                    )
+                                  : null,
+                            ),
+                          ],
                         ),
                       );
                     },
