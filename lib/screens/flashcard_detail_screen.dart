@@ -760,14 +760,18 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     final appState = Provider.of<AppState>(context, listen: false);
     final user = appState.currentUser;
 
-    // Check if user is visual learner or card has visual metadata
+    // Check if user is visual learner
     final bool isVisualLearner =
         user?.preferences.learningStyle.toLowerCase() == 'visual';
-    final bool hasVisualMetadata = _currentCard.visualMetadata != null &&
-        _currentCard.visualMetadata!.isNotEmpty;
+    
+    // Check if card was created for visual learning style
+    final bool isVisualCard = _currentCard.visualMetadata != null &&
+        _currentCard.visualMetadata!.isNotEmpty &&
+        (_currentCard.visualMetadata!['learningStyle'] == 'visual' ||
+         _currentCard.visualMetadata!['learningStyle'] == 'adaptive');
 
-    // Use visual widget for visual learners or cards with visual content
-    if (isVisualLearner || hasVisualMetadata) {
+    // Use visual widget only for visual learners or cards created for visual/adaptive learning
+    if (isVisualLearner || isVisualCard) {
       return VisualFlashcardWidget(
         flashcard: _currentCard,
         showBack: _showAnswer,
