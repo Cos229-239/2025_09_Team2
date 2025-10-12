@@ -90,6 +90,8 @@ import 'providers/calendar_provider.dart';
 import 'providers/planner_provider.dart';
 import 'providers/enhanced_ai_tutor_provider.dart';
 import 'providers/timer_provider.dart';
+import 'providers/analytics_provider.dart'; 
+import 'providers/study_analytics_provider.dart';
 
 // Import services
 import 'services/social_learning_service.dart';
@@ -184,6 +186,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CalendarProvider()),
         ChangeNotifierProvider(create: (_) => PlannerProvider()),
         ChangeNotifierProvider(create: (_) => TimerProvider()),
+        ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
+        ChangeNotifierProxyProvider2<AnalyticsProvider, DeckProvider, StudyAnalyticsProvider>(
+          create: (context) => StudyAnalyticsProvider(
+            Provider.of<AnalyticsProvider>(context, listen: false),
+            Provider.of<DeckProvider>(context, listen: false),
+          ),
+          update: (_, analyticsProvider, deckProvider, previous) => 
+            StudyAnalyticsProvider(analyticsProvider, deckProvider),
+        ),
 
         // Services
         Provider(create: (_) => SocialLearningService()),

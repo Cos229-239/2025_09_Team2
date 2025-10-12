@@ -38,6 +38,7 @@ import 'package:studypals/screens/pet_system_screen.dart'; // Complete pet inter
 // Import custom dashboard widgets that display different app features
 import 'package:studypals/widgets/dashboard/due_cards_widget.dart'; // Flashcards due for review
 import 'package:studypals/widgets/dashboard/progress_graph_widget.dart'; // Progress graph widget
+import 'package:studypals/widgets/dashboard/learning_progress_card.dart'; // Learning progress card
 import 'package:studypals/widgets/dashboard/calendar_display_widget.dart'; // Calendar display widget
 // Import custom icon widgets
 import 'package:studypals/widgets/icons/profile_icon.dart'; // Custom profile icon
@@ -45,6 +46,7 @@ import 'package:studypals/widgets/icons/profile_icon.dart'; // Custom profile ic
 import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered flashcard generation
 import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
 import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
+import 'package:studypals/screens/progress_screen.dart'; // Progress screen
 
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/task_provider.dart'; // Task management state
@@ -3960,6 +3962,11 @@ class DecksScreen extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
+                // Learning Progress section
+                const LearningProgressCard(),
+                
+                const SizedBox(height: 24),
+                
                 // Flashcard Review section
                 const DueCardsWidget(),
 
@@ -4074,42 +4081,8 @@ class DecksScreen extends StatelessWidget {
   }
 }
 
-/// Placeholder screen for progress tracking and analytics
-/// Will be replaced with charts, statistics, and achievement tracking
-class ProgressScreen extends StatelessWidget {
-  // Constructor with optional key for widget identification
-  const ProgressScreen({super.key});
-
-  /// Builds placeholder content indicating feature is coming soon
-  /// @param context - Build context containing theme information
-  /// @return Widget tree showing placeholder content
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      // App bar with descriptive screen title
-      appBar: AppBar(title: const Text('Progress')),
-
-      // Centered placeholder content
-      body: Center(
-        child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center, // Center content vertically
-          children: [
-            // Large analytics icon to indicate progress tracking functionality
-            const Icon(Icons.insights, size: 64, color: Colors.grey),
-
-            // Spacing between icon and text
-            const SizedBox(height: 16),
-
-            // Coming soon message with appropriate text style
-            Text('Progress tracking coming soon!',
-                style: Theme.of(context).textTheme.headlineSmall),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// Use the ProgressScreen from screens/progress_screen.dart instead
+// This placeholder class has been removed
 
 /// Simple flashcard viewer for studying decks
 class SimpleFlashcardViewer extends StatefulWidget {
