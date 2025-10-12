@@ -232,69 +232,6 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     }
   }
 
-  Future<void> _debugAI() async {
-    if (_topicController.text.trim().isEmpty) {
-      setState(() {
-        _generationError = 'Please enter a topic first.';
-      });
-      return;
-    }
-
-    setState(() {
-      setLoading(true);
-      _generationError = null;
-    });
-
-    try {
-      final aiProvider =
-          Provider.of<StudyPalsAIProvider>(context, listen: false);
-
-      // Create a sample user for debugging with the selected learning style
-      final sampleUser = User(
-        id: 'debug_user',
-        email: 'debug@studypals.com',
-        name: 'Debug User',
-        preferences: UserPreferences(
-          learningStyle: _selectedLearningStyle, // Use selected learning style
-          difficultyPreference: 'moderate',
-        ),
-      );
-
-      final response = await aiProvider.aiService.debugFlashcardGeneration(
-        _topicController.text.trim(),
-        _selectedSubject,
-        sampleUser,
-      );
-
-      // Show the raw response in a dialog
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Raw AI Response'),
-            content: SingleChildScrollView(
-              child: Text(response),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Close'),
-              ),
-            ],
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _generationError = 'Debug failed: $e';
-      });
-    } finally {
-      setState(() {
-        setLoading(false);
-      });
-    }
-  }
-
   void _showSuccessDialog(int cardCount) {
     showDialog(
       context: context,
@@ -700,25 +637,6 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                             const Color(0xFF6FB8E9), // Dashboard accent color
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 6),
-                      ),
-                    ),
-                  ),
-
-                  // Debug button
-                  const SizedBox(height: 2),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: isLoading ? null : _debugAI,
-                      icon: const Icon(Icons.bug_report, size: 16),
-                      label: const Text('Debug AI Response',
-                          style: TextStyle(fontSize: 13)),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor:
-                            const Color(0xFF6FB8E9), // Dashboard accent color
-                        side: const BorderSide(
-                            color: Color(0xFF6FB8E9), width: 1),
-                        padding: const EdgeInsets.symmetric(vertical: 2),
                       ),
                     ),
                   ),
