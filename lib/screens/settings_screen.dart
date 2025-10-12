@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../providers/app_state.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/calendar_provider.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/ai/ai_settings_widget.dart';
 import '../../widgets/notifications/notification_panel.dart'; // Import for custom bell icon
-import 'spotify_integration_screen.dart';
 import '../../widgets/common/themed_background_wrapper.dart';
 
 /// Application settings screen
@@ -68,89 +66,6 @@ class SettingsScreen extends StatelessWidget {
 
               // AI Settings Widget
               const AISettingsWidget(),
-
-              const SizedBox(height: 32),
-
-              // Spotify Integration Section
-              Text(
-                'Music Integration',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Connect to Spotify to enhance your study experience with music',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-              ),
-              const SizedBox(height: 16),
-
-              // Spotify Integration Card
-              Card(
-                elevation: 1,
-                color: const Color(0xFF242628),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.music_note,
-                            color: const Color(0xFF6FB8E9),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Spotify Integration',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Connect your Spotify account to access playlists, search music, and create study playlists.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const SpotifyIntegrationScreen(),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.music_note),
-                        label: const Text('Open Spotify Integration'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFF1DB954), // Spotify green
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
 
               const SizedBox(height: 32),
 
@@ -407,85 +322,6 @@ class SettingsScreen extends StatelessWidget {
                               ],
                             ),
                           );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Account Settings
-              Card(
-                elevation: 1,
-                color: const Color(0xFF242628),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  side: BorderSide(
-                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.account_circle,
-                            color: const Color(0xFF6FB8E9),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Account',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        title: const Text('Sign Out'),
-                        subtitle: const Text('Sign out of your account'),
-                        trailing: const Icon(Icons.logout, color: Colors.red),
-                        onTap: () async {
-                          // Confirm logout
-                          final shouldLogout = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Sign Out'),
-                              content: const Text(
-                                  'Are you sure you want to sign out?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.red,
-                                  ),
-                                  child: const Text('Sign Out'),
-                                ),
-                              ],
-                            ),
-                          );
-
-                          if (shouldLogout == true && context.mounted) {
-                            // Sign out the user through AppState
-                            await Provider.of<AppState>(context, listen: false)
-                                .logout();
-                          }
                         },
                       ),
                     ],

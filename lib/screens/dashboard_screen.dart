@@ -47,6 +47,7 @@ import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered
 import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
 import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
 import 'package:studypals/screens/progress_screen.dart'; // Progress screen
+import 'package:studypals/screens/spotify_integration_screen.dart'; // Spotify integration screen
 
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/task_provider.dart'; // Task management state
@@ -1964,8 +1965,11 @@ class _DashboardHomeState extends State<DashboardHome>
           color: Colors.purple,
           onTap: () {
             _closeAllPanels();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Music feature coming soon!')),
+            // Navigate to Spotify Integration Screen
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SpotifyIntegrationScreen(),
+              ),
             );
           },
         ),
@@ -2107,7 +2111,7 @@ class _DashboardHomeState extends State<DashboardHome>
               'Study Pals',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF6FB8E9), // Match blue container borders
+                    color: Colors.white, // Changed to white color
                   ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
