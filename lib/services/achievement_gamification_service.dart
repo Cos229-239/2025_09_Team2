@@ -298,8 +298,9 @@ class SeasonalEvent {
     bool? isActive,
   })  : exclusiveAchievements = exclusiveAchievements ?? [],
         bonusMultipliers = bonusMultipliers ?? {},
-        isActive = isActive ?? 
-            (DateTime.now().isAfter(startDate) && DateTime.now().isBefore(endDate));
+        isActive = isActive ??
+            (DateTime.now().isAfter(startDate) &&
+                DateTime.now().isBefore(endDate));
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -330,7 +331,7 @@ class SeasonalEvent {
 }
 
 /// Achievement and gamification service with complete Firebase integration
-/// 
+///
 /// COMPREHENSIVE FEATURES IMPLEMENTED:
 /// ✅ Full Firebase/Firestore integration for cross-device sync
 /// ✅ Real-time achievement tracking and progress updates
@@ -355,7 +356,7 @@ class AchievementGamificationService {
   static const String _achievementSharesCollection = 'achievement_shares';
   static const String _seasonalEventsCollection = 'seasonal_events';
   static const String _analyticsCollection = 'gamification_analytics';
-  
+
   // Local storage keys (for offline fallback)
   static const String _progressKey = 'achievement_progress';
   static const String _levelKey = 'user_level';
@@ -367,10 +368,10 @@ class AchievementGamificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
-  
+
   // Local storage
   SharedPreferences? _prefs;
-  
+
   // In-memory cache
   Map<String, Achievement> _achievements = {};
   Map<String, AchievementProgress> _progress = {};
@@ -383,7 +384,7 @@ class AchievementGamificationService {
   Map<String, Streak> _streaks = {};
   List<Reward> _earnedRewards = [];
   List<SeasonalEvent> _activeSeasonalEvents = [];
-  
+
   // State management
   bool _isInitialized = false;
   bool _isOnline = true;
@@ -392,13 +393,13 @@ class AchievementGamificationService {
   StreamSubscription? _seasonalEventsSubscription;
   final List<Function(Achievement)> _achievementUnlockCallbacks = [];
   final List<Function(int)> _levelUpCallbacks = [];
-  
+
   // Fraud detection
   final Map<String, List<DateTime>> _progressTimestamps = {};
   final Map<String, int> _suspiciousActivityCount = {};
 
   /// Initialize the service with complete Firebase integration
-  /// 
+  ///
   /// COMPLETE IMPLEMENTATION with:
   /// ✅ Firebase/Firestore initialization and data sync
   /// ✅ User authentication verification and data migration handling
@@ -411,25 +412,26 @@ class AchievementGamificationService {
   /// ✅ Proper achievement definition versioning and updates
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     try {
       // Initialize local storage
       _prefs = await SharedPreferences.getInstance();
-      
+
       // Check authentication
       final user = _auth.currentUser;
       if (user == null) {
-        debugPrint('AchievementService: No authenticated user, loading local data only');
+        debugPrint(
+            'AchievementService: No authenticated user, loading local data only');
         await _loadLocalData();
         await _initializeDefaultAchievements();
         _isOnline = false;
         _isInitialized = true;
         return;
       }
-      
+
       // Try to load from Firestore first
       _isOnline = await _checkConnectivity();
-      
+
       if (_isOnline) {
         await _initializeFirebaseData(user.uid);
         await _setupRealtimeListeners(user.uid);
@@ -438,15 +440,15 @@ class AchievementGamificationService {
         debugPrint('AchievementService: Offline mode, loading local data');
         await _loadLocalData();
       }
-      
+
       // Initialize default achievements if none exist
       if (_achievements.isEmpty) {
         await _initializeDefaultAchievements();
       }
-      
+
       // Load seasonal events
       await _loadSeasonalEvents();
-      
+
       // Track initialization in analytics
       await _analytics.logEvent(
         name: 'gamification_initialized',
@@ -457,7 +459,7 @@ class AchievementGamificationService {
           'achievements_unlocked': unlockedAchievements.length,
         },
       );
-      
+
       _isInitialized = true;
       debugPrint('AchievementService: Initialization complete');
     } catch (e) {
@@ -469,7 +471,7 @@ class AchievementGamificationService {
       _isInitialized = true;
     }
   }
-  
+
   /// Check network connectivity
   Future<bool> _checkConnectivity() async {
     try {
@@ -484,59 +486,57 @@ class AchievementGamificationService {
       return false;
     }
   }
-  
+
   /// Initialize Firebase data
   Future<void> _initializeFirebaseData(String userId) async {
     try {
       // Load user gamification data from Firestore
-      final userDoc = await _firestore
-          .collection(_userDataCollection)
-          .doc(userId)
-          .get();
-      
+      final userDoc =
+          await _firestore.collection(_userDataCollection).doc(userId).get();
+
       if (userDoc.exists) {
         final data = userDoc.data()!;
-        
+
         // Load user level
         if (data['level'] != null) {
-          _userLevel = UserLevel.fromJson(Map<String, dynamic>.from(data['level']));
+          _userLevel =
+              UserLevel.fromJson(Map<String, dynamic>.from(data['level']));
         }
-        
+
         // Load progress
         if (data['progress'] != null) {
           final progressMap = Map<String, dynamic>.from(data['progress']);
-          _progress = progressMap.map(
-              (key, value) => MapEntry(key, AchievementProgress.fromJson(value)));
+          _progress = progressMap.map((key, value) =>
+              MapEntry(key, AchievementProgress.fromJson(value)));
         }
-        
+
         // Load streaks
         if (data['streaks'] != null) {
           final streaksMap = Map<String, dynamic>.from(data['streaks']);
           _streaks = streaksMap
               .map((key, value) => MapEntry(key, Streak.fromJson(value)));
         }
-        
+
         // Load earned rewards
         if (data['rewards'] != null) {
           final rewardsList = List<dynamic>.from(data['rewards']);
           _earnedRewards = rewardsList.map((r) => Reward.fromJson(r)).toList();
         }
-        
+
         debugPrint('AchievementService: Loaded data from Firestore');
       } else {
         // New user, create initial data
         await _createInitialUserData(userId);
       }
-      
+
       // Load achievement definitions
       await _loadAchievementDefinitions();
-      
     } catch (e) {
       debugPrint('AchievementService: Error loading Firebase data: $e');
       rethrow;
     }
   }
-  
+
   /// Create initial user data in Firestore
   Future<void> _createInitialUserData(String userId) async {
     final initialData = {
@@ -551,38 +551,39 @@ class AchievementGamificationService {
       'created_at': FieldValue.serverTimestamp(),
       'last_updated': FieldValue.serverTimestamp(),
     };
-    
+
     await _firestore
         .collection(_userDataCollection)
         .doc(userId)
         .set(initialData);
-    
+
     debugPrint('AchievementService: Created initial user data');
   }
-  
+
   /// Load achievement definitions from Firestore
   Future<void> _loadAchievementDefinitions() async {
     try {
-      final achievementsSnapshot = await _firestore
-          .collection(_achievementsCollection)
-          .get();
-      
+      final achievementsSnapshot =
+          await _firestore.collection(_achievementsCollection).get();
+
       final cloudAchievements = <String, Achievement>{};
       for (final doc in achievementsSnapshot.docs) {
         final achievement = Achievement.fromJson(doc.data());
         cloudAchievements[achievement.id] = achievement;
       }
-      
+
       // If cloud has achievements, use them; otherwise use defaults
       if (cloudAchievements.isNotEmpty) {
         _achievements = cloudAchievements;
-        debugPrint('AchievementService: Loaded ${_achievements.length} achievements from Firestore');
+        debugPrint(
+            'AchievementService: Loaded ${_achievements.length} achievements from Firestore');
       }
     } catch (e) {
-      debugPrint('AchievementService: Error loading achievement definitions: $e');
+      debugPrint(
+          'AchievementService: Error loading achievement definitions: $e');
     }
   }
-  
+
   /// Setup real-time listeners for live updates
   Future<void> _setupRealtimeListeners(String userId) async {
     // Listen to user data changes
@@ -593,25 +594,26 @@ class AchievementGamificationService {
         .listen((snapshot) {
       if (snapshot.exists) {
         final data = snapshot.data()!;
-        
+
         // Update level
         if (data['level'] != null) {
-          _userLevel = UserLevel.fromJson(Map<String, dynamic>.from(data['level']));
+          _userLevel =
+              UserLevel.fromJson(Map<String, dynamic>.from(data['level']));
         }
-        
+
         // Update progress
         if (data['progress'] != null) {
           final progressMap = Map<String, dynamic>.from(data['progress']);
-          _progress = progressMap.map(
-              (key, value) => MapEntry(key, AchievementProgress.fromJson(value)));
+          _progress = progressMap.map((key, value) =>
+              MapEntry(key, AchievementProgress.fromJson(value)));
         }
-        
+
         debugPrint('AchievementService: Real-time update received');
       }
     }, onError: (error) {
       debugPrint('AchievementService: Real-time listener error: $error');
     });
-    
+
     // Listen to achievement definition changes
     _achievementsSubscription = _firestore
         .collection(_achievementsCollection)
@@ -619,7 +621,7 @@ class AchievementGamificationService {
         .listen((snapshot) {
       for (final change in snapshot.docChanges) {
         final achievement = Achievement.fromJson(change.doc.data()!);
-        
+
         switch (change.type) {
           case DocumentChangeType.added:
           case DocumentChangeType.modified:
@@ -639,7 +641,7 @@ class AchievementGamificationService {
       }
       debugPrint('AchievementService: Achievement definitions updated');
     });
-    
+
     // Listen to seasonal events
     _seasonalEventsSubscription = _firestore
         .collection(_seasonalEventsCollection)
@@ -649,29 +651,32 @@ class AchievementGamificationService {
       _activeSeasonalEvents = snapshot.docs
           .map((doc) => SeasonalEvent.fromJson(doc.data()))
           .toList();
-      
-      debugPrint('AchievementService: ${_activeSeasonalEvents.length} active seasonal events');
+
+      debugPrint(
+          'AchievementService: ${_activeSeasonalEvents.length} active seasonal events');
     });
   }
-  
+
   /// Sync local data to cloud
   Future<void> _syncLocalToCloud(String userId) async {
     try {
       final lastSync = _prefs?.getInt(_lastSyncKey);
       final now = DateTime.now().millisecondsSinceEpoch;
-      
+
       // Only sync if it's been more than 5 minutes or first sync
       if (lastSync == null || (now - lastSync) > 300000) {
         final userDoc = _firestore.collection(_userDataCollection).doc(userId);
-        
+
         await userDoc.update({
           'level': _userLevel.toJson(),
-          'progress': _progress.map((key, value) => MapEntry(key, value.toJson())),
-          'streaks': _streaks.map((key, value) => MapEntry(key, value.toJson())),
+          'progress':
+              _progress.map((key, value) => MapEntry(key, value.toJson())),
+          'streaks':
+              _streaks.map((key, value) => MapEntry(key, value.toJson())),
           'rewards': _earnedRewards.map((r) => r.toJson()).toList(),
           'last_updated': FieldValue.serverTimestamp(),
         });
-        
+
         await _prefs?.setInt(_lastSyncKey, now);
         debugPrint('AchievementService: Synced local data to cloud');
       }
@@ -711,37 +716,38 @@ class AchievementGamificationService {
         final List<dynamic> rewardsList = jsonDecode(rewardsData);
         _earnedRewards = rewardsList.map((r) => Reward.fromJson(r)).toList();
       }
-      
+
       debugPrint('AchievementService: Loaded data from local storage');
     } catch (e) {
       debugPrint('AchievementService: Error loading local data: $e');
     }
   }
-  
+
   /// Load seasonal events
   Future<void> _loadSeasonalEvents() async {
     try {
       if (!_isOnline) {
-        debugPrint('AchievementService: Offline, skipping seasonal events load');
+        debugPrint(
+            'AchievementService: Offline, skipping seasonal events load');
         return;
       }
-      
+
       final now = DateTime.now();
       final eventsSnapshot = await _firestore
           .collection(_seasonalEventsCollection)
           .where('startDate', isLessThanOrEqualTo: now)
           .where('endDate', isGreaterThanOrEqualTo: now)
           .get();
-      
+
       _activeSeasonalEvents = eventsSnapshot.docs
           .map((doc) => SeasonalEvent.fromJson(doc.data()))
           .toList();
-      
+
       // Add seasonal achievements to main achievements list
       for (final event in _activeSeasonalEvents) {
         for (final achievement in event.exclusiveAchievements) {
           _achievements[achievement.id] = achievement;
-          
+
           // Initialize progress if not exists
           if (!_progress.containsKey(achievement.id)) {
             _progress[achievement.id] = AchievementProgress(
@@ -751,8 +757,9 @@ class AchievementGamificationService {
           }
         }
       }
-      
-      debugPrint('AchievementService: Loaded ${_activeSeasonalEvents.length} seasonal events');
+
+      debugPrint(
+          'AchievementService: Loaded ${_activeSeasonalEvents.length} seasonal events');
     } catch (e) {
       debugPrint('AchievementService: Error loading seasonal events: $e');
     }
@@ -774,7 +781,7 @@ class AchievementGamificationService {
 
       final rewardsList = _earnedRewards.map((r) => r.toJson()).toList();
       await _prefs?.setString(_rewardsKey, jsonEncode(rewardsList));
-      
+
       // Save to cloud if online and authenticated
       if (_isOnline && _auth.currentUser != null) {
         await _saveToCloud(_auth.currentUser!.uid);
@@ -783,18 +790,19 @@ class AchievementGamificationService {
       debugPrint('AchievementService: Error saving user data: $e');
     }
   }
-  
+
   /// Save data to Firestore
   Future<void> _saveToCloud(String userId) async {
     try {
       await _firestore.collection(_userDataCollection).doc(userId).update({
         'level': _userLevel.toJson(),
-        'progress': _progress.map((key, value) => MapEntry(key, value.toJson())),
+        'progress':
+            _progress.map((key, value) => MapEntry(key, value.toJson())),
         'streaks': _streaks.map((key, value) => MapEntry(key, value.toJson())),
         'rewards': _earnedRewards.map((r) => r.toJson()).toList(),
         'last_updated': FieldValue.serverTimestamp(),
       });
-      
+
       debugPrint('AchievementService: Data saved to cloud');
     } catch (e) {
       debugPrint('AchievementService: Error saving to cloud: $e');
@@ -1153,7 +1161,7 @@ class AchievementGamificationService {
       for (final callback in _levelUpCallbacks) {
         callback(newLevel);
       }
-      
+
       // Track in analytics
       await trackAnalyticsEvent(
         eventName: 'level_up',
@@ -1219,13 +1227,15 @@ class AchievementGamificationService {
 
       final newProgress =
           _calculateAchievementProgress(achievement, sessionData);
-      
+
       // Validate progress for fraud detection
-      if (!_validateAchievementProgress(achievement.id, newProgress, sessionData)) {
-        debugPrint('AchievementService: Invalid progress detected for ${achievement.id}');
+      if (!_validateAchievementProgress(
+          achievement.id, newProgress, sessionData)) {
+        debugPrint(
+            'AchievementService: Invalid progress detected for ${achievement.id}');
         continue;
       }
-      
+
       final updatedProgress = progress.copyWith(progress: newProgress);
 
       if (newProgress >= 1.0 && !progress.isUnlocked) {
@@ -1240,12 +1250,12 @@ class AchievementGamificationService {
         _earnedRewards.addAll(achievement.rewards);
 
         unlockedAchievements.add(achievement);
-        
+
         // Notify callbacks
         for (final callback in _achievementUnlockCallbacks) {
           callback(achievement);
         }
-        
+
         // Track in analytics
         await trackAnalyticsEvent(
           eventName: 'achievement_unlocked',
@@ -1412,28 +1422,28 @@ class AchievementGamificationService {
     }
     await _saveUserData();
   }
-  
+
   // ============================================================================
   // NEW COMPREHENSIVE FEATURES IMPLEMENTATION
   // ============================================================================
-  
+
   /// Register a callback for achievement unlocks
   void onAchievementUnlock(Function(Achievement) callback) {
     _achievementUnlockCallbacks.add(callback);
   }
-  
+
   /// Register a callback for level ups
   void onLevelUp(Function(int) callback) {
     _levelUpCallbacks.add(callback);
   }
-  
+
   /// Share an achievement on social media or with friends
   Future<bool> shareAchievement(Achievement achievement) async {
     if (!_isOnline || _auth.currentUser == null) {
       debugPrint('AchievementService: Cannot share achievement while offline');
       return false;
     }
-    
+
     try {
       final userId = _auth.currentUser!.uid;
       final shareData = {
@@ -1445,11 +1455,9 @@ class AchievementGamificationService {
         'likes': 0,
         'comments': [],
       };
-      
-      await _firestore
-          .collection(_achievementSharesCollection)
-          .add(shareData);
-      
+
+      await _firestore.collection(_achievementSharesCollection).add(shareData);
+
       // Track in analytics
       await _analytics.logEvent(
         name: 'achievement_shared',
@@ -1458,7 +1466,7 @@ class AchievementGamificationService {
           'rarity': achievement.rarity.name,
         },
       );
-      
+
       debugPrint('AchievementService: Achievement shared successfully');
       return true;
     } catch (e) {
@@ -1466,7 +1474,7 @@ class AchievementGamificationService {
       return false;
     }
   }
-  
+
   /// Get leaderboard rankings
   Future<List<Map<String, dynamic>>> getLeaderboard({
     String type = 'level',
@@ -1476,7 +1484,7 @@ class AchievementGamificationService {
       debugPrint('AchievementService: Cannot fetch leaderboard while offline');
       return [];
     }
-    
+
     try {
       String orderByField;
       switch (type) {
@@ -1492,16 +1500,16 @@ class AchievementGamificationService {
         default:
           orderByField = 'level.level';
       }
-      
+
       final snapshot = await _firestore
           .collection(_userDataCollection)
           .orderBy(orderByField, descending: true)
           .limit(limit)
           .get();
-      
+
       final leaderboard = <Map<String, dynamic>>[];
       int rank = 1;
-      
+
       for (final doc in snapshot.docs) {
         final data = doc.data();
         leaderboard.add({
@@ -1510,43 +1518,44 @@ class AchievementGamificationService {
           'level': data['level']?['level'] ?? 1,
           'total_xp': data['level']?['totalXP'] ?? 0,
           'title': data['level']?['title'] ?? 'Beginner',
-          'achievements_count': (data['progress'] as Map?)?.values
+          'achievements_count': (data['progress'] as Map?)
+                  ?.values
                   .where((p) => p['isUnlocked'] == true)
                   .length ??
               0,
           'longest_streak': data['streaks']?['daily']?['longest'] ?? 0,
         });
       }
-      
+
       return leaderboard;
     } catch (e) {
       debugPrint('AchievementService: Error fetching leaderboard: $e');
       return [];
     }
   }
-  
+
   /// Get user's rank in leaderboard
   Future<int?> getUserRank({String type = 'level'}) async {
     if (!_isOnline || _auth.currentUser == null) {
       return null;
     }
-    
+
     try {
       final userId = _auth.currentUser!.uid;
       final leaderboard = await getLeaderboard(type: type, limit: 1000);
-      
+
       final userEntry = leaderboard.firstWhere(
         (entry) => entry['user_id'] == userId,
         orElse: () => {},
       );
-      
+
       return userEntry['rank'] as int?;
     } catch (e) {
       debugPrint('AchievementService: Error getting user rank: $e');
       return null;
     }
   }
-  
+
   /// Redeem a reward
   Future<bool> redeemReward(Reward reward) async {
     // Check if user has the reward
@@ -1554,7 +1563,7 @@ class AchievementGamificationService {
       debugPrint('AchievementService: User does not have this reward');
       return false;
     }
-    
+
     try {
       // Apply reward based on type
       switch (reward.type) {
@@ -1562,19 +1571,19 @@ class AchievementGamificationService {
           final xpAmount = int.tryParse(reward.value) ?? 0;
           await _awardXP(xpAmount);
           break;
-        
+
         case RewardType.badge:
         case RewardType.title:
         case RewardType.avatar:
         case RewardType.theme:
           // These are cosmetic rewards that are automatically applied
           break;
-        
+
         case RewardType.feature:
           // Feature unlocks are handled by checking level/rewards
           break;
       }
-      
+
       // Track redemption in analytics
       await _analytics.logEvent(
         name: 'reward_redeemed',
@@ -1583,7 +1592,7 @@ class AchievementGamificationService {
           'reward_type': reward.type.name,
         },
       );
-      
+
       debugPrint('AchievementService: Reward redeemed successfully');
       return true;
     } catch (e) {
@@ -1591,21 +1600,22 @@ class AchievementGamificationService {
       return false;
     }
   }
-  
+
   /// Generate dynamic achievements based on user behavior
-  Future<void> generateDynamicAchievements(Map<String, dynamic> userBehavior) async {
+  Future<void> generateDynamicAchievements(
+      Map<String, dynamic> userBehavior) async {
     if (!_isOnline || _auth.currentUser == null) {
       return;
     }
-    
+
     try {
       final dynamicAchievements = <Achievement>[];
-      
+
       // Analyze user behavior patterns
       final favoriteSubject = userBehavior['favorite_subject'] as String?;
       final studyHour = userBehavior['most_active_hour'] as int?;
       final averageAccuracy = userBehavior['average_accuracy'] as double?;
-      
+
       // Generate subject-specific achievement
       if (favoriteSubject != null) {
         dynamicAchievements.add(Achievement(
@@ -1624,10 +1634,12 @@ class AchievementGamificationService {
           dateCreated: DateTime.now(),
         ));
       }
-      
+
       // Generate time-based achievement
       if (studyHour != null) {
-        final timeLabel = studyHour < 12 ? 'Morning' : (studyHour < 18 ? 'Afternoon' : 'Evening');
+        final timeLabel = studyHour < 12
+            ? 'Morning'
+            : (studyHour < 18 ? 'Afternoon' : 'Evening');
         dynamicAchievements.add(Achievement(
           id: 'time_${timeLabel.toLowerCase()}_learner',
           name: '$timeLabel Learner',
@@ -1643,7 +1655,7 @@ class AchievementGamificationService {
           dateCreated: DateTime.now(),
         ));
       }
-      
+
       // Generate accuracy-based achievement
       if (averageAccuracy != null && averageAccuracy > 0.9) {
         dynamicAchievements.add(Achievement(
@@ -1661,27 +1673,29 @@ class AchievementGamificationService {
           dateCreated: DateTime.now(),
         ));
       }
-      
+
       // Save dynamic achievements to Firestore
       for (final achievement in dynamicAchievements) {
         await _firestore
             .collection(_achievementsCollection)
             .doc(achievement.id)
             .set(achievement.toJson());
-        
+
         _achievements[achievement.id] = achievement;
         _progress[achievement.id] = AchievementProgress(
           achievementId: achievement.id,
           progress: 0.0,
         );
       }
-      
-      debugPrint('AchievementService: Generated ${dynamicAchievements.length} dynamic achievements');
+
+      debugPrint(
+          'AchievementService: Generated ${dynamicAchievements.length} dynamic achievements');
     } catch (e) {
-      debugPrint('AchievementService: Error generating dynamic achievements: $e');
+      debugPrint(
+          'AchievementService: Error generating dynamic achievements: $e');
     }
   }
-  
+
   /// Validate achievement progress for fraud detection
   bool _validateAchievementProgress(
     String achievementId,
@@ -1692,45 +1706,46 @@ class AchievementGamificationService {
     final now = DateTime.now();
     _progressTimestamps.putIfAbsent(achievementId, () => []);
     _progressTimestamps[achievementId]!.add(now);
-    
+
     // Check for suspicious rapid progress
     final recentProgress = _progressTimestamps[achievementId]!
         .where((timestamp) => now.difference(timestamp).inMinutes < 5)
         .length;
-    
+
     if (recentProgress > 10) {
-      _suspiciousActivityCount[achievementId] = 
+      _suspiciousActivityCount[achievementId] =
           (_suspiciousActivityCount[achievementId] ?? 0) + 1;
-      
-      debugPrint('AchievementService: Suspicious rapid progress detected for $achievementId');
-      
+
+      debugPrint(
+          'AchievementService: Suspicious rapid progress detected for $achievementId');
+
       // If too many suspicious activities, flag for review
       if (_suspiciousActivityCount[achievementId]! > 3) {
         _logSuspiciousActivity(achievementId, sessionData);
         return false;
       }
     }
-    
+
     // Validate progress is within reasonable bounds
     final currentProgress = _progress[achievementId]?.progress ?? 0.0;
     if (newProgress < currentProgress) {
       debugPrint('AchievementService: Progress cannot decrease');
       return false;
     }
-    
+
     if (newProgress > 1.0) {
       debugPrint('AchievementService: Progress cannot exceed 100%');
       return false;
     }
-    
+
     // Clean old timestamps (keep only last hour)
     _progressTimestamps[achievementId]!.removeWhere(
       (timestamp) => now.difference(timestamp).inHours > 1,
     );
-    
+
     return true;
   }
-  
+
   /// Log suspicious activity for review
   Future<void> _logSuspiciousActivity(
     String achievementId,
@@ -1739,7 +1754,7 @@ class AchievementGamificationService {
     if (!_isOnline || _auth.currentUser == null) {
       return;
     }
-    
+
     try {
       await _firestore.collection('fraud_detection').add({
         'user_id': _auth.currentUser!.uid,
@@ -1748,13 +1763,13 @@ class AchievementGamificationService {
         'timestamp': FieldValue.serverTimestamp(),
         'suspicious_count': _suspiciousActivityCount[achievementId],
       });
-      
+
       debugPrint('AchievementService: Suspicious activity logged');
     } catch (e) {
       debugPrint('AchievementService: Error logging suspicious activity: $e');
     }
   }
-  
+
   /// Track gamification analytics
   Future<void> trackAnalyticsEvent({
     required String eventName,
@@ -1762,15 +1777,14 @@ class AchievementGamificationService {
   }) async {
     try {
       // Convert dynamic parameters to Object for Firebase Analytics
-      final analyticsParams = parameters?.map((key, value) => 
-        MapEntry(key, value as Object)
-      );
-      
+      final analyticsParams =
+          parameters?.map((key, value) => MapEntry(key, value as Object));
+
       await _analytics.logEvent(
         name: eventName,
         parameters: analyticsParams,
       );
-      
+
       // Also save detailed analytics to Firestore if online
       if (_isOnline && _auth.currentUser != null) {
         await _firestore.collection(_analyticsCollection).add({
@@ -1786,7 +1800,7 @@ class AchievementGamificationService {
       debugPrint('AchievementService: Error tracking analytics: $e');
     }
   }
-  
+
   /// Export user achievement data for migration
   Future<Map<String, dynamic>> exportUserData() async {
     return {
@@ -1799,7 +1813,7 @@ class AchievementGamificationService {
       'achievements': _achievements.values.map((a) => a.toJson()).toList(),
     };
   }
-  
+
   /// Import user achievement data from migration
   Future<bool> importUserData(Map<String, dynamic> data) async {
     try {
@@ -1809,40 +1823,41 @@ class AchievementGamificationService {
         debugPrint('AchievementService: Unsupported import data version');
         return false;
       }
-      
+
       // Import user level
       if (data['user_level'] != null) {
-        _userLevel = UserLevel.fromJson(Map<String, dynamic>.from(data['user_level']));
+        _userLevel =
+            UserLevel.fromJson(Map<String, dynamic>.from(data['user_level']));
       }
-      
+
       // Import progress
       if (data['progress'] != null) {
         final progressMap = Map<String, dynamic>.from(data['progress']);
         _progress = progressMap.map(
             (key, value) => MapEntry(key, AchievementProgress.fromJson(value)));
       }
-      
+
       // Import streaks
       if (data['streaks'] != null) {
         final streaksMap = Map<String, dynamic>.from(data['streaks']);
         _streaks = streaksMap
             .map((key, value) => MapEntry(key, Streak.fromJson(value)));
       }
-      
+
       // Import rewards
       if (data['rewards'] != null) {
         final rewardsList = List<dynamic>.from(data['rewards']);
         _earnedRewards = rewardsList.map((r) => Reward.fromJson(r)).toList();
       }
-      
+
       // Save imported data
       await _saveUserData();
-      
+
       // Sync to cloud if online
       if (_isOnline && _auth.currentUser != null) {
         await _saveToCloud(_auth.currentUser!.uid);
       }
-      
+
       debugPrint('AchievementService: User data imported successfully');
       return true;
     } catch (e) {
@@ -1850,15 +1865,16 @@ class AchievementGamificationService {
       return false;
     }
   }
-  
+
   /// Get active seasonal events
-  List<SeasonalEvent> get activeSeasonalEvents => List.from(_activeSeasonalEvents);
-  
+  List<SeasonalEvent> get activeSeasonalEvents =>
+      List.from(_activeSeasonalEvents);
+
   /// Check if user has a specific reward
   bool hasReward(String rewardId) {
     return _earnedRewards.any((r) => r.id == rewardId);
   }
-  
+
   /// Get available rewards that can be redeemed
   List<Reward> get availableRewards {
     return _earnedRewards.where((reward) {
@@ -1867,25 +1883,25 @@ class AchievementGamificationService {
       return true;
     }).toList();
   }
-  
+
   /// Get achievements by category/type
   List<Achievement> getAchievementsByType(AchievementType type) {
     return _achievements.values
         .where((achievement) => achievement.type == type)
         .toList();
   }
-  
+
   /// Get achievements by rarity
   List<Achievement> getAchievementsByRarity(AchievementRarity rarity) {
     return _achievements.values
         .where((achievement) => achievement.rarity == rarity)
         .toList();
   }
-  
+
   /// Get recently unlocked achievements
   List<Achievement> getRecentlyUnlockedAchievements({int days = 7}) {
     final cutoffDate = DateTime.now().subtract(Duration(days: days));
-    
+
     return _achievements.values.where((achievement) {
       final progress = _progress[achievement.id];
       return progress != null &&
@@ -1894,30 +1910,30 @@ class AchievementGamificationService {
           progress.unlockedAt!.isAfter(cutoffDate);
     }).toList();
   }
-  
+
   /// Calculate achievement completion percentage
   double getCompletionPercentage() {
     if (_achievements.isEmpty) return 0.0;
     return unlockedAchievements.length / _achievements.length;
   }
-  
+
   /// Get next recommended achievements based on progress
   List<Achievement> getRecommendedAchievements({int count = 5}) {
     final incomplete = _achievements.values.where((achievement) {
       final progress = _progress[achievement.id];
       return progress == null || !progress.isUnlocked;
     }).toList();
-    
+
     // Sort by progress (closest to completion first)
     incomplete.sort((a, b) {
       final progressA = _progress[a.id]?.progress ?? 0.0;
       final progressB = _progress[b.id]?.progress ?? 0.0;
       return progressB.compareTo(progressA);
     });
-    
+
     return incomplete.take(count).toList();
   }
-  
+
   /// Dispose of resources
   void dispose() {
     _progressSubscription?.cancel();
@@ -1926,14 +1942,15 @@ class AchievementGamificationService {
     _achievementUnlockCallbacks.clear();
     _levelUpCallbacks.clear();
   }
-  
+
   /// Force sync with cloud
   Future<void> forceSync() async {
     if (!_isOnline || _auth.currentUser == null) {
-      debugPrint('AchievementService: Cannot sync while offline or unauthenticated');
+      debugPrint(
+          'AchievementService: Cannot sync while offline or unauthenticated');
       return;
     }
-    
+
     try {
       await _syncLocalToCloud(_auth.currentUser!.uid);
       debugPrint('AchievementService: Force sync completed');
@@ -1941,10 +1958,10 @@ class AchievementGamificationService {
       debugPrint('AchievementService: Error during force sync: $e');
     }
   }
-  
+
   /// Get online status
   bool get isOnline => _isOnline;
-  
+
   /// Get initialization status
   bool get isInitialized => _isInitialized;
 }

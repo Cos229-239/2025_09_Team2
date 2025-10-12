@@ -17,10 +17,8 @@ class UserProfileStore {
   /// Returns null if profile doesn't exist or user hasn't opted in
   Future<UserProfileData?> getProfile(String userId) async {
     try {
-      final doc = await _firestore
-          .collection(_collectionName)
-          .doc(userId)
-          .get();
+      final doc =
+          await _firestore.collection(_collectionName).doc(userId).get();
 
       if (!doc.exists) {
         developer.log('No profile found for user: $userId',
@@ -29,7 +27,7 @@ class UserProfileStore {
       }
 
       final profile = UserProfileData.fromJson(doc.data()!);
-      
+
       // Respect privacy - only return if user has opted in
       if (!profile.optInFlags.profileStorage) {
         developer.log('User has not opted in to profile storage: $userId',
@@ -51,8 +49,7 @@ class UserProfileStore {
     try {
       // Verify opt-in before storing
       if (!profile.optInFlags.profileStorage) {
-        developer.log(
-            'Cannot store profile - user has not opted in: $userId',
+        developer.log('Cannot store profile - user has not opted in: $userId',
             name: 'UserProfileStore');
         return false;
       }
@@ -74,17 +71,16 @@ class UserProfileStore {
 
   /// Merge partial updates into existing profile
   /// Creates new profile if none exists (with opt-in)
-  Future<bool> mergeProfile(
-      String userId, Map<String, dynamic> patch) async {
+  Future<bool> mergeProfile(String userId, Map<String, dynamic> patch) async {
     try {
       final existing = await getProfile(userId);
 
       if (existing == null) {
         // Check if patch includes opt-in
         final optInData = patch['optInFlags'] as Map<String, dynamic>?;
-        if (optInData == null || !(optInData['profileStorage'] as bool? ?? false)) {
-          developer.log(
-              'Cannot create profile - no opt-in in patch: $userId',
+        if (optInData == null ||
+            !(optInData['profileStorage'] as bool? ?? false)) {
+          developer.log('Cannot create profile - no opt-in in patch: $userId',
               name: 'UserProfileStore');
           return false;
         }
@@ -109,10 +105,7 @@ class UserProfileStore {
       }
 
       // Merge with existing profile
-      await _firestore
-          .collection(_collectionName)
-          .doc(userId)
-          .update({
+      await _firestore.collection(_collectionName).doc(userId).update({
         ...patch,
         'lastSeen': Timestamp.now(),
       });
@@ -130,10 +123,8 @@ class UserProfileStore {
   /// Update opt-in flags for user
   Future<bool> updateOptInFlags(String userId, OptInFlags flags) async {
     try {
-      final doc = await _firestore
-          .collection(_collectionName)
-          .doc(userId)
-          .get();
+      final doc =
+          await _firestore.collection(_collectionName).doc(userId).get();
 
       if (!doc.exists) {
         // Create minimal profile with opt-in flags
@@ -144,10 +135,7 @@ class UserProfileStore {
         return await setProfile(userId, profile);
       }
 
-      await _firestore
-          .collection(_collectionName)
-          .doc(userId)
-          .update({
+      await _firestore.collection(_collectionName).doc(userId).update({
         'optInFlags': flags.toJson(),
         'lastSeen': Timestamp.now(),
       });
@@ -171,8 +159,7 @@ class UserProfileStore {
   }
 
   /// Update skill scores
-  Future<bool> updateSkillScores(
-      String userId, SkillScores skillScores) async {
+  Future<bool> updateSkillScores(String userId, SkillScores skillScores) async {
     return await mergeProfile(userId, {
       'skillScores': skillScores.toJson(),
     });
@@ -181,10 +168,7 @@ class UserProfileStore {
   /// Delete user profile (for privacy compliance)
   Future<bool> deleteProfile(String userId) async {
     try {
-      await _firestore
-          .collection(_collectionName)
-          .doc(userId)
-          .delete();
+      await _firestore.collection(_collectionName).doc(userId).delete();
 
       developer.log('Profile deleted for user: $userId',
           name: 'UserProfileStore');

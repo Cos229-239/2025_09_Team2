@@ -50,41 +50,62 @@ class MemoryClaimValidator {
     RegExp(r"we looked at ([\w\s]+)", caseSensitive: false),
     RegExp(r"we reviewed ([\w\s]+)", caseSensitive: false),
     RegExp(r"we examined ([\w\s]+)", caseSensitive: false),
-    
+
     // User statements/actions
-    RegExp(r"you (told|said|mentioned|asked|stated|explained) (me )?([\w\s]+)", caseSensitive: false),
+    RegExp(r"you (told|said|mentioned|asked|stated|explained) (me )?([\w\s]+)",
+        caseSensitive: false),
     RegExp(r"you asked about ([\w\s]+)", caseSensitive: false),
     RegExp(r"you were interested in ([\w\s]+)", caseSensitive: false),
-    RegExp(r"you wanted to (know|learn|understand) (about )?([\w\s]+)", caseSensitive: false),
-    
+    RegExp(r"you wanted to (know|learn|understand) (about )?([\w\s]+)",
+        caseSensitive: false),
+
     // Temporal references
-    RegExp(r"(earlier|previously|before|last time) (we |you |I )?([\w\s]+)", caseSensitive: false),
-    RegExp(r"(in|during) (our|the) (last|previous|earlier) (session|conversation|discussion|chat) ([\w\s]*)", caseSensitive: false),
-    
+    RegExp(r"(earlier|previously|before|last time) (we |you |I )?([\w\s]+)",
+        caseSensitive: false),
+    RegExp(
+        r"(in|during) (our|the) (last|previous|earlier) (session|conversation|discussion|chat) ([\w\s]*)",
+        caseSensitive: false),
+
     // Memory/recall language
-    RegExp(r"(remember|recall|recollect) (when |that |how |our )?([\w\s]+)", caseSensitive: false),
+    RegExp(r"(remember|recall|recollect) (when |that |how |our )?([\w\s]+)",
+        caseSensitive: false),
     RegExp(r"(I|we) remember ([\w\s]+)", caseSensitive: false),
-    RegExp(r"as (I|we) (mentioned|discussed|said|explained|noted) ([\w\s]+)", caseSensitive: false),
-    RegExp(r"(do you |don't you )?remember (when |that |how )?([\w\s]+)", caseSensitive: false),
-    
+    RegExp(r"as (I|we) (mentioned|discussed|said|explained|noted) ([\w\s]+)",
+        caseSensitive: false),
+    RegExp(r"(do you |don't you )?remember (when |that |how )?([\w\s]+)",
+        caseSensitive: false),
+
     // Teaching/learning references
-    RegExp(r"(when |as )(I|we) (taught|showed|explained|demonstrated) (you )?([\w\s]+)", caseSensitive: false),
-    RegExp(r"you (learned|studied|practiced|worked on) ([\w\s]+)", caseSensitive: false),
-    RegExp(r"(in|from) (our|the) ([\w\s]+) (lesson|session|discussion)", caseSensitive: false),
-    
+    RegExp(
+        r"(when |as )(I|we) (taught|showed|explained|demonstrated) (you )?([\w\s]+)",
+        caseSensitive: false),
+    RegExp(r"you (learned|studied|practiced|worked on) ([\w\s]+)",
+        caseSensitive: false),
+    RegExp(r"(in|from) (our|the) ([\w\s]+) (lesson|session|discussion)",
+        caseSensitive: false),
+
     // User preferences/characteristics
-    RegExp(r"your (learning style|preference|interest|goal) (is|was) ([\w\s]+)", caseSensitive: false),
+    RegExp(r"your (learning style|preference|interest|goal) (is|was) ([\w\s]+)",
+        caseSensitive: false),
     RegExp(r"you prefer ([\w\s]+)", caseSensitive: false),
     RegExp(r"you (like|enjoy|want) ([\w\s]+)", caseSensitive: false),
-    RegExp(r"you're (interested in|working on|focusing on) ([\w\s]+)", caseSensitive: false),
-    
+    RegExp(r"you're (interested in|working on|focusing on) ([\w\s]+)",
+        caseSensitive: false),
+
     // Session/context references
-    RegExp(r"(based on|from) our (previous|earlier|last) (conversation|discussion|session|chat)", caseSensitive: false),
-    RegExp(r"(continuing|building on) (from |on )?(where we left off|our discussion|what we covered)", caseSensitive: false),
-    
+    RegExp(
+        r"(based on|from) our (previous|earlier|last) (conversation|discussion|session|chat)",
+        caseSensitive: false),
+    RegExp(
+        r"(continuing|building on) (from |on )?(where we left off|our discussion|what we covered)",
+        caseSensitive: false),
+
     // Specific topic claims
-    RegExp(r"(we|you|I) (already |just )?(went through|covered|finished|completed) ([\w\s]+)", caseSensitive: false),
-    RegExp(r"(since|after) we (discussed|talked about|covered) ([\w\s]+)", caseSensitive: false),
+    RegExp(
+        r"(we|you|I) (already |just )?(went through|covered|finished|completed) ([\w\s]+)",
+        caseSensitive: false),
+    RegExp(r"(since|after) we (discussed|talked about|covered) ([\w\s]+)",
+        caseSensitive: false),
   ];
 
   /// Validate memory claims in a response
@@ -100,11 +121,11 @@ class MemoryClaimValidator {
     // Check for memory claim patterns
     for (final pattern in _memoryPatterns) {
       final matches = pattern.allMatches(response);
-      
+
       for (final match in matches) {
         final claimText = match.group(0) ?? '';
         final topic = match.group(1) ?? '';
-        
+
         // Verify claim against session context and profile
         final verification = _verifyClaim(
           topic: topic,
@@ -114,7 +135,7 @@ class MemoryClaimValidator {
         );
 
         claims.add(verification);
-        
+
         if (!verification.isValid) {
           hasInvalidClaims = true;
           developer.log(
@@ -147,14 +168,16 @@ class MemoryClaimValidator {
     String? evidence;
 
     // Check session context for topic
-    final hasDiscussed = sessionContext.hasDiscussedTopic(topic, threshold: threshold);
-    
+    final hasDiscussed =
+        sessionContext.hasDiscussedTopic(topic, threshold: threshold);
+
     if (hasDiscussed) {
       confidence = 0.8;
       final topics = sessionContext.getRecentTopics(topK: 20);
       final matchingTopic = topics.firstWhere(
-        (t) => t.topic.toLowerCase().contains(topic.toLowerCase()) ||
-               topic.toLowerCase().contains(t.topic.toLowerCase()),
+        (t) =>
+            t.topic.toLowerCase().contains(topic.toLowerCase()) ||
+            topic.toLowerCase().contains(t.topic.toLowerCase()),
         orElse: () => topics.first,
       );
       evidence = matchingTopic.context;
@@ -194,8 +217,8 @@ class MemoryClaimValidator {
       'kinesthetic',
     ];
 
-    return preferenceKeywords.any(
-        (keyword) => topic.toLowerCase().contains(keyword));
+    return preferenceKeywords
+        .any((keyword) => topic.toLowerCase().contains(keyword));
   }
 
   /// Check profile for claim evidence
@@ -203,13 +226,16 @@ class MemoryClaimValidator {
     final lowerTopic = topic.toLowerCase();
 
     // Check learning style preferences
-    if (lowerTopic.contains('visual') && profile.learningPreferences.visual > 0.6) {
+    if (lowerTopic.contains('visual') &&
+        profile.learningPreferences.visual > 0.6) {
       return 0.9;
     }
-    if (lowerTopic.contains('auditory') && profile.learningPreferences.auditory > 0.6) {
+    if (lowerTopic.contains('auditory') &&
+        profile.learningPreferences.auditory > 0.6) {
       return 0.9;
     }
-    if (lowerTopic.contains('kinesthetic') && profile.learningPreferences.kinesthetic > 0.6) {
+    if (lowerTopic.contains('kinesthetic') &&
+        profile.learningPreferences.kinesthetic > 0.6) {
       return 0.9;
     }
 
@@ -244,13 +270,14 @@ class MemoryClaimValidator {
         final correction = corrections[0]; // Use first for now
 
         // Create a corrected statement
-        final honestStatement = 
+        final honestStatement =
             "$correction. Would you like me to explain ${claim.topic} now, "
             "or would you prefer to continue from where you think we left off?";
 
         // Try to locate and replace the false claim
         // This is simplified - in production, use more sophisticated NLP
-        corrected = _replaceClaimInText(corrected, claim.claimText, honestStatement);
+        corrected =
+            _replaceClaimInText(corrected, claim.claimText, honestStatement);
       }
     }
 
@@ -270,7 +297,7 @@ class MemoryClaimValidator {
     var replaced = false;
     for (var i = 0; i < sentences.length; i++) {
       final sentence = sentences[i].trim();
-      
+
       if (!replaced && sentence.toLowerCase().contains(claim.toLowerCase())) {
         buffer.write(replacement);
         replaced = true;

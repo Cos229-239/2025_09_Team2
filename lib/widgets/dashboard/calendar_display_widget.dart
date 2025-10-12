@@ -32,7 +32,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
     final now = DateTime.now();
     _currentWeekStart = now.subtract(Duration(days: now.weekday % 7));
     _currentPageIndex = _centerPage;
-    
+
     // Initialize page controller for controlled transitions
     _pageController = PageController(
       initialPage: _centerPage,
@@ -93,16 +93,23 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                 onPanStart: _handlePanStart,
                 onPanUpdate: _handlePanUpdate,
                 onPanEnd: _handlePanEnd,
-                onTap: () {}, // Enable tap detection for better gesture recognition
-                behavior: HitTestBehavior.translucent, // Allow gestures to pass through to children
+                onTap:
+                    () {}, // Enable tap detection for better gesture recognition
+                behavior: HitTestBehavior
+                    .translucent, // Allow gestures to pass through to children
                 child: SizedBox(
-                  height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.75,
+                  height: ResponsiveSpacing.getComponentHeight(
+                          context, ComponentType.actionButton) *
+                      0.75,
                   width: double.infinity, // Ensure full width coverage
                   child: PageView.builder(
                     controller: _pageController,
                     onPageChanged: _onPageChanged,
-                    physics: kIsWeb ? const NeverScrollableScrollPhysics() : const PageScrollPhysics(), // Enable native scrolling on mobile
-                    itemBuilder: (context, index) => _buildWeekView(context, index),
+                    physics: kIsWeb
+                        ? const NeverScrollableScrollPhysics()
+                        : const PageScrollPhysics(), // Enable native scrolling on mobile
+                    itemBuilder: (context, index) =>
+                        _buildWeekView(context, index),
                   ),
                 ),
               ),
@@ -116,13 +123,15 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   Widget _buildMonthYearHeader(BuildContext context) {
     // Get the representative date for the currently displayed week
     final weekOffset = _getWeekOffset();
-    final displayWeekStart = _currentWeekStart.add(Duration(days: weekOffset * 7));
-    final weekDays = List.generate(7, (index) => displayWeekStart.add(Duration(days: index)));
-    
+    final displayWeekStart =
+        _currentWeekStart.add(Duration(days: weekOffset * 7));
+    final weekDays = List.generate(
+        7, (index) => displayWeekStart.add(Duration(days: index)));
+
     // Use smarter month detection for weeks that span multiple months
     final selectedMonth = _getDisplayMonth(weekDays);
     final selectedYear = _getDisplayYear(weekDays, selectedMonth);
-    
+
     final currentMonth = _getMonthName(selectedMonth);
 
     return Text(
@@ -137,8 +146,9 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   Widget _buildWeekView(BuildContext context, int pageIndex) {
     final weekOffset = pageIndex - _centerPage;
     final weekStart = _currentWeekStart.add(Duration(days: weekOffset * 7));
-    final weekDays = List.generate(7, (index) => weekStart.add(Duration(days: index)));
-    
+    final weekDays =
+        List.generate(7, (index) => weekStart.add(Duration(days: index)));
+
     // Get the current display month using the same logic as the header
     final displayMonth = _getDisplayMonth(weekDays);
 
@@ -159,8 +169,12 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             Container(
-                              height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.55,
-                              width: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton) * 0.55,
+                              height: ResponsiveSpacing.getComponentHeight(
+                                      context, ComponentType.actionButton) *
+                                  0.55,
+                              width: ResponsiveSpacing.getComponentHeight(
+                                      context, ComponentType.actionButton) *
+                                  0.55,
                               decoration: BoxDecoration(
                                 color: _isToday(date)
                                     ? const Color(0xFF6FB8E9)
@@ -170,8 +184,12 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                               child: Center(
                                 child: Text(
                                   '${date.day}',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: _getDayTextColor(date, displayMonth),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: _getDayTextColor(
+                                            date, displayMonth),
                                         fontWeight: _isToday(date)
                                             ? FontWeight.w600
                                             : FontWeight.normal,
@@ -184,13 +202,15 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
                               height: 8, // Reduced height to save space
                               child: events.isNotEmpty
                                   ? Padding(
-                                      padding: const EdgeInsets.only(top: 1), // Minimal top padding
+                                      padding: const EdgeInsets.only(
+                                          top: 1), // Minimal top padding
                                       child: Center(
                                         child: Container(
                                           width: 5,
                                           height: 5,
                                           decoration: const BoxDecoration(
-                                            color: Color(0xFF6FB8E9), // Always blue, regardless of selected date
+                                            color: Color(
+                                                0xFF6FB8E9), // Always blue, regardless of selected date
                                             shape: BoxShape.circle,
                                           ),
                                         ),
@@ -230,21 +250,21 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   /// Handle pointer movement for swipe detection while hovering
   void _handlePointerMove(PointerMoveEvent event) {
     if (!_isHovering || _isAnimating) return;
-    
+
     final currentX = event.localPosition.dx;
-    
+
     if (_lastPointerX != null) {
       final deltaX = currentX - _lastPointerX!;
-      const minSwipeDistance = kIsWeb ? 30.0 : 15.0; // Lower threshold for mobile
-      
+      const minSwipeDistance =
+          kIsWeb ? 30.0 : 15.0; // Lower threshold for mobile
+
       // Check if we have significant movement for a swipe
       if (deltaX.abs() > minSwipeDistance) {
         final now = DateTime.now();
-        
+
         // Throttle swipes to prevent multiple rapid triggers
-        if (_lastSwipeTime == null || 
+        if (_lastSwipeTime == null ||
             now.difference(_lastSwipeTime!).inMilliseconds > 300) {
-          
           if (deltaX > 0) {
             // Moving right - go to previous week
             _moveToWeek(-1);
@@ -252,13 +272,13 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
             // Moving left - go to next week
             _moveToWeek(1);
           }
-          
+
           _lastSwipeTime = now;
           _lastPointerX = null; // Reset to prevent continuous triggering
         }
       }
     }
-    
+
     _lastPointerX = currentX;
   }
 
@@ -282,7 +302,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
     // Track current position for better swipe detection
     final currentX = details.localPosition.dx;
     final deltaX = currentX - _panStartX;
-    
+
     // For very fast swipes, we might want to trigger immediately
     if (deltaX.abs() > 50 && !_isAnimating) {
       // Optional: trigger on significant movement during update
@@ -293,24 +313,26 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   /// Handle pan end to determine swipe direction and animate exactly one week
   void _handlePanEnd(DragEndDetails details) {
     if (_isAnimating) return; // Prevent multiple animations
-    
+
     // Add throttling to ensure only one swipe per gesture
     final now = DateTime.now();
-    if (_lastSwipeTime != null && 
+    if (_lastSwipeTime != null &&
         now.difference(_lastSwipeTime!).inMilliseconds < 300) {
       return; // Too soon since last swipe, ignore this gesture
     }
-    
+
     final velocity = details.velocity.pixelsPerSecond.dx;
     final primaryVelocity = details.primaryVelocity ?? 0.0;
     // Lower thresholds for mobile devices
-    final minSwipeVelocity = kIsWeb ? 50.0 : 25.0; // Much lower threshold for mobile
-    
+    final minSwipeVelocity =
+        kIsWeb ? 50.0 : 25.0; // Much lower threshold for mobile
+
     // Check both velocity types for better swipe detection
-    final effectiveVelocity = velocity.abs() > primaryVelocity.abs() ? velocity : primaryVelocity;
-    
+    final effectiveVelocity =
+        velocity.abs() > primaryVelocity.abs() ? velocity : primaryVelocity;
+
     bool swipeDetected = false;
-    
+
     if (effectiveVelocity.abs() > minSwipeVelocity) {
       if (effectiveVelocity > 0) {
         // Swipe right - go to previous week
@@ -324,8 +346,9 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
     } else {
       // Also check the distance traveled for slow but deliberate swipes
       final panDistance = details.localPosition.dx - _panStartX;
-      const minSwipeDistance = 20.0; // Lower minimum distance for swipe recognition
-      
+      const minSwipeDistance =
+          20.0; // Lower minimum distance for swipe recognition
+
       if (panDistance.abs() > minSwipeDistance) {
         if (panDistance > 0) {
           // Swipe right - go to previous week
@@ -338,7 +361,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
         }
       }
     }
-    
+
     // Update last swipe time only if a swipe was actually detected and executed
     if (swipeDetected) {
       _lastSwipeTime = now;
@@ -348,15 +371,17 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   /// Move exactly one week in the specified direction
   void _moveToWeek(int direction) {
     if (_isAnimating) return;
-    
+
     _isAnimating = true;
     final targetPage = _currentPageIndex + direction;
-    
-    _pageController.animateToPage(
+
+    _pageController
+        .animateToPage(
       targetPage,
       duration: const Duration(milliseconds: 300), // Smooth but quick
       curve: Curves.easeOutQuart, // Natural deceleration
-    ).then((_) {
+    )
+        .then((_) {
       _isAnimating = false;
     });
   }
@@ -395,24 +420,24 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
   /// Priority: 1) Month containing today, 2) Month with most days, 3) Later month
   int _getDisplayMonth(List<DateTime> weekDays) {
     final today = DateTime.now(); // Use device's current date
-    
+
     // Count days per month in this week
     final monthCounts = <int, int>{};
     for (final day in weekDays) {
       monthCounts[day.month] = (monthCounts[day.month] ?? 0) + 1;
     }
-    
+
     // Priority 1: If today is in this week, use today's month
     for (final day in weekDays) {
       if (_isToday(day)) {
         return today.month;
       }
     }
-    
+
     // Priority 2: Use month with the most days
     var maxCount = 0;
     var selectedMonth = weekDays.first.month;
-    
+
     monthCounts.forEach((month, count) {
       if (count > maxCount) {
         maxCount = count;
@@ -422,7 +447,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
         selectedMonth = month;
       }
     });
-    
+
     return selectedMonth;
   }
 
@@ -434,7 +459,7 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
         return day.year;
       }
     }
-    
+
     // Fallback to first day's year (shouldn't happen)
     return weekDays.first.year;
   }
@@ -445,12 +470,12 @@ class _CalendarDisplayWidgetState extends State<CalendarDisplayWidget> {
     if (_isToday(date)) {
       return Colors.white;
     }
-    
+
     // Days from other months get muted gray color
     if (date.month != displayMonth) {
       return const Color(0xFF4A4D52);
     }
-    
+
     // Days from current month get default text color
     return const Color(0xFFFFFFFF); // White for dark theme
   }

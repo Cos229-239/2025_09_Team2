@@ -40,7 +40,7 @@ class QuizService {
   /// NOTE: Quizzes can be taken at any time - XP earning has a separate cooldown
   Future<QuizSession?> createQuizSession(Deck deck) async {
     // No longer check cooldown for quiz availability - users can quiz anytime!
-    
+
     // Filter cards that have multiple choice options
     final quizCards = deck.cards
         .where((card) =>
@@ -131,7 +131,8 @@ class QuizService {
     required int correctOptionIndex,
     required Deck deck,
     required PetProvider petProvider,
-    dynamic deckProvider, // Optional DeckProvider to update deck with quiz grade
+    dynamic
+        deckProvider, // Optional DeckProvider to update deck with quiz grade
   }) async {
     final session = _activeSessions[sessionId];
     if (session == null || session.isCompleted) {
@@ -161,8 +162,8 @@ class QuizService {
 
     // Check if quiz is completed
     if (updatedSession.currentQuestionIndex >= updatedSession.totalQuestions) {
-      final completedSession =
-          await _completeQuizSession(updatedSession, petProvider, deck, deckProvider);
+      final completedSession = await _completeQuizSession(
+          updatedSession, petProvider, deck, deckProvider);
       _activeSessions[sessionId] = completedSession;
     } else {
       _activeSessions[sessionId] = updatedSession;
@@ -175,10 +176,10 @@ class QuizService {
 
   /// Completes a quiz session and calculates final results
   Future<QuizSession> _completeQuizSession(
-      QuizSession session, 
-      PetProvider petProvider,
-      Deck deck,
-      dynamic deckProvider,
+    QuizSession session,
+    PetProvider petProvider,
+    Deck deck,
+    dynamic deckProvider,
   ) async {
     final correctAnswers = session.correctAnswers;
     final totalQuestions = session.totalQuestions;
@@ -206,7 +207,8 @@ class QuizService {
       try {
         final updatedDeck = deck.copyWith(lastQuizGrade: finalScore);
         deckProvider.updateDeck(updatedDeck);
-        debugPrint('Updated deck ${deck.id} with quiz grade: ${(finalScore * 100).round()}%');
+        debugPrint(
+            'Updated deck ${deck.id} with quiz grade: ${(finalScore * 100).round()}%');
       } catch (e) {
         debugPrint('Failed to update deck with quiz grade: $e');
       }
@@ -216,11 +218,12 @@ class QuizService {
     if (canEarnXP && totalExpEarned > 0) {
       debugPrint('Awarding $totalExpEarned EXP to pet from quiz session');
       petProvider.addXP(totalExpEarned, source: "quiz_session");
-      
+
       // Set XP cooldown for this deck
       await _setDeckXpCooldown(session.deckId);
     } else if (!canEarnXP) {
-      debugPrint('Deck is on XP cooldown - no XP awarded (can still take quiz for practice)');
+      debugPrint(
+          'Deck is on XP cooldown - no XP awarded (can still take quiz for practice)');
     } else {
       debugPrint('No EXP to award - totalExpEarned: $totalExpEarned');
     }
@@ -236,7 +239,7 @@ class QuizService {
       final activityService = ActivityService();
       await activityService.logActivity(
         type: ActivityType.quizCompleted,
-        description: canEarnXP 
+        description: canEarnXP
             ? 'Completed quiz with ${(finalScore * 100).round()}% score'
             : 'Completed quiz for practice (XP already earned today)',
         metadata: {
@@ -251,8 +254,8 @@ class QuizService {
       debugPrint('Failed to log quiz completion activity: $e');
     }
 
-    final xpMessage = canEarnXP 
-        ? '+$totalExpEarned total EXP' 
+    final xpMessage = canEarnXP
+        ? '+$totalExpEarned total EXP'
         : 'No XP (daily limit reached)';
     debugPrint(
         'Quiz completed: ${(finalScore * 100).round()}% score, $xpMessage');

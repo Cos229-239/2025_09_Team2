@@ -530,7 +530,7 @@ class SettingsScreen extends StatelessWidget {
       future: _getUserPetCareRemindersPreference(),
       builder: (context, snapshot) {
         final isEnabled = snapshot.data ?? true; // Default to enabled
-        
+
         return SwitchListTile(
           title: const Text('Pet Care Reminders'),
           subtitle: const Text('Show automatic pet care events in calendar'),
@@ -548,14 +548,15 @@ class SettingsScreen extends StatelessWidget {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return false; // Default to disabled
-      
+
       final userProfile = await FirestoreService().getUserProfile(user.uid);
       if (userProfile == null) return false; // Default to disabled
-      
+
       final preferences = userProfile['preferences'] as Map<String, dynamic>?;
       if (preferences == null) return false; // Default to disabled
-      
-      return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
+
+      return preferences['petCareReminders'] as bool? ??
+          false; // Default to disabled
     } catch (e) {
       debugPrint('Error getting pet care reminders preference: $e');
       return false; // Default to disabled
@@ -563,7 +564,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   /// Update the pet care reminders preference in Firestore
-  Future<void> _updatePetCareRemindersPreference(BuildContext context, bool value) async {
+  Future<void> _updatePetCareRemindersPreference(
+      BuildContext context, bool value) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -576,7 +578,8 @@ class SettingsScreen extends StatelessWidget {
       }
 
       // Capture the calendar provider reference before any async operations
-      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      final calendarProvider =
+          Provider.of<CalendarProvider>(context, listen: false);
 
       // Get current user profile to update preferences properly
       final userProfile = await FirestoreService().getUserProfile(user.uid);
@@ -590,7 +593,8 @@ class SettingsScreen extends StatelessWidget {
       }
 
       // Get current preferences and update the pet care setting
-      final currentPreferences = userProfile['preferences'] as Map<String, dynamic>? ?? {};
+      final currentPreferences =
+          userProfile['preferences'] as Map<String, dynamic>? ?? {};
       final updatedPreferences = Map<String, dynamic>.from(currentPreferences);
       updatedPreferences['petCareReminders'] = value;
 
@@ -606,11 +610,9 @@ class SettingsScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              value 
-                  ? 'Pet care reminders enabled' 
-                  : 'Pet care reminders disabled'
-            ),
+            content: Text(value
+                ? 'Pet care reminders enabled'
+                : 'Pet care reminders disabled'),
           ),
         );
       }

@@ -105,14 +105,17 @@ class CalendarProvider with ChangeNotifier {
     try {
       final user = _auth.currentUser;
       if (user == null) return false; // Default to disabled for guest users
-      
+
       final userProfile = await _firestoreService.getUserProfile(user.uid);
-      if (userProfile == null) return false; // Default to disabled if no profile
-      
+      if (userProfile == null)
+        return false; // Default to disabled if no profile
+
       final preferences = userProfile['preferences'] as Map<String, dynamic>?;
-      if (preferences == null) return false; // Default to disabled if no preferences
-      
-      return preferences['petCareReminders'] as bool? ?? false; // Default to disabled
+      if (preferences == null)
+        return false; // Default to disabled if no preferences
+
+      return preferences['petCareReminders'] as bool? ??
+          false; // Default to disabled
     } catch (e) {
       debugPrint('Error checking pet care reminders preference: $e');
       return false; // Default to disabled on error
@@ -285,9 +288,10 @@ class CalendarProvider with ChangeNotifier {
       _removeEventsByType(CalendarEventType.breakReminder);
 
       final eventMaps = await _firestoreService.getUserCalendarEvents(user.uid);
-      
-      debugPrint('📅 Loading ${eventMaps.length} calendar events from Firestore');
-      
+
+      debugPrint(
+          '📅 Loading ${eventMaps.length} calendar events from Firestore');
+
       for (final eventMap in eventMaps) {
         try {
           final event = _convertFirestoreToCalendarEvent(eventMap);
@@ -298,7 +302,7 @@ class CalendarProvider with ChangeNotifier {
           debugPrint('  ❌ Error converting calendar event: $e');
         }
       }
-      
+
       debugPrint('📅 Finished loading calendar events');
     } catch (e) {
       debugPrint('❌ Error loading calendar events from Firestore: $e');
@@ -370,7 +374,8 @@ class CalendarProvider with ChangeNotifier {
       debugPrint('💾 Saving calendar event to Firestore: $title (type: $type)');
 
       // Save to Firestore
-      final docId = await _firestoreService.createCalendarEvent(user.uid, eventData);
+      final docId =
+          await _firestoreService.createCalendarEvent(user.uid, eventData);
       if (docId == null) {
         debugPrint('❌ Failed to save event to Firestore');
         _setError('Failed to save event to database');
@@ -420,10 +425,12 @@ class CalendarProvider with ChangeNotifier {
       final eventData = event.toJson();
       eventData.remove('id'); // Firestore will generate the ID
 
-      debugPrint('💾 Saving flashcard study event to Firestore: ${event.title}');
+      debugPrint(
+          '💾 Saving flashcard study event to Firestore: ${event.title}');
 
       // Save to Firestore
-      final docId = await _firestoreService.createCalendarEvent(user.uid, eventData);
+      final docId =
+          await _firestoreService.createCalendarEvent(user.uid, eventData);
       if (docId == null) {
         debugPrint('❌ Failed to save flashcard study event to Firestore');
         _setError('Failed to save flashcard study event to database');
@@ -459,8 +466,9 @@ class CalendarProvider with ChangeNotifier {
       // Update in Firestore
       final eventData = event.toJson();
       eventData.remove('id'); // Don't update the ID field
-      final success = await _firestoreService.updateCalendarEvent(event.id, eventData);
-      
+      final success =
+          await _firestoreService.updateCalendarEvent(event.id, eventData);
+
       if (!success) {
         _setError('Failed to update event in database');
         return null;
@@ -487,11 +495,12 @@ class CalendarProvider with ChangeNotifier {
     try {
       _setLoading(true);
 
-      debugPrint('🗑️ Deleting calendar event: ${event.title} (ID: ${event.id})');
+      debugPrint(
+          '🗑️ Deleting calendar event: ${event.title} (ID: ${event.id})');
 
       // Delete from Firestore (archives it)
       final success = await _firestoreService.deleteCalendarEvent(event.id);
-      
+
       if (!success) {
         debugPrint('❌ Failed to delete event from Firestore');
         _setError('Failed to delete event from database');
@@ -689,7 +698,7 @@ class CalendarProvider with ChangeNotifier {
 
     // Check if pet care reminders are enabled in user preferences
     final areEnabled = await _arePetCareRemindersEnabled();
-    
+
     // Create pet care reminders for different care types only if enabled
     if (pet != null && areEnabled) {
       for (final careType in PetCareType.values) {

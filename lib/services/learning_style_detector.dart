@@ -29,42 +29,121 @@ class DetectedLearningStyle {
 class LearningStyleDetector {
   // Visual indicators
   static final _visualKeywords = {
-    'show', 'see', 'look', 'visual', 'diagram', 'picture', 'image', 'graph',
-    'chart', 'illustration', 'draw', 'sketch', 'color', 'map', 'video',
-    'watch', 'visualize', 'display', 'example', 'demonstration'
+    'show',
+    'see',
+    'look',
+    'visual',
+    'diagram',
+    'picture',
+    'image',
+    'graph',
+    'chart',
+    'illustration',
+    'draw',
+    'sketch',
+    'color',
+    'map',
+    'video',
+    'watch',
+    'visualize',
+    'display',
+    'example',
+    'demonstration'
   };
 
   // Auditory indicators
   static final _auditoryKeywords = {
-    'explain', 'tell', 'say', 'hear', 'listen', 'sound', 'speak', 'talk',
-    'discuss', 'describe', 'verbal', 'lecture', 'audio', 'voice', 'read aloud',
-    'pronunciation', 'rhythm', 'tone'
+    'explain',
+    'tell',
+    'say',
+    'hear',
+    'listen',
+    'sound',
+    'speak',
+    'talk',
+    'discuss',
+    'describe',
+    'verbal',
+    'lecture',
+    'audio',
+    'voice',
+    'read aloud',
+    'pronunciation',
+    'rhythm',
+    'tone'
   };
 
   // Kinesthetic/hands-on indicators
   static final _kinestheticKeywords = {
-    'do', 'practice', 'try', 'hands-on', 'interactive', 'experiment', 'build',
-    'make', 'create', 'work through', 'apply', 'exercise', 'activity',
-    'physical', 'movement', 'touch', 'feel', 'manipulate'
+    'do',
+    'practice',
+    'try',
+    'hands-on',
+    'interactive',
+    'experiment',
+    'build',
+    'make',
+    'create',
+    'work through',
+    'apply',
+    'exercise',
+    'activity',
+    'physical',
+    'movement',
+    'touch',
+    'feel',
+    'manipulate'
   };
 
   // Reading/writing indicators
   static final _readingKeywords = {
-    'write', 'read', 'text', 'note', 'list', 'summary', 'outline', 'document',
-    'article', 'book', 'essay', 'definition', 'description', 'written',
-    'bullet points', 'paragraph'
+    'write',
+    'read',
+    'text',
+    'note',
+    'list',
+    'summary',
+    'outline',
+    'document',
+    'article',
+    'book',
+    'essay',
+    'definition',
+    'description',
+    'written',
+    'bullet points',
+    'paragraph'
   };
 
   // Depth preference indicators
   static final _briefKeywords = {
-    'quick', 'brief', 'short', 'simple', 'concise', 'summary', 'tldr',
-    'key points', 'main idea', 'overview', 'just tell me', 'in a nutshell'
+    'quick',
+    'brief',
+    'short',
+    'simple',
+    'concise',
+    'summary',
+    'tldr',
+    'key points',
+    'main idea',
+    'overview',
+    'just tell me',
+    'in a nutshell'
   };
 
   static final _detailedKeywords = {
-    'detailed', 'explain fully', 'comprehensive', 'in-depth', 'thorough',
-    'complete', 'all the details', 'step-by-step', 'elaborate', 'extensive',
-    'deep dive', 'everything'
+    'detailed',
+    'explain fully',
+    'comprehensive',
+    'in-depth',
+    'thorough',
+    'complete',
+    'all the details',
+    'step-by-step',
+    'elaborate',
+    'extensive',
+    'deep dive',
+    'everything'
   };
 
   /// Estimate learning style from session context and current message
@@ -73,7 +152,7 @@ class LearningStyleDetector {
     String? currentMessage,
   }) {
     final messages = sessionContext.getAllMessages();
-    
+
     // Combine all user messages
     final userMessages = messages
         .where((m) => m.type == MessageType.user)
@@ -89,13 +168,14 @@ class LearningStyleDetector {
     // Calculate style scores
     final visualScore = _calculateStyleScore(allText, _visualKeywords);
     final auditoryScore = _calculateStyleScore(allText, _auditoryKeywords);
-    final kinestheticScore = _calculateStyleScore(allText, _kinestheticKeywords);
+    final kinestheticScore =
+        _calculateStyleScore(allText, _kinestheticKeywords);
     final readingScore = _calculateStyleScore(allText, _readingKeywords);
 
     // Calculate depth preference
     final briefScore = _calculateStyleScore(allText, _briefKeywords);
     final detailedScore = _calculateStyleScore(allText, _detailedKeywords);
-    
+
     final preferredDepth = briefScore > detailedScore * 1.5
         ? 'brief'
         : detailedScore > briefScore * 1.5
@@ -104,7 +184,8 @@ class LearningStyleDetector {
 
     // Calculate confidence based on amount of data
     final messageCount = userMessages.length;
-    final confidence = _calculateConfidence(messageCount, allText.split(' ').length);
+    final confidence =
+        _calculateConfidence(messageCount, allText.split(' ').length);
 
     // Collect evidence
     final evidence = <String, List<String>>{
@@ -135,7 +216,7 @@ class LearningStyleDetector {
   static double _calculateStyleScore(String text, Set<String> keywords) {
     var matchCount = 0;
     final words = text.split(RegExp(r'\s+'));
-    
+
     for (final word in words) {
       if (keywords.contains(word)) {
         matchCount++;
@@ -145,7 +226,7 @@ class LearningStyleDetector {
     // Normalize to 0-1 range with diminishing returns
     final wordCount = words.length;
     if (wordCount == 0) return 0.5; // Default neutral
-    
+
     final frequency = matchCount / wordCount;
     return (frequency * 20).clamp(0.0, 1.0); // Scale up but cap at 1.0
   }
@@ -155,7 +236,7 @@ class LearningStyleDetector {
     // Need at least 5 messages and 100 words for high confidence
     final messageConfidence = (messageCount / 5.0).clamp(0.0, 1.0);
     final wordConfidence = (wordCount / 100.0).clamp(0.0, 1.0);
-    
+
     return (messageConfidence + wordConfidence) / 2.0;
   }
 
@@ -163,21 +244,21 @@ class LearningStyleDetector {
   static List<String> _findEvidence(String text, Set<String> keywords) {
     final evidence = <String>[];
     final sentences = text.split(RegExp(r'[.!?]+'));
-    
+
     for (final sentence in sentences) {
       for (final keyword in keywords) {
         if (sentence.contains(keyword)) {
           final cleaned = sentence.trim();
           if (cleaned.isNotEmpty && evidence.length < 3) {
-            evidence.add(cleaned.length > 80 
-                ? '${cleaned.substring(0, 80)}...' 
+            evidence.add(cleaned.length > 80
+                ? '${cleaned.substring(0, 80)}...'
                 : cleaned);
           }
           break;
         }
       }
     }
-    
+
     return evidence;
   }
 

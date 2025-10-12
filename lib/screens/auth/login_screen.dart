@@ -28,12 +28,12 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _secureStorage = SecureStorageService();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
   bool _isLoadingCredentials = true;
-  
+
   late AnimationController _animationController;
 
   @override
@@ -43,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen>
       duration: const Duration(milliseconds: 500),
       vsync: this,
     );
-    
+
     // Load saved credentials on screen init
     _loadSavedCredentials();
   }
@@ -56,20 +56,21 @@ class _LoginScreenState extends State<LoginScreen>
       });
 
       final savedCredentials = await _secureStorage.getSavedCredentials();
-      
+
       if (savedCredentials != null && mounted) {
         // Validate credentials are not expired
         final isValid = await _secureStorage.areCredentialsValid();
-        
+
         if (isValid) {
           setState(() {
             _emailController.text = savedCredentials.email;
             _passwordController.text = savedCredentials.password;
             _rememberMe = true;
           });
-          
-          debugPrint('✅ Auto-filled credentials for: ${savedCredentials.email}');
-          
+
+          debugPrint(
+              '✅ Auto-filled credentials for: ${savedCredentials.email}');
+
           // Optional: Show a snackbar to inform user
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +124,10 @@ class _LoginScreenState extends State<LoginScreen>
                     Text(
                       'Loading...',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.7),
                           ),
                     ),
                   ],
@@ -221,11 +225,13 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildLoginCard(BuildContext context) {
     return Card(
       elevation: 1,
-      color: const Color(0xFF242628), // Match learning screen task card background
+      color:
+          const Color(0xFF242628), // Match learning screen task card background
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Match learning screen border
+          color: const Color(0xFF6FB8E9)
+              .withValues(alpha: 0.3), // Match learning screen border
           width: 1,
         ),
       ),
@@ -240,7 +246,8 @@ class _LoginScreenState extends State<LoginScreen>
                 'Welcome Back!',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFFD9D9D9), // Match learning screen text color
+                      color: const Color(
+                          0xFFD9D9D9), // Match learning screen text color
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -248,7 +255,8 @@ class _LoginScreenState extends State<LoginScreen>
               Text(
                 'Sign in to continue your learning journey',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.7), // Match learning screen text color
+                      color: const Color(0xFFD9D9D9).withValues(
+                          alpha: 0.7), // Match learning screen text color
                     ),
                 textAlign: TextAlign.center,
               ),
@@ -258,15 +266,20 @@ class _LoginScreenState extends State<LoginScreen>
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
+                textInputAction: TextInputAction.next,
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
+                  labelStyle: const TextStyle(
+                      color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Enter your email address',
-                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  hintStyle: TextStyle(
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
                   prefixIcon: const Icon(
                     Icons.email_outlined,
-                    color: Color(0xFF6FB8E9), // Match learning screen accent color
+                    color:
+                        Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
                   filled: true,
                   fillColor: const Color(0xFF1A1A1A), // Darker fill color
@@ -285,7 +298,8 @@ class _LoginScreenState extends State<LoginScreen>
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF6FB8E9), // Match learning screen accent color
+                      color: Color(
+                          0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -306,15 +320,21 @@ class _LoginScreenState extends State<LoginScreen>
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _handleLogin(),
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  labelStyle: const TextStyle(color: Color(0xFFB0B0B0)), // Lighter gray for label
+                  labelStyle: const TextStyle(
+                      color: Color(0xFFB0B0B0)), // Lighter gray for label
                   hintText: 'Enter your password',
-                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  hintStyle: TextStyle(
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
                   prefixIcon: const Icon(
                     Icons.lock_outlined,
-                    color: Color(0xFF6FB8E9), // Match learning screen accent color
+                    color:
+                        Color(0xFF6FB8E9), // Match learning screen accent color
                   ),
                   suffixIcon: IconButton(
                     icon: SizedBox(
@@ -332,7 +352,8 @@ class _LoginScreenState extends State<LoginScreen>
                           return const Icon(
                             Icons.visibility_outlined,
                             size: 20,
-                            color: Color(0xFF6FB8E9), // Match learning screen accent color
+                            color: Color(
+                                0xFF6FB8E9), // Match learning screen accent color
                           );
                         },
                       ),
@@ -369,7 +390,8 @@ class _LoginScreenState extends State<LoginScreen>
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
-                      color: Color(0xFF6FB8E9), // Match learning screen accent color
+                      color: Color(
+                          0xFF6FB8E9), // Match learning screen accent color
                       width: 2,
                     ),
                   ),
@@ -395,20 +417,23 @@ class _LoginScreenState extends State<LoginScreen>
                       setState(() {
                         _rememberMe = value ?? false;
                       });
-                      
+
                       // If unchecked, clear saved credentials immediately
                       if (!_rememberMe) {
                         await _secureStorage.clearCredentials();
-                        debugPrint('🗑️ Remember Me disabled - credentials cleared');
+                        debugPrint(
+                            '🗑️ Remember Me disabled - credentials cleared');
                       }
                     },
-                    activeColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    activeColor: const Color(
+                        0xFF6FB8E9), // Match learning screen accent color
                     checkColor: Colors.white,
                   ),
                   const Text(
                     'Remember me',
                     style: TextStyle(
-                      color: Color(0xFFD9D9D9), // Match learning screen text color
+                      color:
+                          Color(0xFFD9D9D9), // Match learning screen text color
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -432,13 +457,13 @@ class _LoginScreenState extends State<LoginScreen>
                     child: const Text(
                       'Forgot Password?',
                       style: TextStyle(
-                        color: Color(0xFF6FB8E9), // Match learning screen accent color
+                        color: Color(
+                            0xFF6FB8E9), // Match learning screen accent color
                       ),
                     ),
                   ),
                 ],
               ),
-
 
               const SizedBox(height: 24),
 
@@ -448,7 +473,8 @@ class _LoginScreenState extends State<LoginScreen>
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    backgroundColor: const Color(
+                        0xFF6FB8E9), // Match learning screen accent color
                     foregroundColor: Colors.white,
                     elevation: 4,
                     shadowColor: const Color(0xFF6FB8E9).withValues(alpha: 0.4),
@@ -494,9 +520,11 @@ class _LoginScreenState extends State<LoginScreen>
                 child: OutlinedButton(
                   onPressed: _isLoading ? null : _handleDemoLogin,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF6FB8E9), // Match learning screen accent color
+                    foregroundColor: const Color(
+                        0xFF6FB8E9), // Match learning screen accent color
                     side: const BorderSide(
-                      color: Color(0xFF6FB8E9), // Match learning screen accent color
+                      color: Color(
+                          0xFF6FB8E9), // Match learning screen accent color
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -551,7 +579,8 @@ class _LoginScreenState extends State<LoginScreen>
               child: const Text(
                 'Sign Up',
                 style: TextStyle(
-                  color: Color(0xFF6FB8E9), // Match learning screen accent color
+                  color:
+                      Color(0xFF6FB8E9), // Match learning screen accent color
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -594,7 +623,7 @@ class _LoginScreenState extends State<LoginScreen>
           // Capture theme values before async operation
           final primaryColor = Theme.of(context).colorScheme.primary;
           final scaffoldMessenger = ScaffoldMessenger.of(context);
-          
+
           // Login successful - save credentials if Remember Me is checked
           if (_rememberMe) {
             await _secureStorage.saveCredentials(
@@ -602,9 +631,10 @@ class _LoginScreenState extends State<LoginScreen>
               password: _passwordController.text,
               rememberMe: true,
             );
-            debugPrint('✅ Credentials saved securely for ${_emailController.text.trim()}');
+            debugPrint(
+                '✅ Credentials saved securely for ${_emailController.text.trim()}');
           }
-          
+
           // Show success message - check mounted after async operation
           if (!mounted) return;
           scaffoldMessenger.showSnackBar(

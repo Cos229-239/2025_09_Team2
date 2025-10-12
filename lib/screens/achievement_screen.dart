@@ -5,7 +5,7 @@ import '../widgets/achievement/achievement_widgets.dart';
 import '../widgets/common/themed_background_wrapper.dart';
 
 /// Achievement Screen - Complete Gamification Features
-/// 
+///
 /// FULLY IMPLEMENTED FEATURES:
 /// ✅ Real achievement tracking integrated with achievement_gamification_service
 /// ✅ Study progress integration for achievement unlocking
@@ -34,11 +34,11 @@ class _AchievementScreenState extends State<AchievementScreen>
   AchievementGamificationService? _gamificationService;
   bool _isLoading = true;
   String? _errorMessage;
-  
+
   // Filter states
   AchievementType? _selectedType;
   AchievementRarity? _selectedRarity;
-  
+
   // Leaderboard data
   List<Map<String, dynamic>> _leaderboardData = [];
   bool _loadingLeaderboard = false;
@@ -46,7 +46,8 @@ class _AchievementScreenState extends State<AchievementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this); // Added leaderboard tab
+    _tabController =
+        TabController(length: 5, vsync: this); // Added leaderboard tab
     _initializeGamificationService();
   }
 
@@ -54,24 +55,24 @@ class _AchievementScreenState extends State<AchievementScreen>
     try {
       _gamificationService = AchievementGamificationService();
       await _gamificationService!.initialize();
-      
+
       // Register callbacks for real-time updates
       _gamificationService!.onAchievementUnlock((achievement) {
         if (mounted) {
           _showAchievementUnlocked(achievement);
         }
       });
-      
+
       _gamificationService!.onLevelUp((newLevel) {
         if (mounted) {
           _showLevelUpCelebration(newLevel);
         }
       });
-      
+
       setState(() {
         _isLoading = false;
       });
-      
+
       // Load leaderboard data
       _loadLeaderboard();
     } catch (e) {
@@ -81,21 +82,21 @@ class _AchievementScreenState extends State<AchievementScreen>
       });
     }
   }
-  
+
   /// Load leaderboard data from Firebase
   Future<void> _loadLeaderboard() async {
     if (_gamificationService == null) return;
-    
+
     setState(() {
       _loadingLeaderboard = true;
     });
-    
+
     try {
       final leaderboard = await _gamificationService!.getLeaderboard(
         type: 'level',
         limit: 50,
       );
-      
+
       if (mounted) {
         setState(() {
           _leaderboardData = leaderboard;
@@ -111,7 +112,7 @@ class _AchievementScreenState extends State<AchievementScreen>
       debugPrint('Error loading leaderboard: $e');
     }
   }
-  
+
   /// Show achievement unlock notification
   void _showAchievementUnlocked(Achievement achievement) {
     showDialog(
@@ -120,7 +121,7 @@ class _AchievementScreenState extends State<AchievementScreen>
       builder: (context) => AchievementUnlockDialog(achievement: achievement),
     );
   }
-  
+
   /// Show level up celebration
   void _showLevelUpCelebration(int newLevel) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -165,7 +166,7 @@ class _AchievementScreenState extends State<AchievementScreen>
         ),
       );
     }
-    
+
     if (_errorMessage != null) {
       return Scaffold(
         body: Center(
@@ -266,7 +267,8 @@ class _AchievementScreenState extends State<AchievementScreen>
   Widget _buildOverviewTab() {
     final stats = _gamificationService!.getGamificationStats();
     final userLevel = _gamificationService!.userLevel;
-    final recommended = _gamificationService!.getRecommendedAchievements(count: 3);
+    final recommended =
+        _gamificationService!.getRecommendedAchievements(count: 3);
     final seasonalEvents = _gamificationService!.activeSeasonalEvents;
 
     return SingleChildScrollView(
@@ -356,7 +358,7 @@ class _AchievementScreenState extends State<AchievementScreen>
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Seasonal Events (if any)
           if (seasonalEvents.isNotEmpty) ...[
             Card(
@@ -371,22 +373,24 @@ class _AchievementScreenState extends State<AchievementScreen>
                         const SizedBox(width: 8),
                         Text(
                           'Active Events',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     ...seasonalEvents.map((event) => ListTile(
-                      leading: const Icon(Icons.event, color: Colors.orange),
-                      title: Text(event.name),
-                      subtitle: Text(event.description),
-                      trailing: Text(
-                        '${event.exclusiveAchievements.length} achievements',
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    )),
+                          leading:
+                              const Icon(Icons.event, color: Colors.orange),
+                          title: Text(event.name),
+                          subtitle: Text(event.description),
+                          trailing: Text(
+                            '${event.exclusiveAchievements.length} achievements',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        )),
                   ],
                 ),
               ),
@@ -408,15 +412,17 @@ class _AchievementScreenState extends State<AchievementScreen>
                         const SizedBox(width: 8),
                         Text(
                           'Recommended for You',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     ...recommended.map((achievement) {
-                      final progress = _gamificationService!.getAchievementProgress(achievement.id);
+                      final progress = _gamificationService!
+                          .getAchievementProgress(achievement.id);
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: ListTile(
@@ -425,10 +431,12 @@ class _AchievementScreenState extends State<AchievementScreen>
                             height: 40,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
+                              color: _getRarityColor(achievement.rarity)
+                                  .withValues(alpha: 0.2),
                             ),
                             child: Center(
-                              child: Text(achievement.icon, style: const TextStyle(fontSize: 20)),
+                              child: Text(achievement.icon,
+                                  style: const TextStyle(fontSize: 20)),
                             ),
                           ),
                           title: Text(achievement.name),
@@ -580,15 +588,17 @@ class _AchievementScreenState extends State<AchievementScreen>
   Widget _buildAchievementsTab() {
     // Apply filters
     var achievements = _gamificationService!.allAchievements;
-    
+
     if (_selectedType != null) {
-      achievements = _gamificationService!.getAchievementsByType(_selectedType!);
+      achievements =
+          _gamificationService!.getAchievementsByType(_selectedType!);
     }
-    
+
     if (_selectedRarity != null) {
-      achievements = achievements.where((a) => a.rarity == _selectedRarity).toList();
+      achievements =
+          achievements.where((a) => a.rarity == _selectedRarity).toList();
     }
-    
+
     return Column(
       children: [
         // Filter summary and controls
@@ -604,7 +614,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        const Icon(Icons.filter_alt, size: 20, color: Colors.blue),
+                        const Icon(Icons.filter_alt,
+                            size: 20, color: Colors.blue),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Wrap(
@@ -613,13 +624,15 @@ class _AchievementScreenState extends State<AchievementScreen>
                               if (_selectedType != null)
                                 Chip(
                                   label: Text(_selectedType!.name),
-                                  onDeleted: () => setState(() => _selectedType = null),
+                                  onDeleted: () =>
+                                      setState(() => _selectedType = null),
                                   deleteIcon: const Icon(Icons.close, size: 16),
                                 ),
                               if (_selectedRarity != null)
                                 Chip(
                                   label: Text(_selectedRarity!.name),
-                                  onDeleted: () => setState(() => _selectedRarity = null),
+                                  onDeleted: () =>
+                                      setState(() => _selectedRarity = null),
                                   deleteIcon: const Icon(Icons.close, size: 16),
                                 ),
                             ],
@@ -654,7 +667,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                     child: ElevatedButton.icon(
                       onPressed: () => _showFilteredAchievements(true),
                       icon: const Icon(Icons.check_circle),
-                      label: Text('Unlocked (${_gamificationService!.unlockedAchievements.length})'),
+                      label: Text(
+                          'Unlocked (${_gamificationService!.unlockedAchievements.length})'),
                     ),
                   ),
                 ],
@@ -686,7 +700,7 @@ class _AchievementScreenState extends State<AchievementScreen>
 
   Widget _buildRewardsTab() {
     final availableRewards = _gamificationService!.availableRewards;
-    
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -699,7 +713,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    const Icon(Icons.card_giftcard, size: 40, color: Colors.purple),
+                    const Icon(Icons.card_giftcard,
+                        size: 40, color: Colors.purple),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -707,15 +722,19 @@ class _AchievementScreenState extends State<AchievementScreen>
                         children: [
                           Text(
                             '${availableRewards.length} Rewards Available',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
                           Text(
                             'Earn rewards by unlocking achievements',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.grey[600],
+                                    ),
                           ),
                         ],
                       ),
@@ -725,9 +744,10 @@ class _AchievementScreenState extends State<AchievementScreen>
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Unlocked features
-            if (_gamificationService!.userLevel.unlockedFeatures.isNotEmpty) ...[
+            if (_gamificationService!
+                .userLevel.unlockedFeatures.isNotEmpty) ...[
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -736,9 +756,10 @@ class _AchievementScreenState extends State<AchievementScreen>
                     children: [
                       Text(
                         'Unlocked Features',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 12),
                       ..._gamificationService!.userLevel.unlockedFeatures.map(
@@ -746,7 +767,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                           padding: const EdgeInsets.symmetric(vertical: 4),
                           child: Row(
                             children: [
-                              const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                              const Icon(Icons.check_circle,
+                                  color: Colors.green, size: 20),
                               const SizedBox(width: 8),
                               Text(feature),
                             ],
@@ -759,12 +781,12 @@ class _AchievementScreenState extends State<AchievementScreen>
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // Rewards widget
             RewardsWidget(
               rewards: _gamificationService!.earnedRewards,
             ),
-            
+
             // Reward redemption info
             const SizedBox(height: 16),
             Card(
@@ -806,7 +828,9 @@ class _AchievementScreenState extends State<AchievementScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    showOnlyUnlocked ? 'Unlocked Achievements' : 'All Achievements',
+                    showOnlyUnlocked
+                        ? 'Unlocked Achievements'
+                        : 'All Achievements',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -828,8 +852,9 @@ class _AchievementScreenState extends State<AchievementScreen>
                     final achievement = showOnlyUnlocked
                         ? _gamificationService!.unlockedAchievements[index]
                         : _gamificationService!.allAchievements[index];
-                    final progress = _gamificationService!.getAchievementProgress(achievement.id);
-                    
+                    final progress = _gamificationService!
+                        .getAchievementProgress(achievement.id);
+
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 4),
                       child: ListTile(
@@ -838,14 +863,16 @@ class _AchievementScreenState extends State<AchievementScreen>
                           height: 50,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _getRarityColor(achievement.rarity).withValues(alpha: 0.2),
+                            color: _getRarityColor(achievement.rarity)
+                                .withValues(alpha: 0.2),
                             border: Border.all(
                               color: _getRarityColor(achievement.rarity),
                               width: 2,
                             ),
                           ),
                           child: Center(
-                            child: Text(achievement.icon, style: const TextStyle(fontSize: 24)),
+                            child: Text(achievement.icon,
+                                style: const TextStyle(fontSize: 24)),
                           ),
                         ),
                         title: Text(
@@ -860,7 +887,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                             Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color: _getRarityColor(achievement.rarity),
                                     borderRadius: BorderRadius.circular(4),
@@ -890,11 +918,13 @@ class _AchievementScreenState extends State<AchievementScreen>
                             ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.check_circle, color: Colors.green),
+                                  const Icon(Icons.check_circle,
+                                      color: Colors.green),
                                   const SizedBox(height: 4),
                                   IconButton(
                                     icon: const Icon(Icons.share, size: 20),
-                                    onPressed: () => _shareAchievement(achievement),
+                                    onPressed: () =>
+                                        _shareAchievement(achievement),
                                     tooltip: 'Share',
                                   ),
                                 ],
@@ -917,7 +947,7 @@ class _AchievementScreenState extends State<AchievementScreen>
       ),
     );
   }
-  
+
   /// Show filter dialog
   void _showFilterDialog() {
     showDialog(
@@ -928,7 +958,8 @@ class _AchievementScreenState extends State<AchievementScreen>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Filter by Type:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Filter by Type:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -942,17 +973,18 @@ class _AchievementScreenState extends State<AchievementScreen>
                   },
                 ),
                 ...AchievementType.values.map((type) => FilterChip(
-                  label: Text(type.name),
-                  selected: _selectedType == type,
-                  onSelected: (selected) {
-                    setState(() => _selectedType = selected ? type : null);
-                    Navigator.pop(context);
-                  },
-                )),
+                      label: Text(type.name),
+                      selected: _selectedType == type,
+                      onSelected: (selected) {
+                        setState(() => _selectedType = selected ? type : null);
+                        Navigator.pop(context);
+                      },
+                    )),
               ],
             ),
             const SizedBox(height: 16),
-            const Text('Filter by Rarity:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Filter by Rarity:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -966,14 +998,16 @@ class _AchievementScreenState extends State<AchievementScreen>
                   },
                 ),
                 ...AchievementRarity.values.map((rarity) => FilterChip(
-                  label: Text(rarity.name),
-                  selected: _selectedRarity == rarity,
-                  selectedColor: _getRarityColor(rarity).withValues(alpha: 0.3),
-                  onSelected: (selected) {
-                    setState(() => _selectedRarity = selected ? rarity : null);
-                    Navigator.pop(context);
-                  },
-                )),
+                      label: Text(rarity.name),
+                      selected: _selectedRarity == rarity,
+                      selectedColor:
+                          _getRarityColor(rarity).withValues(alpha: 0.3),
+                      onSelected: (selected) {
+                        setState(
+                            () => _selectedRarity = selected ? rarity : null);
+                        Navigator.pop(context);
+                      },
+                    )),
               ],
             ),
           ],
@@ -987,7 +1021,7 @@ class _AchievementScreenState extends State<AchievementScreen>
       ),
     );
   }
-  
+
   /// Build leaderboard tab
   Widget _buildLeaderboardTab() {
     return RefreshIndicator(
@@ -999,7 +1033,8 @@ class _AchievementScreenState extends State<AchievementScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.leaderboard, size: 64, color: Colors.grey),
+                      const Icon(Icons.leaderboard,
+                          size: 64, color: Colors.grey),
                       const SizedBox(height: 16),
                       const Text(
                         'Leaderboard data not available',
@@ -1019,8 +1054,9 @@ class _AchievementScreenState extends State<AchievementScreen>
                   itemBuilder: (context, index) {
                     final entry = _leaderboardData[index];
                     final rank = entry['rank'] as int;
-                    final isCurrentUser = entry['user_id'] == _gamificationService!.userLevel;
-                    
+                    final isCurrentUser =
+                        entry['user_id'] == _gamificationService!.userLevel;
+
                     return Card(
                       color: isCurrentUser
                           ? Colors.blue.withValues(alpha: 0.1)
@@ -1043,12 +1079,17 @@ class _AchievementScreenState extends State<AchievementScreen>
                           ),
                         ),
                         title: Text(
-                          isCurrentUser ? 'You' : 'Player #${entry['user_id'].toString().substring(0, 8)}',
+                          isCurrentUser
+                              ? 'You'
+                              : 'Player #${entry['user_id'].toString().substring(0, 8)}',
                           style: TextStyle(
-                            fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isCurrentUser
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
-                        subtitle: Text('Level ${entry['level']} - ${entry['title']}'),
+                        subtitle:
+                            Text('Level ${entry['level']} - ${entry['title']}'),
                         trailing: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -1056,17 +1097,20 @@ class _AchievementScreenState extends State<AchievementScreen>
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.star, size: 16, color: Colors.amber),
+                                const Icon(Icons.star,
+                                    size: 16, color: Colors.amber),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${entry['total_xp']} XP',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
                             Text(
                               '${entry['achievements_count']} achievements',
-                              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              style: TextStyle(
+                                  fontSize: 12, color: Colors.grey[600]),
                             ),
                           ],
                         ),
@@ -1076,18 +1120,19 @@ class _AchievementScreenState extends State<AchievementScreen>
                 ),
     );
   }
-  
+
   /// Share achievement via native share or Firebase
   Future<void> _shareAchievement(Achievement achievement) async {
     final success = await _gamificationService!.shareAchievement(achievement);
-    
+
     if (success) {
       // Also copy to clipboard for easy sharing
-      final shareText = '🎉 I just unlocked the "${achievement.name}" achievement! '
+      final shareText =
+          '🎉 I just unlocked the "${achievement.name}" achievement! '
           '${achievement.description} (+${achievement.xpReward} XP)';
-      
+
       await Clipboard.setData(ClipboardData(text: shareText));
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

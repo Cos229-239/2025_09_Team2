@@ -22,7 +22,7 @@ class NotesEditorScreen extends StatefulWidget {
 class _NotesEditorScreenState extends State<NotesEditorScreen> {
   late QuillController _controller;
   final FocusNode _focusNode = FocusNode();
-  
+
   // Toolbar state tracking
   bool _isBold = false;
   bool _isItalic = false;
@@ -86,7 +86,8 @@ class _NotesEditorScreenState extends State<NotesEditorScreen> {
 
   bool _selectionHasBackground(Color color) {
     final styles = _controller.getAllSelectionStyles();
-    final colorHex = '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
+    final colorHex =
+        '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
     for (final style in styles) {
       final bgAttr = style.attributes[Attribute.background.key];
       if (bgAttr != null && bgAttr.value == colorHex) {
@@ -111,13 +112,14 @@ class _NotesEditorScreenState extends State<NotesEditorScreen> {
   // Formatting methods
   void _toggleInline(Attribute attribute) {
     final isActive = _selectionHas(attribute);
-    _controller.formatSelection(isActive ? Attribute.clone(attribute, null) : attribute);
+    _controller.formatSelection(
+        isActive ? Attribute.clone(attribute, null) : attribute);
   }
 
   void _toggleHighlight() {
     const yellowBackground = Color(0xFFFFFF00);
     final isHighlighted = _selectionHasBackground(yellowBackground);
-    
+
     if (isHighlighted) {
       // Remove highlight
       _controller.formatSelection(Attribute.clone(Attribute.background, null));
@@ -130,9 +132,11 @@ class _NotesEditorScreenState extends State<NotesEditorScreen> {
   void _setAlignment(Attribute alignmentAttribute) {
     // Clear existing alignment attributes
     _controller.formatSelection(Attribute.clone(Attribute.leftAlignment, null));
-    _controller.formatSelection(Attribute.clone(Attribute.centerAlignment, null));
-    _controller.formatSelection(Attribute.clone(Attribute.rightAlignment, null));
-    
+    _controller
+        .formatSelection(Attribute.clone(Attribute.centerAlignment, null));
+    _controller
+        .formatSelection(Attribute.clone(Attribute.rightAlignment, null));
+
     // Apply new alignment (unless it's left, which is default)
     if (alignmentAttribute != Attribute.leftAlignment) {
       _controller.formatSelection(alignmentAttribute);
@@ -151,12 +155,12 @@ class _NotesEditorScreenState extends State<NotesEditorScreen> {
   void _handleSave() async {
     final plainText = await exportAsPlainText();
     final deltaJson = await exportAsDeltaJson();
-    
+
     debugPrint('=== Note Export ===');
     debugPrint('Plain Text: $plainText');
     debugPrint('Delta JSON: $deltaJson');
     debugPrint('==================');
-    
+
     // Show a snackbar to confirm save
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -232,13 +236,15 @@ class _NotesEditorScreenState extends State<NotesEditorScreen> {
                   onToggleUnderline: () => _toggleInline(Attribute.underline),
                   onToggleHighlight: _toggleHighlight,
                   onSetAlignment: _setAlignment,
-                  onSetFontSize: (fontSize) {}, // Placeholder - not implemented in this screen
-                  onToggleBulletList: () {}, // Placeholder - not implemented in this screen
+                  onSetFontSize:
+                      (fontSize) {}, // Placeholder - not implemented in this screen
+                  onToggleBulletList:
+                      () {}, // Placeholder - not implemented in this screen
                 ),
               ],
             ),
           ),
-          
+
           // Editor
           Expanded(
             child: Container(

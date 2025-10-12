@@ -7,10 +7,10 @@ import 'dart:developer' as developer;
 /// Represents a topic mentioned in conversation
 class ConversationTopic {
   final String topic;
-  final double score;         // Relevance score 0.0 to 1.0
+  final double score; // Relevance score 0.0 to 1.0
   final DateTime lastMention;
   final int mentionCount;
-  final String context;       // Sample text where topic appeared
+  final String context; // Sample text where topic appeared
 
   ConversationTopic({
     required this.topic,
@@ -21,12 +21,12 @@ class ConversationTopic {
   });
 
   Map<String, dynamic> toJson() => {
-    'topic': topic,
-    'score': score,
-    'lastMention': lastMention.toIso8601String(),
-    'mentionCount': mentionCount,
-    'context': context,
-  };
+        'topic': topic,
+        'score': score,
+        'lastMention': lastMention.toIso8601String(),
+        'mentionCount': mentionCount,
+        'context': context,
+      };
 
   ConversationTopic copyWith({
     double? score,
@@ -61,7 +61,7 @@ class SessionContext {
   /// Add message to context
   void addMessage(ChatMessage message) {
     _messages.add(message);
-    
+
     // Trim to max messages
     if (_messages.length > _maxMessages) {
       _messages.removeRange(0, _messages.length - _maxMessages);
@@ -70,15 +70,14 @@ class SessionContext {
     // Extract and track topics
     _extractTopics(message);
 
-    developer.log('Message added to session context. Total: ${_messages.length}',
+    developer.log(
+        'Message added to session context. Total: ${_messages.length}',
         name: 'SessionContext');
   }
 
   /// Get recent messages
   List<ChatMessage> getRecentMessages({int limit = 10}) {
-    final startIndex = _messages.length > limit 
-        ? _messages.length - limit 
-        : 0;
+    final startIndex = _messages.length > limit ? _messages.length - limit : 0;
     return _messages.sublist(startIndex);
   }
 
@@ -112,7 +111,7 @@ class SessionContext {
   /// Check if a topic has been discussed
   bool hasDiscussedTopic(String topic, {double threshold = 0.5}) {
     final normalizedTopic = topic.toLowerCase().trim();
-    
+
     // Exact match
     if (_topics.containsKey(normalizedTopic)) {
       return _topics[normalizedTopic]!.score >= threshold;
@@ -120,7 +119,7 @@ class SessionContext {
 
     // Partial match (fuzzy)
     for (final entry in _topics.entries) {
-      if (entry.key.contains(normalizedTopic) || 
+      if (entry.key.contains(normalizedTopic) ||
           normalizedTopic.contains(entry.key)) {
         if (entry.value.score >= threshold) {
           return true;
@@ -138,13 +137,15 @@ class SessionContext {
 
     final buffer = StringBuffer();
     buffer.writeln('Session Context:');
-    buffer.writeln('Duration: ${DateTime.now().difference(_sessionStart).inMinutes} minutes');
+    buffer.writeln(
+        'Duration: ${DateTime.now().difference(_sessionStart).inMinutes} minutes');
     buffer.writeln('Messages: ${_messages.length}');
-    
+
     if (recentTopics.isNotEmpty) {
       buffer.writeln('\nRecent Topics:');
       for (final topic in recentTopics) {
-        buffer.writeln('- ${topic.topic} (score: ${topic.score.toStringAsFixed(2)}, mentions: ${topic.mentionCount})');
+        buffer.writeln(
+            '- ${topic.topic} (score: ${topic.score.toStringAsFixed(2)}, mentions: ${topic.mentionCount})');
       }
     }
 
@@ -152,8 +153,8 @@ class SessionContext {
       buffer.writeln('\nRecent Messages:');
       for (final msg in recentMessages) {
         final role = msg.type == MessageType.user ? 'User' : 'AI';
-        final preview = msg.content.length > 100 
-            ? '${msg.content.substring(0, 100)}...' 
+        final preview = msg.content.length > 100
+            ? '${msg.content.substring(0, 100)}...'
             : msg.content;
         buffer.writeln('[$role]: $preview');
       }
@@ -165,10 +166,10 @@ class SessionContext {
   /// Extract topics from message content
   void _extractTopics(ChatMessage message) {
     final content = message.content.toLowerCase();
-    
+
     // Simple keyword extraction (can be enhanced with NLP)
     final keywords = _extractKeywords(content);
-    
+
     for (final keyword in keywords) {
       if (_topics.containsKey(keyword)) {
         // Update existing topic
@@ -185,7 +186,7 @@ class SessionContext {
           score: 0.7, // Initial relevance
           lastMention: message.timestamp,
           context: content.substring(
-            0, 
+            0,
             content.length > 100 ? 100 : content.length,
           ),
         );
@@ -197,21 +198,68 @@ class SessionContext {
   List<String> _extractKeywords(String text) {
     // Remove common words
     final stopWords = {
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
-      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be',
-      'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
-      'would', 'should', 'could', 'may', 'might', 'must', 'can', 'i', 'you',
-      'he', 'she', 'it', 'we', 'they', 'what', 'which', 'who', 'when',
-      'where', 'why', 'how', 'this', 'that', 'these', 'those',
+      'the',
+      'a',
+      'an',
+      'and',
+      'or',
+      'but',
+      'in',
+      'on',
+      'at',
+      'to',
+      'for',
+      'of',
+      'with',
+      'by',
+      'from',
+      'as',
+      'is',
+      'was',
+      'are',
+      'were',
+      'be',
+      'been',
+      'being',
+      'have',
+      'has',
+      'had',
+      'do',
+      'does',
+      'did',
+      'will',
+      'would',
+      'should',
+      'could',
+      'may',
+      'might',
+      'must',
+      'can',
+      'i',
+      'you',
+      'he',
+      'she',
+      'it',
+      'we',
+      'they',
+      'what',
+      'which',
+      'who',
+      'when',
+      'where',
+      'why',
+      'how',
+      'this',
+      'that',
+      'these',
+      'those',
     };
 
     final words = text
         .toLowerCase()
         .replaceAll(RegExp(r'[^\w\s]'), ' ')
         .split(RegExp(r'\s+'))
-        .where((word) => 
-            word.length > 3 && 
-            !stopWords.contains(word))
+        .where((word) => word.length > 3 && !stopWords.contains(word))
         .toList();
 
     // Return unique keywords
@@ -239,7 +287,8 @@ class SessionContext {
       'userId': userId,
       'messageCount': _messages.length,
       'topicCount': _topics.length,
-      'sessionDurationMinutes': DateTime.now().difference(_sessionStart).inMinutes,
+      'sessionDurationMinutes':
+          DateTime.now().difference(_sessionStart).inMinutes,
       'sessionStart': _sessionStart.toIso8601String(),
     };
   }

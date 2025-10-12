@@ -29,10 +29,10 @@ class SinglePageScrollPhysics extends ScrollPhysics {
 
   @override
   SpringDescription get spring => const SpringDescription(
-    mass: 80, // Very heavy mass for immediate stopping
-    stiffness: 200, // Very high stiffness for instant snap
-    damping: 1.0, // Maximum damping to prevent any overshoot
-  );
+        mass: 80, // Very heavy mass for immediate stopping
+        stiffness: 200, // Very high stiffness for instant snap
+        damping: 1.0, // Maximum damping to prevent any overshoot
+      );
 
   @override
   double applyBoundaryConditions(ScrollMetrics position, double value) {
@@ -41,7 +41,7 @@ class SinglePageScrollPhysics extends ScrollPhysics {
     final targetPage = page.round();
     final maxOffset = targetPage * position.viewportDimension;
     final minOffset = targetPage * position.viewportDimension;
-    
+
     // Clamp to current page boundaries
     if (value < minOffset && position.pixels <= minOffset) {
       return value - minOffset;
@@ -49,23 +49,24 @@ class SinglePageScrollPhysics extends ScrollPhysics {
     if (value > maxOffset && position.pixels >= maxOffset) {
       return value - maxOffset;
     }
-    
+
     return super.applyBoundaryConditions(position, value);
   }
 
   @override
-  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+  Simulation? createBallisticSimulation(
+      ScrollMetrics position, double velocity) {
     // Force immediate stop at the nearest page
     final page = position.pixels / position.viewportDimension;
     final targetPage = velocity > 0 ? page.ceil() : page.floor();
     final targetPixels = targetPage * position.viewportDimension;
-    
+
     // Clamp target to valid range
     final clampedTarget = targetPixels.clamp(
-      0.0, 
+      0.0,
       (position.maxScrollExtent).toDouble(),
     );
-    
+
     // Create simulation that goes directly to target page
     return ScrollSpringSimulation(
       spring,
@@ -91,7 +92,8 @@ class _LearningScreenState extends State<LearningScreen>
   late TabController _tabController;
   late PageController _pageController;
   final TextEditingController _noteSearchController = TextEditingController();
-  final TextEditingController _flashcardSearchController = TextEditingController();
+  final TextEditingController _flashcardSearchController =
+      TextEditingController();
   String _noteSearchQuery = '';
   String _flashcardSearchQuery = '';
   int _currentPageIndex = 0;
@@ -100,8 +102,9 @@ class _LearningScreenState extends State<LearningScreen>
   bool _isDragging = false;
   DateTime? _lastPageChangeTime;
   static bool _globalPageChangeLock = false; // GLOBAL lock across all instances
-  bool _isCompletedTasksExpanded = false; // Track collapse/expand state for completed tasks
-  
+  bool _isCompletedTasksExpanded =
+      false; // Track collapse/expand state for completed tasks
+
   // ENHANCED TRACKPAD GESTURE DETECTION SYSTEM
   // This system fixes the trackpad multi-page jumping issue by properly
   // tracking scroll accumulation and gesture completion
@@ -109,12 +112,16 @@ class _LearningScreenState extends State<LearningScreen>
   double _scrollAccumulator = 0.0; // Accumulates scroll delta over time
   double _lastScrollVelocity = 0.0; // Track velocity for momentum detection
   DateTime? _lastScrollEventTime;
-  bool _pageChangeTriggered = false; // Prevents multiple page changes per gesture
-  
+  bool _pageChangeTriggered =
+      false; // Prevents multiple page changes per gesture
+
   // Thresholds for gesture detection
-  static const double _swipeThreshold = 120.0; // Total accumulated distance for page change
-  static const double _maxVelocity = 100.0; // Max scroll velocity to consider intentional
-  static const int _gestureTimeoutMs = 150; // Time after last scroll event to end gesture
+  static const double _swipeThreshold =
+      120.0; // Total accumulated distance for page change
+  static const double _maxVelocity =
+      100.0; // Max scroll velocity to consider intentional
+  static const int _gestureTimeoutMs =
+      150; // Time after last scroll event to end gesture
   static const int _cooldownMs = 200; // Minimum time between page changes
 
   @override
@@ -126,10 +133,10 @@ class _LearningScreenState extends State<LearningScreen>
       viewportFraction: 1.0, // Full page view
       keepPage: true, // Keep page in memory
     );
-    
+
     // Sync tab controller with page controller
     _tabController.addListener(_onTabChanged);
-    
+
     // Load all necessary data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<TaskProvider>(context, listen: false).loadTasks();
@@ -151,11 +158,11 @@ class _LearningScreenState extends State<LearningScreen>
   /// Extract plain text from Quill Delta JSON
   String _getPlainTextFromDelta(String content) {
     if (content.isEmpty) return '';
-    
+
     try {
       // Try to parse as JSON (Quill Delta format)
       final jsonData = jsonDecode(content);
-      
+
       if (jsonData is List) {
         // Extract text from delta operations
         final StringBuffer buffer = StringBuffer();
@@ -173,7 +180,7 @@ class _LearningScreenState extends State<LearningScreen>
       // If parsing fails, return the content as-is (might be plain text)
       return content;
     }
-    
+
     return content;
   }
 
@@ -191,22 +198,28 @@ class _LearningScreenState extends State<LearningScreen>
             onTap: _onTabTapped, // Handle manual tab taps
             tabs: [
               Tab(
-                icon: Icon(_currentPageIndex == 0 ? Icons.assignment : Icons.assignment_outlined),
+                icon: Icon(_currentPageIndex == 0
+                    ? Icons.assignment
+                    : Icons.assignment_outlined),
                 text: 'Learning Tasks',
               ),
               Tab(
-                icon: Icon(_currentPageIndex == 1 ? Icons.style : Icons.style_outlined),
+                icon: Icon(_currentPageIndex == 1
+                    ? Icons.style
+                    : Icons.style_outlined),
                 text: 'Flash Cards',
               ),
               Tab(
-                icon: Icon(_currentPageIndex == 2 ? Icons.note : Icons.note_outlined),
+                icon: Icon(
+                    _currentPageIndex == 2 ? Icons.note : Icons.note_outlined),
                 text: 'Notes',
               ),
             ],
           ),
         ),
         body: Listener(
-          onPointerSignal: _onPointerSignal, // Enhanced trackpad gesture detection
+          onPointerSignal:
+              _onPointerSignal, // Enhanced trackpad gesture detection
           child: GestureDetector(
             onPanStart: _onPanStart,
             onPanUpdate: _onPanUpdate,
@@ -214,7 +227,8 @@ class _LearningScreenState extends State<LearningScreen>
             child: PageView(
               controller: _pageController,
               onPageChanged: _onPageChanged,
-              physics: const NeverScrollableScrollPhysics(), // Disable default scrolling
+              physics:
+                  const NeverScrollableScrollPhysics(), // Disable default scrolling
               pageSnapping: true,
               children: [
                 _buildTasksTab(),
@@ -237,11 +251,11 @@ class _LearningScreenState extends State<LearningScreen>
   void _onPageChanged(int index) {
     // Ensure we only move one page at a time
     final targetIndex = _clampPageIndex(index);
-    
+
     setState(() {
       _currentPageIndex = targetIndex;
     });
-    
+
     // Sync tab controller without animation to prevent conflicts
     if (_tabController.index != targetIndex) {
       _tabController.index = targetIndex;
@@ -252,11 +266,13 @@ class _LearningScreenState extends State<LearningScreen>
   void _onTabChanged() {
     if (_tabController.indexIsChanging && !_isAnimating) {
       _isAnimating = true;
-      _pageController.animateToPage(
+      _pageController
+          .animateToPage(
         _tabController.index,
         duration: const Duration(milliseconds: 250), // Fast snap
         curve: Curves.easeOutCubic,
-      ).then((_) {
+      )
+          .then((_) {
         _isAnimating = false;
       });
     }
@@ -274,7 +290,7 @@ class _LearningScreenState extends State<LearningScreen>
         return _currentPageIndex - 1;
       }
     }
-    
+
     // Ensure within bounds
     return newIndex.clamp(0, 2);
   }
@@ -298,10 +314,10 @@ class _LearningScreenState extends State<LearningScreen>
     }
 
     _isDragging = false;
-    
+
     final velocity = details.velocity.pixelsPerSecond.dx;
     const minSwipeVelocity = 300.0; // Minimum velocity to trigger swipe
-    
+
     int targetPage = _currentPageIndex;
 
     // Determine swipe direction based on velocity
@@ -310,7 +326,7 @@ class _LearningScreenState extends State<LearningScreen>
         // Swiping right - go to next page
         targetPage = (_currentPageIndex + 1).clamp(0, 2);
       } else {
-        // Swiping left - go to previous page  
+        // Swiping left - go to previous page
         targetPage = (_currentPageIndex - 1).clamp(0, 2);
       }
     } else {
@@ -318,7 +334,7 @@ class _LearningScreenState extends State<LearningScreen>
       final currentX = details.localPosition.dx;
       final deltaX = currentX - _startDragX;
       const minSwipeDistance = 50.0;
-      
+
       if (deltaX.abs() > minSwipeDistance) {
         if (deltaX > 0) {
           // Swiping right - go to next page
@@ -345,48 +361,48 @@ class _LearningScreenState extends State<LearningScreen>
       if (_globalPageChangeLock || _isAnimating) {
         return;
       }
-      
+
       final now = DateTime.now();
       final deltaX = event.scrollDelta.dx;
-      
+
       // Ignore very small deltas (noise)
       if (deltaX.abs() < 0.5) return;
-      
+
       // Calculate time since last scroll event
-      final timeSinceLastScroll = _lastScrollEventTime == null 
-          ? 1000 
+      final timeSinceLastScroll = _lastScrollEventTime == null
+          ? 1000
           : now.difference(_lastScrollEventTime!).inMilliseconds;
-      
+
       // Check if this is a new gesture or continuation of existing one
       if (!_gestureInProgress || timeSinceLastScroll > _gestureTimeoutMs) {
         _startNewGesture(deltaX, now);
       } else {
         _continueGesture(deltaX, now);
       }
-      
+
       _lastScrollEventTime = now;
       _scheduleGestureEndDetection();
     }
   }
-  
+
   /// Start a new trackpad gesture
   /// ISSUE FIX: Properly initialize gesture state to prevent cross-contamination
   void _startNewGesture(double deltaX, DateTime now) {
     // Only start if enough time has passed since last page change (cooldown)
-    if (_lastPageChangeTime != null && 
+    if (_lastPageChangeTime != null &&
         now.difference(_lastPageChangeTime!).inMilliseconds < _cooldownMs) {
       return; // Still in cooldown period
     }
-    
+
     _gestureInProgress = true;
     _scrollAccumulator = deltaX; // Start accumulating from this delta
     _pageChangeTriggered = false; // Fresh gesture, no page change yet
     _lastScrollVelocity = deltaX.abs();
-    
+
     // Check if we immediately hit the threshold (for very fast swipes)
     _checkSwipeThreshold();
   }
-  
+
   /// Continue existing trackpad gesture
   /// ISSUE FIX: Proper accumulation and direction consistency
   void _continueGesture(double deltaX, DateTime now) {
@@ -394,35 +410,36 @@ class _LearningScreenState extends State<LearningScreen>
     if (_pageChangeTriggered) {
       return;
     }
-    
+
     // Calculate current velocity (deltaX per ms)
     final timeDelta = now.difference(_lastScrollEventTime!).inMilliseconds;
     if (timeDelta > 0) {
       _lastScrollVelocity = deltaX.abs() / timeDelta;
     }
-    
+
     // Only accumulate if the scroll is in consistent direction and not too fast
     // ISSUE FIX: Reject momentum scrolling by checking velocity
     if (_lastScrollVelocity <= _maxVelocity) {
       final currentDirection = deltaX > 0 ? 1 : -1;
       final accumulatedDirection = _scrollAccumulator > 0 ? 1 : -1;
-      
+
       // Only accumulate if direction is consistent
-      if (currentDirection == accumulatedDirection || _scrollAccumulator.abs() < 10) {
+      if (currentDirection == accumulatedDirection ||
+          _scrollAccumulator.abs() < 10) {
         _scrollAccumulator += deltaX;
         _checkSwipeThreshold();
       }
     }
     // If velocity is too high, this is likely momentum - ignore
   }
-  
+
   /// Check if accumulated scroll has reached the swipe threshold
   /// ISSUE FIX: Clear threshold logic with single page change per gesture
   void _checkSwipeThreshold() {
     if (_pageChangeTriggered || _scrollAccumulator.abs() < _swipeThreshold) {
       return; // Either already triggered or not enough distance
     }
-    
+
     // Determine target page based on scroll direction
     int? targetPage;
     if (_scrollAccumulator > 0) {
@@ -431,12 +448,12 @@ class _LearningScreenState extends State<LearningScreen>
         targetPage = _currentPageIndex + 1;
       }
     } else {
-      // Scrolling left/negative - go to previous page (swipe left = previous)  
+      // Scrolling left/negative - go to previous page (swipe left = previous)
       if (_currentPageIndex > 0) {
         targetPage = _currentPageIndex - 1;
       }
     }
-    
+
     // Execute page change if valid target
     if (targetPage != null) {
       _pageChangeTriggered = true; // Mark this gesture as used
@@ -444,20 +461,21 @@ class _LearningScreenState extends State<LearningScreen>
       _moveToPage(targetPage);
     }
   }
-  
+
   /// Schedule gesture end detection
   /// ISSUE FIX: Proper timeout handling for gesture completion
   void _scheduleGestureEndDetection() {
     Future.delayed(Duration(milliseconds: _gestureTimeoutMs), () {
       final now = DateTime.now();
-      if (_lastScrollEventTime != null && 
-          now.difference(_lastScrollEventTime!).inMilliseconds >= _gestureTimeoutMs &&
+      if (_lastScrollEventTime != null &&
+          now.difference(_lastScrollEventTime!).inMilliseconds >=
+              _gestureTimeoutMs &&
           _gestureInProgress) {
         _endGesture();
       }
     });
   }
-  
+
   /// End current trackpad gesture
   /// ISSUE FIX: Clean reset of all gesture state
   void _endGesture() {
@@ -467,33 +485,33 @@ class _LearningScreenState extends State<LearningScreen>
     _pageChangeTriggered = false;
     // Keep _lastPageChangeTime for cooldown protection
   }
-  
-
-  
-
 
   /// ULTIMATE protected page movement - prevents multiple changes per gesture only
   void _moveToPage(int targetPage) {
     // GLOBAL PROTECTION: If animation is happening, block
-    if (_globalPageChangeLock || _isAnimating || targetPage == _currentPageIndex) {
+    if (_globalPageChangeLock ||
+        _isAnimating ||
+        targetPage == _currentPageIndex) {
       return;
     }
-    
+
     // Validate single page movement only
     final clampedTarget = targetPage.clamp(0, 2);
     final distance = (clampedTarget - _currentPageIndex).abs();
-    
+
     if (distance != 1) return; // Must be exactly 1 page
-    
+
     // ACTIVATE GLOBAL LOCK - blocks concurrent page changes only
     _globalPageChangeLock = true;
     _isAnimating = true;
-    
-    _pageController.animateToPage(
+
+    _pageController
+        .animateToPage(
       clampedTarget,
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
-    ).then((_) {
+    )
+        .then((_) {
       _isAnimating = false;
       // Release global lock quickly - only block during animation
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -515,20 +533,26 @@ class _LearningScreenState extends State<LearningScreen>
     );
   }
 
-  /// Build flashcards tab with search bar, deck list, and create button  
+  /// Build flashcards tab with search bar, deck list, and create button
   Widget _buildFlashcardsTab() {
     return Consumer<DeckProvider>(
       builder: (context, deckProvider, child) {
-        debugPrint('🔍 FlashcardsTab - Total decks: ${deckProvider.decks.length}');
+        debugPrint(
+            '🔍 FlashcardsTab - Total decks: ${deckProvider.decks.length}');
         debugPrint('🔍 FlashcardsTab - Is loading: ${deckProvider.isLoading}');
-        
+
         // Filter decks based on search query
         final filteredDecks = deckProvider.decks.where((deck) {
-          return deck.title.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()) ||
-                 deck.tags.any((tag) => tag.toLowerCase().contains(_flashcardSearchQuery.toLowerCase()));
+          return deck.title
+                  .toLowerCase()
+                  .contains(_flashcardSearchQuery.toLowerCase()) ||
+              deck.tags.any((tag) => tag
+                  .toLowerCase()
+                  .contains(_flashcardSearchQuery.toLowerCase()));
         }).toList();
-        
-        debugPrint('🔍 FlashcardsTab - Filtered decks: ${filteredDecks.length}');
+
+        debugPrint(
+            '🔍 FlashcardsTab - Filtered decks: ${filteredDecks.length}');
 
         // Sort decks by updated date (most recent first)
         filteredDecks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
@@ -585,7 +609,7 @@ class _LearningScreenState extends State<LearningScreen>
                 },
               ),
             ),
-            
+
             // Deck list
             Expanded(
               child: filteredDecks.isEmpty
@@ -634,7 +658,8 @@ class _LearningScreenState extends State<LearningScreen>
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                             side: BorderSide(
-                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              color: const Color(0xFF6FB8E9)
+                                  .withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
@@ -650,7 +675,8 @@ class _LearningScreenState extends State<LearningScreen>
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                                      color: const Color(0xFF6FB8E9)
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(
@@ -662,7 +688,8 @@ class _LearningScreenState extends State<LearningScreen>
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           deck.title,
@@ -676,20 +703,32 @@ class _LearningScreenState extends State<LearningScreen>
                                           Wrap(
                                             spacing: 6,
                                             runSpacing: 4,
-                                            children: deck.tags.take(3).map((tag) => Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: Text(
-                                                tag,
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Color(0xFF6FB8E9),
-                                                ),
-                                              ),
-                                            )).toList(),
+                                            children: deck.tags
+                                                .take(3)
+                                                .map((tag) => Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(
+                                                                0xFF6FB8E9)
+                                                            .withValues(
+                                                                alpha: 0.1),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8),
+                                                      ),
+                                                      child: Text(
+                                                        tag,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Color(0xFF6FB8E9),
+                                                        ),
+                                                      ),
+                                                    ))
+                                                .toList(),
                                           ),
                                         ],
                                         const SizedBox(height: 8),
@@ -729,7 +768,8 @@ class _LearningScreenState extends State<LearningScreen>
                                   ),
                                   const SizedBox(width: 12),
                                   // Quiz grade circular chart (always show - 0% if no quiz taken)
-                                  _buildGradeCircularChart(deck.lastQuizGrade ?? 0.0),
+                                  _buildGradeCircularChart(
+                                      deck.lastQuizGrade ?? 0.0),
                                   const SizedBox(width: 8),
                                   PopupMenuButton<String>(
                                     icon: const Icon(
@@ -738,13 +778,16 @@ class _LearningScreenState extends State<LearningScreen>
                                     ),
                                     onSelected: (value) {
                                       if (value == 'edit') {
-                                        _showEditDeckDialog(context, deck, deckProvider);
+                                        _showEditDeckDialog(
+                                            context, deck, deckProvider);
                                       } else if (value == 'delete') {
-                                        _showDeleteDeckDialog(context, deck, deckProvider);
+                                        _showDeleteDeckDialog(
+                                            context, deck, deckProvider);
                                       } else if (value == 'calendar') {
                                         _showAddToCalendarDialog(context, deck);
                                       } else if (value == 'add_cards') {
-                                        _showAddCardsDialog(context, deck, deckProvider);
+                                        _showAddCardsDialog(
+                                            context, deck, deckProvider);
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -772,7 +815,11 @@ class _LearningScreenState extends State<LearningScreen>
                                         value: 'calendar',
                                         child: Row(
                                           children: [
-                                            Icon(Icons.calendar_today, size: 18, color: Theme.of(context).colorScheme.primary),
+                                            Icon(Icons.calendar_today,
+                                                size: 18,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary),
                                             const SizedBox(width: 12),
                                             const Text('Add to Calendar'),
                                           ],
@@ -782,9 +829,12 @@ class _LearningScreenState extends State<LearningScreen>
                                         value: 'delete',
                                         child: Row(
                                           children: [
-                                            Icon(Icons.delete, size: 18, color: Colors.red),
+                                            Icon(Icons.delete,
+                                                size: 18, color: Colors.red),
                                             SizedBox(width: 12),
-                                            Text('Delete', style: TextStyle(color: Colors.red)),
+                                            Text('Delete',
+                                                style: TextStyle(
+                                                    color: Colors.red)),
                                           ],
                                         ),
                                       ),
@@ -798,7 +848,7 @@ class _LearningScreenState extends State<LearningScreen>
                       },
                     ),
             ),
-            
+
             // Create button at bottom with extra spacing above AI tutor
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
@@ -825,16 +875,21 @@ class _LearningScreenState extends State<LearningScreen>
     );
   }
 
-  /// Build notes tab with search bar, note list, and create button  
+  /// Build notes tab with search bar, note list, and create button
   Widget _buildNotesTab() {
     return Consumer<NoteProvider>(
       builder: (context, noteProvider, child) {
         // Filter notes based on search query
         final filteredNotes = noteProvider.notes.where((note) {
           final plainTextContent = _getPlainTextFromDelta(note.contentMd);
-          return note.title.toLowerCase().contains(_noteSearchQuery.toLowerCase()) ||
-                 plainTextContent.toLowerCase().contains(_noteSearchQuery.toLowerCase()) ||
-                 note.tags.any((tag) => tag.toLowerCase().contains(_noteSearchQuery.toLowerCase()));
+          return note.title
+                  .toLowerCase()
+                  .contains(_noteSearchQuery.toLowerCase()) ||
+              plainTextContent
+                  .toLowerCase()
+                  .contains(_noteSearchQuery.toLowerCase()) ||
+              note.tags.any((tag) =>
+                  tag.toLowerCase().contains(_noteSearchQuery.toLowerCase()));
         }).toList();
 
         // Sort notes by updated date (most recent first)
@@ -892,7 +947,7 @@ class _LearningScreenState extends State<LearningScreen>
                 },
               ),
             ),
-            
+
             // Note list
             Expanded(
               child: filteredNotes.isEmpty
@@ -941,7 +996,8 @@ class _LearningScreenState extends State<LearningScreen>
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                             side: BorderSide(
-                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              color: const Color(0xFF6FB8E9)
+                                  .withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
@@ -957,7 +1013,8 @@ class _LearningScreenState extends State<LearningScreen>
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                                      color: const Color(0xFF6FB8E9)
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(
@@ -969,7 +1026,8 @@ class _LearningScreenState extends State<LearningScreen>
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           note.title,
@@ -983,27 +1041,40 @@ class _LearningScreenState extends State<LearningScreen>
                                           Wrap(
                                             spacing: 6,
                                             runSpacing: 4,
-                                            children: note.tags.take(3).map((tag) => Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: Text(
-                                                tag,
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Color(0xFF6FB8E9),
-                                                ),
-                                              ),
-                                            )).toList(),
+                                            children: note.tags
+                                                .take(3)
+                                                .map((tag) => Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 8,
+                                                          vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(
+                                                                0xFF6FB8E9)
+                                                            .withValues(
+                                                                alpha: 0.1),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(8),
+                                                      ),
+                                                      child: Text(
+                                                        tag,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Color(0xFF6FB8E9),
+                                                        ),
+                                                      ),
+                                                    ))
+                                                .toList(),
                                           ),
                                         ],
                                         const SizedBox(height: 4),
                                         Text(
-                                          note.contentMd.isEmpty 
-                                            ? 'No content' 
-                                            : _getPlainTextFromDelta(note.contentMd),
+                                          note.contentMd.isEmpty
+                                              ? 'No content'
+                                              : _getPlainTextFromDelta(
+                                                  note.contentMd),
                                           style: TextStyle(
                                             fontSize: 12,
                                             color: Colors.grey[600],
@@ -1035,11 +1106,14 @@ class _LearningScreenState extends State<LearningScreen>
                                   PopupMenuButton<String>(
                                     onSelected: (value) {
                                       if (value == 'edit') {
-                                        _showEditNoteDialog(context, note, noteProvider);
+                                        _showEditNoteDialog(
+                                            context, note, noteProvider);
                                       } else if (value == 'delete') {
-                                        _showDeleteNoteDialog(context, note, noteProvider);
+                                        _showDeleteNoteDialog(
+                                            context, note, noteProvider);
                                       } else if (value == 'calendar') {
-                                        _showAddNoteToCalendarDialog(context, note);
+                                        _showAddNoteToCalendarDialog(
+                                            context, note);
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -1057,7 +1131,11 @@ class _LearningScreenState extends State<LearningScreen>
                                         value: 'calendar',
                                         child: Row(
                                           children: [
-                                            Icon(Icons.calendar_today, size: 18, color: Theme.of(context).colorScheme.primary),
+                                            Icon(Icons.calendar_today,
+                                                size: 18,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .primary),
                                             const SizedBox(width: 12),
                                             const Text('Add to Calendar'),
                                           ],
@@ -1067,9 +1145,12 @@ class _LearningScreenState extends State<LearningScreen>
                                         value: 'delete',
                                         child: Row(
                                           children: [
-                                            Icon(Icons.delete, size: 18, color: Colors.red),
+                                            Icon(Icons.delete,
+                                                size: 18, color: Colors.red),
                                             SizedBox(width: 12),
-                                            Text('Delete', style: TextStyle(color: Colors.red)),
+                                            Text('Delete',
+                                                style: TextStyle(
+                                                    color: Colors.red)),
                                           ],
                                         ),
                                       ),
@@ -1087,7 +1168,7 @@ class _LearningScreenState extends State<LearningScreen>
                       },
                     ),
             ),
-            
+
             // Create button at bottom with extra spacing above AI tutor
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -1155,7 +1236,8 @@ class _LearningScreenState extends State<LearningScreen>
   List<Task> _getTodayTasks(List<Task> allTasks) {
     final today = DateTime.now();
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      if (task.dueAt == null || task.status == TaskStatus.completed)
+        return false;
       return task.dueAt!.year == today.year &&
           task.dueAt!.month == today.month &&
           task.dueAt!.day == today.day;
@@ -1167,16 +1249,18 @@ class _LearningScreenState extends State<LearningScreen>
     final today = DateTime.now();
     final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
-    
+
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      if (task.dueAt == null || task.status == TaskStatus.completed)
+        return false;
       // Exclude today's tasks as they're shown in the today section
       final isToday = task.dueAt!.year == today.year &&
           task.dueAt!.month == today.month &&
           task.dueAt!.day == today.day;
       if (isToday) return false;
-      
-      return task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+
+      return task.dueAt!
+              .isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
           task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
     }).toList();
   }
@@ -1186,26 +1270,32 @@ class _LearningScreenState extends State<LearningScreen>
     final today = DateTime.now();
     final startOfMonth = DateTime(today.year, today.month, 1);
     final endOfMonth = DateTime(today.year, today.month + 1, 0);
-    
+
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
-      
+      if (task.dueAt == null || task.status == TaskStatus.completed)
+        return false;
+
       // Exclude tasks already shown in today and this week sections
       final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
       final endOfWeek = startOfWeek.add(const Duration(days: 6));
-      final isInCurrentWeek = task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+      final isInCurrentWeek =
+          task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+              task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
       if (isInCurrentWeek) return false;
-      
-      return task.dueAt!.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+
+      return task.dueAt!
+              .isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
           task.dueAt!.isBefore(endOfMonth.add(const Duration(days: 1)));
     }).toList();
   }
 
   /// Get completed tasks
   List<Task> _getCompletedTasks(List<Task> allTasks) {
-    return allTasks.where((task) => task.status == TaskStatus.completed).toList()
-      ..sort((a, b) => (b.dueAt ?? DateTime.now()).compareTo(a.dueAt ?? DateTime.now()));
+    return allTasks
+        .where((task) => task.status == TaskStatus.completed)
+        .toList()
+      ..sort((a, b) =>
+          (b.dueAt ?? DateTime.now()).compareTo(a.dueAt ?? DateTime.now()));
   }
 
   /// Build a task section with header and task list inline
@@ -1254,7 +1344,7 @@ class _LearningScreenState extends State<LearningScreen>
           ],
         ),
         const SizedBox(height: 12),
-        
+
         // Task list or empty message
         if (tasks.isEmpty)
           Container(
@@ -1263,7 +1353,8 @@ class _LearningScreenState extends State<LearningScreen>
             decoration: BoxDecoration(
               color: const Color(0xFF242628), // Match dashboard header color
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+              border: Border.all(
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
             ),
             child: Column(
               children: [
@@ -1286,7 +1377,7 @@ class _LearningScreenState extends State<LearningScreen>
           )
         else
           ...tasks.take(3).map((task) => _buildInlineTaskCard(task)),
-        
+
         // Show more button if there are more than 3 tasks
         if (tasks.length > 3)
           Padding(
@@ -1335,7 +1426,9 @@ class _LearningScreenState extends State<LearningScreen>
             child: Row(
               children: [
                 Icon(
-                  _isCompletedTasksExpanded ? Icons.expand_less : Icons.expand_more,
+                  _isCompletedTasksExpanded
+                      ? Icons.expand_less
+                      : Icons.expand_more,
                   color: const Color(0xFF6FB8E9),
                   size: 24,
                 ),
@@ -1356,7 +1449,8 @@ class _LearningScreenState extends State<LearningScreen>
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -1374,7 +1468,7 @@ class _LearningScreenState extends State<LearningScreen>
             ),
           ),
         ),
-        
+
         // Expanded task list or empty message
         if (_isCompletedTasksExpanded) ...[
           const SizedBox(height: 12),
@@ -1385,7 +1479,8 @@ class _LearningScreenState extends State<LearningScreen>
               decoration: BoxDecoration(
                 color: const Color(0xFF242628),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
@@ -1462,7 +1557,7 @@ class _LearningScreenState extends State<LearningScreen>
                   ),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Task content
                 Expanded(
                   child: Column(
@@ -1478,7 +1573,8 @@ class _LearningScreenState extends State<LearningScreen>
                               : null,
                           color: task.status == TaskStatus.completed
                               ? const Color(0xFF888888)
-                              : const Color(0xFFD9D9D9), // Light text for dark theme
+                              : const Color(
+                                  0xFFD9D9D9), // Light text for dark theme
                         ),
                       ),
                       if (task.dueAt != null) ...[
@@ -1488,14 +1584,16 @@ class _LearningScreenState extends State<LearningScreen>
                             Icon(
                               Icons.schedule,
                               size: 12,
-                              color: const Color(0xFF888888), // Lighter grey for dark theme
+                              color: const Color(
+                                  0xFF888888), // Lighter grey for dark theme
                             ),
                             const SizedBox(width: 4),
                             Text(
                               _formatDueDateInline(task.dueAt!),
                               style: const TextStyle(
                                 fontSize: 11,
-                                color: Color(0xFF888888), // Lighter grey for dark theme
+                                color: Color(
+                                    0xFF888888), // Lighter grey for dark theme
                               ),
                             ),
                           ],
@@ -1538,7 +1636,7 @@ class _LearningScreenState extends State<LearningScreen>
     final newStatus = task.status == TaskStatus.completed
         ? TaskStatus.pending
         : TaskStatus.completed;
-    
+
     // Create updated task
     final updatedTask = Task(
       id: task.id,
@@ -1551,7 +1649,7 @@ class _LearningScreenState extends State<LearningScreen>
       linkedNoteId: task.linkedNoteId,
       linkedDeckId: task.linkedDeckId,
     );
-    
+
     provider.updateTask(updatedTask);
   }
 
@@ -1569,8 +1667,7 @@ class _LearningScreenState extends State<LearningScreen>
             if (task.dueAt != null)
               Text('Due: ${_formatDueDateInline(task.dueAt!)}'),
             Text('Priority: ${_getPriorityTextInline(task.priority)}'),
-            if (task.tags.isNotEmpty)
-              Text('Tags: ${task.tags.join(', ')}'),
+            if (task.tags.isNotEmpty) Text('Tags: ${task.tags.join(', ')}'),
           ],
         ),
         actions: [
@@ -1615,10 +1712,11 @@ class _LearningScreenState extends State<LearningScreen>
 
   /// Build circular chart showing quiz grade percentage
   Widget _buildGradeCircularChart(double grade) {
-    final gradeColor = grade > 0 ? _getGradeColor(grade) : const Color(0xFF888888);
+    final gradeColor =
+        grade > 0 ? _getGradeColor(grade) : const Color(0xFF888888);
     final percentage = (grade * 100).round();
     final displayText = '$percentage%';
-    
+
     return SizedBox(
       width: 48,
       height: 48,
@@ -1697,7 +1795,8 @@ class _LearningScreenState extends State<LearningScreen>
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: 600,
-              maxHeight: MediaQuery.of(context).size.height * 0.85, // 85% of screen height
+              maxHeight: MediaQuery.of(context).size.height *
+                  0.85, // 85% of screen height
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1762,7 +1861,7 @@ class _LearningScreenState extends State<LearningScreen>
                     ],
                   ),
                 ),
-                
+
                 // Content area with AI Flashcard Generator
                 Flexible(
                   child: Container(
@@ -1843,9 +1942,9 @@ class _LearningScreenState extends State<LearningScreen>
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 const Text(
                   'Choose your action:',
                   style: TextStyle(
@@ -1854,9 +1953,9 @@ class _LearningScreenState extends State<LearningScreen>
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // View Mode Button
                 SizedBox(
                   width: double.infinity,
@@ -1885,9 +1984,9 @@ class _LearningScreenState extends State<LearningScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Edit Mode Button
                 SizedBox(
                   width: double.infinity,
@@ -1920,9 +2019,9 @@ class _LearningScreenState extends State<LearningScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Generate Flashcards Button
                 SizedBox(
                   width: double.infinity,
@@ -1957,7 +2056,8 @@ class _LearningScreenState extends State<LearningScreen>
                     icon: const Icon(Icons.auto_awesome),
                     label: const Text('Generate Flashcards'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                      backgroundColor:
+                          const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                       foregroundColor: const Color(0xFF6FB8E9),
                       side: const BorderSide(
                         color: Color(0xFF6FB8E9),
@@ -1970,9 +2070,9 @@ class _LearningScreenState extends State<LearningScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Cancel Button
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -2075,14 +2175,15 @@ class _LearningScreenState extends State<LearningScreen>
                     ],
                   ),
                 ),
-                
+
                 // Content area with Create Note Form
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                     child: simple.CreateNoteForm(
                       onSaveNote: (Note note) {
-                        Provider.of<NoteProvider>(context, listen: false).addNote(note);
+                        Provider.of<NoteProvider>(context, listen: false)
+                            .addNote(note);
                         Navigator.of(context).pop();
                       },
                     ),
@@ -2097,7 +2198,8 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Show dialog to edit an existing note
-  void _showEditNoteDialog(BuildContext context, Note note, NoteProvider noteProvider) {
+  void _showEditNoteDialog(
+      BuildContext context, Note note, NoteProvider noteProvider) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -2110,7 +2212,8 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Show delete confirmation dialog for note
-  void _showDeleteNoteDialog(BuildContext context, Note note, NoteProvider noteProvider) {
+  void _showDeleteNoteDialog(
+      BuildContext context, Note note, NoteProvider noteProvider) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -2153,7 +2256,8 @@ class _LearningScreenState extends State<LearningScreen>
                   await noteProvider.deleteNote(note.id);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Note deleted successfully')),
+                      const SnackBar(
+                          content: Text('Note deleted successfully')),
                     );
                   }
                 } catch (e) {
@@ -2175,6 +2279,7 @@ class _LearningScreenState extends State<LearningScreen>
       },
     );
   }
+
   void _showDeckModeSelection(BuildContext context, Deck deck) {
     showDialog(
       context: context,
@@ -2237,9 +2342,9 @@ class _LearningScreenState extends State<LearningScreen>
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 Text(
                   'Choose your study mode:',
                   style: const TextStyle(
@@ -2248,9 +2353,9 @@ class _LearningScreenState extends State<LearningScreen>
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Study Mode Button
                 SizedBox(
                   width: double.infinity,
@@ -2279,9 +2384,9 @@ class _LearningScreenState extends State<LearningScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Quiz Mode Button
                 SizedBox(
                   width: double.infinity,
@@ -2314,9 +2419,9 @@ class _LearningScreenState extends State<LearningScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Cancel Button
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
@@ -2336,7 +2441,8 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Show dialog to edit an existing deck
-  void _showEditDeckDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+  void _showEditDeckDialog(
+      BuildContext context, Deck deck, DeckProvider deckProvider) {
     final titleController = TextEditingController(text: deck.title);
     final tagsController = TextEditingController(text: deck.tags.join(', '));
 
@@ -2457,7 +2563,8 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Show dialog to confirm deck deletion
-  void _showDeleteDeckDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+  void _showDeleteDeckDialog(
+      BuildContext context, Deck deck, DeckProvider deckProvider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -2502,10 +2609,12 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Show dialog to add cards to an existing deck
-  void _showAddCardsDialog(BuildContext context, Deck deck, DeckProvider deckProvider) {
+  void _showAddCardsDialog(
+      BuildContext context, Deck deck, DeckProvider deckProvider) {
     showDialog(
       context: context,
-      builder: (context) => _AddCardsDialog(deck: deck, deckProvider: deckProvider),
+      builder: (context) =>
+          _AddCardsDialog(deck: deck, deckProvider: deckProvider),
     );
   }
 
@@ -2513,7 +2622,8 @@ class _LearningScreenState extends State<LearningScreen>
   void _showAddToCalendarDialog(BuildContext context, Deck deck) {
     // Default to tomorrow at 10 AM
     DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
-    selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
+    selectedDate = DateTime(
+        selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
     int selectedDuration = 30; // Default 30 minutes
 
@@ -2545,12 +2655,14 @@ class _LearningScreenState extends State<LearningScreen>
                       style: const TextStyle(color: Color(0xFFD9D9D9)),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Date Picker
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.calendar_today, color: Color(0xFF6FB8E9)),
-                      title: const Text('Date', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      leading: const Icon(Icons.calendar_today,
+                          color: Color(0xFF6FB8E9)),
+                      title: const Text('Date',
+                          style: TextStyle(color: Color(0xFFD9D9D9))),
                       subtitle: Text(
                         '${selectedDate.month}/${selectedDate.day}/${selectedDate.year}',
                         style: const TextStyle(color: Color(0xFFD9D9D9)),
@@ -2560,7 +2672,8 @@ class _LearningScreenState extends State<LearningScreen>
                           context: context,
                           initialDate: selectedDate,
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
                         );
                         if (picked != null) {
                           setState(() {
@@ -2575,12 +2688,14 @@ class _LearningScreenState extends State<LearningScreen>
                         }
                       },
                     ),
-                    
+
                     // Time Picker
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.access_time, color: Color(0xFF6FB8E9)),
-                      title: const Text('Time', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      leading: const Icon(Icons.access_time,
+                          color: Color(0xFF6FB8E9)),
+                      title: const Text('Time',
+                          style: TextStyle(color: Color(0xFFD9D9D9))),
                       subtitle: Text(
                         selectedTime.format(context),
                         style: const TextStyle(color: Color(0xFFD9D9D9)),
@@ -2604,21 +2719,26 @@ class _LearningScreenState extends State<LearningScreen>
                         }
                       },
                     ),
-                    
+
                     // Duration Selector
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.timer, color: Color(0xFF6FB8E9)),
-                      title: const Text('Duration', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      leading:
+                          const Icon(Icons.timer, color: Color(0xFF6FB8E9)),
+                      title: const Text('Duration',
+                          style: TextStyle(color: Color(0xFFD9D9D9))),
                       subtitle: DropdownButton<int>(
                         value: selectedDuration,
                         isExpanded: true,
                         dropdownColor: const Color(0xFF242628),
                         style: const TextStyle(color: Color(0xFFD9D9D9)),
                         items: const [
-                          DropdownMenuItem(value: 15, child: Text('15 minutes')),
-                          DropdownMenuItem(value: 30, child: Text('30 minutes')),
-                          DropdownMenuItem(value: 45, child: Text('45 minutes')),
+                          DropdownMenuItem(
+                              value: 15, child: Text('15 minutes')),
+                          DropdownMenuItem(
+                              value: 30, child: Text('30 minutes')),
+                          DropdownMenuItem(
+                              value: 45, child: Text('45 minutes')),
                           DropdownMenuItem(value: 60, child: Text('1 hour')),
                           DropdownMenuItem(value: 90, child: Text('1.5 hours')),
                           DropdownMenuItem(value: 120, child: Text('2 hours')),
@@ -2632,7 +2752,7 @@ class _LearningScreenState extends State<LearningScreen>
                         },
                       ),
                     ),
-                    
+
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -2646,7 +2766,8 @@ class _LearningScreenState extends State<LearningScreen>
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline, color: Color(0xFF6FB8E9), size: 20),
+                          const Icon(Icons.info_outline,
+                              color: Color(0xFF6FB8E9), size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -2667,7 +2788,8 @@ class _LearningScreenState extends State<LearningScreen>
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    _addToCalendar(context, deck, selectedDate, selectedDuration);
+                    _addToCalendar(
+                        context, deck, selectedDate, selectedDuration);
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
@@ -2685,7 +2807,8 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Add deck to calendar as a study event
-  void _addToCalendar(BuildContext context, Deck deck, DateTime scheduledTime, int durationMinutes) async {
+  void _addToCalendar(BuildContext context, Deck deck, DateTime scheduledTime,
+      int durationMinutes) async {
     try {
       // Create the calendar event from the deck
       final event = CalendarEvent.fromDeck(
@@ -2695,14 +2818,16 @@ class _LearningScreenState extends State<LearningScreen>
       );
 
       // Add to calendar provider
-      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      final calendarProvider =
+          Provider.of<CalendarProvider>(context, listen: false);
       final addedEvent = await calendarProvider.addFlashcardStudyEvent(event);
 
       if (addedEvent != null && context.mounted) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added "${deck.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
+            content: Text(
+                'Added "${deck.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
             duration: const Duration(seconds: 3),
             backgroundColor: Colors.green,
             action: SnackBarAction(
@@ -2743,7 +2868,8 @@ class _LearningScreenState extends State<LearningScreen>
   void _showAddNoteToCalendarDialog(BuildContext context, Note note) {
     // Default to tomorrow at 10 AM
     DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
-    selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
+    selectedDate = DateTime(
+        selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
     int selectedDuration = 30; // Default 30 minutes
 
@@ -2775,12 +2901,14 @@ class _LearningScreenState extends State<LearningScreen>
                       style: const TextStyle(color: Color(0xFFD9D9D9)),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Date Picker
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.calendar_today, color: Color(0xFF6FB8E9)),
-                      title: const Text('Date', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      leading: const Icon(Icons.calendar_today,
+                          color: Color(0xFF6FB8E9)),
+                      title: const Text('Date',
+                          style: TextStyle(color: Color(0xFFD9D9D9))),
                       subtitle: Text(
                         '${selectedDate.month}/${selectedDate.day}/${selectedDate.year}',
                         style: const TextStyle(color: Color(0xFFD9D9D9)),
@@ -2790,7 +2918,8 @@ class _LearningScreenState extends State<LearningScreen>
                           context: context,
                           initialDate: selectedDate,
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
                         );
                         if (picked != null) {
                           setState(() {
@@ -2805,12 +2934,14 @@ class _LearningScreenState extends State<LearningScreen>
                         }
                       },
                     ),
-                    
+
                     // Time Picker
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.access_time, color: Color(0xFF6FB8E9)),
-                      title: const Text('Time', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      leading: const Icon(Icons.access_time,
+                          color: Color(0xFF6FB8E9)),
+                      title: const Text('Time',
+                          style: TextStyle(color: Color(0xFFD9D9D9))),
                       subtitle: Text(
                         selectedTime.format(context),
                         style: const TextStyle(color: Color(0xFFD9D9D9)),
@@ -2834,21 +2965,26 @@ class _LearningScreenState extends State<LearningScreen>
                         }
                       },
                     ),
-                    
+
                     // Duration Selector
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.timer, color: Color(0xFF6FB8E9)),
-                      title: const Text('Duration', style: TextStyle(color: Color(0xFFD9D9D9))),
+                      leading:
+                          const Icon(Icons.timer, color: Color(0xFF6FB8E9)),
+                      title: const Text('Duration',
+                          style: TextStyle(color: Color(0xFFD9D9D9))),
                       subtitle: DropdownButton<int>(
                         value: selectedDuration,
                         isExpanded: true,
                         dropdownColor: const Color(0xFF242628),
                         style: const TextStyle(color: Color(0xFFD9D9D9)),
                         items: const [
-                          DropdownMenuItem(value: 15, child: Text('15 minutes')),
-                          DropdownMenuItem(value: 30, child: Text('30 minutes')),
-                          DropdownMenuItem(value: 45, child: Text('45 minutes')),
+                          DropdownMenuItem(
+                              value: 15, child: Text('15 minutes')),
+                          DropdownMenuItem(
+                              value: 30, child: Text('30 minutes')),
+                          DropdownMenuItem(
+                              value: 45, child: Text('45 minutes')),
                           DropdownMenuItem(value: 60, child: Text('1 hour')),
                           DropdownMenuItem(value: 90, child: Text('1.5 hours')),
                           DropdownMenuItem(value: 120, child: Text('2 hours')),
@@ -2862,7 +2998,7 @@ class _LearningScreenState extends State<LearningScreen>
                         },
                       ),
                     ),
-                    
+
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -2876,7 +3012,8 @@ class _LearningScreenState extends State<LearningScreen>
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline, color: Color(0xFF6FB8E9), size: 20),
+                          const Icon(Icons.info_outline,
+                              color: Color(0xFF6FB8E9), size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -2897,7 +3034,8 @@ class _LearningScreenState extends State<LearningScreen>
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    _addNoteToCalendar(context, note, selectedDate, selectedDuration);
+                    _addNoteToCalendar(
+                        context, note, selectedDate, selectedDuration);
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
@@ -2915,7 +3053,8 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Add note to calendar as a review event
-  void _addNoteToCalendar(BuildContext context, Note note, DateTime scheduledTime, int durationMinutes) async {
+  void _addNoteToCalendar(BuildContext context, Note note,
+      DateTime scheduledTime, int durationMinutes) async {
     try {
       // Create the calendar event from the note
       final event = CalendarEvent.fromNote(
@@ -2925,7 +3064,8 @@ class _LearningScreenState extends State<LearningScreen>
       );
 
       // Add to calendar provider
-      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      final calendarProvider =
+          Provider.of<CalendarProvider>(context, listen: false);
       final addedEvent = await calendarProvider.createEvent(
         title: event.title,
         description: event.description,
@@ -2942,7 +3082,8 @@ class _LearningScreenState extends State<LearningScreen>
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added "${note.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
+            content: Text(
+                'Added "${note.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
             duration: const Duration(seconds: 3),
             backgroundColor: Colors.green,
             action: SnackBarAction(
@@ -2999,7 +3140,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
   final _option2Controller = TextEditingController();
   final _option3Controller = TextEditingController();
   final _option4Controller = TextEditingController();
-  
+
   CardType _selectedType = CardType.basic;
   int _difficulty = 3;
   int _correctAnswerIndex = 0;
@@ -3054,8 +3195,10 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
               // Card Type Selector
               DropdownButtonFormField<CardType>(
                 initialValue: _selectedType,
-                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
-                dropdownColor: const Color(0xFF242628), // Match dialog background
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
+                dropdownColor:
+                    const Color(0xFF242628), // Match dialog background
                 decoration: InputDecoration(
                   labelText: 'Card Type',
                   labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
@@ -3109,18 +3252,20 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Front/Question
               TextFormField(
                 controller: _frontController,
-                style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
                 decoration: InputDecoration(
                   labelText: _selectedType == CardType.multipleChoice
                       ? 'Question *'
                       : 'Front (Question) *',
                   labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                   hintText: 'Enter the question or prompt',
-                  hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  hintStyle: TextStyle(
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
                   filled: true,
                   fillColor: const Color(0xFF1A1A1A),
                   border: OutlineInputBorder(
@@ -3149,17 +3294,19 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               if (_selectedType == CardType.basic) ...[
                 // Back/Answer for basic cards
                 TextFormField(
                   controller: _backController,
-                  style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
+                  style: const TextStyle(
+                      color: Color(0xFFD9D9D9)), // Match learning screen text
                   decoration: InputDecoration(
                     labelText: 'Back (Answer) *',
                     labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
                     hintText: 'Enter the answer',
-                    hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                    hintStyle: TextStyle(
+                        color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
                     filled: true,
                     fillColor: const Color(0xFF1A1A1A),
                     border: OutlineInputBorder(
@@ -3192,11 +3339,11 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 Text(
                   'Answer Options',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: const Color(0xFFD9D9D9),
-                  ),
+                        color: const Color(0xFFD9D9D9),
+                      ),
                 ),
                 const SizedBox(height: 8),
-                
+
                 _buildOptionField(_option1Controller, 'Option 1 *', 0),
                 const SizedBox(height: 8),
                 _buildOptionField(_option2Controller, 'Option 2 *', 1),
@@ -3205,24 +3352,25 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 const SizedBox(height: 8),
                 _buildOptionField(_option4Controller, 'Option 4 *', 3),
                 const SizedBox(height: 16),
-                
+
                 // Correct answer selector
                 Text(
                   'Correct Answer: Option ${_correctAnswerIndex + 1}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF4CAF50), // Use green from our palette
+                        color: const Color(
+                            0xFF4CAF50), // Use green from our palette
                       ),
                 ),
               ],
               const SizedBox(height: 16),
-              
+
               // Difficulty Selector
               Text(
                 'Difficulty',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: const Color(0xFFD9D9D9),
-                ),
+                      color: const Color(0xFFD9D9D9),
+                    ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -3244,13 +3392,15 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? const Color(0xFF6FB8E9) // Use our standard blue
+                                ? const Color(
+                                    0xFF6FB8E9) // Use our standard blue
                                 : const Color(0xFF1A1A1A), // Dark background
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: isSelected
                                   ? const Color(0xFF6FB8E9)
-                                  : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                                  : const Color(0xFF6FB8E9)
+                                      .withValues(alpha: 0.3),
                               width: isSelected ? 2 : 1,
                             ),
                           ),
@@ -3258,8 +3408,12 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                             '$difficulty',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: isSelected ? Colors.white : const Color(0xFFD9D9D9),
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFFD9D9D9),
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -3300,14 +3454,16 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
     );
   }
 
-  Widget _buildOptionField(TextEditingController controller, String label, int index) {
+  Widget _buildOptionField(
+      TextEditingController controller, String label, int index) {
     final isCorrect = _correctAnswerIndex == index;
     return Row(
       children: [
         Expanded(
           child: TextFormField(
             controller: controller,
-            style: const TextStyle(color: Color(0xFFD9D9D9)), // Match learning screen text
+            style: const TextStyle(
+                color: Color(0xFFD9D9D9)), // Match learning screen text
             decoration: InputDecoration(
               labelText: label,
               labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
@@ -3315,19 +3471,25 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
               fillColor: const Color(0xFF1A1A1A),
               border: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  color: isCorrect
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                   width: isCorrect ? 2 : 1,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  color: isCorrect
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                   width: isCorrect ? 2 : 1,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(
-                  color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFF6FB8E9),
+                  color: isCorrect
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFF6FB8E9),
                   width: 2,
                 ),
               ),
@@ -3344,7 +3506,8 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
         IconButton(
           icon: Icon(
             isCorrect ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: isCorrect ? const Color(0xFF4CAF50) : const Color(0xFFB0B0B0),
+            color:
+                isCorrect ? const Color(0xFF4CAF50) : const Color(0xFFB0B0B0),
           ),
           onPressed: () {
             setState(() {
@@ -3377,7 +3540,8 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
               _option4Controller.text.trim(),
             ]
           : [],
-      correctAnswerIndex: _selectedType == CardType.multipleChoice ? _correctAnswerIndex : 0,
+      correctAnswerIndex:
+          _selectedType == CardType.multipleChoice ? _correctAnswerIndex : 0,
       difficulty: _difficulty,
     );
 

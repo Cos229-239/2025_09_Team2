@@ -35,13 +35,14 @@ class AITutorTestParser {
 
     final content = file.readAsStringSync();
     final testCases = <AITutorTestCase>[];
-    
+
     // Parse sections separated by horizontal lines
-    final sections = content.split('----------------------------------------------------------------------------');
-    
+    final sections = content.split(
+        '----------------------------------------------------------------------------');
+
     for (final section in sections) {
       if (section.trim().isEmpty) continue;
-      
+
       final cases = _parseSection(section.trim());
       testCases.addAll(cases);
     }
@@ -52,24 +53,26 @@ class AITutorTestParser {
   static List<AITutorTestCase> _parseSection(String section) {
     final cases = <AITutorTestCase>[];
     final lines = section.split('\n');
-    
+
     if (lines.isEmpty) return cases;
-    
+
     // First line is the category
     final category = lines[0].trim();
-    
+
     // Parse question-response pairs
     String? currentQuestion;
     String? currentQuestionText;
     String? currentResponse;
     int questionNum = 0;
-    
+
     for (var i = 1; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       if (line.startsWith('Question ')) {
         // Save previous case
-        if (currentQuestion != null && currentQuestionText != null && currentResponse != null) {
+        if (currentQuestion != null &&
+            currentQuestionText != null &&
+            currentResponse != null) {
           cases.add(AITutorTestCase(
             questionNumber: questionNum,
             category: category,
@@ -78,19 +81,22 @@ class AITutorTestParser {
             acceptanceCriteria: _extractCriteria(category, questionNum),
           ));
         }
-        
+
         // Start new case
         currentQuestion = line;
         questionNum = int.tryParse(line.split(' ')[1].replaceAll(':', '')) ?? 0;
         currentQuestionText = null;
         currentResponse = null;
-      } else if (currentQuestion != null && currentQuestionText == null && line.isNotEmpty) {
+      } else if (currentQuestion != null &&
+          currentQuestionText == null &&
+          line.isNotEmpty) {
         currentQuestionText = line;
       } else if (line.startsWith('AI Response ')) {
         // Next few lines are the response
         final responseBuffer = StringBuffer();
         for (var j = i + 1; j < lines.length; j++) {
-          if (lines[j].trim().isEmpty || lines[j].trim().startsWith('Question ')) {
+          if (lines[j].trim().isEmpty ||
+              lines[j].trim().startsWith('Question ')) {
             break;
           }
           responseBuffer.writeln(lines[j].trim());
@@ -98,9 +104,11 @@ class AITutorTestParser {
         currentResponse = responseBuffer.toString().trim();
       }
     }
-    
+
     // Save last case
-    if (currentQuestion != null && currentQuestionText != null && currentResponse != null) {
+    if (currentQuestion != null &&
+        currentQuestionText != null &&
+        currentResponse != null) {
       cases.add(AITutorTestCase(
         questionNumber: questionNum,
         category: category,
@@ -109,14 +117,14 @@ class AITutorTestParser {
         acceptanceCriteria: _extractCriteria(category, questionNum),
       ));
     }
-    
+
     return cases;
   }
 
   /// Extract acceptance criteria based on category and question number
   static List<String> _extractCriteria(String category, int questionNum) {
     final criteria = <String>[];
-    
+
     if (category.contains('Memory')) {
       if (questionNum == 2) {
         criteria.add('MUST NOT assert prior discussion when none present');
@@ -130,13 +138,14 @@ class AITutorTestParser {
       criteria.add('Should adapt tone to user state');
     } else if (category.contains('Learning Pattern')) {
       if (questionNum == 8) {
-        criteria.add('Should offer visual examples or describe how to create them');
+        criteria
+            .add('Should offer visual examples or describe how to create them');
       } else if (questionNum == 9) {
         criteria.add('Should provide step-by-step instructions');
         criteria.add('Math validation should pass');
       }
     }
-    
+
     return criteria;
   }
 }
@@ -153,12 +162,12 @@ class AITutorTestRunner {
   Future<TestResults> runAllTests(String testFilePath) async {
     final testCases = AITutorTestParser.parseTestFile(testFilePath);
     final results = <TestResult>[];
-    
+
     for (final testCase in testCases) {
       final result = await runTestCase(testCase);
       results.add(result);
     }
-    
+
     return TestResults(
       total: results.length,
       passed: results.where((r) => r.passed).length,
@@ -172,7 +181,7 @@ class AITutorTestRunner {
   Future<TestResult> runTestCase(AITutorTestCase testCase) async {
     final userId = 'test_user_${testCase.questionNumber}';
     final failures = <String>[];
-    
+
     try {
       // Step 1: Pre-process
       final preContext = await middleware.preProcessMessage(
@@ -234,7 +243,8 @@ class AITutorTestRunner {
 
     if (lowerCriterion.contains('must not assert prior discussion')) {
       // Check memory validation caught false claims
-      return response.memoryValid || response.corrections.any((c) => c.contains('memory'));
+      return response.memoryValid ||
+          response.corrections.any((c) => c.contains('memory'));
     }
 
     if (lowerCriterion.contains('should ask')) {
@@ -248,15 +258,21 @@ class AITutorTestRunner {
 
     if (lowerCriterion.contains('should acknowledge user emotion')) {
       // Check for emotional acknowledgment keywords
-      final emotionalKeywords = ['understand', 'see', 'help', 'know', 'appreciate'];
+      final emotionalKeywords = [
+        'understand',
+        'see',
+        'help',
+        'know',
+        'appreciate'
+      ];
       return emotionalKeywords.any((kw) => lowerResponse.contains(kw));
     }
 
     if (lowerCriterion.contains('step-by-step')) {
       // Check for numbered steps or sequential indicators
-      return lowerResponse.contains('step') || 
-             lowerResponse.contains('1.') || 
-             lowerResponse.contains('first');
+      return lowerResponse.contains('step') ||
+          lowerResponse.contains('1.') ||
+          lowerResponse.contains('first');
     }
 
     // Default: check if criterion keywords appear in response
@@ -313,17 +329,18 @@ class TestResults {
     buffer.writeln('Failed: $failed');
     buffer.writeln('Pass Rate: ${(passRate * 100).toStringAsFixed(1)}%');
     buffer.writeln();
-    
+
     if (failed > 0) {
       buffer.writeln('Failed Tests:');
       for (final result in results.where((r) => !r.passed)) {
-        buffer.writeln('  Q${result.testCase.questionNumber}: ${result.testCase.category}');
+        buffer.writeln(
+            '  Q${result.testCase.questionNumber}: ${result.testCase.category}');
         for (final failure in result.failures) {
           buffer.writeln('    - $failure');
         }
       }
     }
-    
+
     return buffer.toString();
   }
 }
@@ -337,24 +354,27 @@ void main() {
       runner = AITutorTestRunner();
     });
 
-    test('Memory claim validation - Q2 (Fresh session, no prior history)', () async {
+    test('Memory claim validation - Q2 (Fresh session, no prior history)',
+        () async {
       // This test verifies that the AI doesn't falsely claim to remember previous conversations
       // when the session is fresh with no prior messages
-      
+
       final userId = 'test_user_memory_Q2';
-      
+
       // User asks if AI remembers yesterday's conversation (but there was none!)
-      final question = 'Hi again! Do you remember what we discussed about algebra yesterday?';
-      
+      final question =
+          'Hi again! Do you remember what we discussed about algebra yesterday?';
+
       // Simulate a false memory claim from the LLM
-      final badLlmResponse = 'Yes, we discussed algebraic expressions and equations yesterday. You were learning about factoring.';
-      
+      final badLlmResponse =
+          'Yes, we discussed algebraic expressions and equations yesterday. You were learning about factoring.';
+
       // Pre-process (should have empty session since this is first message)
       final preContext = await runner.middleware.preProcessMessage(
         userId: userId,
         message: question,
       );
-      
+
       // Post-process (should detect and correct the false memory claim)
       final postResult = await runner.middleware.postProcessResponse(
         userId: userId,
@@ -362,14 +382,14 @@ void main() {
         llmResponse: badLlmResponse,
         context: preContext,
       );
-      
+
       // Verify the memory claim was caught
       expect(postResult.memoryValid, isFalse,
           reason: 'Should detect false memory claim when session is empty');
-      
+
       expect(postResult.corrections.isNotEmpty, isTrue,
           reason: 'Should add corrections for the false memory claim');
-      
+
       expect(postResult.response.toLowerCase(), isNot(contains('yesterday')),
           reason: 'Corrected response should not claim to remember yesterday');
     });
@@ -377,18 +397,19 @@ void main() {
     test('Memory claim validation - Legitimate recall (should pass)', () async {
       // This test verifies that REAL memory claims are NOT flagged as false
       // when the session actually contains the referenced conversation
-      
+
       final userId = 'test_user_memory_legit';
-      
+
       // Step 1: Simulate prior conversation about algebra
       final priorMessage = 'Can you explain quadratic equations?';
       await runner.middleware.preProcessMessage(
         userId: userId,
         message: priorMessage,
       );
-      
+
       // Simulate LLM response to build session history
-      final priorResponse = 'Sure! Quadratic equations are polynomials of degree 2...';
+      final priorResponse =
+          'Sure! Quadratic equations are polynomials of degree 2...';
       final priorPreContext = await runner.middleware.preProcessMessage(
         userId: userId,
         message: priorMessage,
@@ -399,27 +420,29 @@ void main() {
         llmResponse: priorResponse,
         context: priorPreContext,
       );
-      
+
       // Step 2: User asks about the previous topic (legitimate recall)
-      final question = 'Can you remind me about the quadratic formula we discussed?';
-      final llmResponse = 'Yes, we were discussing quadratic equations. The formula is x = (-b ± √(b²-4ac)) / 2a';
-      
+      final question =
+          'Can you remind me about the quadratic formula we discussed?';
+      final llmResponse =
+          'Yes, we were discussing quadratic equations. The formula is x = (-b ± √(b²-4ac)) / 2a';
+
       final preContext = await runner.middleware.preProcessMessage(
         userId: userId,
         message: question,
       );
-      
+
       final postResult = await runner.middleware.postProcessResponse(
         userId: userId,
         message: question,
         llmResponse: llmResponse,
         context: preContext,
       );
-      
+
       // This should PASS validation (legitimate memory)
       expect(postResult.memoryValid, isTrue,
           reason: 'Should NOT flag legitimate memory recall as false');
-      
+
       expect(postResult.corrections, isEmpty,
           reason: 'Should not add corrections for valid memory claims');
     });
@@ -436,7 +459,7 @@ void main() {
       );
 
       final result = await runner.runTestCase(testCase);
-      
+
       // This should FAIL validation and add corrections
       expect(result.mathValid || result.corrections.isNotEmpty, isTrue,
           reason: 'Should detect and correct math errors');
@@ -445,7 +468,7 @@ void main() {
     test('SessionContext - tracks conversation topics correctly', () async {
       // This test verifies that SessionContext properly tracks conversation topics
       final userId = 'test_user_session_context';
-      
+
       // Create a session with multiple messages
       final messages = [
         ChatMessage(
@@ -470,7 +493,7 @@ void main() {
           timestamp: DateTime.now(),
         ),
       ];
-      
+
       // Process messages to build session
       for (final msg in messages) {
         await runner.middleware.preProcessMessage(
@@ -478,46 +501,49 @@ void main() {
           message: msg.content,
         );
       }
-      
+
       // Now ask a follow-up question
       final followUp = 'Can you explain that derivative rule again?';
       final preContext = await runner.middleware.preProcessMessage(
         userId: userId,
         message: followUp,
       );
-      
+
       // Verify session context was populated
       expect(preContext.sessionContext, isNotNull,
           reason: 'SessionContext should be available in PreProcessedContext');
-      
+
       // Get the session context explicitly (ensures import is used)
       final SessionContext session = preContext.sessionContext;
-      
+
       // The session should have tracked the calculus/derivative discussion
       final topics = session.getRecentTopics(topK: 5);
-      expect(topics.any((t) => t.topic.toLowerCase().contains('derivative') || 
-                              t.topic.toLowerCase().contains('calculus')), isTrue,
+      expect(
+          topics.any((t) =>
+              t.topic.toLowerCase().contains('derivative') ||
+              t.topic.toLowerCase().contains('calculus')),
+          isTrue,
           reason: 'SessionContext should track discussed topics');
     });
 
     test('UserProfileStore - integration with middleware', () async {
       // This test verifies that the middleware properly integrates with UserProfileStore
       final userId = 'test_user_profile_integration';
-      
+
       // Create a custom profile store for testing
       final profileStore = UserProfileStore();
       final testMiddleware = AITutorMiddleware(profileStore: profileStore);
-      
+
       // First call should work even without a profile (user hasn't opted in)
       final preContext = await testMiddleware.preProcessMessage(
         userId: userId,
         message: 'Hello, can you help me with math?',
       );
-      
+
       // Profile should be null since user hasn't opted in
       expect(preContext.profile, isNull,
           reason: 'Profile should be null for users who haven\'t opted in');
-      
+
       // System should still function correctly without profile
       final postResult = await testMiddleware.postProcessResponse(
         userId: userId,
@@ -525,7 +551,7 @@ void main() {
         llmResponse: 'Of course! I\'d be happy to help you with math.',
         context: preContext,
       );
-      
+
       expect(postResult.response, isNotEmpty,
           reason: 'Middleware should work even without user profile');
     });

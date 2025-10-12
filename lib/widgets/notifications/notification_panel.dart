@@ -61,7 +61,7 @@ class NotificationPanel extends StatelessWidget {
                   width: double.infinity,
                 );
               }
-              
+
               return ClipRect(
                 clipBehavior: Clip.hardEdge,
                 child: SizedBox(
@@ -83,7 +83,8 @@ class NotificationPanel extends StatelessWidget {
 
                       // Notification list - takes remaining space
                       Expanded(
-                        child: _buildNotificationList(context, notificationProvider),
+                        child: _buildNotificationList(
+                            context, notificationProvider),
                       ),
                     ],
                   ),
@@ -149,15 +150,18 @@ class NotificationPanel extends StatelessWidget {
             children: [
               // Mark all as read text button - always visible
               GestureDetector(
-                onTap: provider.unreadCount > 0 ? () => provider.markAllAsRead() : null,
+                onTap: provider.unreadCount > 0
+                    ? () => provider.markAllAsRead()
+                    : null,
                 child: Text(
                   'Mark all as read',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: provider.unreadCount > 0 
-                        ? const Color(0xFF6FB8E9) 
-                        : const Color(0xFF6FB8E9).withValues(alpha: 0.5), // Dimmed when no unread
-                    fontWeight: FontWeight.w600,
-                  ),
+                        color: provider.unreadCount > 0
+                            ? const Color(0xFF6FB8E9)
+                            : const Color(0xFF6FB8E9).withValues(
+                                alpha: 0.5), // Dimmed when no unread
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ),
             ],
@@ -235,8 +239,10 @@ class NotificationPanel extends StatelessWidget {
           // Scale down the illustration if space is limited during animation
           final availableHeight = constraints.maxHeight;
           final shouldShowIllustration = availableHeight > 200;
-          final illustrationSize = availableHeight > 300 ? 160.0 : (availableHeight * 0.4).clamp(80.0, 160.0);
-          
+          final illustrationSize = availableHeight > 300
+              ? 160.0
+              : (availableHeight * 0.4).clamp(80.0, 160.0);
+
           return Center(
             child: SingleChildScrollView(
               child: ConstrainedBox(
@@ -269,13 +275,16 @@ class NotificationPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    if (availableHeight > 100) // Only show text if there's enough space
+                    if (availableHeight >
+                        100) // Only show text if there's enough space
                       Text(
                         'Looks like nothing\'s here...',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: const Color(0xFFD9D9D9), // Matching app text color
-                              fontWeight: FontWeight.w500,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: const Color(
+                                      0xFFD9D9D9), // Matching app text color
+                                  fontWeight: FontWeight.w500,
+                                ),
                       ),
                   ],
                 ),
@@ -697,7 +706,8 @@ class _NotificationBellIconState extends State<NotificationBellIcon>
                       ? _ringAnimation.value * (3.14159 / 180)
                       : 0, // Only animate rotation when there are unread notifications
                   child: GestureDetector(
-                    onTap: widget.onTap ?? () => _showNotificationPanel(context),
+                    onTap:
+                        widget.onTap ?? () => _showNotificationPanel(context),
                     child: CustomPaint(
                       size: const Size(28, 28),
                       painter: _getNotificationPainter(

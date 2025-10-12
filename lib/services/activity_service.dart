@@ -28,7 +28,9 @@ class ActivityService {
         metadata: metadata,
       );
 
-      await _firestoreService.activitiesCollection.doc(activity.id).set(activity.toJson());
+      await _firestoreService.activitiesCollection
+          .doc(activity.id)
+          .set(activity.toJson());
       debugPrint('✅ Activity logged: ${activity.description}');
     } catch (e) {
       debugPrint('❌ Error logging activity: $e');
@@ -57,7 +59,8 @@ class ActivityService {
   }
 
   /// Get activities for a specific user (for viewing friend's profile)
-  Future<List<Activity>> getUserActivities(String userId, {int limit = 10}) async {
+  Future<List<Activity>> getUserActivities(String userId,
+      {int limit = 10}) async {
     try {
       final querySnapshot = await _firestoreService.activitiesCollection
           .where('userId', isEqualTo: userId)

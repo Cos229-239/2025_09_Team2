@@ -91,7 +91,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize flip animation
     _flipController = AnimationController(
       duration: const Duration(milliseconds: 400),
@@ -100,7 +100,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     _flipAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _flipController, curve: Curves.easeInOut),
     );
-    
+
     _loadCardState();
 
     // If starting in quiz mode, start a deck quiz
@@ -176,7 +176,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     if (_showAnswer) {
       _flipController.reverse();
       // Change content at midpoint of animation (when card is perpendicular)
-      Future.delayed(Duration(milliseconds: (_flipController.duration!.inMilliseconds * 0.5).round()), () {
+      Future.delayed(
+          Duration(
+              milliseconds: (_flipController.duration!.inMilliseconds * 0.5)
+                  .round()), () {
         if (mounted) {
           setState(() {
             _showAnswer = !_showAnswer;
@@ -186,7 +189,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     } else {
       _flipController.forward();
       // Change content at midpoint of animation (when card is perpendicular)
-      Future.delayed(Duration(milliseconds: (_flipController.duration!.inMilliseconds * 0.5).round()), () {
+      Future.delayed(
+          Duration(
+              milliseconds: (_flipController.duration!.inMilliseconds * 0.5)
+                  .round()), () {
         if (mounted) {
           setState(() {
             _showAnswer = !_showAnswer;
@@ -240,7 +246,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
       });
 
       _xpFadeTimer?.cancel(); // Cancel any existing timer
-      
+
       debugPrint('Started deck quiz with ${session.totalQuestions} questions');
     }
   }
@@ -278,16 +284,16 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     if (isCorrect) {
       final expEarned = currentCard.calculateExpReward();
       _lastDisplayedXP = expEarned;
-      
+
       // Show XP with fade animation
       if (mounted) {
         setState(() {
           _xpOpacity = 1.0; // Fade in
         });
-        
+
         // Cancel any existing timer
         _xpFadeTimer?.cancel();
-        
+
         // Start fade out timer after 2 seconds
         _xpFadeTimer = Timer(const Duration(seconds: 2), () {
           if (mounted) {
@@ -362,7 +368,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
           children: [
             Icon(
               results.isPerfectScore ? Icons.star : Icons.quiz,
-              color: results.isPerfectScore ? Colors.amber : const Color(0xFF6FB8E9),
+              color: results.isPerfectScore
+                  ? Colors.amber
+                  : const Color(0xFF6FB8E9),
             ),
             const SizedBox(width: 8),
             const Text(
@@ -719,14 +727,16 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
             vertical: 6,
           ),
           decoration: BoxDecoration(
-            color: _showAnswer 
-              ? const Color(0xFF4CAF50).withValues(alpha: 0.2) // Green for answer
-              : const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard accent for question
+            color: _showAnswer
+                ? const Color(0xFF4CAF50)
+                    .withValues(alpha: 0.2) // Green for answer
+                : const Color(0xFF6FB8E9)
+                    .withValues(alpha: 0.2), // Dashboard accent for question
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _showAnswer 
-                ? const Color(0xFF4CAF50) 
-                : const Color(0xFF6FB8E9),
+              color: _showAnswer
+                  ? const Color(0xFF4CAF50)
+                  : const Color(0xFF6FB8E9),
               width: 1,
             ),
           ),
@@ -734,9 +744,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
             _showAnswer ? 'ANSWER' : 'QUESTION',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: _showAnswer 
-                ? const Color(0xFF4CAF50) 
-                : const Color(0xFF6FB8E9),
+              color: _showAnswer
+                  ? const Color(0xFF4CAF50)
+                  : const Color(0xFF6FB8E9),
             ),
           ),
         ),
@@ -763,12 +773,12 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     // Check if user is visual learner
     final bool isVisualLearner =
         user?.preferences.learningStyle.toLowerCase() == 'visual';
-    
+
     // Check if card was created for visual learning style
     final bool isVisualCard = _currentCard.visualMetadata != null &&
         _currentCard.visualMetadata!.isNotEmpty &&
         (_currentCard.visualMetadata!['learningStyle'] == 'visual' ||
-         _currentCard.visualMetadata!['learningStyle'] == 'adaptive');
+            _currentCard.visualMetadata!['learningStyle'] == 'adaptive');
 
     // Use visual widget only for visual learners or cards created for visual/adaptive learning
     if (isVisualLearner || isVisualCard) {
@@ -861,7 +871,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
           children: [
             const Text(
               'Score: ',
-              style: TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
+              style:
+                  TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
             ),
             Text(
               '${_currentQuizSession!.correctAnswers}/${_currentQuizSession!.questionsAnswered}',
@@ -935,14 +946,17 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                   buttonColor = const Color(0xFFEF5350); // Red for incorrect
                   textColor = Colors.white;
                 } else if (isCorrect) {
-                  buttonColor = const Color(0xFF4CAF50); // Green for correct answer
+                  buttonColor =
+                      const Color(0xFF4CAF50); // Green for correct answer
                   textColor = Colors.white;
                 } else {
-                  buttonColor = const Color(0xFF242628); // Dashboard container color
+                  buttonColor =
+                      const Color(0xFF242628); // Dashboard container color
                   textColor = const Color(0xFFD9D9D9); // Dashboard text color
                 }
               } else {
-                buttonColor = const Color(0xFF242628); // Dashboard container color
+                buttonColor =
+                    const Color(0xFF242628); // Dashboard container color
                 textColor = const Color(0xFFD9D9D9); // Dashboard text color
               }
 
@@ -959,9 +973,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: showResult && isCorrect 
-                          ? const Color(0xFF4CAF50)
-                          : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        color: showResult && isCorrect
+                            ? const Color(0xFF4CAF50)
+                            : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -989,8 +1003,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: currentAnswer!.isCorrect
-                  ? const Color(0xFF4CAF50).withValues(alpha: 0.2) // Green with transparency
-                  : const Color(0xFFEF5350).withValues(alpha: 0.2), // Red with transparency
+                  ? const Color(0xFF4CAF50)
+                      .withValues(alpha: 0.2) // Green with transparency
+                  : const Color(0xFFEF5350)
+                      .withValues(alpha: 0.2), // Red with transparency
               border: Border.all(
                 color: currentAnswer.isCorrect
                     ? const Color(0xFF4CAF50)
@@ -1004,9 +1020,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
               children: [
                 Icon(
                   currentAnswer.isCorrect ? Icons.check_circle : Icons.cancel,
-                  color: currentAnswer.isCorrect 
-                    ? const Color(0xFF4CAF50) 
-                    : const Color(0xFFEF5350),
+                  color: currentAnswer.isCorrect
+                      ? const Color(0xFF4CAF50)
+                      : const Color(0xFFEF5350),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -1106,9 +1122,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     size: 48,
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Title
                 Text(
                   'Quiz Complete!',
@@ -1118,9 +1134,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Deck name
                 Text(
                   widget.deck.title,
@@ -1129,9 +1145,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     fontSize: 16,
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Results summary
                 Text(
                   'You completed all ${widget.deck.cards.length} cards',
@@ -1140,9 +1156,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     fontSize: 14,
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Try Again Button
                 SizedBox(
                   width: double.infinity,
@@ -1170,9 +1186,9 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Back to Deck Selection Button
                 SizedBox(
                   width: double.infinity,
@@ -1226,42 +1242,42 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     }
 
     return ThemedBackgroundWrapper(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
-            tooltip: 'Back to decks',
+        child: Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Back to decks',
+        ),
+        title: Text(
+          widget.deck.title,
+          style: const TextStyle(
+            color: Color(0xFFD9D9D9),
+            fontWeight: FontWeight.w600,
           ),
-          title: Text(
-            widget.deck.title,
-            style: const TextStyle(
-              color: Color(0xFFD9D9D9),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          backgroundColor: const Color(0xFF6FB8E9),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          iconTheme: const IconThemeData(
-            color: Colors.white,
-          ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                '${_currentCardIndex + 1} / ${widget.deck.cards.length}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
+        ),
+        backgroundColor: const Color(0xFF6FB8E9),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              '${_currentCardIndex + 1} / ${widget.deck.cards.length}',
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ],
-        ),
-        body: Padding(
+          ),
+        ],
+      ),
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -1275,8 +1291,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                 ),
               ),
 
-            if (!_isDeckQuizMode)
-              const SizedBox(height: 24),
+            if (!_isDeckQuizMode) const SizedBox(height: 24),
 
             if (_isDeckQuizMode)
               const SizedBox(height: 0), // No extra spacing in quiz mode
@@ -1289,14 +1304,15 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                   builder: (context, child) {
                     final angle = _flipAnimation.value * math.pi;
                     final isShowingBack = angle >= (math.pi / 2);
-                    
+
                     // Apply additional 180-degree rotation to the back side to make text readable
-                    final correctedAngle = isShowingBack ? angle + math.pi : angle;
-                    
+                    final correctedAngle =
+                        isShowingBack ? angle + math.pi : angle;
+
                     final transform = Matrix4.identity()
                       ..setEntry(3, 2, 0.001)
                       ..rotateY(correctedAngle);
-                    
+
                     return Transform(
                       transform: transform,
                       alignment: Alignment.center,
@@ -1307,7 +1323,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                             color: const Color(0xFF242628),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              color: const Color(0xFF6FB8E9)
+                                  .withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
@@ -1407,7 +1424,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     )
                   else
                     // Invisible placeholder to maintain button positions
-                    const SizedBox(width: 120), // Approximate width of Previous button
+                    const SizedBox(
+                        width: 120), // Approximate width of Previous button
 
                   // Show answer button (only in study mode, not quiz mode)
                   if (!_isDeckQuizMode)
@@ -1418,7 +1436,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                           : Icons.visibility),
                       label: Text(_showAnswer ? 'Hide Answer' : 'Show Answer'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
+                        backgroundColor:
+                            const Color(0xFF6FB8E9), // Dashboard accent
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
@@ -1435,7 +1454,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                         ? 'Next'
                         : 'Finish'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
+                      backgroundColor:
+                          const Color(0xFF6FB8E9), // Dashboard accent
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1458,7 +1478,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     icon: const Icon(Icons.quiz_outlined),
                     label: const Text('Start Deck Quiz'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent
+                      backgroundColor:
+                          const Color(0xFF6FB8E9), // Dashboard accent
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -1493,8 +1514,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: _currentCard.lastQuizCorrect == true
-                            ? const Color(0xFF38A169).withValues(alpha: 0.2) // Success green with transparency
-                            : const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Blue with transparency
+                            ? const Color(0xFF38A169).withValues(
+                                alpha: 0.2) // Success green with transparency
+                            : const Color(0xFF6FB8E9).withValues(
+                                alpha: 0.2), // Blue with transparency
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(

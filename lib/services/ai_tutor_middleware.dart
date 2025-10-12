@@ -90,7 +90,7 @@ class AITutorMiddleware {
         sessionContext: sessionContext,
         currentMessage: message,
       );
-      
+
       developer.log('Learning style detected: ${detectedStyle.getSummary()}',
           name: 'AITutorMiddleware');
     } catch (e) {
@@ -134,9 +134,8 @@ class AITutorMiddleware {
     var finalResponse = llmResponse;
 
     // Get session context
-    final sessionContext = _sessions[userId] ?? 
-        SessionContext(userId: userId);
-    
+    final sessionContext = _sessions[userId] ?? SessionContext(userId: userId);
+
     final profile = context?.profile;
 
     // Step 1: Memory Claim Validation (if enabled)
@@ -152,14 +151,13 @@ class AITutorMiddleware {
 
         memoryValid = memoryValidation.valid;
         telemetry['memoryClaimsDetected'] = memoryValidation.claims.length;
-        telemetry['invalidMemoryClaims'] = 
+        telemetry['invalidMemoryClaims'] =
             memoryValidation.claims.where((c) => !c.isValid).length;
 
         if (!memoryValid && memoryValidation.correctedResponse != null) {
           finalResponse = memoryValidation.correctedResponse!;
           corrections.add('Corrected false memory claims');
-          developer.log('Memory claims corrected',
-              name: 'AITutorMiddleware');
+          developer.log('Memory claims corrected', name: 'AITutorMiddleware');
         }
       } catch (e) {
         developer.log('Error in memory validation: $e',
@@ -172,18 +170,19 @@ class AITutorMiddleware {
     var mathValid = true;
     if (FeatureFlags.isEnabled('mathValidation', userId)) {
       try {
-        final mathValidation = await MathEngine.validateAndAnnotate(llmResponse);
-        
+        final mathValidation =
+            await MathEngine.validateAndAnnotate(llmResponse);
+
         mathValid = mathValidation.valid;
-        telemetry['mathExpressionsFound'] = 
+        telemetry['mathExpressionsFound'] =
             mathValidation.calculatedValues?.length ?? 0;
         telemetry['mathIssues'] = mathValidation.issues.length;
 
         if (!mathValid && mathValidation.correctedSteps != null) {
-          finalResponse += '\n\n---\n**Math Verification:**\n${mathValidation.correctedSteps}';
+          finalResponse +=
+              '\n\n---\n**Math Verification:**\n${mathValidation.correctedSteps}';
           corrections.add('Added math corrections');
-          developer.log('Math corrections added',
-              name: 'AITutorMiddleware');
+          developer.log('Math corrections added', name: 'AITutorMiddleware');
         }
       } catch (e) {
         developer.log('Error in math validation: $e',
@@ -196,7 +195,7 @@ class AITutorMiddleware {
     if (!memoryValid && !mathValid) {
       developer.log('Multiple validation failures detected - using fallback',
           name: 'AITutorMiddleware');
-      
+
       finalResponse = _generateFallbackResponse(
         userMessage: message,
         memoryIssue: !memoryValid,
@@ -214,7 +213,7 @@ class AITutorMiddleware {
         type: MessageType.user,
         format: MessageFormat.text,
       ));
-      
+
       sessionContext.addMessage(ChatMessage(
         id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
         content: finalResponse,
@@ -242,50 +241,65 @@ class AITutorMiddleware {
     DetectedLearningStyle? detectedStyle,
   }) {
     final buffer = StringBuffer();
-    
-    buffer.writeln('System: You are StudyPals Tutor, an expert educational AI assistant.');
+
+    buffer.writeln(
+        'System: You are StudyPals Tutor, an expert educational AI assistant.');
     buffer.writeln();
-    
+
     buffer.writeln('CONTEXT PROVIDED:');
-    
+
     // Profile information
     if (profile != null && profile.optInFlags.profileStorage) {
       buffer.writeln('- User Profile: Available (opted in)');
-      buffer.writeln('  - Dominant Learning Style: ${profile.learningPreferences.getDominantStyle()}');
-      buffer.writeln('  - Preferred Detail Level: ${profile.learningPreferences.preferredDepth}');
+      buffer.writeln(
+          '  - Dominant Learning Style: ${profile.learningPreferences.getDominantStyle()}');
+      buffer.writeln(
+          '  - Preferred Detail Level: ${profile.learningPreferences.preferredDepth}');
       if (profile.skillScores.subjectMastery.isNotEmpty) {
-        buffer.writeln('  - Subject Mastery: ${profile.skillScores.subjectMastery.keys.join(", ")}');
+        buffer.writeln(
+            '  - Subject Mastery: ${profile.skillScores.subjectMastery.keys.join(", ")}');
       }
     } else {
       buffer.writeln('- User Profile: Not available (user has not opted in)');
     }
-    
+
     // Session context
-    buffer.writeln('- Session Context: ${sessionContext.getAllMessages().length} messages');
+    buffer.writeln(
+        '- Session Context: ${sessionContext.getAllMessages().length} messages');
     final recentTopics = sessionContext.getRecentTopics(topK: 5);
     if (recentTopics.isNotEmpty) {
-      buffer.writeln('  - Recent Topics: ${recentTopics.map((t) => t.topic).join(", ")}');
+      buffer.writeln(
+          '  - Recent Topics: ${recentTopics.map((t) => t.topic).join(", ")}');
     }
-    
+
     // Detected learning style
     if (detectedStyle != null) {
       buffer.writeln('- Detected Learning Style (current session):');
-      buffer.writeln('  - Visual: ${(detectedStyle.preferences.visual * 100).toStringAsFixed(0)}%');
-      buffer.writeln('  - Auditory: ${(detectedStyle.preferences.auditory * 100).toStringAsFixed(0)}%');
-      buffer.writeln('  - Kinesthetic: ${(detectedStyle.preferences.kinesthetic * 100).toStringAsFixed(0)}%');
-      buffer.writeln('  - Reading: ${(detectedStyle.preferences.reading * 100).toStringAsFixed(0)}%');
-      buffer.writeln('  - Preferred Depth: ${detectedStyle.preferences.preferredDepth}');
+      buffer.writeln(
+          '  - Visual: ${(detectedStyle.preferences.visual * 100).toStringAsFixed(0)}%');
+      buffer.writeln(
+          '  - Auditory: ${(detectedStyle.preferences.auditory * 100).toStringAsFixed(0)}%');
+      buffer.writeln(
+          '  - Kinesthetic: ${(detectedStyle.preferences.kinesthetic * 100).toStringAsFixed(0)}%');
+      buffer.writeln(
+          '  - Reading: ${(detectedStyle.preferences.reading * 100).toStringAsFixed(0)}%');
+      buffer.writeln(
+          '  - Preferred Depth: ${detectedStyle.preferences.preferredDepth}');
     }
-    
+
     buffer.writeln();
     buffer.writeln('CRITICAL RULES:');
-    buffer.writeln('1. NEVER assert prior conversations or stored facts unless sessionContext or userProfile contains supporting evidence.');
-    buffer.writeln('   - Use semantic search threshold of 0.75 for memory claims.');
-    buffer.writeln('   - If uncertain, ask "Would you like me to explain X?" instead of "We discussed X".');
+    buffer.writeln(
+        '1. NEVER assert prior conversations or stored facts unless sessionContext or userProfile contains supporting evidence.');
+    buffer.writeln(
+        '   - Use semantic search threshold of 0.75 for memory claims.');
+    buffer.writeln(
+        '   - If uncertain, ask "Would you like me to explain X?" instead of "We discussed X".');
     buffer.writeln();
     buffer.writeln('2. ALWAYS structure responses in this format:');
     buffer.writeln('   - Start with a 1-2 sentence SHORT ANSWER');
-    buffer.writeln('   - Follow with an "Expand" section with examples and details');
+    buffer.writeln(
+        '   - Follow with an "Expand" section with examples and details');
     buffer.writeln('   - End with "Next Actions" (2-3 suggestions)');
     buffer.writeln();
     buffer.writeln('3. For mathematical calculations:');
@@ -294,20 +308,23 @@ class AITutorMiddleware {
     buffer.writeln('   - Verify final answer');
     buffer.writeln();
     buffer.writeln('4. Emotional awareness:');
-    buffer.writeln('   - Acknowledge user emotions (frustration, excitement, confusion)');
+    buffer.writeln(
+        '   - Acknowledge user emotions (frustration, excitement, confusion)');
     buffer.writeln('   - Offer calming, supportive scaffolding questions');
     buffer.writeln('   - Adapt tone to match user state');
     buffer.writeln();
     buffer.writeln('5. Learning style adaptation:');
     if (detectedStyle != null) {
-      final recommendations = LearningStyleDetector.getRecommendations(detectedStyle);
+      final recommendations =
+          LearningStyleDetector.getRecommendations(detectedStyle);
       for (final rec in recommendations) {
         buffer.writeln('   - $rec');
       }
     } else {
-      buffer.writeln('   - Offer multiple formats (text, visual descriptions, examples)');
+      buffer.writeln(
+          '   - Offer multiple formats (text, visual descriptions, examples)');
     }
-    
+
     return buffer.toString();
   }
 
@@ -318,26 +335,32 @@ class AITutorMiddleware {
     required bool mathIssue,
   }) {
     final buffer = StringBuffer();
-    
-    buffer.writeln('I want to make sure I give you the most accurate help possible.');
+
+    buffer.writeln(
+        'I want to make sure I give you the most accurate help possible.');
     buffer.writeln();
-    
+
     if (memoryIssue) {
-      buffer.writeln('I noticed some uncertainty about our conversation history. ');
+      buffer.writeln(
+          'I noticed some uncertainty about our conversation history. ');
     }
-    
+
     if (mathIssue) {
-      buffer.writeln('I also want to double-check any calculations to ensure accuracy. ');
+      buffer.writeln(
+          'I also want to double-check any calculations to ensure accuracy. ');
     }
-    
+
     buffer.writeln();
     buffer.writeln('To help you best, I can:');
-    buffer.writeln('1. **Quick Summary**: Give you a brief overview of the topic');
-    buffer.writeln('2. **Step-by-Step Solution**: Walk through the problem methodically');
-    buffer.writeln('3. **Extended Explanation**: Provide comprehensive coverage with examples');
+    buffer.writeln(
+        '1. **Quick Summary**: Give you a brief overview of the topic');
+    buffer.writeln(
+        '2. **Step-by-Step Solution**: Walk through the problem methodically');
+    buffer.writeln(
+        '3. **Extended Explanation**: Provide comprehensive coverage with examples');
     buffer.writeln();
     buffer.writeln('Which approach would be most helpful for you right now?');
-    
+
     return buffer.toString();
   }
 
@@ -356,7 +379,7 @@ class AITutorMiddleware {
     }
     return session.getStatistics();
   }
-  
+
   /// ========== PRODUCTION-READY: Complete AI Response Processing ==========
   /// Static method for one-call processing without maintaining middleware instance
   static Future<ProcessedAIResponse> processAIResponse({
@@ -367,7 +390,7 @@ class AITutorMiddleware {
   }) async {
     developer.log('🔄 Processing AI response through middleware pipeline',
         name: 'AITutorMiddleware');
-    
+
     // 1. Detect learning style from current query
     DetectedLearningStyle? detectedStyle;
     try {
@@ -381,11 +404,11 @@ class AITutorMiddleware {
       developer.log('⚠️ Error detecting learning style: $e',
           name: 'AITutorMiddleware', error: e);
     }
-    
+
     // 2. Validate memory claims - ONLY if user asked about past conversations
     final memoryIssues = <MemoryIssue>[];
     final userAskedAboutPast = _userAskedAboutPastConversation(userQuery);
-    
+
     try {
       // CRITICAL FIX: Only validate memory claims if user explicitly references past conversations
       // This prevents false "I don't have a record" warnings on normal teaching responses
@@ -394,12 +417,13 @@ class AITutorMiddleware {
           response: aiResponse,
           sessionContext: sessionContext,
         );
-        
+
         if (!memoryResult.valid && memoryResult.claims.isNotEmpty) {
           for (final claim in memoryResult.claims.where((c) => !c.isValid)) {
             // Generate honest alternative for each false claim
             final honestAlt = MemoryClaimValidator.generateHonestAlternative(
-              sessionContext.getRecentTopics(topK: 3)
+              sessionContext
+                  .getRecentTopics(topK: 3)
                   .map((t) => t.topic)
                   .join(', '),
             );
@@ -415,20 +439,21 @@ class AITutorMiddleware {
               name: 'AITutorMiddleware');
         }
       } else {
-        developer.log('ℹ️ Skipping memory validation (user didn\'t ask about past)',
+        developer.log(
+            'ℹ️ Skipping memory validation (user didn\'t ask about past)',
             name: 'AITutorMiddleware');
       }
     } catch (e) {
       developer.log('⚠️ Error validating memory: $e',
           name: 'AITutorMiddleware', error: e);
     }
-    
+
     // 3. Validate math expressions
     final mathIssues = <MathIssue>[];
     final mathValidations = <MathValidation>[];
     try {
       final mathResults = await MathEngine.validateAndAnnotate(aiResponse);
-      
+
       if (mathResults.hasIssues) {
         for (final issueText in mathResults.issues) {
           mathIssues.add(MathIssue(
@@ -440,7 +465,7 @@ class AITutorMiddleware {
         developer.log('⚠️ Found ${mathIssues.length} math issues',
             name: 'AITutorMiddleware');
       }
-      
+
       if (mathResults.valid && mathResults.calculatedValues != null) {
         for (final entry in mathResults.calculatedValues!.entries) {
           mathValidations.add(MathValidation(
@@ -456,33 +481,33 @@ class AITutorMiddleware {
       developer.log('⚠️ Error validating math: $e',
           name: 'AITutorMiddleware', error: e);
     }
-    
+
     // 4. Build final response
     String finalResponse = aiResponse;
-    
+
     // If there are memory issues, prepend corrections
     if (memoryIssues.isNotEmpty) {
-      final corrections = memoryIssues
-          .map((issue) => issue.honestAlternative)
-          .join('\n\n');
+      final corrections =
+          memoryIssues.map((issue) => issue.honestAlternative).join('\n\n');
       finalResponse = '$corrections\n\n$aiResponse';
       developer.log('🔧 Prepended memory corrections to response',
           name: 'AITutorMiddleware');
     }
-    
+
     // If there are math issues, append warnings
     if (mathIssues.isNotEmpty) {
       final warnings = mathIssues
-          .map((issue) => '⚠️ Math check: ${issue.expression} - ${issue.description}')
+          .map((issue) =>
+              '⚠️ Math check: ${issue.expression} - ${issue.description}')
           .join('\n');
       finalResponse = '$finalResponse\n\n$warnings';
       developer.log('🔧 Appended math warnings to response',
           name: 'AITutorMiddleware');
     }
-    
+
     developer.log('✅ Middleware processing complete',
         name: 'AITutorMiddleware');
-    
+
     return ProcessedAIResponse(
       finalResponse: finalResponse,
       detectedLearningStyle: detectedStyle,
@@ -491,12 +516,12 @@ class AITutorMiddleware {
       mathValidations: mathValidations,
     );
   }
-  
+
   /// Check if user's query is asking about past conversations
   /// This prevents false memory warnings on normal teaching questions
   static bool _userAskedAboutPastConversation(String userQuery) {
     final lowerQuery = userQuery.toLowerCase();
-    
+
     // Patterns that indicate user is asking about past conversations
     final pastConversationIndicators = [
       // Direct memory queries
@@ -505,7 +530,7 @@ class AITutorMiddleware {
       'do you remember',
       'did we',
       'did i',
-      
+
       // Temporal references
       'yesterday',
       'last time',
@@ -515,7 +540,7 @@ class AITutorMiddleware {
       'last session',
       'last week',
       'last class',
-      
+
       // Continuation phrases
       'we discussed',
       'we talked about',
@@ -527,7 +552,7 @@ class AITutorMiddleware {
       'i told you',
       'i said',
       'i mentioned',
-      
+
       // Context references
       'from before',
       'from earlier',
@@ -535,10 +560,9 @@ class AITutorMiddleware {
       'that we talked about',
       'what we discussed',
     ];
-    
-    return pastConversationIndicators.any((indicator) => 
-      lowerQuery.contains(indicator)
-    );
+
+    return pastConversationIndicators
+        .any((indicator) => lowerQuery.contains(indicator));
   }
 }
 
@@ -549,7 +573,7 @@ class ProcessedAIResponse {
   final List<MemoryIssue> memoryIssues;
   final List<MathIssue> mathIssues;
   final List<MathValidation> mathValidations;
-  
+
   ProcessedAIResponse({
     required this.finalResponse,
     this.detectedLearningStyle,
@@ -559,7 +583,7 @@ class ProcessedAIResponse {
   })  : memoryIssues = memoryIssues ?? [],
         mathIssues = mathIssues ?? [],
         mathValidations = mathValidations ?? [];
-        
+
   bool get hasIssues => memoryIssues.isNotEmpty || mathIssues.isNotEmpty;
   int get issueCount => memoryIssues.length + mathIssues.length;
 }
@@ -568,7 +592,7 @@ class ProcessedAIResponse {
 class MemoryIssue {
   final String claim;
   final String honestAlternative;
-  
+
   MemoryIssue({
     required this.claim,
     required this.honestAlternative,
@@ -580,7 +604,7 @@ class MathIssue {
   final String expression;
   final String description;
   final String severity;
-  
+
   MathIssue({
     required this.expression,
     required this.description,
@@ -593,7 +617,7 @@ class MathValidation {
   final String expression;
   final String result;
   final String explanation;
-  
+
   MathValidation({
     required this.expression,
     required this.result,

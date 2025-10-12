@@ -6,6 +6,7 @@ import '../../providers/app_state.dart';
 import '../../models/deck.dart';
 import '../../models/user.dart';
 import '../../mixins/loading_state_mixin.dart';
+import '../../screens/flashcard_detail_screen.dart';
 import 'ai_settings_widget.dart';
 
 // TODO: AI Flashcard Generator - Major Implementation Gaps
@@ -69,17 +70,18 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize learning style from user's preferences
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = Provider.of<AppState>(context, listen: false);
       if (appState.currentUser != null) {
         setState(() {
-          _selectedLearningStyle = appState.currentUser!.preferences.learningStyle;
+          _selectedLearningStyle =
+              appState.currentUser!.preferences.learningStyle;
         });
       }
     });
-    
+
     // Pre-fill text fields if initial values are provided
     if (widget.initialTopic != null) {
       _topicController.text = widget.initialTopic!;
@@ -225,7 +227,7 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
 
         // Show success dialog
         if (mounted) {
-          _showSuccessDialog(flashcards.length);
+          _showSuccessDialog(flashcards.length, newDeck);
         }
       } else {
         setState(() {
@@ -243,29 +245,45 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
     }
   }
 
-  void _showSuccessDialog(int cardCount) {
+  void _showSuccessDialog(int cardCount, Deck createdDeck) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Success!'),
+        backgroundColor: const Color(0xFF242628),
+        title: const Text(
+          'Success!',
+          style: TextStyle(
+            color: Color(0xFF6FB8E9),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Generated $cardCount flashcards successfully!'),
+            Text(
+              'Generated $cardCount flashcards successfully!',
+              style: const TextStyle(color: Color(0xFFD9D9D9)),
+            ),
             const SizedBox(height: 12),
             const Text(
               'Your new deck has been created and can be found in:',
-              style: TextStyle(fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Color(0xFFD9D9D9),
+              ),
             ),
             const SizedBox(height: 8),
-            const Text('📚 Dashboard → "Decks" Tab (4th tab at bottom)'),
+            const Text(
+              '📚 Dashboard → "Decks" Tab (4th tab at bottom)',
+              style: TextStyle(color: Color(0xFFD9D9D9)),
+            ),
             const SizedBox(height: 8),
             Text(
               'Deck Name: "AI Generated: ${_topicController.text}"',
-              style: TextStyle(
+              style: const TextStyle(
                 fontStyle: FontStyle.italic,
-                color: Theme.of(context).primaryColor,
+                color: Color(0xFF6FB8E9),
               ),
             ),
           ],
@@ -283,14 +301,29 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                 _cardCount = 5;
               });
             },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF6FB8E9),
+            ),
             child: const Text('OK'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop();
-              // Navigate back to dashboard to see the deck
+              Navigator.of(context).pop(); // Close dialog
               Navigator.of(context).pop(); // Close the flashcard generator
+              // Navigate to study screen with the newly created deck
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => FlashcardDetailScreen(
+                    deck: createdDeck,
+                    startInQuizMode: false,
+                  ),
+                ),
+              );
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6FB8E9),
+              foregroundColor: const Color(0xFF1A1A1A),
+            ),
             child: const Text('View Deck'),
           ),
         ],

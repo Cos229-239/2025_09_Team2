@@ -24,13 +24,13 @@ class CallScreen extends StatefulWidget {
 class _CallScreenState extends State<CallScreen> {
   final RTCVideoRenderer _localRenderer = RTCVideoRenderer();
   final RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
-  
+
   bool _isMuted = false;
   bool _isCameraOff = false;
   bool _isSpeakerOn = true; // Speaker is on by default for calls
   bool _isScreenSharing = false;
   CallState _callState = CallState.idle;
-  
+
   @override
   void initState() {
     super.initState();
@@ -38,12 +38,12 @@ class _CallScreenState extends State<CallScreen> {
     _setupListeners();
     _enableSpeaker(); // Enable speaker by default for calls
   }
-  
+
   Future<void> _initRenderers() async {
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
   }
-  
+
   /// Enable speaker by default when call starts
   Future<void> _enableSpeaker() async {
     try {
@@ -53,7 +53,7 @@ class _CallScreenState extends State<CallScreen> {
       debugPrint('❌ Error enabling speaker on init: $e');
     }
   }
-  
+
   void _setupListeners() {
     // Listen to call state
     widget.webrtcService.callStateStream.listen((state) {
@@ -61,7 +61,7 @@ class _CallScreenState extends State<CallScreen> {
         setState(() {
           _callState = state;
         });
-        
+
         // Auto-close screen when call ends
         if (state == CallState.ended) {
           Future.delayed(const Duration(seconds: 2), () {
@@ -72,7 +72,7 @@ class _CallScreenState extends State<CallScreen> {
         }
       }
     });
-    
+
     // Listen to remote stream
     widget.webrtcService.remoteStreamStream.listen((stream) {
       if (mounted && stream != null) {
@@ -81,7 +81,7 @@ class _CallScreenState extends State<CallScreen> {
         });
       }
     });
-    
+
     // Listen to local stream
     widget.webrtcService.localStreamStream.listen((stream) {
       if (mounted && stream != null) {
@@ -91,42 +91,42 @@ class _CallScreenState extends State<CallScreen> {
       }
     });
   }
-  
+
   @override
   void dispose() {
     debugPrint('🧹 Disposing CallScreen...');
-    
+
     // Dispose renderers first to release video tracks
     _localRenderer.dispose();
     _remoteRenderer.dispose();
-    
+
     debugPrint('✅ CallScreen disposed');
     super.dispose();
   }
-  
+
   void _toggleMute() async {
     await widget.webrtcService.toggleMute();
     setState(() {
       _isMuted = !_isMuted;
     });
   }
-  
+
   void _toggleCamera() async {
     await widget.webrtcService.toggleCamera();
     setState(() {
       _isCameraOff = !_isCameraOff;
     });
   }
-  
+
   void _switchCamera() async {
     await widget.webrtcService.switchCamera();
   }
-  
+
   void _toggleSpeaker() async {
     setState(() {
       _isSpeakerOn = !_isSpeakerOn;
     });
-    
+
     // Enable/disable speaker phone using flutter_webrtc Helper
     try {
       await Helper.setSpeakerphoneOn(_isSpeakerOn);
@@ -139,7 +139,7 @@ class _CallScreenState extends State<CallScreen> {
       });
     }
   }
-  
+
   void _toggleScreenShare() async {
     if (_isScreenSharing) {
       await widget.webrtcService.disableScreenSharing();
@@ -150,11 +150,11 @@ class _CallScreenState extends State<CallScreen> {
       _isScreenSharing = !_isScreenSharing;
     });
   }
-  
+
   void _endCall() async {
     await widget.webrtcService.endCall();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -165,10 +165,12 @@ class _CallScreenState extends State<CallScreen> {
             // Remote video (full screen)
             if (widget.callType == CallType.video)
               Positioned.fill(
-                child: _callState == CallState.connected && _remoteRenderer.srcObject != null
+                child: _callState == CallState.connected &&
+                        _remoteRenderer.srcObject != null
                     ? RTCVideoView(
                         _remoteRenderer,
-                        objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                        objectFit:
+                            RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                         mirror: false,
                       )
                     : _buildWaitingView(),
@@ -178,9 +180,10 @@ class _CallScreenState extends State<CallScreen> {
               Positioned.fill(
                 child: _buildAudioCallView(),
               ),
-            
+
             // Local video (small preview in corner) - only for video calls
-            if (widget.callType == CallType.video && _localRenderer.srcObject != null)
+            if (widget.callType == CallType.video &&
+                _localRenderer.srcObject != null)
               Positioned(
                 top: 40,
                 right: 20,
@@ -195,13 +198,14 @@ class _CallScreenState extends State<CallScreen> {
                     ),
                     child: RTCVideoView(
                       _localRenderer,
-                      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                      objectFit:
+                          RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
                       mirror: true,
                     ),
                   ),
                 ),
               ),
-            
+
             // Top bar with user info
             Positioned(
               top: 0,
@@ -241,7 +245,7 @@ class _CallScreenState extends State<CallScreen> {
                 ),
               ),
             ),
-            
+
             // Bottom control bar
             Positioned(
               bottom: 0,
@@ -267,7 +271,7 @@ class _CallScreenState extends State<CallScreen> {
       ),
     );
   }
-  
+
   Widget _buildWaitingView() {
     return Container(
       color: Colors.black,
@@ -277,7 +281,8 @@ class _CallScreenState extends State<CallScreen> {
           children: [
             CircleAvatar(
               radius: 60,
-              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+              backgroundColor:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
               backgroundImage: widget.otherUser.avatar != null
                   ? NetworkImage(widget.otherUser.avatar!)
                   : null,
@@ -293,7 +298,8 @@ class _CallScreenState extends State<CallScreen> {
                   : null,
             ),
             const SizedBox(height: 30),
-            if (_callState == CallState.connecting || _callState == CallState.ringing)
+            if (_callState == CallState.connecting ||
+                _callState == CallState.ringing)
               const CircularProgressIndicator(
                 color: Colors.white,
               ),
@@ -302,7 +308,7 @@ class _CallScreenState extends State<CallScreen> {
       ),
     );
   }
-  
+
   Widget _buildAudioCallView() {
     return Container(
       decoration: BoxDecoration(
@@ -337,7 +343,8 @@ class _CallScreenState extends State<CallScreen> {
                   : null,
             ),
             const SizedBox(height: 40),
-            if (_callState == CallState.connecting || _callState == CallState.ringing)
+            if (_callState == CallState.connecting ||
+                _callState == CallState.ringing)
               const CircularProgressIndicator(
                 color: Colors.white,
               ),
@@ -352,30 +359,32 @@ class _CallScreenState extends State<CallScreen> {
       ),
     );
   }
-  
+
   Widget _buildControls() {
     final List<Widget> controls = [];
-    
+
     // Mute button
     controls.add(
       _buildControlButton(
         icon: _isMuted ? Icons.mic_off : Icons.mic,
         label: _isMuted ? 'Unmute' : 'Mute',
         onPressed: _toggleMute,
-        backgroundColor: _isMuted ? Colors.red : Colors.white.withValues(alpha: 0.3),
+        backgroundColor:
+            _isMuted ? Colors.red : Colors.white.withValues(alpha: 0.3),
       ),
     );
-    
+
     // Speaker button (for all call types)
     controls.add(
       _buildControlButton(
         icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_off,
         label: _isSpeakerOn ? 'Speaker' : 'Earpiece',
         onPressed: _toggleSpeaker,
-        backgroundColor: _isSpeakerOn ? Colors.blue : Colors.white.withValues(alpha: 0.3),
+        backgroundColor:
+            _isSpeakerOn ? Colors.blue : Colors.white.withValues(alpha: 0.3),
       ),
     );
-    
+
     // Camera button (video calls only)
     if (widget.callType == CallType.video) {
       controls.add(
@@ -383,11 +392,12 @@ class _CallScreenState extends State<CallScreen> {
           icon: _isCameraOff ? Icons.videocam_off : Icons.videocam,
           label: _isCameraOff ? 'Camera Off' : 'Camera On',
           onPressed: _toggleCamera,
-          backgroundColor: _isCameraOff ? Colors.red : Colors.white.withValues(alpha: 0.3),
+          backgroundColor:
+              _isCameraOff ? Colors.red : Colors.white.withValues(alpha: 0.3),
         ),
       );
     }
-    
+
     // Screen share button (video calls only)
     if (widget.callType == CallType.video) {
       controls.add(
@@ -395,11 +405,13 @@ class _CallScreenState extends State<CallScreen> {
           icon: _isScreenSharing ? Icons.stop_screen_share : Icons.screen_share,
           label: _isScreenSharing ? 'Stop Share' : 'Share Screen',
           onPressed: _toggleScreenShare,
-          backgroundColor: _isScreenSharing ? Colors.green : Colors.white.withValues(alpha: 0.3),
+          backgroundColor: _isScreenSharing
+              ? Colors.green
+              : Colors.white.withValues(alpha: 0.3),
         ),
       );
     }
-    
+
     // Switch camera button (video calls only, when camera is on)
     if (widget.callType == CallType.video && !_isCameraOff) {
       controls.add(
@@ -411,7 +423,7 @@ class _CallScreenState extends State<CallScreen> {
         ),
       );
     }
-    
+
     // End call button
     controls.add(
       _buildControlButton(
@@ -422,7 +434,7 @@ class _CallScreenState extends State<CallScreen> {
         isEndCall: true,
       ),
     );
-    
+
     return Wrap(
       alignment: WrapAlignment.center,
       spacing: 20,
@@ -430,7 +442,7 @@ class _CallScreenState extends State<CallScreen> {
       children: controls,
     );
   }
-  
+
   Widget _buildControlButton({
     required IconData icon,
     required String label,
@@ -468,7 +480,7 @@ class _CallScreenState extends State<CallScreen> {
       ],
     );
   }
-  
+
   String _getCallStateText() {
     switch (_callState) {
       case CallState.connecting:

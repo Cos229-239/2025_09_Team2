@@ -106,7 +106,8 @@ void main() {
           deckId: 'deck1',
           subject: 'Mathematics',
           startTime: now.subtract(const Duration(days: 1)),
-          endTime: now.subtract(const Duration(days: 1, hours: -1, minutes: -30)),
+          endTime:
+              now.subtract(const Duration(days: 1, hours: -1, minutes: -30)),
           activities: [
             SessionActivity(
               type: 'card_view',
@@ -256,8 +257,9 @@ void main() {
       // Check Mathematics performance
       expect(analytics.subjectPerformance.containsKey('Mathematics'), isTrue);
       final mathPerf = analytics.subjectPerformance['Mathematics']!;
-      
-      expect(mathPerf.totalCards, equals(4)); // 4 math cards viewed (card1, card2, card5, card6)
+
+      expect(mathPerf.totalCards,
+          equals(4)); // 4 math cards viewed (card1, card2, card5, card6)
       expect(mathPerf.accuracy, greaterThan(0.6)); // 3 out of 4 correct = 0.75
       expect(mathPerf.studyTimeMinutes, equals(210)); // 1 + 1.5 + 1 hours
       expect(mathPerf.totalQuizzes, equals(1)); // 1 math quiz
@@ -267,7 +269,7 @@ void main() {
       // Check Science performance
       expect(analytics.subjectPerformance.containsKey('Science'), isTrue);
       final sciencePerf = analytics.subjectPerformance['Science']!;
-      
+
       expect(sciencePerf.totalCards, equals(2)); // 2 science cards viewed
       expect(sciencePerf.accuracy, equals(1.0)); // Perfect accuracy
       expect(sciencePerf.studyTimeMinutes, equals(120)); // 2 hours
@@ -283,7 +285,7 @@ void main() {
       );
 
       final mathPerf = analytics.subjectPerformance['Mathematics']!;
-      
+
       // Math has cards with difficulty: 2 (easy), 4 (hard), 3 (moderate), 5 (hard)
       expect(mathPerf.difficultyBreakdown.containsKey('easy'), isTrue);
       expect(mathPerf.difficultyBreakdown.containsKey('moderate'), isTrue);
@@ -299,7 +301,7 @@ void main() {
       );
 
       final mathPerf = analytics.subjectPerformance['Mathematics']!;
-      
+
       // Math response times: 5000, 8000, 3000, 7000 ms = average 5750 ms = 5.75 seconds
       expect(mathPerf.averageResponseTime, greaterThan(5.0));
       expect(mathPerf.averageResponseTime, lessThan(6.5));
@@ -320,13 +322,15 @@ void main() {
 
       // Test learning style effectiveness
       expect(patterns.learningStyleEffectiveness.containsKey('visual'), isTrue);
-      expect(patterns.learningStyleEffectiveness.containsKey('reading'), isTrue);
+      expect(
+          patterns.learningStyleEffectiveness.containsKey('reading'), isTrue);
 
       // Visual style: 4 correct out of 5 attempts = 0.8
       expect(patterns.learningStyleEffectiveness['visual'], greaterThan(0.7));
 
       // Test average session length
-      expect(patterns.averageSessionLength, greaterThan(60.0)); // Over 1 hour average
+      expect(patterns.averageSessionLength,
+          greaterThan(60.0)); // Over 1 hour average
 
       // Test preferred cards per session (6 cards / 4 sessions = 1.5, rounds to 2)
       expect(patterns.preferredCardsPerSession, isIn([1, 2]));
@@ -348,7 +352,8 @@ void main() {
 
       // Mathematics should have higher interest (3 sessions vs 1)
       expect(
-        patterns.topicInterest['Mathematics']! > patterns.topicInterest['Science']!,
+        patterns.topicInterest['Mathematics']! >
+            patterns.topicInterest['Science']!,
         isTrue,
       );
     });
@@ -422,7 +427,8 @@ void main() {
       );
 
       // Longest streak should be at least the current streak
-      expect(analytics.longestStreak, greaterThanOrEqualTo(analytics.currentStreak));
+      expect(analytics.longestStreak,
+          greaterThanOrEqualTo(analytics.currentStreak));
       expect(analytics.longestStreak, equals(4));
     });
 
@@ -453,7 +459,8 @@ void main() {
       // Check that subject performance was updated
       expect(
         updatedAnalytics.subjectPerformance['Mathematics']!.totalCards,
-        greaterThan(initialAnalytics.subjectPerformance['Mathematics']!.totalCards),
+        greaterThan(
+            initialAnalytics.subjectPerformance['Mathematics']!.totalCards),
       );
     });
 

@@ -24,7 +24,7 @@ class _AITutorChatState extends State<AITutorChat>
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _messageFocusNode = FocusNode();
-  
+
   // Animation controllers
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -32,12 +32,12 @@ class _AITutorChatState extends State<AITutorChat>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _pulseAnimation;
-  
+
   // State variables
   bool _showScrollToBottom = false;
   Timer? _typingTimer;
   bool _isTyping = false;
-  
+
   // Subject and difficulty options
   final List<String> _subjects = [
     'Mathematics',
@@ -49,13 +49,13 @@ class _AITutorChatState extends State<AITutorChat>
     'Physics',
     'Biology',
   ];
-  
+
   final List<String> _difficulties = [
     'Beginner',
     'Intermediate',
     'Advanced',
   ];
-  
+
   final List<String> _learningGoalOptions = [
     'Homework help',
     'Exam preparation',
@@ -87,7 +87,7 @@ class _AITutorChatState extends State<AITutorChat>
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -95,7 +95,7 @@ class _AITutorChatState extends State<AITutorChat>
       parent: _fadeController,
       curve: Curves.easeIn,
     ));
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
@@ -103,7 +103,7 @@ class _AITutorChatState extends State<AITutorChat>
       parent: _slideController,
       curve: Curves.easeOutCubic,
     ));
-    
+
     _pulseAnimation = Tween<double>(
       begin: 1.0,
       end: 1.1,
@@ -111,7 +111,7 @@ class _AITutorChatState extends State<AITutorChat>
       parent: _pulseController,
       curve: Curves.easeInOut,
     ));
-    
+
     _fadeController.forward();
     _slideController.forward();
   }
@@ -179,17 +179,18 @@ class _AITutorChatState extends State<AITutorChat>
 
   void _generateFlashcardsFromAI(EnhancedAITutorProvider provider) {
     final lastAIResponse = _getLastAIResponse(provider);
-    
+
     if (lastAIResponse.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('No AI tutor response found. Please have a conversation first.'),
+          content: Text(
+              'No AI tutor response found. Please have a conversation first.'),
           backgroundColor: Colors.orange,
         ),
       );
       return;
     }
-    
+
     // Navigate to AI flashcard generator with pre-filled text
     Navigator.push(
       context,
@@ -205,8 +206,8 @@ class _AITutorChatState extends State<AITutorChat>
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: AIFlashcardGenerator(
-                initialTopic: provider.currentSubject.isNotEmpty 
-                    ? provider.currentSubject 
+                initialTopic: provider.currentSubject.isNotEmpty
+                    ? provider.currentSubject
                     : 'AI Tutor Session',
                 initialText: lastAIResponse,
               ),
@@ -222,7 +223,8 @@ class _AITutorChatState extends State<AITutorChat>
     return Consumer2<EnhancedAITutorProvider, AppState>(
       builder: (context, tutorProvider, appState, child) {
         return Scaffold(
-          backgroundColor: const Color(0xFF16181A), // Dashboard background color
+          backgroundColor:
+              const Color(0xFF16181A), // Dashboard background color
           appBar: _buildAppBar(tutorProvider),
           body: Stack(
             children: [
@@ -231,25 +233,25 @@ class _AITutorChatState extends State<AITutorChat>
                   // Progress bar if active session
                   if (tutorProvider.hasActiveSession)
                     _buildSessionProgressBar(tutorProvider),
-                  
+
                   // Session setup or chat area
                   Expanded(
                     child: tutorProvider.hasActiveSession
                         ? _buildChatView(tutorProvider)
                         : _buildSessionSetup(tutorProvider),
                   ),
-                  
+
                   // Quick replies
                   if (tutorProvider.quickReplies.isNotEmpty &&
                       tutorProvider.hasActiveSession)
                     _buildQuickReplies(tutorProvider, appState),
-                  
+
                   // Message input
                   if (tutorProvider.hasActiveSession)
                     _buildMessageInput(tutorProvider, appState),
                 ],
               ),
-              
+
               // Floating scroll to bottom button
               if (_showScrollToBottom)
                 Positioned(
@@ -257,11 +259,10 @@ class _AITutorChatState extends State<AITutorChat>
                   bottom: tutorProvider.hasActiveSession ? 100 : 20,
                   child: _buildScrollToBottomButton(),
                 ),
-              
+
               // Badges overlay
-              if (tutorProvider.showBadges)
-                _buildBadgesOverlay(tutorProvider),
-              
+              if (tutorProvider.showBadges) _buildBadgesOverlay(tutorProvider),
+
               // Progress overlay
               if (tutorProvider.showProgress)
                 _buildProgressOverlay(tutorProvider),
@@ -315,7 +316,8 @@ class _AITutorChatState extends State<AITutorChat>
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // Dashboard blue accent
+              color: const Color(0xFF6FB8E9)
+                  .withValues(alpha: 0.2), // Dashboard blue accent
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -333,13 +335,14 @@ class _AITutorChatState extends State<AITutorChat>
               ],
             ),
           ),
-        
+
         // Points indicator
         Container(
           margin: const EdgeInsets.only(right: 8),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard blue accent
+            color: const Color(0xFF6FB8E9)
+                .withValues(alpha: 0.1), // Dashboard blue accent
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -357,7 +360,7 @@ class _AITutorChatState extends State<AITutorChat>
             ],
           ),
         ),
-        
+
         // Menu button
         PopupMenuButton<String>(
           onSelected: (value) => _handleMenuAction(value, provider),
@@ -387,9 +390,11 @@ class _AITutorChatState extends State<AITutorChat>
                 value: 'generate_flashcards',
                 child: Row(
                   children: [
-                    Icon(Icons.auto_awesome, size: 20, color: Color(0xFF6FB8E9)),
+                    Icon(Icons.auto_awesome,
+                        size: 20, color: Color(0xFF6FB8E9)),
                     SizedBox(width: 8),
-                    Text('Generate Flashcards', style: TextStyle(color: Color(0xFF6FB8E9))),
+                    Text('Generate Flashcards',
+                        style: TextStyle(color: Color(0xFF6FB8E9))),
                   ],
                 ),
               ),
@@ -398,9 +403,14 @@ class _AITutorChatState extends State<AITutorChat>
                 value: 'end_session',
                 child: Row(
                   children: [
-                     Icon(Icons.stop, size: 20, color: Color(0xFFE57373)), // Softer red for dark theme
-                     SizedBox(width: 8),
-                     Text('End Session', style: TextStyle(color: Color(0xFFE57373))), // Softer red for dark theme
+                    Icon(Icons.stop,
+                        size: 20,
+                        color: Color(0xFFE57373)), // Softer red for dark theme
+                    SizedBox(width: 8),
+                    Text('End Session',
+                        style: TextStyle(
+                            color: Color(
+                                0xFFE57373))), // Softer red for dark theme
                   ],
                 ),
               ),
@@ -412,7 +422,7 @@ class _AITutorChatState extends State<AITutorChat>
 
   Widget _buildSessionProgressBar(EnhancedAITutorProvider provider) {
     final mastery = provider.subjectMastery;
-    
+
     return SizedBox(
       height: 4,
       child: LinearProgressIndicator(
@@ -441,23 +451,23 @@ class _AITutorChatState extends State<AITutorChat>
               // Welcome card
               _buildWelcomeCard(provider),
               const SizedBox(height: 24),
-              
+
               // Subject selection
               _buildSubjectSelection(provider),
               const SizedBox(height: 16),
-              
+
               // Difficulty selection
               _buildDifficultySelection(provider),
               const SizedBox(height: 16),
-              
+
               // Learning goals
               _buildLearningGoals(provider),
               const SizedBox(height: 24),
-              
+
               // Start button
               _buildStartButton(provider),
               const SizedBox(height: 16),
-              
+
               // Recent badges
               if (provider.unlockedBadges.isNotEmpty)
                 _buildRecentBadges(provider),
@@ -532,9 +542,11 @@ class _AITutorChatState extends State<AITutorChat>
             if (provider.currentStreak > 0) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard blue accent
+                  color: const Color(0xFF6FB8E9)
+                      .withValues(alpha: 0.1), // Dashboard blue accent
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -594,8 +606,9 @@ class _AITutorChatState extends State<AITutorChat>
               runSpacing: 8,
               children: _subjects.map((subject) {
                 final isSelected = provider.currentSubject == subject;
-                final mastery = provider.userProfile?.subjectMastery[subject] ?? 0;
-                
+                final mastery =
+                    provider.userProfile?.subjectMastery[subject] ?? 0;
+
                 return ChoiceChip(
                   label: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -603,7 +616,9 @@ class _AITutorChatState extends State<AITutorChat>
                       Text(
                         subject,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : const Color(0xFFD9D9D9),
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFFD9D9D9),
                         ),
                       ),
                       if (mastery > 0)
@@ -611,15 +626,19 @@ class _AITutorChatState extends State<AITutorChat>
                           '${(mastery * 100).toInt()}%',
                           style: TextStyle(
                             fontSize: 10,
-                            color: isSelected ? Colors.white : const Color(0xFF888888),
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFF888888),
                           ),
                         ),
                     ],
                   ),
                   selected: isSelected,
                   onSelected: (_) => provider.updateSubject(subject),
-                  selectedColor: const Color(0xFF6FB8E9), // Dashboard blue accent
-                  backgroundColor: const Color(0xFF16181A), // Match main background color
+                  selectedColor:
+                      const Color(0xFF6FB8E9), // Dashboard blue accent
+                  backgroundColor:
+                      const Color(0xFF16181A), // Match main background color
                   avatar: isSelected
                       ? const Icon(Icons.check, size: 18, color: Colors.white)
                       : null,
@@ -669,7 +688,7 @@ class _AITutorChatState extends State<AITutorChat>
                     : difficulty == 'Intermediate'
                         ? Icons.looks_two
                         : Icons.looks_3;
-                
+
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -680,14 +699,17 @@ class _AITutorChatState extends State<AITutorChat>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isSelected
                             ? const Color(0xFF6FB8E9) // Dashboard blue accent
-                            : const Color(0xFF16181A), // Match main background color
+                            : const Color(
+                                0xFF16181A), // Match main background color
                         foregroundColor: isSelected
                             ? Colors.white
-                            : const Color(0xFFD9D9D9), // Light text for dark theme
+                            : const Color(
+                                0xFFD9D9D9), // Light text for dark theme
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                           side: BorderSide(
-                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -738,12 +760,13 @@ class _AITutorChatState extends State<AITutorChat>
               runSpacing: 8,
               children: _learningGoalOptions.map((goal) {
                 final isSelected = provider.learningGoals.contains(goal);
-                
+
                 return ChoiceChip(
                   label: Text(
                     goal,
                     style: TextStyle(
-                      color: isSelected ? Colors.white : const Color(0xFFD9D9D9),
+                      color:
+                          isSelected ? Colors.white : const Color(0xFFD9D9D9),
                     ),
                   ),
                   selected: isSelected,
@@ -754,8 +777,10 @@ class _AITutorChatState extends State<AITutorChat>
                       provider.addLearningGoal(goal);
                     }
                   },
-                  selectedColor: const Color(0xFF6FB8E9), // Dashboard blue accent
-                  backgroundColor: const Color(0xFF16181A), // Match main background color
+                  selectedColor:
+                      const Color(0xFF6FB8E9), // Dashboard blue accent
+                  backgroundColor:
+                      const Color(0xFF16181A), // Match main background color
                   avatar: isSelected
                       ? const Icon(Icons.check, size: 18, color: Colors.white)
                       : null,
@@ -773,10 +798,12 @@ class _AITutorChatState extends State<AITutorChat>
       width: double.infinity,
       height: 56,
       child: ElevatedButton(
-        onPressed: provider.isStartingSession ? null : () async {
-          HapticFeedback.lightImpact();
-          await provider.startAdaptiveSession();
-        },
+        onPressed: provider.isStartingSession
+            ? null
+            : () async {
+                HapticFeedback.lightImpact();
+                await provider.startAdaptiveSession();
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF6FB8E9), // Dashboard blue accent
           foregroundColor: Colors.white,
@@ -784,7 +811,8 @@ class _AITutorChatState extends State<AITutorChat>
             borderRadius: BorderRadius.circular(28),
           ),
           elevation: 8,
-          shadowColor: const Color(0xFF6FB8E9).withValues(alpha: 0.5), // Dashboard blue shadow
+          shadowColor: const Color(0xFF6FB8E9)
+              .withValues(alpha: 0.5), // Dashboard blue shadow
         ),
         child: provider.isStartingSession
             ? const Row(
@@ -843,8 +871,8 @@ class _AITutorChatState extends State<AITutorChat>
                 Text(
                   'Recent Achievements',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ],
             ),
@@ -858,7 +886,7 @@ class _AITutorChatState extends State<AITutorChat>
                   final badge = provider.unlockedBadges[
                       provider.unlockedBadges.length - 1 - index];
                   final details = provider.getBadgeDetails(badge);
-                  
+
                   return Container(
                     margin: const EdgeInsets.only(right: 12),
                     padding: const EdgeInsets.symmetric(
@@ -902,13 +930,13 @@ class _AITutorChatState extends State<AITutorChat>
 
   Widget _buildChatView(EnhancedAITutorProvider provider) {
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    
+
     if (provider.messages.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(),
       );
     }
-    
+
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -917,7 +945,7 @@ class _AITutorChatState extends State<AITutorChat>
         if (index == provider.messages.length && provider.isGenerating) {
           return _buildTypingIndicator();
         }
-        
+
         final message = provider.messages[index];
         return _buildMessageBubble(message, provider);
       },
@@ -933,7 +961,7 @@ class _AITutorChatState extends State<AITutorChat>
     final isQuiz = message.metadata?['type'] == 'quiz';
     final isProgress = message.metadata?['type'] == 'progress';
     final isSessionSummary = message.metadata?['type'] == 'session_summary';
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: EdgeInsets.only(
@@ -982,14 +1010,17 @@ class _AITutorChatState extends State<AITutorChat>
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.85,
               ),
-              padding: EdgeInsets.all(isProgress || isQuiz || isSessionSummary ? 16 : 14),
+              padding: EdgeInsets.all(
+                  isProgress || isQuiz || isSessionSummary ? 16 : 14),
               decoration: BoxDecoration(
                 color: isError
                     ? Colors.red.shade100
                     : isUser
                         ? Theme.of(context).primaryColor
                         : isProgress || isSessionSummary
-                            ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+                            ? Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.1)
                             : isQuiz
                                 ? Colors.purple.withValues(alpha: 0.1)
                                 : Colors.grey.shade100,
@@ -1007,7 +1038,9 @@ class _AITutorChatState extends State<AITutorChat>
                     ? Border.all(
                         color: isQuiz
                             ? Colors.purple.withValues(alpha: 0.3)
-                            : Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                            : Theme.of(context)
+                                .primaryColor
+                                .withValues(alpha: 0.3),
                         width: 1,
                       )
                     : null,
@@ -1227,7 +1260,8 @@ class _AITutorChatState extends State<AITutorChat>
                     color: Colors.blue.withValues(alpha: 0.15), // More visible!
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.blue.withValues(alpha: 0.5), // More visible border!
+                      color: Colors.blue
+                          .withValues(alpha: 0.5), // More visible border!
                       width: 1.5,
                     ),
                   ),
@@ -1281,7 +1315,7 @@ class _AITutorChatState extends State<AITutorChat>
                 onPressed: provider.isGenerating ? null : _handleAttachment,
                 tooltip: 'Attach file',
               ),
-              
+
               // Message field
               Expanded(
                 child: Container(
@@ -1328,9 +1362,9 @@ class _AITutorChatState extends State<AITutorChat>
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 8),
-              
+
               // Voice input button
               IconButton(
                 icon: const Icon(
@@ -1341,7 +1375,7 @@ class _AITutorChatState extends State<AITutorChat>
                 onPressed: provider.isGenerating ? null : _handleVoiceInput,
                 tooltip: 'Voice input',
               ),
-              
+
               // Send button
               Container(
                 width: 48,
@@ -1351,7 +1385,8 @@ class _AITutorChatState extends State<AITutorChat>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                      color:
+                          Theme.of(context).primaryColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -1458,7 +1493,8 @@ class _AITutorChatState extends State<AITutorChat>
                   Flexible(
                     child: GridView.builder(
                       shrinkWrap: true,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         childAspectRatio: 1,
                         crossAxisSpacing: 16,
@@ -1468,7 +1504,7 @@ class _AITutorChatState extends State<AITutorChat>
                       itemBuilder: (context, index) {
                         final badge = provider.unlockedBadges[index];
                         final details = provider.getBadgeDetails(badge);
-                        
+
                         return Container(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -1523,7 +1559,7 @@ class _AITutorChatState extends State<AITutorChat>
 
   Widget _buildProgressOverlay(EnhancedAITutorProvider provider) {
     final analytics = provider.getUserAnalytics();
-    
+
     return AnimatedPositioned(
       duration: const Duration(milliseconds: 300),
       top: provider.showProgress ? 0 : -MediaQuery.of(context).size.height,
@@ -1558,7 +1594,7 @@ class _AITutorChatState extends State<AITutorChat>
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Stats grid
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1581,14 +1617,14 @@ class _AITutorChatState extends State<AITutorChat>
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Subject mastery
                   Text(
                     'Subject Mastery',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   if (analytics['subjectMastery'] != null)
                     ...Map<String, dynamic>.from(analytics['subjectMastery'])
                         .entries

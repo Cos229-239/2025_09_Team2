@@ -507,7 +507,8 @@ class UserPreferences {
         achievementNotifications:
             json['achievementNotifications'] as bool? ?? true,
         socialNotifications: json['socialNotifications'] as bool? ?? true,
-        petCareReminders: json['petCareReminders'] as bool? ?? false, // Default to disabled
+        petCareReminders:
+            json['petCareReminders'] as bool? ?? false, // Default to disabled
         emailDigest: json['emailDigest'] as bool? ?? false,
         reminderTime: json['reminderTime'] as String? ?? '09:00',
 
