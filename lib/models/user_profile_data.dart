@@ -5,12 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Learning style preferences detected from user interactions
 class LearningStylePreferences {
-  final double visual;        // 0.0 to 1.0
-  final double auditory;      // 0.0 to 1.0
-  final double kinesthetic;   // 0.0 to 1.0
-  final double reading;       // 0.0 to 1.0
+  final double visual; // 0.0 to 1.0
+  final double auditory; // 0.0 to 1.0
+  final double kinesthetic; // 0.0 to 1.0
+  final double reading; // 0.0 to 1.0
   final String preferredDepth; // 'brief' or 'detailed'
-  
+
   LearningStylePreferences({
     this.visual = 0.5,
     this.auditory = 0.5,
@@ -20,12 +20,12 @@ class LearningStylePreferences {
   });
 
   Map<String, dynamic> toJson() => {
-    'visual': visual,
-    'auditory': auditory,
-    'kinesthetic': kinesthetic,
-    'reading': reading,
-    'preferredDepth': preferredDepth,
-  };
+        'visual': visual,
+        'auditory': auditory,
+        'kinesthetic': kinesthetic,
+        'reading': reading,
+        'preferredDepth': preferredDepth,
+      };
 
   factory LearningStylePreferences.fromJson(Map<String, dynamic> json) {
     return LearningStylePreferences(
@@ -52,9 +52,9 @@ class LearningStylePreferences {
 /// Skill mastery scores by subject
 class SkillScores {
   final Map<String, double> subjectMastery; // subject -> 0.0 to 1.0
-  final Map<String, int> topicAttempts;     // topic -> count
+  final Map<String, int> topicAttempts; // topic -> count
   final Map<String, double> conceptConfidence; // concept -> 0.0 to 1.0
-  
+
   SkillScores({
     Map<String, double>? subjectMastery,
     Map<String, int>? topicAttempts,
@@ -64,10 +64,10 @@ class SkillScores {
         conceptConfidence = conceptConfidence ?? {};
 
   Map<String, dynamic> toJson() => {
-    'subjectMastery': subjectMastery,
-    'topicAttempts': topicAttempts,
-    'conceptConfidence': conceptConfidence,
-  };
+        'subjectMastery': subjectMastery,
+        'topicAttempts': topicAttempts,
+        'conceptConfidence': conceptConfidence,
+      };
 
   factory SkillScores.fromJson(Map<String, dynamic> json) {
     return SkillScores(
@@ -83,11 +83,11 @@ class SkillScores {
 
 /// Privacy and feature opt-in flags
 class OptInFlags {
-  final bool profileStorage;      // Allow persistent profile
-  final bool learningAnalytics;   // Track learning patterns
-  final bool personalization;     // Use data for personalization
-  final bool semanticMemory;      // Store conversation embeddings
-  
+  final bool profileStorage; // Allow persistent profile
+  final bool learningAnalytics; // Track learning patterns
+  final bool personalization; // Use data for personalization
+  final bool semanticMemory; // Store conversation embeddings
+
   OptInFlags({
     this.profileStorage = false,
     this.learningAnalytics = false,
@@ -96,11 +96,11 @@ class OptInFlags {
   });
 
   Map<String, dynamic> toJson() => {
-    'profileStorage': profileStorage,
-    'learningAnalytics': learningAnalytics,
-    'personalization': personalization,
-    'semanticMemory': semanticMemory,
-  };
+        'profileStorage': profileStorage,
+        'learningAnalytics': learningAnalytics,
+        'personalization': personalization,
+        'semanticMemory': semanticMemory,
+      };
 
   factory OptInFlags.fromJson(Map<String, dynamic> json) {
     return OptInFlags(
@@ -111,7 +111,7 @@ class OptInFlags {
     );
   }
 
-  bool get anyEnabled => 
+  bool get anyEnabled =>
       profileStorage || learningAnalytics || personalization || semanticMemory;
 }
 
@@ -124,7 +124,7 @@ class UserProfileData {
   final DateTime lastSeen;
   final OptInFlags optInFlags;
   final Map<String, dynamic> metadata; // Extensible for future features
-  
+
   UserProfileData({
     required this.userId,
     this.displayName,
@@ -140,14 +140,14 @@ class UserProfileData {
         metadata = metadata ?? {};
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
-    'displayName': displayName,
-    'learningPreferences': learningPreferences.toJson(),
-    'skillScores': skillScores.toJson(),
-    'lastSeen': Timestamp.fromDate(lastSeen),
-    'optInFlags': optInFlags.toJson(),
-    'metadata': metadata,
-  };
+        'userId': userId,
+        'displayName': displayName,
+        'learningPreferences': learningPreferences.toJson(),
+        'skillScores': skillScores.toJson(),
+        'lastSeen': Timestamp.fromDate(lastSeen),
+        'optInFlags': optInFlags.toJson(),
+        'metadata': metadata,
+      };
 
   factory UserProfileData.fromJson(Map<String, dynamic> json) {
     return UserProfileData(

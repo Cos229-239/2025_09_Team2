@@ -43,7 +43,7 @@ class DeckProvider extends ChangeNotifier {
     try {
       final currentUser = _auth.currentUser;
       debugPrint('🔍 DeckProvider: Current user = ${currentUser?.uid}');
-      
+
       if (currentUser == null) {
         debugPrint('❌ No user logged in, cannot load decks');
         _decks = [];
@@ -53,15 +53,17 @@ class DeckProvider extends ChangeNotifier {
       // Load decks from Firestore
       debugPrint('🔍 DeckProvider: Calling getUserDecks()...');
       final deckData = await _firestoreService.getUserDecks(currentUser.uid);
-      debugPrint('🔍 DeckProvider: Got ${deckData.length} deck documents from Firestore');
-      
+      debugPrint(
+          '🔍 DeckProvider: Got ${deckData.length} deck documents from Firestore');
+
       // Convert each deck with error handling
       _decks = [];
       for (var data in deckData) {
         try {
           final deck = _convertFirestoreToDeck(data);
           _decks.add(deck);
-          debugPrint('✅ Converted deck: ${deck.title} with ${deck.cards.length} cards');
+          debugPrint(
+              '✅ Converted deck: ${deck.title} with ${deck.cards.length} cards');
         } catch (e) {
           debugPrint('❌ Error converting deck ${data['id']}: $e');
         }
@@ -147,7 +149,8 @@ class DeckProvider extends ChangeNotifier {
       // Log any errors that occur during deck loading for debugging
       debugPrint('❌❌❌ CRITICAL ERROR loading decks: $e');
       debugPrint('Stack trace: $stackTrace');
-      developer.log('Error loading decks: $e\n$stackTrace', name: 'DeckProvider');
+      developer.log('Error loading decks: $e\n$stackTrace',
+          name: 'DeckProvider');
       _decks = []; // Set empty list on error
     } finally {
       _isLoading = false; // Always clear loading state
@@ -160,10 +163,11 @@ class DeckProvider extends ChangeNotifier {
     try {
       final cardsData = data['cards'] as List<dynamic>? ?? [];
       final cards = <FlashCard>[];
-      
+
       for (var cardData in cardsData) {
         try {
-          final card = _convertFirestoreToCard(cardData as Map<String, dynamic>);
+          final card =
+              _convertFirestoreToCard(cardData as Map<String, dynamic>);
           cards.add(card);
         } catch (e) {
           debugPrint('⚠️ Skipping invalid card in deck ${data['id']}: $e');
@@ -276,7 +280,8 @@ class DeckProvider extends ChangeNotifier {
 
   /// Convert Deck to Firestore format
   Map<String, dynamic> _convertDeckToFirestore(Deck deck) {
-    final cardsData = deck.cards.map((card) => _convertCardToFirestore(card)).toList();
+    final cardsData =
+        deck.cards.map((card) => _convertCardToFirestore(card)).toList();
     return {
       'title': deck.title,
       'tags': deck.tags,
@@ -325,7 +330,8 @@ class DeckProvider extends ChangeNotifier {
       // Delete from Firestore first
       final currentUser = _auth.currentUser;
       if (currentUser != null) {
-        final success = await _firestoreService.deleteDeck(deckId, currentUser.uid);
+        final success =
+            await _firestoreService.deleteDeck(deckId, currentUser.uid);
         if (!success) {
           debugPrint('❌ Failed to delete deck from Firestore');
           return false;
@@ -335,7 +341,7 @@ class DeckProvider extends ChangeNotifier {
       // Remove from local list
       _decks.removeWhere((deck) => deck.id == deckId);
       notifyListeners(); // Notify UI of the removal
-      
+
       debugPrint('✅ Deck deleted successfully');
       return true;
     } catch (e) {

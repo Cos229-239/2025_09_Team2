@@ -24,7 +24,8 @@ void main() {
             deckId: 'test_deck_123',
             type: CardType.basic,
             front: 'What is photosynthesis?',
-            back: 'The process by which plants convert light energy into chemical energy',
+            back:
+                'The process by which plants convert light energy into chemical energy',
             difficulty: 3,
             multipleChoiceOptions: const [],
             correctAnswerIndex: 0,
@@ -57,12 +58,14 @@ void main() {
 
     test('CalendarEventType.flashcardStudy enum exists', () {
       expect(CalendarEventType.flashcardStudy, isNotNull);
-      expect(CalendarEventType.values.contains(CalendarEventType.flashcardStudy), isTrue);
+      expect(
+          CalendarEventType.values.contains(CalendarEventType.flashcardStudy),
+          isTrue);
     });
 
     test('CalendarEventType.flashcardStudy has correct display properties', () {
       final type = CalendarEventType.flashcardStudy;
-      
+
       expect(type.displayName, equals('Flashcard Study'));
       expect(type.defaultIcon, equals(Icons.style));
       expect(type.defaultColor, equals(Colors.deepPurple));
@@ -70,7 +73,7 @@ void main() {
 
     test('Creates flashcard study event from deck with default duration', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,
@@ -92,7 +95,7 @@ void main() {
     test('Creates flashcard study event with custom duration', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
       const customDuration = 45;
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,
@@ -100,12 +103,13 @@ void main() {
       );
 
       expect(event.estimatedMinutes, equals(customDuration));
-      expect(event.endTime, equals(scheduledTime.add(const Duration(minutes: customDuration))));
+      expect(event.endTime,
+          equals(scheduledTime.add(const Duration(minutes: customDuration))));
     });
 
     test('Calculates estimated duration based on card count', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,
@@ -118,7 +122,7 @@ void main() {
 
     test('Description includes card count', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,
@@ -130,7 +134,7 @@ void main() {
 
     test('Event includes reminder notification', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,
@@ -145,12 +149,12 @@ void main() {
     test('Event ID is unique for same deck scheduled at different times', () {
       final time1 = DateTime.now().add(const Duration(days: 1));
       final time2 = DateTime.now().add(const Duration(days: 2));
-      
+
       final event1 = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: time1,
       );
-      
+
       final event2 = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: time2,
@@ -165,7 +169,7 @@ void main() {
 
     test('Event has correct status and priority', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,
@@ -177,7 +181,7 @@ void main() {
 
     test('Event color and icon are appropriate for flashcards', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,
@@ -189,7 +193,7 @@ void main() {
 
     test('Event includes deck tags in event tags', () {
       final scheduledTime = DateTime.now().add(const Duration(days: 1));
-      
+
       final event = CalendarEvent.fromDeck(
         deck: testDeck,
         scheduledTime: scheduledTime,

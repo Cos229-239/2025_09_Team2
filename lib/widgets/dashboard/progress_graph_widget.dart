@@ -164,7 +164,8 @@ class _ProgressGraphWidgetState extends State<ProgressGraphWidget> {
                 return LineTooltipItem(
                   '${barSpot.y.toInt()}',
                   TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color ?? const Color(0xFFD9D9D9),
+                    color: Theme.of(context).textTheme.bodyMedium?.color ??
+                        const Color(0xFFD9D9D9),
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),

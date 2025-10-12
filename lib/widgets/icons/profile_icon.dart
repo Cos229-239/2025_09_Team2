@@ -45,12 +45,14 @@ class ProfileIconPainter extends CustomPainter {
 
     // Draw the outer circle (full person outline)
     final outerCircle = Path();
-    outerCircle.addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 11));
+    outerCircle
+        .addOval(Rect.fromCircle(center: const Offset(12, 12), radius: 11));
     canvas.drawPath(outerCircle, paint);
 
     // Draw the head (inner circle)
     final headCircle = Path();
-    headCircle.addOval(Rect.fromCircle(center: const Offset(12, 9.75), radius: 3));
+    headCircle
+        .addOval(Rect.fromCircle(center: const Offset(12, 9.75), radius: 3));
     canvas.drawPath(headCircle, paint);
 
     // Draw the body/shoulders (bottom arc)
@@ -60,7 +62,7 @@ class ProfileIconPainter extends CustomPainter {
     // Curve up to the neck area and back down to right shoulder
     bodyPath.cubicTo(8.5, 16.5, 10.5, 15.75, 12, 15.75);
     bodyPath.cubicTo(13.5, 15.75, 15.5, 16.5, 17.982, 18.725);
-    
+
     canvas.drawPath(bodyPath, paint);
   }
 

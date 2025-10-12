@@ -43,7 +43,8 @@ class NotesTestScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6FB8E9),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: const Text('Open Notes Editor'),
             ),
@@ -55,7 +56,8 @@ class NotesTestScreen extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => const NotesEditorScreen(
                       title: 'Pre-filled Note',
-                      initialText: 'This is some initial text.\n\nYou can format this text using the toolbar above.',
+                      initialText:
+                          'This is some initial text.\n\nYou can format this text using the toolbar above.',
                     ),
                   ),
                 );
@@ -63,7 +65,8 @@ class NotesTestScreen extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF6FB8E9),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
               child: const Text('Open with Initial Text'),
             ),

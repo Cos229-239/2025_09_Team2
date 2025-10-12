@@ -1,27 +1,27 @@
 /// Manual testing guide for responsive spacing
-/// 
+///
 /// This guide helps you verify that the dashboard spacing works correctly
 /// across different device sizes as shown in the attached image.
-/// 
+///
 /// Test the following device configurations:
 library;
 
 // DEVICE CONFIGURATIONS TO TEST:
-// 
+//
 // 1. iPhone 14 Pro (393 x 852 logical pixels)
 //    - Should use phone-specific spacing (16-20px base padding)
 //    - Calendar height: ~128px (15% of 852)
 //    - Graph height: ~213px (25% of 852)
 //    - Action buttons: 44px height
 //    - Navigation icons: compact spacing
-// 
+//
 // 2. iPad Pro (1024 x 1366 logical pixels)
 //    - Should use tablet spacing (24-32px base padding)
 //    - Calendar height: ~246px (18% of 1366)
 //    - Graph height: ~382px (28% of 1366)
 //    - Action buttons: 48px height
 //    - Navigation icons: medium spacing
-// 
+//
 // 3. Samsung Galaxy S20 Ultra (412 x 915 logical pixels)
 //    - Should use large phone spacing (16-22px base padding)
 //    - Calendar height: ~137px (15% of 915)
@@ -30,22 +30,22 @@ library;
 //    - Button spacing: ~16px (4% of 412)
 
 /// MANUAL TESTING STEPS:
-/// 
+///
 /// 1. Open the app on each target device or use device simulator
 /// 2. Navigate to the dashboard home screen
 /// 3. Verify the following layout matches the attached image:
-///    
+///
 ///    ✓ Header spacing from top edge
 ///    ✓ Calendar widget proportional height
 ///    ✓ Spacing between calendar and graph
-///    ✓ Graph widget proportional height  
+///    ✓ Graph widget proportional height
 ///    ✓ Spacing between graph and action buttons
 ///    ✓ Action button row spacing (Calendar | Progress)
 ///    ✓ Spacing between action buttons and next content
 ///    ✓ Pet widget proportional height
 ///    ✓ Bottom navigation icon spacing
 ///    ✓ Bottom navigation padding
-/// 
+///
 /// 4. Test in both portrait and landscape orientations
 /// 5. Verify smooth transitions when rotating device
 /// 6. Check that touch targets remain accessible (minimum 44px)
@@ -58,7 +58,8 @@ class ResponsiveTestingHelper {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Screen: ${MediaQuery.of(context).size.width} x ${MediaQuery.of(context).size.height}'),
+        Text(
+            'Screen: ${MediaQuery.of(context).size.width} x ${MediaQuery.of(context).size.height}'),
         Text('Device Type: ${_getDeviceTypeName(context)}'),
         Text('Horizontal Padding: ${_getHorizontalPadding(context)}px'),
         Text('Vertical Spacing: ${_getVerticalSpacing(context)}px'),

@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 /// Uses platform-specific secure storage (Keychain on iOS, KeyStore on Android)
 class SecureStorageService {
   // Singleton pattern for global access
-  static final SecureStorageService _instance = SecureStorageService._internal();
+  static final SecureStorageService _instance =
+      SecureStorageService._internal();
   factory SecureStorageService() => _instance;
   SecureStorageService._internal();
 
@@ -73,7 +74,7 @@ class SecureStorageService {
   Future<SavedCredentials?> getSavedCredentials() async {
     try {
       final rememberMe = await isRememberMeEnabled();
-      
+
       if (!rememberMe) {
         return null;
       }

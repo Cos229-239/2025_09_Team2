@@ -257,12 +257,15 @@ class CalendarEvent {
     required DateTime scheduledTime,
     int? durationMinutes,
   }) {
-    final estimatedDuration = durationMinutes ?? (deck.cards.length * 2).clamp(15, 120); // 2 mins per card, 15-120 min range
-    
+    final estimatedDuration = durationMinutes ??
+        (deck.cards.length * 2)
+            .clamp(15, 120); // 2 mins per card, 15-120 min range
+
     return CalendarEvent(
       id: 'flashcard_${deck.id}_${scheduledTime.millisecondsSinceEpoch}',
       title: 'Study: ${deck.title}',
-      description: 'Review ${deck.cards.length} flashcard${deck.cards.length == 1 ? '' : 's'} from "${deck.title}"${deck.tags.isNotEmpty ? ' (${deck.tags.join(', ')})' : ''}',
+      description:
+          'Review ${deck.cards.length} flashcard${deck.cards.length == 1 ? '' : 's'} from "${deck.title}"${deck.tags.isNotEmpty ? ' (${deck.tags.join(', ')})' : ''}',
       type: CalendarEventType.flashcardStudy,
       startTime: scheduledTime,
       endTime: scheduledTime.add(Duration(minutes: estimatedDuration)),
@@ -296,13 +299,15 @@ class CalendarEvent {
   }) {
     // Estimate reading time: ~200 words per minute
     // Rough estimate: 5 chars per word = contentMd.length / 1000 minutes
-    final estimatedReading = (note.contentMd.length / 1000).ceil().clamp(15, 120);
+    final estimatedReading =
+        (note.contentMd.length / 1000).ceil().clamp(15, 120);
     final estimatedDuration = durationMinutes ?? estimatedReading;
-    
+
     return CalendarEvent(
       id: 'note_${note.id}_${scheduledTime.millisecondsSinceEpoch}',
       title: 'Review: ${note.title}',
-      description: 'Review and study note: "${note.title}"${note.tags.isNotEmpty ? ' (${note.tags.join(', ')})' : ''}',
+      description:
+          'Review and study note: "${note.title}"${note.tags.isNotEmpty ? ' (${note.tags.join(', ')})' : ''}',
       type: CalendarEventType.studySession,
       startTime: scheduledTime,
       endTime: scheduledTime.add(Duration(minutes: estimatedDuration)),

@@ -45,9 +45,12 @@ class FirestoreService {
   CollectionReference get cardsCollection => _firestore.collection('cards');
   CollectionReference get tasksCollection => _firestore.collection('tasks');
   CollectionReference get notesCollection => _firestore.collection('notes');
-  CollectionReference get activitiesCollection => _firestore.collection('activities');
-  CollectionReference get friendshipsCollection => _firestore.collection('friendships');
-  CollectionReference get studyGroupsCollection => _firestore.collection('study_groups');
+  CollectionReference get activitiesCollection =>
+      _firestore.collection('activities');
+  CollectionReference get friendshipsCollection =>
+      _firestore.collection('friendships');
+  CollectionReference get studyGroupsCollection =>
+      _firestore.collection('study_groups');
 
   /// Create or update user profile in Firestore with comprehensive data
   Future<bool> createUserProfile({
@@ -311,7 +314,7 @@ class FirestoreService {
   Future<List<Map<String, dynamic>>> getUserDecks(String uid) async {
     try {
       debugPrint('🔍 FirestoreService: getUserDecks called for uid: $uid');
-      
+
       // Try with orderBy first (requires composite index)
       try {
         final querySnapshot = await decksCollection
@@ -319,42 +322,47 @@ class FirestoreService {
             .orderBy('updatedAt', descending: true)
             .get();
 
-        debugPrint('🔍 FirestoreService: Query with orderBy returned ${querySnapshot.docs.length} documents');
+        debugPrint(
+            '🔍 FirestoreService: Query with orderBy returned ${querySnapshot.docs.length} documents');
 
         final results = querySnapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           data['id'] = doc.id;
-          debugPrint('🔍 FirestoreService: Deck doc ${doc.id}: ${data['title']}');
+          debugPrint(
+              '🔍 FirestoreService: Deck doc ${doc.id}: ${data['title']}');
           return data;
         }).toList();
-        
+
         debugPrint('🔍 FirestoreService: Returning ${results.length} decks');
         return results;
       } catch (indexError) {
         // If index error, fall back to query without orderBy
-        debugPrint('⚠️ FirestoreService: Index error, trying without orderBy: $indexError');
-        
-        final querySnapshot = await decksCollection
-            .where('uid', isEqualTo: uid)
-            .get();
+        debugPrint(
+            '⚠️ FirestoreService: Index error, trying without orderBy: $indexError');
 
-        debugPrint('🔍 FirestoreService: Query without orderBy returned ${querySnapshot.docs.length} documents');
+        final querySnapshot =
+            await decksCollection.where('uid', isEqualTo: uid).get();
+
+        debugPrint(
+            '🔍 FirestoreService: Query without orderBy returned ${querySnapshot.docs.length} documents');
 
         final results = querySnapshot.docs.map((doc) {
           final data = doc.data() as Map<String, dynamic>;
           data['id'] = doc.id;
-          debugPrint('🔍 FirestoreService: Deck doc ${doc.id}: ${data['title']}');
+          debugPrint(
+              '🔍 FirestoreService: Deck doc ${doc.id}: ${data['title']}');
           return data;
         }).toList();
-        
+
         // Sort in memory if needed
         results.sort((a, b) {
           final aTime = a['updatedAt']?.toDate() ?? DateTime.now();
           final bTime = b['updatedAt']?.toDate() ?? DateTime.now();
           return bTime.compareTo(aTime);
         });
-        
-        debugPrint('🔍 FirestoreService: Returning ${results.length} decks (sorted in memory)');
+
+        debugPrint(
+            '🔍 FirestoreService: Returning ${results.length} decks (sorted in memory)');
         return results;
       }
     } catch (e) {
@@ -395,10 +403,10 @@ class FirestoreService {
 
       // Delete the deck
       await decksCollection.doc(deckId).delete();
-      
+
       // Also remove any deck cooldowns
       await removeDeckCooldown(deckId, uid);
-      
+
       if (kDebugMode) {
         print('✅ Deleted deck: $deckId');
       }
@@ -438,7 +446,7 @@ class FirestoreService {
       // Update the deck with new data
       deckData['updatedAt'] = FieldValue.serverTimestamp();
       await decksCollection.doc(deckId).update(deckData);
-      
+
       if (kDebugMode) {
         print('✅ Updated deck: $deckId');
       }
@@ -2273,7 +2281,8 @@ class FirestoreService {
   // ========================================
 
   /// Collection reference for saved timers
-  CollectionReference get savedTimersCollection => _firestore.collection('savedTimers');
+  CollectionReference get savedTimersCollection =>
+      _firestore.collection('savedTimers');
 
   /// Save a custom timer to Firestore
   Future<String?> saveTimer({
@@ -2306,11 +2315,11 @@ class FirestoreService {
       };
 
       final docRef = await savedTimersCollection.add(timerData);
-      
+
       if (kDebugMode) {
         print('✅ Timer saved successfully: ${docRef.id}');
       }
-      
+
       return docRef.id;
     } catch (e) {
       if (kDebugMode) {
@@ -2329,9 +2338,8 @@ class FirestoreService {
         return [];
       }
 
-      final snapshot = await savedTimersCollection
-          .where('userId', isEqualTo: uid)
-          .get();
+      final snapshot =
+          await savedTimersCollection.where('userId', isEqualTo: uid).get();
 
       final timers = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
@@ -2362,9 +2370,7 @@ class FirestoreService {
       return const Stream.empty();
     }
 
-    return savedTimersCollection
-        .where('userId', isEqualTo: uid)
-        .snapshots();
+    return savedTimersCollection.where('userId', isEqualTo: uid).snapshots();
   }
 
   /// Update an existing saved timer
@@ -2399,7 +2405,7 @@ class FirestoreService {
       if (kDebugMode) {
         print('✅ Timer updated successfully: $timerId');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {
@@ -2419,11 +2425,11 @@ class FirestoreService {
       }
 
       await savedTimersCollection.doc(timerId).delete();
-      
+
       if (kDebugMode) {
         print('✅ Timer deleted successfully: $timerId');
       }
-      
+
       return true;
     } catch (e) {
       if (kDebugMode) {

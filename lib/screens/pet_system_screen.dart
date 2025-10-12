@@ -21,23 +21,24 @@ class PetSystemScreen extends StatefulWidget {
   State<PetSystemScreen> createState() => _PetSystemScreenState();
 }
 
-class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderStateMixin {
+class _PetSystemScreenState extends State<PetSystemScreen>
+    with TickerProviderStateMixin {
   late AnimationController _petAnimationController;
   late Animation<double> _petBounceAnimation;
-  
+
   String? _selectedCategory; // Track which interaction category is selected
   PetSpecies? _previewingSpecies; // Track which pet species is being previewed
 
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize pet bounce animation
     _petAnimationController = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _petBounceAnimation = Tween<double>(
       begin: -5.0,
       end: 5.0,
@@ -111,7 +112,8 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
           if (pet == null) {
             // If previewing a species, show preview screen
             if (_previewingSpecies != null) {
-              return _buildPetPreviewScreen(context, petProvider, _previewingSpecies!);
+              return _buildPetPreviewScreen(
+                  context, petProvider, _previewingSpecies!);
             }
             // Otherwise show selection screen
             return _buildCreatePetScreen(context, petProvider);
@@ -125,22 +127,23 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                 // Heart Bar for advancing pet to next level
                 _buildHeartBar(context, pet),
                 const SizedBox(height: 24),
-                
+
                 // Pet Display Area
                 _buildPetDisplay(context, pet),
                 const SizedBox(height: 24),
-                
+
                 // Pet Stats Card
                 _buildStatsCard(context, pet, petProvider),
                 const SizedBox(height: 24),
-                
+
                 // Interaction Categories
                 _buildInteractionCategories(context, petProvider),
                 const SizedBox(height: 16),
-                
+
                 // Display selected category actions
                 if (_selectedCategory != null)
-                  _buildCategoryActions(context, _selectedCategory!, petProvider),
+                  _buildCategoryActions(
+                      context, _selectedCategory!, petProvider),
               ],
             ),
           );
@@ -152,8 +155,9 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
   /// Build heart bar showing progress to next level
   Widget _buildHeartBar(BuildContext context, Pet pet) {
     final progress = pet.xpProgress;
-    final hearts = (progress * 10).ceil().clamp(0, 10); // 0-10 hearts based on XP progress
-    
+    final hearts =
+        (progress * 10).ceil().clamp(0, 10); // 0-10 hearts based on XP progress
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -189,7 +193,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Heart icons display
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -202,22 +206,23 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               );
             }),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // XP Progress bar
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
               value: progress,
               backgroundColor: Colors.grey[800],
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF6FB8E9)),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(Color(0xFF6FB8E9)),
               minHeight: 8,
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
             '${pet.xp} / ${pet.xpForNextLevel} XP',
             style: TextStyle(
@@ -277,7 +282,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               size: 30,
             ),
           ),
-          
+
           // Animated pet display
           Center(
             child: AnimatedBuilder(
@@ -302,7 +307,8 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                              color: const Color(0xFF6FB8E9)
+                                  .withValues(alpha: 0.3),
                               blurRadius: 30,
                               spreadRadius: 10,
                             ),
@@ -315,7 +321,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                         ),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Pet name/type
                       Text(
                         _getPetSpeciesName(pet.species),
@@ -325,7 +331,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      
+
                       // Pet mood
                       Text(
                         _getMoodEmoji(pet.mood),
@@ -366,7 +372,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
             ),
           ),
           const SizedBox(height: 16),
-          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -442,14 +447,45 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
   }
 
   /// Build interaction categories
-  Widget _buildInteractionCategories(BuildContext context, PetProvider provider) {
+  Widget _buildInteractionCategories(
+      BuildContext context, PetProvider provider) {
     final categories = [
-      {'id': 'buddy', 'icon': Icons.favorite, 'label': 'Buddy', 'color': Colors.pinkAccent},
-      {'id': 'play', 'icon': Icons.sports_esports, 'label': 'Play', 'color': Colors.orange},
-      {'id': 'toy', 'icon': Icons.toys, 'label': 'Give Toy', 'color': Colors.amber},
-      {'id': 'dress', 'icon': Icons.checkroom, 'label': 'Dress', 'color': Colors.purple},
-      {'id': 'furniture', 'icon': Icons.chair, 'label': 'Furniture', 'color': Colors.teal},
-      {'id': 'snapshot', 'icon': Icons.camera_alt, 'label': 'Snapshot', 'color': Colors.blue},
+      {
+        'id': 'buddy',
+        'icon': Icons.favorite,
+        'label': 'Buddy',
+        'color': Colors.pinkAccent
+      },
+      {
+        'id': 'play',
+        'icon': Icons.sports_esports,
+        'label': 'Play',
+        'color': Colors.orange
+      },
+      {
+        'id': 'toy',
+        'icon': Icons.toys,
+        'label': 'Give Toy',
+        'color': Colors.amber
+      },
+      {
+        'id': 'dress',
+        'icon': Icons.checkroom,
+        'label': 'Dress',
+        'color': Colors.purple
+      },
+      {
+        'id': 'furniture',
+        'icon': Icons.chair,
+        'label': 'Furniture',
+        'color': Colors.teal
+      },
+      {
+        'id': 'snapshot',
+        'icon': Icons.camera_alt,
+        'label': 'Snapshot',
+        'color': Colors.blue
+      },
     ];
 
     return Container(
@@ -474,7 +510,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
             ),
           ),
           const SizedBox(height: 16),
-          
           Wrap(
             spacing: 12,
             runSpacing: 12,
@@ -487,7 +522,8 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                 isSelected: isSelected,
                 onTap: () {
                   setState(() {
-                    _selectedCategory = isSelected ? null : category['id'] as String;
+                    _selectedCategory =
+                        isSelected ? null : category['id'] as String;
                   });
                 },
               );
@@ -542,7 +578,8 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
   }
 
   /// Build category-specific actions
-  Widget _buildCategoryActions(BuildContext context, String category, PetProvider provider) {
+  Widget _buildCategoryActions(
+      BuildContext context, String category, PetProvider provider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -557,7 +594,8 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
     );
   }
 
-  Widget _getCategoryContent(BuildContext context, String category, PetProvider provider) {
+  Widget _getCategoryContent(
+      BuildContext context, String category, PetProvider provider) {
     switch (category) {
       case 'buddy':
         return _buildBuddyActions(context, provider);
@@ -598,7 +636,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
           ),
         ),
         const SizedBox(height: 16),
-        
         Row(
           children: [
             Expanded(
@@ -620,7 +657,8 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               child: ElevatedButton.icon(
                 onPressed: () {
                   provider.playWithPet();
-                  _showInteractionFeedback(context, 'Played with buddy! +20 XP');
+                  _showInteractionFeedback(
+                      context, 'Played with buddy! +20 XP');
                 },
                 icon: const Icon(Icons.favorite),
                 label: const Text('Pet'),
@@ -665,7 +703,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
           ),
         ),
         const SizedBox(height: 16),
-        
         Wrap(
           spacing: 12,
           runSpacing: 12,
@@ -674,7 +711,8 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               width: (MediaQuery.of(context).size.width - 80) / 2,
               child: ElevatedButton(
                 onPressed: () {
-                  provider.addXP(option['xp'] as int, source: option['label'] as String);
+                  provider.addXP(option['xp'] as int,
+                      source: option['label'] as String);
                   _showInteractionFeedback(
                     context,
                     '${option['label']}! +${option['xp']} XP',
@@ -742,7 +780,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
           ),
         ),
         const SizedBox(height: 16),
-        
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -837,7 +874,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
           ),
         ),
         const SizedBox(height: 16),
-        
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -932,7 +968,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
           ),
         ),
         const SizedBox(height: 16),
-        
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -1020,7 +1055,6 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
           ),
         ),
         const SizedBox(height: 16),
-        
         Row(
           children: [
             Expanded(
@@ -1148,7 +1182,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            
+
             // Pet species selection
             const Text(
               'Choose Your Pet:',
@@ -1159,7 +1193,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               ),
             ),
             const SizedBox(height: 16),
-            
+
             Wrap(
               spacing: 16,
               runSpacing: 16,
@@ -1279,7 +1313,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
   ) {
     final speciesName = _getPetSpeciesName(species);
     final speciesEmoji = _getSpeciesEmoji(species);
-    
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -1301,9 +1335,9 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Pet preview display
           Container(
             height: 280,
@@ -1343,9 +1377,9 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               ),
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Features section
           Container(
             padding: const EdgeInsets.all(20),
@@ -1369,36 +1403,35 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                   ),
                 ),
                 const SizedBox(height: 16),
-                
                 ..._getPetFeatures(species).map((feature) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(
-                        Icons.check_circle,
-                        color: Color(0xFF6FB8E9),
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          feature,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 16,
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Color(0xFF6FB8E9),
+                            size: 20,
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              feature,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                )),
+                    )),
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Special abilities
           Container(
             padding: const EdgeInsets.all(20),
@@ -1433,9 +1466,9 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               ],
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Choose this pet button
           SizedBox(
             height: 56,
@@ -1470,7 +1503,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
               ),
             ),
           ),
-          
+
           const SizedBox(height: 16),
         ],
       ),
@@ -1558,7 +1591,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
   /// Show dialog to change pet species
   void _showChangePetDialog(BuildContext context, PetProvider petProvider) {
     final currentPet = petProvider.currentPet!;
-    
+
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -1621,7 +1654,7 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Pet selection grid
               Wrap(
                 spacing: 12,
@@ -1629,32 +1662,34 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                 children: PetSpecies.values.map((species) {
                   final isCurrentPet = species == currentPet.species;
                   return GestureDetector(
-                    onTap: isCurrentPet ? null : () async {
-                      Navigator.of(dialogContext).pop();
-                      await petProvider.changePetSpecies(species);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              '🎉 Changed to ${_getPetSpeciesName(species)}! Your progress is preserved.',
-                            ),
-                            backgroundColor: const Color(0xFF6FB8E9),
-                          ),
-                        );
-                      }
-                    },
+                    onTap: isCurrentPet
+                        ? null
+                        : () async {
+                            Navigator.of(dialogContext).pop();
+                            await petProvider.changePetSpecies(species);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '🎉 Changed to ${_getPetSpeciesName(species)}! Your progress is preserved.',
+                                  ),
+                                  backgroundColor: const Color(0xFF6FB8E9),
+                                ),
+                              );
+                            }
+                          },
                     child: Container(
                       width: 90,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isCurrentPet 
-                          ? const Color(0xFF6FB8E9).withValues(alpha: 0.3)
-                          : const Color(0xFF1A1C2E),
+                        color: isCurrentPet
+                            ? const Color(0xFF6FB8E9).withValues(alpha: 0.3)
+                            : const Color(0xFF1A1C2E),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isCurrentPet
-                            ? const Color(0xFF6FB8E9)
-                            : Colors.grey.withValues(alpha: 0.3),
+                              ? const Color(0xFF6FB8E9)
+                              : Colors.grey.withValues(alpha: 0.3),
                           width: isCurrentPet ? 2 : 1,
                         ),
                       ),
@@ -1665,16 +1700,22 @@ class _PetSystemScreenState extends State<PetSystemScreen> with TickerProviderSt
                             _getSpeciesEmoji(species),
                             style: TextStyle(
                               fontSize: 32,
-                              color: isCurrentPet ? Colors.white : Colors.white70,
+                              color:
+                                  isCurrentPet ? Colors.white : Colors.white70,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _getPetSpeciesName(species).replaceAll('Study ', ''),
+                            _getPetSpeciesName(species)
+                                .replaceAll('Study ', ''),
                             style: TextStyle(
-                              color: isCurrentPet ? Colors.white : Colors.grey[400],
+                              color: isCurrentPet
+                                  ? Colors.white
+                                  : Colors.grey[400],
                               fontSize: 12,
-                              fontWeight: isCurrentPet ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isCurrentPet
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                             textAlign: TextAlign.center,
                           ),

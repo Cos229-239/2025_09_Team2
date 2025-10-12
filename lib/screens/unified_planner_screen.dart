@@ -139,8 +139,7 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
           child: SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 80),
             child: EnhancedCalendarWidget(
-              onDaySelected: (date, events) {
-              },
+              onDaySelected: (date, events) {},
               onEventTapped: _showEventDetails,
               enableQuickCreate: true,
               showFilters: true,

@@ -4,7 +4,7 @@
 // ✅ Offline mode support with Firestore persistence (enabled in main.dart)
 // ✅ Quick actions via long-press on dashboard widgets
 // ✅ Accessibility features with Semantics for screen readers
-// 
+//
 // Note: The following features are available but require user-facing UI:
 // - Dashboard customization: Can be added via settings panel
 // - Dashboard analytics: FirebaseAnalytics tracking ready to implement
@@ -18,7 +18,7 @@ import 'dart:math';
 // Import Provider package for accessing state management across widgets
 import 'package:provider/provider.dart';
 // Import screen for flashcard study interface
-import 'package:studypals/screens/flashcard_study_screen.dart'; // Flashcard study interface
+import 'package:studypals/screens/flashcard_detail_screen.dart'; // Flashcard study interface
 // Import additional screens for hamburger menu navigation
 import 'package:studypals/screens/achievement_screen.dart'; // Achievement and rewards screen
 import 'package:studypals/screens/social_screen.dart'; // Social learning screen
@@ -732,9 +732,10 @@ class _DashboardHomeState extends State<DashboardHome>
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 5, 
+      length: 5,
       vsync: this,
-      animationDuration: const Duration(milliseconds: 0), // Immediate switching - no animation delay
+      animationDuration: const Duration(
+          milliseconds: 0), // Immediate switching - no animation delay
     );
     _tabController.addListener(() {
       // Animate icons when tab changes
@@ -795,9 +796,10 @@ class _DashboardHomeState extends State<DashboardHome>
       curve: Curves.easeInOut,
     ));
 
-    // Initialize Social icon hugging animation controller  
+    // Initialize Social icon hugging animation controller
     _socialIconController = AnimationController(
-      duration: const Duration(milliseconds: 1600), // Longer duration for full hug-and-release cycle
+      duration: const Duration(
+          milliseconds: 1600), // Longer duration for full hug-and-release cycle
       vsync: this,
     );
     _socialIconAnimation = Tween<double>(
@@ -805,12 +807,14 @@ class _DashboardHomeState extends State<DashboardHome>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _socialIconController,
-      curve: Curves.easeInOutBack, // Smooth back-and-forth curve for hug-release effect
+      curve: Curves
+          .easeInOutBack, // Smooth back-and-forth curve for hug-release effect
     ));
 
     // Initialize Learn icon tassel sway animation controller
     _learnIconController = AnimationController(
-      duration: const Duration(milliseconds: 2000), // Gentle 2-second sway cycle
+      duration:
+          const Duration(milliseconds: 2000), // Gentle 2-second sway cycle
       vsync: this,
     );
     _learnIconAnimation = Tween<double>(
@@ -936,7 +940,8 @@ class _DashboardHomeState extends State<DashboardHome>
     // Special handling for Learn button (index 1)
     if (newIndex == 1) {
       if (_learnIconAnimation != null) {
-        _learnIconController.repeat(reverse: true); // Start gentle tassel sway animation
+        _learnIconController.repeat(
+            reverse: true); // Start gentle tassel sway animation
       }
     } else if (oldIndex == 1) {
       if (_learnIconAnimation != null) {
@@ -972,15 +977,17 @@ class _DashboardHomeState extends State<DashboardHome>
   /// Reloads all provider data when user pulls down on the dashboard
   Future<void> _handleRefresh() async {
     debugPrint('🔄 Pull-to-refresh triggered - reloading all data');
-    
+
     // Get provider instances without listening to changes
     final taskProvider = Provider.of<TaskProvider>(context, listen: false);
     final deckProvider = Provider.of<DeckProvider>(context, listen: false);
     final petProvider = Provider.of<PetProvider>(context, listen: false);
     final srsProvider = Provider.of<SRSProvider>(context, listen: false);
-    final questProvider = Provider.of<DailyQuestProvider>(context, listen: false);
-    final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
-    
+    final questProvider =
+        Provider.of<DailyQuestProvider>(context, listen: false);
+    final notificationProvider =
+        Provider.of<NotificationProvider>(context, listen: false);
+
     // Reload all data sources concurrently
     await Future.wait([
       taskProvider.loadTasks(),
@@ -990,7 +997,7 @@ class _DashboardHomeState extends State<DashboardHome>
       questProvider.loadTodaysQuests(),
       notificationProvider.loadNotifications(),
     ]);
-    
+
     debugPrint('✅ Pull-to-refresh complete');
   }
 
@@ -1001,36 +1008,37 @@ class _DashboardHomeState extends State<DashboardHome>
     if (tabIndex != _selectedTabIndex) {
       return const SizedBox.shrink(); // Hide non-selected tabs
     }
-    
+
     // Get animation progress from TabController
     final animation = _tabController.animation!;
     final animationValue = animation.value;
-    
+
     // Calculate progress for transition animation
     // When animating TO this tab: progress goes from 0.0 to 1.0
     // When this tab is fully active: progress stays at 1.0
     double progress = 1.0;
-    
+
     // Check if we're currently animating
     if (animation.isAnimating) {
       // Calculate how close the animation is to our tab index
       final distance = (animationValue - tabIndex).abs();
       progress = (1.0 - distance).clamp(0.0, 1.0);
     }
-    
+
     // Enhanced bottom-up slide animation
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     // Vertical translation: slides from bottom toolbar to full screen
     // Start from the bottom (beyond screen) and slide up
-    final verticalOffset = screenHeight * (1.0 - Curves.easeOutCubic.transform(progress));
-    
+    final verticalOffset =
+        screenHeight * (1.0 - Curves.easeOutCubic.transform(progress));
+
     // Opacity with faster fade-in for smoother appearance
     final opacity = Curves.easeOutQuart.transform(progress);
-    
+
     // Optional: Slight scale effect for depth (less dramatic than before)
     final scale = 0.95 + (progress * 0.05); // Subtle scale from 95% to 100%
-    
+
     // Apply transforms: translate from bottom up with smooth curves
     return Transform.translate(
       offset: Offset(0, verticalOffset),
@@ -1041,7 +1049,8 @@ class _DashboardHomeState extends State<DashboardHome>
           opacity: opacity,
           child: ClipRRect(
             borderRadius: BorderRadius.vertical(
-              top: Radius.circular(20 * (1.0 - progress)), // Subtle corner rounding during transition
+              top: Radius.circular(20 *
+                  (1.0 - progress)), // Subtle corner rounding during transition
             ),
             child: child,
           ),
@@ -1140,7 +1149,7 @@ class _DashboardHomeState extends State<DashboardHome>
         _profileSettingsPanelController.reverse();
         return;
       }
-      
+
       _isProfilePanelOpen = !_isProfilePanelOpen;
       if (_isProfilePanelOpen) {
         _profilePanelController.forward();
@@ -1191,7 +1200,7 @@ class _DashboardHomeState extends State<DashboardHome>
       // Close settings panel
       _isProfileSettingsPanelOpen = false;
       _profileSettingsPanelController.reverse();
-      
+
       // Open profile panel
       _isProfilePanelOpen = true;
       _profilePanelController.forward();
@@ -1206,19 +1215,19 @@ class _DashboardHomeState extends State<DashboardHome>
         _isHamburgerMenuOpen = false;
         _hamburgerMenuController.reverse();
       }
-      
+
       // Close notification panel if open
       if (_isNotificationPanelOpen) {
         _isNotificationPanelOpen = false;
         _notificationPanelController.reverse();
       }
-      
+
       // Close profile panel if open
       if (_isProfilePanelOpen) {
         _isProfilePanelOpen = false;
         _profilePanelController.reverse();
       }
-      
+
       // Close profile settings panel if open
       if (_isProfileSettingsPanelOpen) {
         _isProfileSettingsPanelOpen = false;
@@ -1231,12 +1240,12 @@ class _DashboardHomeState extends State<DashboardHome>
   void _toggleHamburgerMenu() {
     setState(() {
       _isHamburgerMenuOpen = !_isHamburgerMenuOpen;
-      
+
       // Stop any ongoing animation to prevent conflicts during rapid toggling
       if (_hamburgerMenuController.isAnimating) {
         _hamburgerMenuController.stop();
       }
-      
+
       if (_isHamburgerMenuOpen) {
         _hamburgerMenuController.forward();
         // Close notification panel if open
@@ -1267,164 +1276,213 @@ class _DashboardHomeState extends State<DashboardHome>
                 // Tab 0: Home tab - responsive dashboard content - Wrapped with animation
                 AnimatedBuilder(
                   animation: _tabController.animation!,
-                  builder: (context, child) => _buildExpandTransition(0, child!),
+                  builder: (context, child) =>
+                      _buildExpandTransition(0, child!),
                   child: Stack(
-                    clipBehavior: Clip.hardEdge, // Prevent overflow from Stack children
+                    clipBehavior:
+                        Clip.hardEdge, // Prevent overflow from Stack children
                     children: [
                       // Main home tab content
                       SafeArea(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Status bar area for time, WiFi, notch spacing
-                          _buildStatusBar(context),
-                          
-                          // Header with responsive spacing
-                          Container(
-                            height: ResponsiveSpacing.getHeaderHeight(context),
-                            color: const Color(0xFF242628),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: ResponsiveSpacing.getHorizontalPadding(context),
-                              vertical: ResponsiveSpacing.getSmallSpacing(context),
-                            ),
-                            child: _buildHeader(context),
-                          ),
-
-                          // Horizontal divider line - full width
-                          Container(
-                            width: double.infinity,
-                            height: 3.0,
-                            color: const Color(0xFF6FB8E9),
-                          ),
-
-                          // Content section with responsive padding and pull-to-refresh
-                          Expanded(
-                            child: RefreshIndicator(
-                              onRefresh: _handleRefresh,
-                              color: const Color(0xFF6FB8E9), // Match app theme
-                              backgroundColor: const Color(0xFF242628),
-                              child: SingleChildScrollView(
-                                physics: const AlwaysScrollableScrollPhysics(), // Enable pull-to-refresh even with short content
-                                padding: EdgeInsets.fromLTRB(
-                                  ResponsiveSpacing.getHorizontalPadding(context),
-                                  ResponsiveSpacing.getVerticalSpacing(context) * 0.5, // Small top margin
-                          ResponsiveSpacing.getHorizontalPadding(context),
-                          ResponsiveSpacing.getHorizontalPadding(context),
-                        ),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Calendar Display Widget with responsive height
-                            Semantics(
-                              label: 'Calendar Widget',
-                              hint: 'Shows your upcoming events and tasks',
-                              child: SizedBox(
-                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar),
-                                child: const CalendarDisplayWidget(),
+                            // Status bar area for time, WiFi, notch spacing
+                            _buildStatusBar(context),
+
+                            // Header with responsive spacing
+                            Container(
+                              height:
+                                  ResponsiveSpacing.getHeaderHeight(context),
+                              color: const Color(0xFF242628),
+                              padding: EdgeInsets.symmetric(
+                                horizontal:
+                                    ResponsiveSpacing.getHorizontalPadding(
+                                        context),
+                                vertical:
+                                    ResponsiveSpacing.getSmallSpacing(context),
                               ),
-                            ),
-                            
-                            // Progress Graph Widget with responsive height - moved extremely close to calendar with larger negative margin
-                            Transform.translate(
-                              offset: const Offset(0, -40), // Move up by 40 logical pixels (increased from -24)
-                              child: Semantics(
-                                label: 'Progress Graph',
-                                hint: 'Displays your study progress and statistics',
-                                child: SizedBox(
-                                  height: ResponsiveSpacing.getComponentHeight(context, ComponentType.graph) * 1.35 + ResponsiveSpacing.getVerticalSpacing(context) * 0.0,
-                                  child: const ProgressGraphWidget(),
-                                ),
-                              ),
+                              child: _buildHeader(context),
                             ),
 
-                          // Calendar and Progress buttons row with responsive spacing - moved closer to graph
-                          Transform.translate(
-                            offset: const Offset(0, -20), // Increased offset from -10 to -20 to move buttons up
-                            child: Row(
-                            children: [
-                              Expanded(
-                                child: _buildActionButton(
-                                  context,
-                                  label: 'Calendar',
-                                  onTap: () {
-                                    _closeAllPanels();
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const UnifiedPlannerScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              SizedBox(width: ResponsiveSpacing.getButtonSpacing(context)),
-                              Expanded(
-                                child: _buildActionButton(
-                                  context,
-                                  label: 'Progress',
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ProgressScreen(),
-                                      ),
-                                    );
-
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          ), // Close Transform.translate for buttons row
-                          
-                          // Pets Coming Soon Container - enlarged to extend closer to toolbar
-                          Transform.translate(
-                            offset: const Offset(0, -2), // Maintains minimal spacing adjustment
-                            child: Container(
-                              height: 220, // Increased from 120 to 220 to extend closer to the toolbar
-                              margin: const EdgeInsets.symmetric(horizontal: 0),
-                            decoration: BoxDecoration(
-                              color: Colors.transparent,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: const Color(0xFF6FB8E9), // Same blue border as graph container
-                                width: 2,
-                              ),
+                            // Horizontal divider line - full width
+                            Container(
+                              width: double.infinity,
+                              height: 3.0,
+                              color: const Color(0xFF6FB8E9),
                             ),
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.pets,
-                                    size: 48,
-                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+
+                            // Content section with responsive padding and pull-to-refresh
+                            Expanded(
+                              child: RefreshIndicator(
+                                onRefresh: _handleRefresh,
+                                color:
+                                    const Color(0xFF6FB8E9), // Match app theme
+                                backgroundColor: const Color(0xFF242628),
+                                child: SingleChildScrollView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(), // Enable pull-to-refresh even with short content
+                                  padding: EdgeInsets.fromLTRB(
+                                    ResponsiveSpacing.getHorizontalPadding(
+                                        context),
+                                    ResponsiveSpacing.getVerticalSpacing(
+                                            context) *
+                                        0.5, // Small top margin
+                                    ResponsiveSpacing.getHorizontalPadding(
+                                        context),
+                                    ResponsiveSpacing.getHorizontalPadding(
+                                        context),
                                   ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    'Pets Coming Soon',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                    ),
+                                  child: Column(
+                                    children: [
+                                      // Calendar Display Widget with responsive height
+                                      Semantics(
+                                        label: 'Calendar Widget',
+                                        hint:
+                                            'Shows your upcoming events and tasks',
+                                        child: SizedBox(
+                                          height: ResponsiveSpacing
+                                              .getComponentHeight(context,
+                                                  ComponentType.calendar),
+                                          child: const CalendarDisplayWidget(),
+                                        ),
+                                      ),
+
+                                      // Progress Graph Widget with responsive height - moved extremely close to calendar with larger negative margin
+                                      Transform.translate(
+                                        offset: const Offset(0,
+                                            -40), // Move up by 40 logical pixels (increased from -24)
+                                        child: Semantics(
+                                          label: 'Progress Graph',
+                                          hint:
+                                              'Displays your study progress and statistics',
+                                          child: SizedBox(
+                                            height: ResponsiveSpacing
+                                                        .getComponentHeight(
+                                                            context,
+                                                            ComponentType
+                                                                .graph) *
+                                                    1.35 +
+                                                ResponsiveSpacing
+                                                        .getVerticalSpacing(
+                                                            context) *
+                                                    0.0,
+                                            child: const ProgressGraphWidget(),
+                                          ),
+                                        ),
+                                      ),
+
+                                      // Calendar and Progress buttons row with responsive spacing - moved closer to graph
+                                      Transform.translate(
+                                        offset: const Offset(0,
+                                            -20), // Increased offset from -10 to -20 to move buttons up
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildActionButton(
+                                                context,
+                                                label: 'Calendar',
+                                                onTap: () {
+                                                  _closeAllPanels();
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const UnifiedPlannerScreen(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                            SizedBox(
+                                                width: ResponsiveSpacing
+                                                    .getButtonSpacing(context)),
+                                            Expanded(
+                                              child: _buildActionButton(
+                                                context,
+                                                label: 'Progress',
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const ProgressScreen(),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ), // Close Transform.translate for buttons row
+
+                                      // Pets Coming Soon Container - enlarged to extend closer to toolbar
+                                      Transform.translate(
+                                        offset: const Offset(0,
+                                            -2), // Maintains minimal spacing adjustment
+                                        child: Container(
+                                          height:
+                                              220, // Increased from 120 to 220 to extend closer to the toolbar
+                                          margin: const EdgeInsets.symmetric(
+                                              horizontal: 0),
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                            border: Border.all(
+                                              color: const Color(
+                                                  0xFF6FB8E9), // Same blue border as graph container
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Column(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.pets,
+                                                  size: 48,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                      .withValues(alpha: 0.5),
+                                                ),
+                                                const SizedBox(height: 12),
+                                                Text(
+                                                  'Pets Coming Soon',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface
+                                                            .withValues(
+                                                                alpha: 0.7),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ), // Close Transform.translate for Pets container
+
+                                      // Reduced bottom spacing to bring container closer to toolbar
+                                      SizedBox(
+                                          height: ResponsiveSpacing
+                                                  .getVerticalSpacing(context) *
+                                              0.5), // Reduced from 1.5 to 0.5
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
-                          ),
-                          ), // Close Transform.translate for Pets container
-
-                          // Reduced bottom spacing to bring container closer to toolbar
-                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 0.5), // Reduced from 1.5 to 0.5
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                ],
-              ),
-            ),
                       // Notification panel overlay within home tab
                       _buildNotificationPanelOverlay(context),
                       // Profile panel overlay within home tab
@@ -1436,41 +1494,48 @@ class _DashboardHomeState extends State<DashboardHome>
                     ],
                   ),
                 ),
-            // Tab 1: Learn tab (Flashcards/Decks) - Wrapped with animation
-            AnimatedBuilder(
-              animation: _tabController.animation!,
-              builder: (context, child) => _buildExpandTransition(1, child!),
-              child: _buildLearnTab(),
-            ),
-            // Tab 2: AI Tutor tab - Wrapped with animation
-            AnimatedBuilder(
-              animation: _tabController.animation!,
-              builder: (context, child) => _buildExpandTransition(2, child!),
-              child: _buildAITutorTab(),
-            ),
-            // Tab 3: Social tab - Wrapped with animation
-            AnimatedBuilder(
-              animation: _tabController.animation!,
-              builder: (context, child) => _buildExpandTransition(3, child!),
-              child: _buildSocialTab(),
-            ),
-            // Tab 4: Pet tab - Wrapped with animation
-            AnimatedBuilder(
-              animation: _tabController.animation!,
-              builder: (context, child) => _buildExpandTransition(4, child!),
-              child: _buildPetTab(),
-            ),
-          ],
+                // Tab 1: Learn tab (Flashcards/Decks) - Wrapped with animation
+                AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) =>
+                      _buildExpandTransition(1, child!),
+                  child: _buildLearnTab(),
+                ),
+                // Tab 2: AI Tutor tab - Wrapped with animation
+                AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) =>
+                      _buildExpandTransition(2, child!),
+                  child: _buildAITutorTab(),
+                ),
+                // Tab 3: Social tab - Wrapped with animation
+                AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) =>
+                      _buildExpandTransition(3, child!),
+                  child: _buildSocialTab(),
+                ),
+                // Tab 4: Pet tab - Wrapped with animation
+                AnimatedBuilder(
+                  animation: _tabController.animation!,
+                  builder: (context, child) =>
+                      _buildExpandTransition(4, child!),
+                  child: _buildPetTab(),
+                ),
+              ],
             ),
           ),
         ],
       ),
       bottomNavigationBar: Container(
         padding: EdgeInsets.fromLTRB(
-          ResponsiveSpacing.getHorizontalPadding(context), // Left padding matching dashboard containers
+          ResponsiveSpacing.getHorizontalPadding(
+              context), // Left padding matching dashboard containers
           0, // No top padding
-          ResponsiveSpacing.getHorizontalPadding(context), // Right padding matching dashboard containers  
-          ResponsiveSpacing.getHorizontalPadding(context), // Bottom padding matching horizontal container spacing
+          ResponsiveSpacing.getHorizontalPadding(
+              context), // Right padding matching dashboard containers
+          ResponsiveSpacing.getHorizontalPadding(
+              context), // Bottom padding matching horizontal container spacing
         ),
         child: Stack(
           clipBehavior: Clip.none,
@@ -1480,7 +1545,8 @@ class _DashboardHomeState extends State<DashboardHome>
               height: 68, // Adjusted to fit content with exact AI Tutor spacing
               decoration: BoxDecoration(
                 color: const Color(0xFF242628), // Dark background color
-                borderRadius: BorderRadius.circular(34), // Rounded corners (half of height for pill shape)
+                borderRadius: BorderRadius.circular(
+                    34), // Rounded corners (half of height for pill shape)
                 border: Border.all(
                   color: const Color(0xFF6FB8E9), // Blue border
                   width: 1,
@@ -1501,7 +1567,8 @@ class _DashboardHomeState extends State<DashboardHome>
                 ],
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24), // Internal padding
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 24), // Internal padding
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -1573,14 +1640,17 @@ class _DashboardHomeState extends State<DashboardHome>
   /// Build the status bar with time, connectivity, and notch spacing
   Widget _buildStatusBar(BuildContext context) {
     return StreamBuilder<DateTime>(
-      stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+      stream:
+          Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
       builder: (context, snapshot) {
         final now = snapshot.data ?? DateTime.now();
         // Convert to 12-hour format with AM/PM
-        final hour = now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
+        final hour =
+            now.hour == 0 ? 12 : (now.hour > 12 ? now.hour - 12 : now.hour);
         final period = now.hour >= 12 ? 'PM' : 'AM';
-        final timeString = '$hour:${now.minute.toString().padLeft(2, '0')}$period';
-        
+        final timeString =
+            '$hour:${now.minute.toString().padLeft(2, '0')}$period';
+
         return Container(
           height: 44, // Standard status bar height with notch consideration
           color: const Color(0xFF242628), // Match header color
@@ -1594,10 +1664,10 @@ class _DashboardHomeState extends State<DashboardHome>
               Text(
                 timeString,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
-              
+
               // Connectivity indicators
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1633,29 +1703,38 @@ class _DashboardHomeState extends State<DashboardHome>
         if (_notificationPanelAnimation.value == 0.0) {
           return const SizedBox.shrink();
         }
-        
+
         // Now that we're inside the SafeArea, we can position relative to the content
         // Calculate the position after status bar + header + blue divider
         final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
         final statusBarHeight = MediaQuery.of(context).padding.top;
         final dividerHeight = 3.0;
-        
+
         // Position right after the blue divider line within the SafeArea + 43px offset (42 + 1)
-        final topPosition = statusBarHeight + headerHeight + dividerHeight + 43.0;
-        
+        final topPosition =
+            statusBarHeight + headerHeight + dividerHeight + 43.0;
+
         // Calculate height to cover calendar and progress containers
-        final calendarHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar);
-        final progressHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
+        final calendarHeight = ResponsiveSpacing.getComponentHeight(
+            context, ComponentType.calendar);
+        final progressHeight =
+            ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
         final verticalSpacing = ResponsiveSpacing.getVerticalSpacing(context);
-        final panelHeight = calendarHeight + progressHeight + (verticalSpacing * 3) + 100 - 65; // Reduced by 65px (66 - 1)
-        
+        final panelHeight = calendarHeight +
+            progressHeight +
+            (verticalSpacing * 3) +
+            100 -
+            65; // Reduced by 65px (66 - 1)
+
         return Positioned(
           top: topPosition, // Position right after the blue divider
           left: 0,
           right: 0,
           child: ClipRect(
             child: SizedBox(
-              height: panelHeight * _notificationPanelAnimation.value, // Animate height from 0 to full
+              height: panelHeight *
+                  _notificationPanelAnimation
+                      .value, // Animate height from 0 to full
               child: Container(
                 margin: EdgeInsets.symmetric(
                   horizontal: ResponsiveSpacing.getHorizontalPadding(context),
@@ -1703,28 +1782,36 @@ class _DashboardHomeState extends State<DashboardHome>
         if (_profilePanelAnimation.value == 0.0) {
           return const SizedBox.shrink();
         }
-        
+
         // Position the profile panel on the right side under the profile icon
         final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
         final statusBarHeight = MediaQuery.of(context).padding.top;
         final dividerHeight = 3.0;
-        
+
         // Position right after the blue divider line within the SafeArea + 43px offset (42 + 1)
-        final topPosition = statusBarHeight + headerHeight + dividerHeight + 43.0;
-        
+        final topPosition =
+            statusBarHeight + headerHeight + dividerHeight + 43.0;
+
         // Calculate height to cover calendar and progress containers
-        final calendarHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar);
-        final progressHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
+        final calendarHeight = ResponsiveSpacing.getComponentHeight(
+            context, ComponentType.calendar);
+        final progressHeight =
+            ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
         final verticalSpacing = ResponsiveSpacing.getVerticalSpacing(context);
-        final panelHeight = calendarHeight + progressHeight + (verticalSpacing * 3) + 307 - 65; // Extended by 207px total (100 + 40 + 70 - 10 + 5 + 2 = 307)
-        
+        final panelHeight = calendarHeight +
+            progressHeight +
+            (verticalSpacing * 3) +
+            307 -
+            65; // Extended by 207px total (100 + 40 + 70 - 10 + 5 + 2 = 307)
+
         return Positioned(
           top: topPosition, // Position right after the blue divider
           left: 0,
           right: 0,
           child: ClipRect(
             child: SizedBox(
-              height: panelHeight * _profilePanelAnimation.value, // Animate height from 0 to full
+              height: panelHeight *
+                  _profilePanelAnimation.value, // Animate height from 0 to full
               child: Container(
                 margin: EdgeInsets.symmetric(
                   horizontal: ResponsiveSpacing.getHorizontalPadding(context),
@@ -1771,28 +1858,37 @@ class _DashboardHomeState extends State<DashboardHome>
         if (_profileSettingsPanelAnimation.value == 0.0) {
           return const SizedBox.shrink();
         }
-        
+
         // Position the settings panel on the right side under the profile icon
         final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
         final statusBarHeight = MediaQuery.of(context).padding.top;
         final dividerHeight = 3.0;
-        
+
         // Position right after the blue divider line within the SafeArea + 43px offset (42 + 1)
-        final topPosition = statusBarHeight + headerHeight + dividerHeight + 43.0;
-        
+        final topPosition =
+            statusBarHeight + headerHeight + dividerHeight + 43.0;
+
         // Calculate height to cover calendar and progress containers
-        final calendarHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.calendar);
-        final progressHeight = ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
+        final calendarHeight = ResponsiveSpacing.getComponentHeight(
+            context, ComponentType.calendar);
+        final progressHeight =
+            ResponsiveSpacing.getComponentHeight(context, ComponentType.graph);
         final verticalSpacing = ResponsiveSpacing.getVerticalSpacing(context);
-        final panelHeight = calendarHeight + progressHeight + (verticalSpacing * 3) + 307 - 65; // Match profile panel height (207px extension)
-        
+        final panelHeight = calendarHeight +
+            progressHeight +
+            (verticalSpacing * 3) +
+            307 -
+            65; // Match profile panel height (207px extension)
+
         return Positioned(
           top: topPosition, // Position right after the blue divider
           left: 0,
           right: 0,
           child: ClipRect(
             child: SizedBox(
-              height: panelHeight * _profileSettingsPanelAnimation.value, // Animate height from 0 to full
+              height: panelHeight *
+                  _profileSettingsPanelAnimation
+                      .value, // Animate height from 0 to full
               child: Container(
                 margin: EdgeInsets.symmetric(
                   horizontal: ResponsiveSpacing.getHorizontalPadding(context),
@@ -1841,28 +1937,33 @@ class _DashboardHomeState extends State<DashboardHome>
         if (!_isHamburgerMenuOpen || _hamburgerMenuAnimation.value < 0.01) {
           return const SizedBox.shrink();
         }
-        
+
         // Calculate position - menu appears from top on the left side
         final statusBarHeight = 44.0; // Custom status bar height
         final headerHeight = ResponsiveSpacing.getHeaderHeight(context);
-        final systemStatusBar = MediaQuery.of(context).padding.top; // System notch/status bar
+        final systemStatusBar =
+            MediaQuery.of(context).padding.top; // System notch/status bar
         final dividerHeight = 3.0;
-        
+
         // Position right after: system status bar + custom status bar + header + divider
-        final topPosition = systemStatusBar + statusBarHeight + headerHeight + dividerHeight;
-        
+        final topPosition =
+            systemStatusBar + statusBarHeight + headerHeight + dividerHeight;
+
         // Menu takes partial width from the left side
         final screenWidth = MediaQuery.of(context).size.width;
-        final baseMenuWidth = screenWidth * 0.45; // Increased to 45% to accommodate menu item content
+        final baseMenuWidth = screenWidth *
+            0.45; // Increased to 45% to accommodate menu item content
         final animatedWidth = baseMenuWidth * _hamburgerMenuAnimation.value;
-        
+
         // Ensure minimum width to prevent overflow issues during animation
-        final menuWidth = animatedWidth.clamp(0.0, baseMenuWidth.clamp(0.0, screenWidth * 0.45));
-        
+        final menuWidth = animatedWidth.clamp(
+            0.0, baseMenuWidth.clamp(0.0, screenWidth * 0.45));
+
         // Calculate height to extend all the way to the bottom of the screen
         final screenHeight = MediaQuery.of(context).size.height;
-        final menuHeight = screenHeight - topPosition; // Extend from topPosition to bottom of screen
-        
+        final menuHeight = screenHeight -
+            topPosition; // Extend from topPosition to bottom of screen
+
         return Positioned(
           top: topPosition,
           left: 0,
@@ -1870,12 +1971,15 @@ class _DashboardHomeState extends State<DashboardHome>
             width: menuWidth, // Constrain width to prevent overflow
             height: menuHeight, // Extend to bottom of screen
             child: Opacity(
-              opacity: _hamburgerMenuAnimation.value * 0.95, // 95% opacity when fully visible
+              opacity: _hamburgerMenuAnimation.value *
+                  0.95, // 95% opacity when fully visible
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  bottomRight: Radius.circular(20), // Rounded bottom-right corner
+                  bottomRight:
+                      Radius.circular(20), // Rounded bottom-right corner
                 ),
-                clipBehavior: Clip.hardEdge, // Ensure proper clipping to prevent overflow
+                clipBehavior:
+                    Clip.hardEdge, // Ensure proper clipping to prevent overflow
                 child: Container(
                   decoration: BoxDecoration(
                     color: const Color(0xFF242628), // Same as header background
@@ -1907,105 +2011,106 @@ class _DashboardHomeState extends State<DashboardHome>
   Widget _buildHamburgerMenuContent(BuildContext context) {
     return Container(
       color: const Color(0xFF242628), // Same as header background
-      padding: const EdgeInsets.only(bottom: 100), // Add bottom padding to avoid bottom toolbar
+      padding: const EdgeInsets.only(
+          bottom: 100), // Add bottom padding to avoid bottom toolbar
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribute items evenly across full height
+        mainAxisAlignment: MainAxisAlignment
+            .spaceEvenly, // Distribute items evenly across full height
         children: [
-
-        // Menu items
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.emoji_events,
-          title: 'Badges',
-          color: Colors.orange,
-          onTap: () {
-            _closeAllPanels();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AchievementScreen(),
-              ),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.timer,
-          title: 'Timer',
-          color: Colors.red,
-          onTap: () {
-            _closeAllPanels();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const TimerScreen(),
-              ),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.shopping_bag,
-          title: 'Shop',
-          color: Colors.green,
-          onTap: () {
-            _closeAllPanels();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Shop feature coming soon!')),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.music_note,
-          title: 'Music',
-          color: Colors.purple,
-          onTap: () {
-            _closeAllPanels();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Music feature coming soon!')),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.feedback,
-          title: 'Feedback',
-          color: Colors.teal,
-          onTap: () {
-            _closeAllPanels();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Feedback feature coming soon!')),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.settings,
-          title: 'Settings',
-          color: Colors.grey,
-          onTap: () {
-            _closeAllPanels();
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
-            );
-          },
-        ),
-        _buildHamburgerMenuItem(
-          context,
-          icon: Icons.help,
-          title: 'Help',
-          color: Colors.blueGrey,
-          onTap: () {
-            _closeAllPanels();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Help feature coming soon!')),
-            );
-          },
-        ),
+          // Menu items
+          _buildHamburgerMenuItem(
+            context,
+            icon: Icons.emoji_events,
+            title: 'Badges',
+            color: Colors.orange,
+            onTap: () {
+              _closeAllPanels();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AchievementScreen(),
+                ),
+              );
+            },
+          ),
+          _buildHamburgerMenuItem(
+            context,
+            icon: Icons.timer,
+            title: 'Timer',
+            color: Colors.red,
+            onTap: () {
+              _closeAllPanels();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TimerScreen(),
+                ),
+              );
+            },
+          ),
+          _buildHamburgerMenuItem(
+            context,
+            icon: Icons.shopping_bag,
+            title: 'Shop',
+            color: Colors.green,
+            onTap: () {
+              _closeAllPanels();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Shop feature coming soon!')),
+              );
+            },
+          ),
+          _buildHamburgerMenuItem(
+            context,
+            icon: Icons.music_note,
+            title: 'Music',
+            color: Colors.purple,
+            onTap: () {
+              _closeAllPanels();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Music feature coming soon!')),
+              );
+            },
+          ),
+          _buildHamburgerMenuItem(
+            context,
+            icon: Icons.feedback,
+            title: 'Feedback',
+            color: Colors.teal,
+            onTap: () {
+              _closeAllPanels();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Feedback feature coming soon!')),
+              );
+            },
+          ),
+          _buildHamburgerMenuItem(
+            context,
+            icon: Icons.settings,
+            title: 'Settings',
+            color: Colors.grey,
+            onTap: () {
+              _closeAllPanels();
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+          _buildHamburgerMenuItem(
+            context,
+            icon: Icons.help,
+            title: 'Help',
+            color: Colors.blueGrey,
+            onTap: () {
+              _closeAllPanels();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Help feature coming soon!')),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -2026,7 +2131,9 @@ class _DashboardHomeState extends State<DashboardHome>
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16), // Reduced vertical padding for even spacing
+          padding: const EdgeInsets.symmetric(
+              vertical: 8,
+              horizontal: 16), // Reduced vertical padding for even spacing
           child: Row(
             mainAxisSize: MainAxisSize.min, // Use minimum space needed
             children: [
@@ -2044,7 +2151,8 @@ class _DashboardHomeState extends State<DashboardHome>
                   style: const TextStyle(
                     fontSize: 15, // Slightly smaller font
                     fontWeight: FontWeight.w400,
-                    color: Color(0xFFCCCCCC), // Light gray text like in the image
+                    color:
+                        Color(0xFFCCCCCC), // Light gray text like in the image
                     letterSpacing: 0.2, // Reduced letter spacing
                   ),
                   overflow: TextOverflow.ellipsis, // Handle overflow gracefully
@@ -2061,7 +2169,8 @@ class _DashboardHomeState extends State<DashboardHome>
   /// Build the header section with greeting and action buttons
   Widget _buildHeader(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.center, // Ensure all elements are centered vertically
+      crossAxisAlignment: CrossAxisAlignment
+          .center, // Ensure all elements are centered vertically
       children: [
         // Simple hamburger menu icon at the top left with functionality
         Semantics(
@@ -2076,7 +2185,8 @@ class _DashboardHomeState extends State<DashboardHome>
                 onTap: _toggleHamburgerMenu,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
                     return FadeTransition(
                       opacity: animation,
                       child: child,
@@ -2085,9 +2195,9 @@ class _DashboardHomeState extends State<DashboardHome>
                   child: Icon(
                     _isHamburgerMenuOpen ? Icons.close : Icons.menu,
                     key: ValueKey<bool>(_isHamburgerMenuOpen),
-                    color: _isHamburgerMenuOpen 
-                      ? const Color(0xFF6FB8E9)
-                      : Theme.of(context).colorScheme.primary,
+                    color: _isHamburgerMenuOpen
+                        ? const Color(0xFF6FB8E9)
+                        : Theme.of(context).colorScheme.primary,
                     size: 28,
                   ),
                 ),
@@ -2105,7 +2215,8 @@ class _DashboardHomeState extends State<DashboardHome>
               'Study Pals',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF6FB8E9), // Match blue container borders
+                    color:
+                        const Color(0xFF6FB8E9), // Match blue container borders
                   ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -2116,7 +2227,8 @@ class _DashboardHomeState extends State<DashboardHome>
         // Action buttons on the right
         Row(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center, // Ensure right icons are centered too
+          crossAxisAlignment:
+              CrossAxisAlignment.center, // Ensure right icons are centered too
           children: _buildAppBarActions(context),
         ),
       ],
@@ -2137,7 +2249,8 @@ class _DashboardHomeState extends State<DashboardHome>
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          height: ResponsiveSpacing.getComponentHeight(context, ComponentType.actionButton),
+          height: ResponsiveSpacing.getComponentHeight(
+              context, ComponentType.actionButton),
           padding: EdgeInsets.symmetric(
             horizontal: ResponsiveSpacing.getHorizontalPadding(context) * 0.75,
             vertical: ResponsiveSpacing.getSmallSpacing(context) * 0.75,
@@ -2407,71 +2520,89 @@ class _DashboardHomeState extends State<DashboardHome>
                     onTap: onTap,
                     borderRadius: BorderRadius.circular(16),
                     child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Icon container with consistent height for alignment
-                      SizedBox(
-                        height: 40, // Fixed height to ensure all icons align horizontally
-                        child: Center(
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            padding: EdgeInsets.all(label == 'AI Tutor' && isSelected ? 
-                              2.0 : // Minimal padding for AI Tutor when selected
-                              1.0), // Minimal padding for all other icons
-                            decoration: BoxDecoration(
-                              color: (label == 'AI Tutor' && isSelected) 
-                                  ? const Color(0xFF6FB8E9) // Blue background for selected AI Tutor
-                                  : Colors.transparent, // Transparent for others
-                              borderRadius: BorderRadius.circular(label == 'AI Tutor' && isSelected ? 24 : 16),
-                              border: (label != 'AI Tutor' || !isSelected) ? Border.all(
-                                color: Colors.transparent,
-                                width: 0,
-                              ) : null,
-                            ),
-                            child: _buildIconWithHollowEffect(
-                                icon, isSelected, label),
-                          ),
-                        ),
-                      ),
-                      // No spacing - text immediately under icon
-                      // Label text with consistent baseline alignment
-                      SizedBox(
-                        height: 14, // Fixed height to ensure all text aligns horizontally
-                        child: Center(
-                          child: AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 200),
-                            style:
-                                Theme.of(context).textTheme.labelSmall?.copyWith(
-                                          color: (label == 'AI Tutor' && isSelected)
-                                              ? Colors.white // White text for selected AI Tutor
-                                              : (label == 'AI Tutor')
-                                                  ? const Color(0xFF6FB8E9) // Blue for unselected AI Tutor
-                                                  : const Color(0xFFCFCFCF), // Gray for all others
-                                          fontWeight: isSelected
-                                              ? FontWeight.w600
-                                              : FontWeight.w500,
-                                          fontSize: 10, // Reduced from 11 to fit better
-                                        ) ??
-                                    const TextStyle(),
-                            child: Text(
-                              label,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Icon container with consistent height for alignment
+                        SizedBox(
+                          height:
+                              40, // Fixed height to ensure all icons align horizontally
+                          child: Center(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              padding: EdgeInsets.all(label == 'AI Tutor' &&
+                                      isSelected
+                                  ? 2.0
+                                  : // Minimal padding for AI Tutor when selected
+                                  1.0), // Minimal padding for all other icons
+                              decoration: BoxDecoration(
+                                color: (label == 'AI Tutor' && isSelected)
+                                    ? const Color(
+                                        0xFF6FB8E9) // Blue background for selected AI Tutor
+                                    : Colors
+                                        .transparent, // Transparent for others
+                                borderRadius: BorderRadius.circular(
+                                    label == 'AI Tutor' && isSelected
+                                        ? 24
+                                        : 16),
+                                border: (label != 'AI Tutor' || !isSelected)
+                                    ? Border.all(
+                                        color: Colors.transparent,
+                                        width: 0,
+                                      )
+                                    : null,
+                              ),
+                              child: _buildIconWithHollowEffect(
+                                  icon, isSelected, label),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        // No spacing - text immediately under icon
+                        // Label text with consistent baseline alignment
+                        SizedBox(
+                          height:
+                              14, // Fixed height to ensure all text aligns horizontally
+                          child: Center(
+                            child: AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 200),
+                              style: Theme.of(context)
+                                      .textTheme
+                                      .labelSmall
+                                      ?.copyWith(
+                                        color: (label == 'AI Tutor' &&
+                                                isSelected)
+                                            ? Colors
+                                                .white // White text for selected AI Tutor
+                                            : (label == 'AI Tutor')
+                                                ? const Color(
+                                                    0xFF6FB8E9) // Blue for unselected AI Tutor
+                                                : const Color(
+                                                    0xFFCFCFCF), // Gray for all others
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        fontSize:
+                                            10, // Reduced from 11 to fit better
+                                      ) ??
+                                  const TextStyle(),
+                              child: Text(
+                                label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -2479,10 +2610,12 @@ class _DashboardHomeState extends State<DashboardHome>
   /// Build floating AI Tutor button with hollow circle design
   Widget _buildFloatingAIButton(BuildContext context) {
     final isSelected = _selectedTabIndex == 2;
-    
+
     return Semantics(
       label: 'AI Tutor floating button',
-      hint: isSelected ? 'Currently on AI Tutor screen' : 'Tap to open AI Tutor chat',
+      hint: isSelected
+          ? 'Currently on AI Tutor screen'
+          : 'Tap to open AI Tutor chat',
       selected: isSelected,
       button: true,
       child: AnimatedBuilder(
@@ -2496,55 +2629,56 @@ class _DashboardHomeState extends State<DashboardHome>
                 _tabController.animateTo(2);
               },
               child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: isSelected 
-                      ? const Color(0xFF6FB8E9) 
-                      : const Color(0xFF242628), // Match footer background when not selected
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF6FB8E9),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 4),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF6FB8E9)
+                          : const Color(
+                              0xFF242628), // Match footer background when not selected
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF6FB8E9),
+                        width: 2,
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.psychology,
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF6FB8E9),
+                      size: 28,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.psychology,
-                    color: isSelected 
-                      ? Colors.white 
-                      : const Color(0xFF6FB8E9),
-                    size: 28,
+                  const SizedBox(height: 4),
+                  Text(
+                    'AI Tutor',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isSelected
+                              ? const Color(0xFF6FB8E9)
+                              : const Color(0xFFCFCFCF),
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w500,
+                          fontSize: 11,
+                        ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'AI Tutor',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: isSelected
-                      ? const Color(0xFF6FB8E9)
-                      : const Color(0xFFCFCFCF),
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 11,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
       ),
     );
   }
@@ -2560,9 +2694,9 @@ class _DashboardHomeState extends State<DashboardHome>
           return CustomPaint(
             size: const Size(28, 28),
             painter: AnimatedHomeIconPainter(
-              color: isSelected 
-                ? const Color(0xFF6FB8E9) // Blue when selected
-                : const Color(0xFFCFCFCF), // Gray when not selected
+              color: isSelected
+                  ? const Color(0xFF6FB8E9) // Blue when selected
+                  : const Color(0xFFCFCFCF), // Gray when not selected
               isFilled: isSelected,
               animationProgress: isSelected ? _homeIconAnimation.value : 0.0,
             ),
@@ -2617,28 +2751,29 @@ class _DashboardHomeState extends State<DashboardHome>
         return CustomPaint(
           size: const Size(28, 28),
           painter: GraduationCapPainter(
-            color: isSelected 
-              ? const Color(0xFF6FB8E9)
-              : const Color(0xFFCFCFCF),
+            color:
+                isSelected ? const Color(0xFF6FB8E9) : const Color(0xFFCFCFCF),
             isFilled: isSelected,
             strokeWidth: 1.5,
             animationValue: 0.0,
           ),
         );
       }
-      
+
       return AnimatedBuilder(
         animation: _learnIconAnimation!,
         builder: (context, child) {
           return CustomPaint(
             size: const Size(28, 28),
             painter: GraduationCapPainter(
-              color: isSelected 
-                ? const Color(0xFF6FB8E9) // Blue when selected
-                : const Color(0xFFCFCFCF), // Gray when not selected
+              color: isSelected
+                  ? const Color(0xFF6FB8E9) // Blue when selected
+                  : const Color(0xFFCFCFCF), // Gray when not selected
               isFilled: isSelected, // Filled when selected, outlined when not
               strokeWidth: 1.5,
-              animationValue: isSelected ? _learnIconAnimation!.value : 0.0, // Only animate when selected
+              animationValue: isSelected
+                  ? _learnIconAnimation!.value
+                  : 0.0, // Only animate when selected
             ),
           );
         },
@@ -2653,12 +2788,13 @@ class _DashboardHomeState extends State<DashboardHome>
           return CustomPaint(
             size: const Size(28, 28),
             painter: SocialIconPainter(
-              color: isSelected 
-                ? const Color(0xFF6FB8E9) // Blue when selected
-                : const Color(0xFFCFCFCF), // Gray when not selected
+              color: isSelected
+                  ? const Color(0xFF6FB8E9) // Blue when selected
+                  : const Color(0xFFCFCFCF), // Gray when not selected
               isFilled: isSelected, // Filled when selected, outlined when not
               strokeWidth: 1.5,
-              animationValue: _socialIconAnimation.value, // Add hugging animation
+              animationValue:
+                  _socialIconAnimation.value, // Add hugging animation
             ),
           );
         },
@@ -2677,9 +2813,9 @@ class _DashboardHomeState extends State<DashboardHome>
               CustomPaint(
                 size: const Size(32, 32),
                 painter: AnimatedPawsPainter(
-                  color: isSelected 
-                    ? const Color(0xFF6FB8E9) // Blue when selected
-                    : const Color(0xFFCFCFCF), // Gray when not selected
+                  color: isSelected
+                      ? const Color(0xFF6FB8E9) // Blue when selected
+                      : const Color(0xFFCFCFCF), // Gray when not selected
                   animationProgress: 0.0, // No animation for base icon
                   isFilled:
                       isSelected, // Filled when selected, outlined when not
@@ -2691,7 +2827,8 @@ class _DashboardHomeState extends State<DashboardHome>
                 CustomPaint(
                   size: const Size(32, 32),
                   painter: AnimatedPawsPainter(
-                    color: const Color(0xFF6FB8E9), // Blue for animation overlay
+                    color:
+                        const Color(0xFF6FB8E9), // Blue for animation overlay
                     animationProgress: _petIconAnimation.value,
                     isFilled: true, // Filled when selected
                     strokeWidth: 1.5,
@@ -2717,7 +2854,9 @@ class _DashboardHomeState extends State<DashboardHome>
 
     return Icon(
       icon,
-      size: label == 'AI Tutor' && isSelected ? 32 : 28, // Larger size for selected AI Tutor
+      size: label == 'AI Tutor' && isSelected
+          ? 32
+          : 28, // Larger size for selected AI Tutor
       color: iconColor,
     );
   }
@@ -4047,8 +4186,10 @@ class DecksScreen extends StatelessWidget {
                             if (deck.cards.isNotEmpty) {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      FlashcardStudyScreen(deck: deck),
+                                  builder: (context) => FlashcardDetailScreen(
+                                    deck: deck,
+                                    startInQuizMode: false,
+                                  ),
                                 ),
                               );
                             } else {
@@ -4939,7 +5080,8 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 18; // Scale the claw extension (reduced from 30 for much smaller, subtle claws)
+        final clawExtension = clawProgress *
+            18; // Scale the claw extension (reduced from 30 for much smaller, subtle claws)
         pad1Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad1Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -4990,7 +5132,8 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
+        final clawExtension =
+            clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad2Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad2Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -5042,7 +5185,8 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
+        final clawExtension =
+            clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad3Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad3Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -5094,7 +5238,8 @@ class AnimatedPawsPainter extends CustomPainter {
           clawProgress = (1.0 - animationProgress) * 2;
         }
 
-        final clawExtension = clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
+        final clawExtension =
+            clawProgress * 18; // Reduced from 30 for much smaller, subtle claws
         pad4Path.moveTo(32.645 * scaleX * 0.6, -109.234 * scaleY * 0.6);
         pad4Path.cubicTo(
           (32.645 - 0.736) * scaleX * 0.6,
@@ -5442,12 +5587,14 @@ class GraduationCapPainter extends CustomPainter {
 
     final scaleX = size.width / 24;
     final scaleY = size.height / 24;
-    
+
     // Calculate tassel sway animation
     // animationValue goes from 0.0 to 1.0, create gentle sway from -1 to +1
-    final swayProgress = (animationValue * 2.0) - 1.0; // Convert 0-1 to -1 to +1  
+    final swayProgress =
+        (animationValue * 2.0) - 1.0; // Convert 0-1 to -1 to +1
     final maxSwayDistance = 1.5 * scaleX; // Maximum sway distance
-    final tasselSwayOffset = maxSwayDistance * sin(swayProgress * pi); // Smooth sine wave motion
+    final tasselSwayOffset =
+        maxSwayDistance * sin(swayProgress * pi); // Smooth sine wave motion
 
     if (isFilled) {
       // Filled version using exact SVG paths from reference
@@ -5456,94 +5603,139 @@ class GraduationCapPainter extends CustomPainter {
       // First path: d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.067-.248.172-.311a54.615 54.615 0 0 1 4.653-2.52.75.75 0 0 0-.65-1.352 56.123 56.123 0 0 0-4.78 2.589 1.858 1.858 0 0 0-.859 1.228 49.803 49.803 0 0 0-4.634-1.527.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z"
       final path1 = Path();
       path1.moveTo(11.7 * scaleX, 2.805 * scaleY);
-      path1.cubicTo(11.85 * scaleX, 2.73 * scaleY, 12.15 * scaleX, 2.73 * scaleY, 12.3 * scaleX, 2.805 * scaleY);
-      path1.cubicTo(16.2 * scaleX, 4.5 * scaleY, 20.1 * scaleX, 6.5 * scaleY, 22.83 * scaleX, 8.72 * scaleY);
-      path1.cubicTo(22.91 * scaleX, 8.82 * scaleY, 22.91 * scaleX, 9.02 * scaleY, 22.599 * scaleX, 10.057 * scaleY);
-      path1.cubicTo(19.8 * scaleX, 11.2 * scaleY, 16.2 * scaleX, 12.8 * scaleY, 12.697 * scaleX, 13.969 * scaleY);
+      path1.cubicTo(11.85 * scaleX, 2.73 * scaleY, 12.15 * scaleX,
+          2.73 * scaleY, 12.3 * scaleX, 2.805 * scaleY);
+      path1.cubicTo(16.2 * scaleX, 4.5 * scaleY, 20.1 * scaleX, 6.5 * scaleY,
+          22.83 * scaleX, 8.72 * scaleY);
+      path1.cubicTo(22.91 * scaleX, 8.82 * scaleY, 22.91 * scaleX,
+          9.02 * scaleY, 22.599 * scaleX, 10.057 * scaleY);
+      path1.cubicTo(19.8 * scaleX, 11.2 * scaleY, 16.2 * scaleX, 12.8 * scaleY,
+          12.697 * scaleX, 13.969 * scaleY);
       path1.lineTo(12.694 * scaleX, 13.971 * scaleY);
-      path1.cubicTo(12.58 * scaleX, 14.031 * scaleY, 12.467 * scaleX, 14.09 * scaleY, 12.354 * scaleX, 14.151 * scaleY);
-      path1.cubicTo(12.12 * scaleX, 14.28 * scaleY, 11.88 * scaleX, 14.28 * scaleY, 11.647 * scaleX, 14.151 * scaleY);
-      path1.cubicTo(10.2 * scaleX, 13.5 * scaleY, 8.8 * scaleX, 12.9 * scaleY, 7.5 * scaleX, 12.173 * scaleY);
+      path1.cubicTo(12.58 * scaleX, 14.031 * scaleY, 12.467 * scaleX,
+          14.09 * scaleY, 12.354 * scaleX, 14.151 * scaleY);
+      path1.cubicTo(12.12 * scaleX, 14.28 * scaleY, 11.88 * scaleX,
+          14.28 * scaleY, 11.647 * scaleX, 14.151 * scaleY);
+      path1.cubicTo(10.2 * scaleX, 13.5 * scaleY, 8.8 * scaleX, 12.9 * scaleY,
+          7.5 * scaleX, 12.173 * scaleY);
       path1.lineTo(7.5 * scaleX, 11.949 * scaleY);
-      path1.cubicTo(7.567 * scaleX, 11.818 * scaleY, 7.634 * scaleX, 11.701 * scaleY, 7.672 * scaleX, 11.638 * scaleY);
-      path1.cubicTo(9.2 * scaleX, 10.5 * scaleY, 10.9 * scaleX, 9.6 * scaleY, 12.325 * scaleX, 9.118 * scaleY);
-      path1.cubicTo(12.45 * scaleX, 9.068 * scaleY, 12.52 * scaleX, 8.918 * scaleY, 11.675 * scaleX, 7.766 * scaleY);
-      path1.cubicTo(10.1 * scaleX, 8.4 * scaleY, 8.7 * scaleX, 9.3 * scaleY, 6.895 * scaleX, 10.355 * scaleY);
-      path1.cubicTo(6.56 * scaleX, 10.55 * scaleY, 6.3 * scaleX, 10.9 * scaleY, 6.036 * scaleX, 11.583 * scaleY);
-      path1.cubicTo(4.5 * scaleX, 11.2 * scaleY, 2.9 * scaleX, 10.7 * scaleY, 1.402 * scaleX, 10.056 * scaleY);
-      path1.cubicTo(1.31 * scaleX, 10.02 * scaleY, 1.25 * scaleX, 9.86 * scaleY, 1.171 * scaleX, 8.719 * scaleY);
-      path1.cubicTo(4.2 * scaleX, 6.4 * scaleY, 7.8 * scaleX, 4.2 * scaleY, 11.7 * scaleX, 2.805 * scaleY);
+      path1.cubicTo(7.567 * scaleX, 11.818 * scaleY, 7.634 * scaleX,
+          11.701 * scaleY, 7.672 * scaleX, 11.638 * scaleY);
+      path1.cubicTo(9.2 * scaleX, 10.5 * scaleY, 10.9 * scaleX, 9.6 * scaleY,
+          12.325 * scaleX, 9.118 * scaleY);
+      path1.cubicTo(12.45 * scaleX, 9.068 * scaleY, 12.52 * scaleX,
+          8.918 * scaleY, 11.675 * scaleX, 7.766 * scaleY);
+      path1.cubicTo(10.1 * scaleX, 8.4 * scaleY, 8.7 * scaleX, 9.3 * scaleY,
+          6.895 * scaleX, 10.355 * scaleY);
+      path1.cubicTo(6.56 * scaleX, 10.55 * scaleY, 6.3 * scaleX, 10.9 * scaleY,
+          6.036 * scaleX, 11.583 * scaleY);
+      path1.cubicTo(4.5 * scaleX, 11.2 * scaleY, 2.9 * scaleX, 10.7 * scaleY,
+          1.402 * scaleX, 10.056 * scaleY);
+      path1.cubicTo(1.31 * scaleX, 10.02 * scaleY, 1.25 * scaleX, 9.86 * scaleY,
+          1.171 * scaleX, 8.719 * scaleY);
+      path1.cubicTo(4.2 * scaleX, 6.4 * scaleY, 7.8 * scaleX, 4.2 * scaleY,
+          11.7 * scaleX, 2.805 * scaleY);
       path1.close();
       canvas.drawPath(path1, paint);
 
       // Second path: d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.284a.75.75 0 0 1-.46.711 47.87 47.87 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.87 47.87 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.442.121-2.87.255-4.286.921.304 1.83.634 2.726.99v1.27a1.5 1.5 0 0 0-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.66a6.727 6.727 0 0 0 .551-1.607 1.5 1.5 0 0 0 .14-2.67v-.645a48.549 48.549 0 0 1 3.44 1.667 2.25 2.25 0 0 0 2.12 0Z"
       final path2 = Path();
       path2.moveTo(13.06 * scaleX, 15.473 * scaleY);
-      path2.cubicTo(16.2 * scaleX, 14.1 * scaleY, 18.8 * scaleX, 13.0 * scaleY, 20.726 * scaleX, 12.191 * scaleY);
-      path2.cubicTo(20.86 * scaleX, 13.605 * scaleY, 20.946 * scaleX, 15.034 * scaleY, 20.981 * scaleX, 16.475 * scaleY);
-      path2.cubicTo(20.981 * scaleX, 16.725 * scaleY, 20.85 * scaleX, 16.95 * scaleY, 20.521 * scaleX, 17.186 * scaleY);
-      path2.cubicTo(18.2 * scaleX, 18.8 * scaleY, 15.4 * scaleX, 20.4 * scaleY, 12.416 * scaleX, 21.528 * scaleY);
-      path2.cubicTo(12.28 * scaleX, 21.59 * scaleY, 12.14 * scaleX, 21.59 * scaleY, 11.584 * scaleX, 21.528 * scaleY);
-      path2.cubicTo(8.6 * scaleX, 20.4 * scaleY, 5.8 * scaleX, 18.8 * scaleY, 3.48 * scaleX, 17.186 * scaleY);
-      path2.cubicTo(3.15 * scaleX, 16.95 * scaleY, 3.019 * scaleX, 16.725 * scaleY, 3.019 * scaleX, 16.476 * scaleY);
-      path2.cubicTo(3.054 * scaleX, 15.034 * scaleY, 3.14 * scaleX, 13.606 * scaleY, 3.274 * scaleX, 12.19 * scaleY);
-      path2.cubicTo(4.195 * scaleX, 12.494 * scaleY, 5.104 * scaleX, 12.824 * scaleY, 6.0 * scaleX, 13.18 * scaleY);
+      path2.cubicTo(16.2 * scaleX, 14.1 * scaleY, 18.8 * scaleX, 13.0 * scaleY,
+          20.726 * scaleX, 12.191 * scaleY);
+      path2.cubicTo(20.86 * scaleX, 13.605 * scaleY, 20.946 * scaleX,
+          15.034 * scaleY, 20.981 * scaleX, 16.475 * scaleY);
+      path2.cubicTo(20.981 * scaleX, 16.725 * scaleY, 20.85 * scaleX,
+          16.95 * scaleY, 20.521 * scaleX, 17.186 * scaleY);
+      path2.cubicTo(18.2 * scaleX, 18.8 * scaleY, 15.4 * scaleX, 20.4 * scaleY,
+          12.416 * scaleX, 21.528 * scaleY);
+      path2.cubicTo(12.28 * scaleX, 21.59 * scaleY, 12.14 * scaleX,
+          21.59 * scaleY, 11.584 * scaleX, 21.528 * scaleY);
+      path2.cubicTo(8.6 * scaleX, 20.4 * scaleY, 5.8 * scaleX, 18.8 * scaleY,
+          3.48 * scaleX, 17.186 * scaleY);
+      path2.cubicTo(3.15 * scaleX, 16.95 * scaleY, 3.019 * scaleX,
+          16.725 * scaleY, 3.019 * scaleX, 16.476 * scaleY);
+      path2.cubicTo(3.054 * scaleX, 15.034 * scaleY, 3.14 * scaleX,
+          13.606 * scaleY, 3.274 * scaleX, 12.19 * scaleY);
+      path2.cubicTo(4.195 * scaleX, 12.494 * scaleY, 5.104 * scaleX,
+          12.824 * scaleY, 6.0 * scaleX, 13.18 * scaleY);
       path2.lineTo(6.0 * scaleX, 14.45 * scaleY);
-      path2.cubicTo(5.86 * scaleX, 15.95 * scaleY, 6.86 * scaleX, 16.458 * scaleY, 7.0 * scaleX, 16.958 * scaleY);
-      path2.cubicTo(6.91 * scaleX, 17.338 * scaleY, 6.778 * scaleX, 17.711 * scaleY, 6.603 * scaleX, 18.068 * scaleY);
-      path2.cubicTo(7.055 * scaleX, 18.281 * scaleY, 7.504 * scaleX, 18.502 * scaleY, 7.949 * scaleX, 18.728 * scaleY);
-      path2.cubicTo(8.5 * scaleX, 17.121 * scaleY, 8.5 * scaleX, 17.058 * scaleY, 8.089 * scaleX, 16.058 * scaleY);
+      path2.cubicTo(5.86 * scaleX, 15.95 * scaleY, 6.86 * scaleX,
+          16.458 * scaleY, 7.0 * scaleX, 16.958 * scaleY);
+      path2.cubicTo(6.91 * scaleX, 17.338 * scaleY, 6.778 * scaleX,
+          17.711 * scaleY, 6.603 * scaleX, 18.068 * scaleY);
+      path2.cubicTo(7.055 * scaleX, 18.281 * scaleY, 7.504 * scaleX,
+          18.502 * scaleY, 7.949 * scaleX, 18.728 * scaleY);
+      path2.cubicTo(8.5 * scaleX, 17.121 * scaleY, 8.5 * scaleX,
+          17.058 * scaleY, 8.089 * scaleX, 16.058 * scaleY);
       path2.lineTo(8.089 * scaleX, 15.413 * scaleY);
-      path2.cubicTo(9.72 * scaleX, 16.08 * scaleY, 11.209 * scaleX, 16.747 * scaleY, 12.529 * scaleX, 17.08 * scaleY);
-      path2.cubicTo(13.279 * scaleX, 17.21 * scaleY, 13.649 * scaleX, 16.88 * scaleY, 13.649 * scaleX, 16.38 * scaleY);
+      path2.cubicTo(9.72 * scaleX, 16.08 * scaleY, 11.209 * scaleX,
+          16.747 * scaleY, 12.529 * scaleX, 17.08 * scaleY);
+      path2.cubicTo(13.279 * scaleX, 17.21 * scaleY, 13.649 * scaleX,
+          16.88 * scaleY, 13.649 * scaleX, 16.38 * scaleY);
       path2.lineTo(13.06 * scaleX, 15.473 * scaleY);
       path2.close();
       canvas.drawPath(path2, paint);
 
-      // Third path: d="M4.462 19.462c.42-.419.753-.89 1-1.395.453.214.902.435 1.347.662a6.742 6.742 0 0 1-1.286 1.794.75.75 0 0 1-1.06-1.06Z"  
+      // Third path: d="M4.462 19.462c.42-.419.753-.89 1-1.395.453.214.902.435 1.347.662a6.742 6.742 0 0 1-1.286 1.794.75.75 0 0 1-1.06-1.06Z"
       // This is the tassel that should hang straight down - now with sway animation
       final path3 = Path();
       path3.moveTo((4.462 * scaleX) + tasselSwayOffset, 19.462 * scaleY);
-      path3.lineTo((5.462 * scaleX) + tasselSwayOffset, 18.067 * scaleY); // Straight up first
-      path3.lineTo((6.809 * scaleX) + tasselSwayOffset, 18.729 * scaleY); // Then right and slightly down
-      path3.lineTo((5.523 * scaleX) + tasselSwayOffset, 20.523 * scaleY); // Straight down to bottom
-      path3.lineTo((4.462 * scaleX) + tasselSwayOffset, 19.462 * scaleY); // Back to start
+      path3.lineTo((5.462 * scaleX) + tasselSwayOffset,
+          18.067 * scaleY); // Straight up first
+      path3.lineTo((6.809 * scaleX) + tasselSwayOffset,
+          18.729 * scaleY); // Then right and slightly down
+      path3.lineTo((5.523 * scaleX) + tasselSwayOffset,
+          20.523 * scaleY); // Straight down to bottom
+      path3.lineTo((4.462 * scaleX) + tasselSwayOffset,
+          19.462 * scaleY); // Back to start
       path3.close();
       canvas.drawPath(path3, paint);
-
     } else {
       // Outlined version - keep existing complex implementation
       paint.style = PaintingStyle.stroke;
-      
+
       // Exact SVG path implementation
       // Path 1: M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347
       final mainCapPath = Path();
       mainCapPath.moveTo(4.26 * scaleX, 10.147 * scaleY);
-      
+
       // Create the curved bottom part of the graduation cap
       mainCapPath.cubicTo(
-        4.1 * scaleX, 13.0 * scaleY,    // Control point 1
-        3.9 * scaleX, 15.5 * scaleY,    // Control point 2  
-        3.769 * scaleX, 16.494 * scaleY // End point (10.147 + 6.347)
-      );
-      
+          4.1 * scaleX,
+          13.0 * scaleY, // Control point 1
+          3.9 * scaleX,
+          15.5 * scaleY, // Control point 2
+          3.769 * scaleX,
+          16.494 * scaleY // End point (10.147 + 6.347)
+          );
+
       mainCapPath.cubicTo(
-        6.0 * scaleX, 19.0 * scaleY,    // Control point 1
-        9.0 * scaleX, 20.5 * scaleY,    // Control point 2
-        12 * scaleX, 20.904 * scaleY    // Center bottom point
-      );
-      
+          6.0 * scaleX,
+          19.0 * scaleY, // Control point 1
+          9.0 * scaleX,
+          20.5 * scaleY, // Control point 2
+          12 * scaleX,
+          20.904 * scaleY // Center bottom point
+          );
+
       mainCapPath.cubicTo(
-        15.0 * scaleX, 20.5 * scaleY,    // Control point 1
-        18.0 * scaleX, 19.0 * scaleY,    // Control point 2
-        20.232 * scaleX, 16.494 * scaleY // Right side point (12 + 8.232, same as left)
-      );
-      
+          15.0 * scaleX,
+          20.5 * scaleY, // Control point 1
+          18.0 * scaleX,
+          19.0 * scaleY, // Control point 2
+          20.232 * scaleX,
+          16.494 * scaleY // Right side point (12 + 8.232, same as left)
+          );
+
       mainCapPath.cubicTo(
-        20.1 * scaleX, 15.5 * scaleY,     // Control point 1
-        19.9 * scaleX, 13.0 * scaleY,     // Control point 2
-        19.741 * scaleX, 10.147 * scaleY  // Back to right edge
-      );
+          20.1 * scaleX,
+          15.5 * scaleY, // Control point 1
+          19.9 * scaleX,
+          13.0 * scaleY, // Control point 2
+          19.741 * scaleX,
+          10.147 * scaleY // Back to right edge
+          );
 
       canvas.drawPath(mainCapPath, paint);
 
@@ -5551,30 +5743,42 @@ class GraduationCapPainter extends CustomPainter {
       // m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814
       final topRidgePath = Path();
       topRidgePath.moveTo(4.259 * scaleX, 10.147 * scaleY); // 19.741 - 15.482
-      
+
       topRidgePath.cubicTo(
-        3.5 * scaleX, 9.8 * scaleY,     // Control point 1
-        2.8 * scaleX, 9.5 * scaleY,     // Control point 2  
-        1.601 * scaleX, 9.334 * scaleY  // Left edge point (4.259 - 2.658, 10.147 - 0.813)
-      );
-      
+          3.5 * scaleX,
+          9.8 * scaleY, // Control point 1
+          2.8 * scaleX,
+          9.5 * scaleY, // Control point 2
+          1.601 * scaleX,
+          9.334 * scaleY // Left edge point (4.259 - 2.658, 10.147 - 0.813)
+          );
+
       topRidgePath.cubicTo(
-        5.0 * scaleX, 6.0 * scaleY,     // Control point 1
-        8.5 * scaleX, 4.0 * scaleY,     // Control point 2
-        12 * scaleX, 3.493 * scaleY     // Top center point
-      );
-      
+          5.0 * scaleX,
+          6.0 * scaleY, // Control point 1
+          8.5 * scaleX,
+          4.0 * scaleY, // Control point 2
+          12 * scaleX,
+          3.493 * scaleY // Top center point
+          );
+
       topRidgePath.cubicTo(
-        15.5 * scaleX, 4.0 * scaleY,     // Control point 1
-        19.0 * scaleX, 6.0 * scaleY,     // Control point 2
-        22.399 * scaleX, 9.333 * scaleY  // Right edge point (12 + 10.399)
-      );
-      
+          15.5 * scaleX,
+          4.0 * scaleY, // Control point 1
+          19.0 * scaleX,
+          6.0 * scaleY, // Control point 2
+          22.399 * scaleX,
+          9.333 * scaleY // Right edge point (12 + 10.399)
+          );
+
       topRidgePath.cubicTo(
-        21.5 * scaleX, 9.6 * scaleY,     // Control point 1
-        20.6 * scaleX, 9.8 * scaleY,     // Control point 2
-        19.741 * scaleX, 10.147 * scaleY // Back to right edge
-      );
+          21.5 * scaleX,
+          9.6 * scaleY, // Control point 1
+          20.6 * scaleX,
+          9.8 * scaleY, // Control point 2
+          19.741 * scaleX,
+          10.147 * scaleY // Back to right edge
+          );
 
       canvas.drawPath(topRidgePath, paint);
 
@@ -5583,15 +5787,21 @@ class GraduationCapPainter extends CustomPainter {
       final centerLines = Path();
       centerLines.moveTo(4.259 * scaleX, 10.147 * scaleY);
       centerLines.cubicTo(
-        7.0 * scaleX, 11.5 * scaleY,     // Control point 1
-        9.5 * scaleX, 12.8 * scaleY,     // Control point 2
-        12 * scaleX, 13.489 * scaleY     // Center point
-      );
+          7.0 * scaleX,
+          11.5 * scaleY, // Control point 1
+          9.5 * scaleX,
+          12.8 * scaleY, // Control point 2
+          12 * scaleX,
+          13.489 * scaleY // Center point
+          );
       centerLines.cubicTo(
-        15.0 * scaleX, 12.2 * scaleY,     // Control point 1
-        17.5 * scaleX, 11.0 * scaleY,     // Control point 2
-        19.74 * scaleX, 10.147 * scaleY   // Right edge point (12 + 7.74)
-      );
+          15.0 * scaleX,
+          12.2 * scaleY, // Control point 1
+          17.5 * scaleX,
+          11.0 * scaleY, // Control point 2
+          19.74 * scaleX,
+          10.147 * scaleY // Right edge point (12 + 7.74)
+          );
 
       canvas.drawPath(centerLines, paint);
 
@@ -5611,31 +5821,41 @@ class GraduationCapPainter extends CustomPainter {
       // Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443
       canvas.drawLine(
         Offset((6.75 * scaleX) + tasselSwayOffset, 15 * scaleY),
-        Offset((6.75 * scaleX) + (tasselSwayOffset * 0.3), 11.325 * scaleY), // Less sway at top connection point
+        Offset((6.75 * scaleX) + (tasselSwayOffset * 0.3),
+            11.325 * scaleY), // Less sway at top connection point
         paint,
       );
 
       // Curved line to center - with sway animation
       final tasselCurve = Path();
-      tasselCurve.moveTo((6.75 * scaleX) + (tasselSwayOffset * 0.3), 11.325 * scaleY);
+      tasselCurve.moveTo(
+          (6.75 * scaleX) + (tasselSwayOffset * 0.3), 11.325 * scaleY);
       tasselCurve.cubicTo(
-        8.5 * scaleX, 10.0 * scaleY,     // Control point 1 - no sway, connected to cap
-        10.0 * scaleX, 9.0 * scaleY,     // Control point 2 - no sway, connected to cap
-        12 * scaleX, 8.443 * scaleY      // Connect to cap center - no sway
-      );
+          8.5 * scaleX,
+          10.0 * scaleY, // Control point 1 - no sway, connected to cap
+          10.0 * scaleX,
+          9.0 * scaleY, // Control point 2 - no sway, connected to cap
+          12 * scaleX,
+          8.443 * scaleY // Connect to cap center - no sway
+          );
       canvas.drawPath(tasselCurve, paint);
 
       // Additional tassel detail - with sway animation
       // m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5
       final tasselDetail = Path();
-      tasselDetail.moveTo((4.993 * scaleX) + tasselSwayOffset, 19.993 * scaleY); // 12 - 7.007, 8.443 + 11.55
+      tasselDetail.moveTo((4.993 * scaleX) + tasselSwayOffset,
+          19.993 * scaleY); // 12 - 7.007, 8.443 + 11.55
       tasselDetail.cubicTo(
-        5.5 * scaleX, 18.0 * scaleY,     // Control point 1
-        6.0 * scaleX, 16.8 * scaleY,     // Control point 2
-        (6.75 * scaleX) + tasselSwayOffset, 15.75 * scaleY    // End point with sway
-      );
-      tasselDetail.lineTo((6.75 * scaleX) + tasselSwayOffset, 14.25 * scaleY); // 15.75 - 1.5 with sway
-      
+          5.5 * scaleX,
+          18.0 * scaleY, // Control point 1
+          6.0 * scaleX,
+          16.8 * scaleY, // Control point 2
+          (6.75 * scaleX) + tasselSwayOffset,
+          15.75 * scaleY // End point with sway
+          );
+      tasselDetail.lineTo((6.75 * scaleX) + tasselSwayOffset,
+          14.25 * scaleY); // 15.75 - 1.5 with sway
+
       canvas.drawPath(tasselDetail, paint);
     }
   }
@@ -5643,10 +5863,10 @@ class GraduationCapPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
     return oldDelegate is GraduationCapPainter &&
-        (oldDelegate.isFilled != isFilled || 
-         oldDelegate.color != color ||
-         oldDelegate.strokeWidth != strokeWidth ||
-         oldDelegate.animationValue != animationValue);
+        (oldDelegate.isFilled != isFilled ||
+            oldDelegate.color != color ||
+            oldDelegate.strokeWidth != strokeWidth ||
+            oldDelegate.animationValue != animationValue);
   }
 }
 
@@ -5678,8 +5898,8 @@ class SocialIconPainter extends CustomPainter {
 
     // Calculate hugging animation offsets - side figures move closer to center and back
     // Animation goes: 0.0 → 0.5 (max hug) → 1.0 (back to normal)
-    final hugProgress = animationValue <= 0.5 
-        ? animationValue * 2.0  // 0.0 to 1.0 in first half
+    final hugProgress = animationValue <= 0.5
+        ? animationValue * 2.0 // 0.0 to 1.0 in first half
         : (1.0 - animationValue) * 2.0; // 1.0 to 0.0 in second half
     final hugOffset = hugProgress * 1.5; // Maximum 1.5 units closer to center
     final leftHugX = 5.25 + hugOffset; // Left figure moves right
@@ -5691,256 +5911,201 @@ class SocialIconPainter extends CustomPainter {
 
       // First path: d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z"
       final mainPath = Path();
-      
+
       // Center head: M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0Z
       mainPath.addOval(Rect.fromCenter(
         center: Offset(12 * scaleX, 6.75 * scaleY), // 8.25 + 3.75 = 12
         width: 7.5 * scaleX,
         height: 7.5 * scaleY,
       ));
-      
+
       // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (moves left during animation)
       mainPath.addOval(Rect.fromCenter(
-        center: Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
+        center:
+            Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
-      
+
       // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (moves right during animation)
       mainPath.addOval(Rect.fromCenter(
         center: Offset(leftHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
-      
+
       // Main body: M6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z
-      final bodyLeftX = 6.31 + hugOffset * 0.5; // Body sides also move but less dramatically
+      final bodyLeftX =
+          6.31 + hugOffset * 0.5; // Body sides also move but less dramatically
       final bodyRightX = 18.709 - hugOffset * 0.5;
-      
+
       mainPath.moveTo(bodyLeftX * scaleX, 15.117 * scaleY);
+      mainPath.cubicTo(8.0 * scaleX, 13.5 * scaleY, 10.0 * scaleX,
+          12.0 * scaleY, 12 * scaleX, 12 * scaleY);
+      mainPath.cubicTo(14.0 * scaleX, 12.0 * scaleY, 16.0 * scaleX,
+          13.5 * scaleY, bodyRightX * scaleX, 19.498 * scaleY);
       mainPath.cubicTo(
-        8.0 * scaleX, 13.5 * scaleY,
-        10.0 * scaleX, 12.0 * scaleY,
-        12 * scaleX, 12 * scaleY
-      );
+          (bodyRightX - 0.122) * scaleX,
+          19.69 * scaleY,
+          (bodyRightX - 0.272) * scaleX,
+          19.82 * scaleY,
+          (bodyRightX - 0.372) * scaleX,
+          20.066 * scaleY);
+      mainPath.cubicTo(16.5 * scaleX, 21.2 * scaleY, 14.3 * scaleX,
+          21.75 * scaleY, 12 * scaleX, 21.75 * scaleY);
+      mainPath.cubicTo(9.695 * scaleX, 21.75 * scaleY, 7.53 * scaleX,
+          21.138 * scaleY, (bodyLeftX - 0.647) * scaleX, 20.066 * scaleY);
       mainPath.cubicTo(
-        14.0 * scaleX, 12.0 * scaleY,
-        16.0 * scaleX, 13.5 * scaleY,
-        bodyRightX * scaleX, 19.498 * scaleY
-      );
+          (bodyLeftX - 0.747) * scaleX,
+          19.82 * scaleY,
+          (bodyLeftX - 0.897) * scaleX,
+          19.69 * scaleY,
+          (bodyLeftX - 1.019) * scaleX,
+          19.498 * scaleY);
       mainPath.cubicTo(
-        (bodyRightX - 0.122) * scaleX, 19.69 * scaleY,
-        (bodyRightX - 0.272) * scaleX, 19.82 * scaleY,
-        (bodyRightX - 0.372) * scaleX, 20.066 * scaleY
-      );
-      mainPath.cubicTo(
-        16.5 * scaleX, 21.2 * scaleY,
-        14.3 * scaleX, 21.75 * scaleY,
-        12 * scaleX, 21.75 * scaleY
-      );
-      mainPath.cubicTo(
-        9.695 * scaleX, 21.75 * scaleY,
-        7.53 * scaleX, 21.138 * scaleY,
-        (bodyLeftX - 0.647) * scaleX, 20.066 * scaleY
-      );
-      mainPath.cubicTo(
-        (bodyLeftX - 0.747) * scaleX, 19.82 * scaleY,
-        (bodyLeftX - 0.897) * scaleX, 19.69 * scaleY,
-        (bodyLeftX - 1.019) * scaleX, 19.498 * scaleY
-      );
-      mainPath.cubicTo(
-        (bodyLeftX - 0.51) * scaleX, 17.8 * scaleY,
-        (bodyLeftX - 0.26) * scaleX, 16.5 * scaleY,
-        bodyLeftX * scaleX, 15.117 * scaleY
-      );
+          (bodyLeftX - 0.51) * scaleX,
+          17.8 * scaleY,
+          (bodyLeftX - 0.26) * scaleX,
+          16.5 * scaleY,
+          bodyLeftX * scaleX,
+          15.117 * scaleY);
       mainPath.close();
       canvas.drawPath(mainPath, paint);
 
       // Second path: d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z"
       final sidePath = Path();
-      
+
       // Animated side body positions for hugging effect
-      final leftSideX = 5.082 + hugOffset * 0.3; // Left side moves right slightly
-      final rightSideX = 20.226 - hugOffset * 0.3; // Right side moves left slightly
-      final leftSideBodyX = 18.918 - hugOffset * 0.3; // Right side body moves left
-      
+      final leftSideX =
+          5.082 + hugOffset * 0.3; // Left side moves right slightly
+      final rightSideX =
+          20.226 - hugOffset * 0.3; // Right side moves left slightly
+      final leftSideBodyX =
+          18.918 - hugOffset * 0.3; // Right side body moves left
+
       // Left side body: M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047Z
       sidePath.moveTo(leftSideX * scaleX, 14.254 * scaleY);
       sidePath.cubicTo(
-        (leftSideX - 0.582) * scaleX, 16.8 * scaleY,
-        (leftSideX - 0.882) * scaleX, 18.5 * scaleY,
-        (leftSideX - 1.308) * scaleX, 19.389 * scaleY
-      );
-      sidePath.cubicTo(
-        2.8 * scaleX, 19.2 * scaleY,
-        2.0 * scaleX, 19.0 * scaleY,
-        2.01 * scaleX, 18.949 * scaleY
-      );
+          (leftSideX - 0.582) * scaleX,
+          16.8 * scaleY,
+          (leftSideX - 0.882) * scaleX,
+          18.5 * scaleY,
+          (leftSideX - 1.308) * scaleX,
+          19.389 * scaleY);
+      sidePath.cubicTo(2.8 * scaleX, 19.2 * scaleY, 2.0 * scaleX, 19.0 * scaleY,
+          2.01 * scaleX, 18.949 * scaleY);
       sidePath.lineTo(1.895 * scaleX, 18.909 * scaleY);
-      sidePath.cubicTo(
-        1.7 * scaleX, 18.8 * scaleY,
-        1.6 * scaleX, 18.6 * scaleY,
-        1.522 * scaleX, 18.422 * scaleY
-      );
+      sidePath.cubicTo(1.7 * scaleX, 18.8 * scaleY, 1.6 * scaleX, 18.6 * scaleY,
+          1.522 * scaleX, 18.422 * scaleY);
       sidePath.lineTo(1.512 * scaleX, 18.301 * scaleY);
-      sidePath.cubicTo(
-        1.8 * scaleX, 16.5 * scaleY,
-        3.2 * scaleX, 14.8 * scaleY,
-        leftSideX * scaleX, 14.254 * scaleY
-      );
+      sidePath.cubicTo(1.8 * scaleX, 16.5 * scaleY, 3.2 * scaleX, 14.8 * scaleY,
+          leftSideX * scaleX, 14.254 * scaleY);
       sidePath.close();
-      
+
       // Right side body: M20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z
       sidePath.moveTo(rightSideX * scaleX, 19.389 * scaleY);
       sidePath.cubicTo(
-        (rightSideX - 0.626) * scaleX, 16.8 * scaleY,
-        (rightSideX - 0.926) * scaleX, 15.0 * scaleY,
-        leftSideBodyX * scaleX, 14.254 * scaleY
-      );
+          (rightSideX - 0.626) * scaleX,
+          16.8 * scaleY,
+          (rightSideX - 0.926) * scaleX,
+          15.0 * scaleY,
+          leftSideBodyX * scaleX,
+          14.254 * scaleY);
       sidePath.cubicTo(
-        (leftSideBodyX + 1.882) * scaleX, 14.8 * scaleY,
-        (leftSideBodyX + 3.282) * scaleX, 16.5 * scaleY,
-        22.488 * scaleX, 18.301 * scaleY
-      );
+          (leftSideBodyX + 1.882) * scaleX,
+          14.8 * scaleY,
+          (leftSideBodyX + 3.282) * scaleX,
+          16.5 * scaleY,
+          22.488 * scaleX,
+          18.301 * scaleY);
       sidePath.lineTo(22.478 * scaleX, 18.422 * scaleY);
-      sidePath.cubicTo(
-        22.4 * scaleX, 18.6 * scaleY,
-        22.3 * scaleX, 18.8 * scaleY,
-        22.105 * scaleX, 18.908 * scaleY
-      );
+      sidePath.cubicTo(22.4 * scaleX, 18.6 * scaleY, 22.3 * scaleX,
+          18.8 * scaleY, 22.105 * scaleX, 18.908 * scaleY);
       sidePath.lineTo(21.99 * scaleX, 18.948 * scaleY);
-      sidePath.cubicTo(
-        21.2 * scaleX, 19.15 * scaleY,
-        20.8 * scaleX, 19.3 * scaleY,
-        rightSideX * scaleX, 19.389 * scaleY
-      );
+      sidePath.cubicTo(21.2 * scaleX, 19.15 * scaleY, 20.8 * scaleX,
+          19.3 * scaleY, rightSideX * scaleX, 19.389 * scaleY);
       sidePath.close();
-      
-      canvas.drawPath(sidePath, paint);
 
+      canvas.drawPath(sidePath, paint);
     } else {
       // Outlined version - use the same shape as filled but as stroke
       paint.style = PaintingStyle.stroke;
 
       // Use the exact same paths as the filled version but draw them as outlines
       final mainPath = Path();
-      
+
       // Center head: M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0Z
       mainPath.addOval(Rect.fromCenter(
         center: Offset(12 * scaleX, 6.75 * scaleY), // 8.25 + 3.75 = 12
         width: 7.5 * scaleX,
         height: 7.5 * scaleY,
       ));
-      
+
       // Right head: M15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (animated)
       mainPath.addOval(Rect.fromCenter(
-        center: Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
+        center:
+            Offset(rightHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
-      
+
       // Left head: M2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z (animated)
       mainPath.addOval(Rect.fromCenter(
         center: Offset(leftHugX * scaleX, 9.75 * scaleY), // Animated X position
         width: 6 * scaleX,
         height: 6 * scaleY,
       ));
-      
+
       // Main body: M6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z
       mainPath.moveTo(6.31 * scaleX, 15.117 * scaleY);
-      mainPath.cubicTo(
-        8.0 * scaleX, 13.5 * scaleY,
-        10.0 * scaleX, 12.0 * scaleY,
-        12 * scaleX, 12 * scaleY
-      );
-      mainPath.cubicTo(
-        14.0 * scaleX, 12.0 * scaleY,
-        16.0 * scaleX, 13.5 * scaleY,
-        18.709 * scaleX, 19.498 * scaleY
-      );
-      mainPath.cubicTo(
-        18.587 * scaleX, 19.69 * scaleY,
-        18.437 * scaleX, 19.82 * scaleY,
-        18.337 * scaleX, 20.066 * scaleY
-      );
-      mainPath.cubicTo(
-        16.5 * scaleX, 21.2 * scaleY,
-        14.3 * scaleX, 21.75 * scaleY,
-        12 * scaleX, 21.75 * scaleY
-      );
-      mainPath.cubicTo(
-        9.695 * scaleX, 21.75 * scaleY,
-        7.53 * scaleX, 21.138 * scaleY,
-        5.663 * scaleX, 20.066 * scaleY
-      );
-      mainPath.cubicTo(
-        5.563 * scaleX, 19.82 * scaleY,
-        5.413 * scaleX, 19.69 * scaleY,
-        5.291 * scaleX, 19.498 * scaleY
-      );
-      mainPath.cubicTo(
-        5.8 * scaleX, 17.8 * scaleY,
-        6.05 * scaleX, 16.5 * scaleY,
-        6.31 * scaleX, 15.117 * scaleY
-      );
+      mainPath.cubicTo(8.0 * scaleX, 13.5 * scaleY, 10.0 * scaleX,
+          12.0 * scaleY, 12 * scaleX, 12 * scaleY);
+      mainPath.cubicTo(14.0 * scaleX, 12.0 * scaleY, 16.0 * scaleX,
+          13.5 * scaleY, 18.709 * scaleX, 19.498 * scaleY);
+      mainPath.cubicTo(18.587 * scaleX, 19.69 * scaleY, 18.437 * scaleX,
+          19.82 * scaleY, 18.337 * scaleX, 20.066 * scaleY);
+      mainPath.cubicTo(16.5 * scaleX, 21.2 * scaleY, 14.3 * scaleX,
+          21.75 * scaleY, 12 * scaleX, 21.75 * scaleY);
+      mainPath.cubicTo(9.695 * scaleX, 21.75 * scaleY, 7.53 * scaleX,
+          21.138 * scaleY, 5.663 * scaleX, 20.066 * scaleY);
+      mainPath.cubicTo(5.563 * scaleX, 19.82 * scaleY, 5.413 * scaleX,
+          19.69 * scaleY, 5.291 * scaleX, 19.498 * scaleY);
+      mainPath.cubicTo(5.8 * scaleX, 17.8 * scaleY, 6.05 * scaleX,
+          16.5 * scaleY, 6.31 * scaleX, 15.117 * scaleY);
       mainPath.close();
       canvas.drawPath(mainPath, paint);
 
       // Side body paths as outlines
       final sidePath = Path();
-      
+
       // Left side body: M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047Z
       sidePath.moveTo(5.082 * scaleX, 14.254 * scaleY);
-      sidePath.cubicTo(
-        4.5 * scaleX, 16.8 * scaleY,
-        4.2 * scaleX, 18.5 * scaleY,
-        3.774 * scaleX, 19.389 * scaleY
-      );
-      sidePath.cubicTo(
-        2.8 * scaleX, 19.2 * scaleY,
-        2.0 * scaleX, 19.0 * scaleY,
-        2.01 * scaleX, 18.949 * scaleY
-      );
+      sidePath.cubicTo(4.5 * scaleX, 16.8 * scaleY, 4.2 * scaleX, 18.5 * scaleY,
+          3.774 * scaleX, 19.389 * scaleY);
+      sidePath.cubicTo(2.8 * scaleX, 19.2 * scaleY, 2.0 * scaleX, 19.0 * scaleY,
+          2.01 * scaleX, 18.949 * scaleY);
       sidePath.lineTo(1.895 * scaleX, 18.909 * scaleY);
-      sidePath.cubicTo(
-        1.7 * scaleX, 18.8 * scaleY,
-        1.6 * scaleX, 18.6 * scaleY,
-        1.522 * scaleX, 18.422 * scaleY
-      );
+      sidePath.cubicTo(1.7 * scaleX, 18.8 * scaleY, 1.6 * scaleX, 18.6 * scaleY,
+          1.522 * scaleX, 18.422 * scaleY);
       sidePath.lineTo(1.512 * scaleX, 18.301 * scaleY);
-      sidePath.cubicTo(
-        1.8 * scaleX, 16.5 * scaleY,
-        3.2 * scaleX, 14.8 * scaleY,
-        5.082 * scaleX, 14.254 * scaleY
-      );
+      sidePath.cubicTo(1.8 * scaleX, 16.5 * scaleY, 3.2 * scaleX, 14.8 * scaleY,
+          5.082 * scaleX, 14.254 * scaleY);
       sidePath.close();
-      
+
       // Right side body: M20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z
       sidePath.moveTo(20.226 * scaleX, 19.389 * scaleY);
-      sidePath.cubicTo(
-        19.6 * scaleX, 16.8 * scaleY,
-        19.3 * scaleX, 15.0 * scaleY,
-        18.918 * scaleX, 14.254 * scaleY
-      );
-      sidePath.cubicTo(
-        20.8 * scaleX, 14.8 * scaleY,
-        22.2 * scaleX, 16.5 * scaleY,
-        22.488 * scaleX, 18.301 * scaleY
-      );
+      sidePath.cubicTo(19.6 * scaleX, 16.8 * scaleY, 19.3 * scaleX,
+          15.0 * scaleY, 18.918 * scaleX, 14.254 * scaleY);
+      sidePath.cubicTo(20.8 * scaleX, 14.8 * scaleY, 22.2 * scaleX,
+          16.5 * scaleY, 22.488 * scaleX, 18.301 * scaleY);
       sidePath.lineTo(22.478 * scaleX, 18.422 * scaleY);
-      sidePath.cubicTo(
-        22.4 * scaleX, 18.6 * scaleY,
-        22.3 * scaleX, 18.8 * scaleY,
-        22.105 * scaleX, 18.908 * scaleY
-      );
+      sidePath.cubicTo(22.4 * scaleX, 18.6 * scaleY, 22.3 * scaleX,
+          18.8 * scaleY, 22.105 * scaleX, 18.908 * scaleY);
       sidePath.lineTo(21.99 * scaleX, 18.948 * scaleY);
-      sidePath.cubicTo(
-        21.2 * scaleX, 19.15 * scaleY,
-        20.8 * scaleX, 19.3 * scaleY,
-        20.226 * scaleX, 19.389 * scaleY
-      );
+      sidePath.cubicTo(21.2 * scaleX, 19.15 * scaleY, 20.8 * scaleX,
+          19.3 * scaleY, 20.226 * scaleX, 19.389 * scaleY);
       sidePath.close();
-      
+
       canvas.drawPath(sidePath, paint);
     }
   }
@@ -5948,9 +6113,9 @@ class SocialIconPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) {
     return oldDelegate is SocialIconPainter &&
-        (oldDelegate.isFilled != isFilled || 
-         oldDelegate.color != color ||
-         oldDelegate.strokeWidth != strokeWidth ||
-         oldDelegate.animationValue != animationValue);
+        (oldDelegate.isFilled != isFilled ||
+            oldDelegate.color != color ||
+            oldDelegate.strokeWidth != strokeWidth ||
+            oldDelegate.animationValue != animationValue);
   }
 }

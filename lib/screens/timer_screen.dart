@@ -102,15 +102,16 @@ class _TimerScreenState extends State<TimerScreen> {
   // UI state only (timer state is now in provider)
   bool _showPresets = true; // Toggle between sessions and custom timer
   SavedTimer? _selectedTimerDetails; // Track selected timer for detailed view
-  bool _timerStartedFromSavedTimers = false; // Track if timer was started from saved timers list
+  bool _timerStartedFromSavedTimers =
+      false; // Track if timer was started from saved timers list
   String? _editingTimerId; // Track if we're editing an existing timer
 
   // Custom timer picker state
   int _selectedHours = 0;
   int _selectedMinutes = 0;
   int _selectedSeconds = 0;
-  
-  // Custom timer advanced options  
+
+  // Custom timer advanced options
   bool _includeBreakTimer = false;
   int _breakMinutes = 5;
   int _iterationCount = 1;
@@ -311,7 +312,7 @@ class _TimerScreenState extends State<TimerScreen> {
         _showSessionCompleteDialog();
       }
     });
-    
+
     // Load saved timers from Firebase
     _loadSavedTimers();
   }
@@ -321,7 +322,7 @@ class _TimerScreenState extends State<TimerScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // Check if timer is running and switch to active timer view
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
     if (timerProvider.timerState != TimerState.idle) {
@@ -332,7 +333,7 @@ class _TimerScreenState extends State<TimerScreen> {
         });
       }
     }
-    
+
     // Reload timers every time the screen becomes active
     // This ensures timers are refreshed when navigating back from another screen
     if (!_hasLoadedTimers || ModalRoute.of(context)?.isCurrent == true) {
@@ -346,22 +347,24 @@ class _TimerScreenState extends State<TimerScreen> {
     try {
       final firestoreService = FirestoreService();
       final timersData = await firestoreService.getSavedTimers();
-      
+
       if (mounted) {
         setState(() {
           // Keep the preset timers (Pomodoro, Deep Work, Time-Box, Quick Study) and add user's saved timers
-          final presetTimers = _savedTimers.where((timer) => 
-            timer.label == 'Pomodoro Focus' || 
-            timer.label == 'Deep Work Session' || 
-            timer.label == 'Time-Box Focus' ||
-            timer.label == 'Quick Study'
-          ).toList();
-          
-          final userTimers = timersData.map((data) => SavedTimer.fromFirestore(data)).toList();
-          
+          final presetTimers = _savedTimers
+              .where((timer) =>
+                  timer.label == 'Pomodoro Focus' ||
+                  timer.label == 'Deep Work Session' ||
+                  timer.label == 'Time-Box Focus' ||
+                  timer.label == 'Quick Study')
+              .toList();
+
+          final userTimers =
+              timersData.map((data) => SavedTimer.fromFirestore(data)).toList();
+
           _savedTimers = [...presetTimers, ...userTimers];
         });
-        
+
         debugPrint('✅ Loaded ${timersData.length} user timers from Firebase');
       }
     } catch (e) {
@@ -397,7 +400,7 @@ class _TimerScreenState extends State<TimerScreen> {
       _labelController.clear();
       _editingTimerId = null; // Clear editing state
     });
-    
+
     // Reset scroll controllers to initial positions
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_hoursController.hasClients) {
@@ -424,15 +427,16 @@ class _TimerScreenState extends State<TimerScreen> {
     }
 
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
-    timerProvider.setSelectedTime(_selectedHours, _selectedMinutes, _selectedSeconds);
-    
+    timerProvider.setSelectedTime(
+        _selectedHours, _selectedMinutes, _selectedSeconds);
+
     // Get the timer name from label controller or use default
-    final timerName = _labelController.text.trim().isEmpty 
-        ? 'Custom Timer' 
+    final timerName = _labelController.text.trim().isEmpty
+        ? 'Custom Timer'
         : _labelController.text.trim();
-    
+
     timerProvider.startTimer(name: timerName);
-    
+
     // Reset custom timer settings and switch to active timer view
     _resetCustomTimerSettings();
     setState(() {
@@ -443,7 +447,7 @@ class _TimerScreenState extends State<TimerScreen> {
   void _startSession(TimerSession session) {
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
     timerProvider.startSession(session);
-    
+
     setState(() {
       _showPresets = false; // Switch to Active Timer tab
     });
@@ -464,10 +468,10 @@ class _TimerScreenState extends State<TimerScreen> {
     final wasSession = timerProvider.activeSession != null;
     final wasFromSavedTimers = _timerStartedFromSavedTimers;
     timerProvider.stopTimer();
-    
+
     // Reset the flag
     _timerStartedFromSavedTimers = false;
-    
+
     // If it was a session timer OR started from saved timers, go back to Saved Timers tab
     // Otherwise stay in Custom Timer area
     setState(() {
@@ -478,7 +482,7 @@ class _TimerScreenState extends State<TimerScreen> {
   void _showSessionCompleteDialog() {
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
     final activeSession = timerProvider.activeSession;
-    
+
     if (activeSession == null) return;
 
     showDialog(
@@ -811,7 +815,9 @@ class _TimerScreenState extends State<TimerScreen> {
                       child: Consumer<TimerProvider>(
                         builder: (context, timerProvider, child) {
                           return Text(
-                            timerProvider.timerState != TimerState.idle ? 'Current Timer' : 'Custom Timer',
+                            timerProvider.timerState != TimerState.idle
+                                ? 'Current Timer'
+                                : 'Custom Timer',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: !_showPresets
@@ -836,11 +842,11 @@ class _TimerScreenState extends State<TimerScreen> {
           Expanded(
             child: Consumer<TimerProvider>(
               builder: (context, timerProvider, child) {
-                return _showPresets 
-                  ? _buildStudyPresets() 
-                  : (timerProvider.timerState != TimerState.idle 
-                      ? _buildActiveTimer() 
-                      : _buildCustomTimer());
+                return _showPresets
+                    ? _buildStudyPresets()
+                    : (timerProvider.timerState != TimerState.idle
+                        ? _buildActiveTimer()
+                        : _buildCustomTimer());
               },
             ),
           ),
@@ -894,47 +900,50 @@ class _TimerScreenState extends State<TimerScreen> {
             // Saved timer options displayed as wrapped cards (only show when details NOT selected)
             // Filter out preset timers that are shown in Study Techniques section
             if (_selectedTimerDetails == null) ...[
-              if (_savedTimers.where((timer) => 
-                  timer.label != 'Pomodoro Focus' && 
-                  timer.label != 'Deep Work Session' && 
-                  timer.label != 'Time-Box Focus').isNotEmpty) ...[
+              if (_savedTimers
+                  .where((timer) =>
+                      timer.label != 'Pomodoro Focus' &&
+                      timer.label != 'Deep Work Session' &&
+                      timer.label != 'Time-Box Focus')
+                  .isNotEmpty) ...[
                 Wrap(
                   spacing: 16, // Horizontal spacing between cards
                   runSpacing: 16, // Vertical spacing between rows
                   children: _savedTimers
-                      .where((timer) => 
-                          timer.label != 'Pomodoro Focus' && 
-                          timer.label != 'Deep Work Session' && 
-                      timer.label != 'Time-Box Focus')
-                  .toList()
-                  .asMap()
-                  .entries
-                  .map((entry) {
-                final index = entry.key;
-                final timer = entry.value;
-                return _buildSavedTimerPresetCard(timer, index);
-              }).toList(),
-            ),
-          ] else ...[
-            const Text(
-              'No saved timers yet. Create some in the Custom Timer section!',
-              style: TextStyle(
-                color: Color(0xFFB0B0B0),
-                fontSize: 16,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-          const SizedBox(height: 30),
+                      .where((timer) =>
+                          timer.label != 'Pomodoro Focus' &&
+                          timer.label != 'Deep Work Session' &&
+                          timer.label != 'Time-Box Focus')
+                      .toList()
+                      .asMap()
+                      .entries
+                      .map((entry) {
+                    final index = entry.key;
+                    final timer = entry.value;
+                    return _buildSavedTimerPresetCard(timer, index);
+                  }).toList(),
+                ),
+              ] else ...[
+                const Text(
+                  'No saved timers yet. Create some in the Custom Timer section!',
+                  style: TextStyle(
+                    color: Color(0xFFB0B0B0),
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              const SizedBox(height: 30),
             ],
           ],
         ),
-        
+
         // Overlay: Timer details view (shows on top when a timer is selected)
         if (_selectedTimerDetails != null)
           Positioned.fill(
             child: Container(
-              color: const Color(0xFF1A1A1A).withValues(alpha: 0.95), // Semi-transparent dark background
+              color: const Color(0xFF1A1A1A)
+                  .withValues(alpha: 0.95), // Semi-transparent dark background
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: _buildTimerDetailsView(_selectedTimerDetails!),
@@ -960,8 +969,12 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   Widget _buildTimerDetailsView(SavedTimer timer) {
-    final bool isPresetTimer = ['Pomodoro Focus', 'Deep Work Session', 'Time-Box Focus'].contains(timer.label);
-    
+    final bool isPresetTimer = [
+      'Pomodoro Focus',
+      'Deep Work Session',
+      'Time-Box Focus'
+    ].contains(timer.label);
+
     return Container(
       margin: const EdgeInsets.only(top: 20),
       padding: const EdgeInsets.all(20),
@@ -1008,7 +1021,7 @@ class _TimerScreenState extends State<TimerScreen> {
               ),
             ],
           ),
-          
+
           if (isPresetTimer) ...[
             const SizedBox(height: 8),
             Container(
@@ -1028,9 +1041,9 @@ class _TimerScreenState extends State<TimerScreen> {
               ),
             ),
           ],
-          
+
           const SizedBox(height: 20),
-          
+
           // Timer specifications
           Row(
             children: [
@@ -1051,9 +1064,9 @@ class _TimerScreenState extends State<TimerScreen> {
                 ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
@@ -1066,17 +1079,19 @@ class _TimerScreenState extends State<TimerScreen> {
               Expanded(
                 child: _buildDetailItem(
                   'Total Time',
-                  timer.includeBreakTimer 
-                    ? _formatTotalTime((timer.totalSeconds + (timer.breakMinutes * 60)) * timer.cycles)
-                    : timer.formattedTime,
+                  timer.includeBreakTimer
+                      ? _formatTotalTime(
+                          (timer.totalSeconds + (timer.breakMinutes * 60)) *
+                              timer.cycles)
+                      : timer.formattedTime,
                   Icons.timer,
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Description
           Text(
             isPresetTimer ? 'Study Technique Description:' : 'Description:',
@@ -1095,9 +1110,9 @@ class _TimerScreenState extends State<TimerScreen> {
               height: 1.5,
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Action buttons
           Row(
             children: [
@@ -1114,7 +1129,8 @@ class _TimerScreenState extends State<TimerScreen> {
                       _iterationCount = timer.cycles;
                       _labelController.text = timer.label;
                       _selectedTimerDetails = null;
-                      _timerStartedFromSavedTimers = true; // Mark as started from saved timers
+                      _timerStartedFromSavedTimers =
+                          true; // Mark as started from saved timers
                     });
                     _startCustomTimer();
                   },
@@ -1136,7 +1152,7 @@ class _TimerScreenState extends State<TimerScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Show Edit button for custom timers, Customize for preset timers
               if (!isPresetTimer) ...[
                 Expanded(
@@ -1144,7 +1160,7 @@ class _TimerScreenState extends State<TimerScreen> {
                     onPressed: () {
                       // Find the index of this timer in the saved list
                       final timerIndex = _savedTimers.indexOf(timer);
-                      
+
                       // Load timer settings into custom timer form for editing
                       setState(() {
                         _selectedHours = timer.hours;
@@ -1154,18 +1170,19 @@ class _TimerScreenState extends State<TimerScreen> {
                         _breakMinutes = timer.breakMinutes;
                         _iterationCount = timer.cycles;
                         _labelController.text = timer.label;
-                        _editingTimerId = timer.id; // Track that we're editing this timer
+                        _editingTimerId =
+                            timer.id; // Track that we're editing this timer
                         _selectedTimerDetails = null;
                         _showPresets = false; // Switch to Custom Timer tab
                       });
-                      
+
                       // Delete the old timer from the display list (will be re-added when saved)
                       if (timerIndex != -1) {
                         setState(() {
                           _savedTimers.removeAt(timerIndex);
                         });
                       }
-                      
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Editing "${timer.label}"'),
@@ -1176,7 +1193,8 @@ class _TimerScreenState extends State<TimerScreen> {
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF6FB8E9),
-                      side: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                      side:
+                          const BorderSide(color: Color(0xFF6FB8E9), width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1198,7 +1216,7 @@ class _TimerScreenState extends State<TimerScreen> {
                     onPressed: () {
                       // Find the index of this timer in the saved list
                       final timerIndex = _savedTimers.indexOf(timer);
-                      
+
                       // Show confirmation dialog before deleting
                       showDialog(
                         context: context,
@@ -1206,7 +1224,8 @@ class _TimerScreenState extends State<TimerScreen> {
                           backgroundColor: const Color(0xFF242628),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
-                            side: const BorderSide(color: Color(0xFFEF5350), width: 2),
+                            side: const BorderSide(
+                                color: Color(0xFFEF5350), width: 2),
                           ),
                           title: const Text(
                             'Delete Timer?',
@@ -1233,14 +1252,15 @@ class _TimerScreenState extends State<TimerScreen> {
                               onPressed: () async {
                                 final navigator = Navigator.of(context);
                                 final messenger = ScaffoldMessenger.of(context);
-                                
+
                                 navigator.pop();
                                 if (timerIndex != -1) {
                                   // Only delete from Firebase if it has an ID (not a preset)
                                   if (timer.id != null) {
                                     final firestoreService = FirestoreService();
-                                    final success = await firestoreService.deleteTimer(timer.id!);
-                                    
+                                    final success = await firestoreService
+                                        .deleteTimer(timer.id!);
+
                                     if (success) {
                                       setState(() {
                                         _savedTimers.removeAt(timerIndex);
@@ -1248,14 +1268,17 @@ class _TimerScreenState extends State<TimerScreen> {
                                       });
                                       messenger.showSnackBar(
                                         SnackBar(
-                                          content: Text('Deleted timer "${timer.label}"'),
-                                          backgroundColor: const Color(0xFFEF5350),
+                                          content: Text(
+                                              'Deleted timer "${timer.label}"'),
+                                          backgroundColor:
+                                              const Color(0xFFEF5350),
                                         ),
                                       );
                                     } else {
                                       messenger.showSnackBar(
                                         const SnackBar(
-                                          content: Text('Failed to delete timer. Please try again.'),
+                                          content: Text(
+                                              'Failed to delete timer. Please try again.'),
                                           backgroundColor: Colors.red,
                                         ),
                                       );
@@ -1264,7 +1287,8 @@ class _TimerScreenState extends State<TimerScreen> {
                                     // Can't delete preset timers
                                     messenger.showSnackBar(
                                       const SnackBar(
-                                        content: Text('Cannot delete preset timers'),
+                                        content:
+                                            Text('Cannot delete preset timers'),
                                         backgroundColor: Colors.orange,
                                       ),
                                     );
@@ -1285,7 +1309,8 @@ class _TimerScreenState extends State<TimerScreen> {
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFEF5350),
-                      side: const BorderSide(color: Color(0xFFEF5350), width: 2),
+                      side:
+                          const BorderSide(color: Color(0xFFEF5350), width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1321,7 +1346,8 @@ class _TimerScreenState extends State<TimerScreen> {
                     },
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF6FB8E9),
-                      side: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                      side:
+                          const BorderSide(color: Color(0xFF6FB8E9), width: 2),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -1350,7 +1376,8 @@ class _TimerScreenState extends State<TimerScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF16181A),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), width: 1),
+        border: Border.all(
+            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -1384,7 +1411,7 @@ class _TimerScreenState extends State<TimerScreen> {
   String _formatTotalTime(int totalSeconds) {
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
-    
+
     if (hours > 0) {
       return '${hours}h ${minutes}m';
     } else {
@@ -1398,7 +1425,7 @@ class _TimerScreenState extends State<TimerScreen> {
         final activeSession = timerProvider.activeSession;
         final currentPhase = timerProvider.currentPhase;
         final timerState = timerProvider.timerState;
-        
+
         return SingleChildScrollView(
           child: Column(
             children: [
@@ -1420,9 +1447,10 @@ class _TimerScreenState extends State<TimerScreen> {
                       child: Column(
                         children: [
                           Text(
-                            activeSession?.name ?? (timerProvider.customTimerName.isEmpty 
-                                ? 'Custom Timer' 
-                                : timerProvider.customTimerName),
+                            activeSession?.name ??
+                                (timerProvider.customTimerName.isEmpty
+                                    ? 'Custom Timer'
+                                    : timerProvider.customTimerName),
                             style: const TextStyle(
                               color: Color(0xFFD9D9D9),
                               fontSize: 18,
@@ -1430,7 +1458,8 @@ class _TimerScreenState extends State<TimerScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          if (activeSession != null && currentPhase != null) ...[
+                          if (activeSession != null &&
+                              currentPhase != null) ...[
                             const SizedBox(height: 4),
                             Text(
                               'Phase ${(timerProvider.currentPhaseIndex ~/ 2) + 1} of ${activeSession.phases.length ~/ 2}',
@@ -1443,9 +1472,9 @@ class _TimerScreenState extends State<TimerScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Study Time and Break Time cards (fixed positions)
                     Row(
                       children: [
@@ -1454,20 +1483,27 @@ class _TimerScreenState extends State<TimerScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1A1A1A), // Dark content background
+                              color: const Color(
+                                  0xFF1A1A1A), // Dark content background
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: currentPhase?.isBreak == false || activeSession == null
-                                  ? const Color(0xFF6FB8E9) // Active border
-                                  : const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Inactive border
-                                width: currentPhase?.isBreak == false || activeSession == null ? 2 : 1,
+                                color: currentPhase?.isBreak == false ||
+                                        activeSession == null
+                                    ? const Color(0xFF6FB8E9) // Active border
+                                    : const Color(0xFF6FB8E9).withValues(
+                                        alpha: 0.3), // Inactive border
+                                width: currentPhase?.isBreak == false ||
+                                        activeSession == null
+                                    ? 2
+                                    : 1,
                               ),
                             ),
                             child: Column(
                               children: [
                                 Text(
-                                  currentPhase?.isBreak == false || activeSession == null
-                                      ? 'Current: Study Time' 
+                                  currentPhase?.isBreak == false ||
+                                          activeSession == null
+                                      ? 'Current: Study Time'
                                       : 'Study Time',
                                   style: TextStyle(
                                     color: const Color(0xFF6FB8E9),
@@ -1482,12 +1518,19 @@ class _TimerScreenState extends State<TimerScreen> {
                                 Text(
                                   // For simple timers (no session), always show countdown
                                   // For session timers, show countdown only during study phase
-                                  activeSession == null || currentPhase?.isBreak == false
-                                    ? timerProvider.getFormattedTime()
-                                    : _formatTime(activeSession.phases.firstWhere((p) => !p.isBreak).seconds),
+                                  activeSession == null ||
+                                          currentPhase?.isBreak == false
+                                      ? timerProvider.getFormattedTime()
+                                      : _formatTime(activeSession.phases
+                                          .firstWhere((p) => !p.isBreak)
+                                          .seconds),
                                   style: TextStyle(
-                                    color: const Color(0xFFD9D9D9), // Dashboard primary text
-                                    fontSize: activeSession == null || currentPhase?.isBreak == false ? 24 : 20,
+                                    color: const Color(
+                                        0xFFD9D9D9), // Dashboard primary text
+                                    fontSize: activeSession == null ||
+                                            currentPhase?.isBreak == false
+                                        ? 24
+                                        : 20,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'monospace',
                                   ),
@@ -1496,7 +1539,8 @@ class _TimerScreenState extends State<TimerScreen> {
                                 Text(
                                   'Focus on your task for the set duration.',
                                   style: const TextStyle(
-                                    color: Color(0xFF888888), // Dashboard secondary text
+                                    color: Color(
+                                        0xFF888888), // Dashboard secondary text
                                     fontSize: 10,
                                   ),
                                   textAlign: TextAlign.center,
@@ -1507,29 +1551,35 @@ class _TimerScreenState extends State<TimerScreen> {
                             ),
                           ),
                         ),
-                        
+
                         // Only show Break Time card if there's an active session with break phases
-                        if (activeSession != null && activeSession.phases.any((p) => p.isBreak)) ...[
+                        if (activeSession != null &&
+                            activeSession.phases.any((p) => p.isBreak)) ...[
                           const SizedBox(width: 12),
-                          
+
                           // Break Time (always on right)
                           Expanded(
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF1A1A1A), // Dark content background
+                                color: const Color(
+                                    0xFF1A1A1A), // Dark content background
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: currentPhase?.isBreak == true 
-                                    ? const Color(0xFF4CAF50) // Active border (green for break)
-                                    : const Color(0xFF4CAF50).withValues(alpha: 0.3), // Inactive border
+                                  color: currentPhase?.isBreak == true
+                                      ? const Color(
+                                          0xFF4CAF50) // Active border (green for break)
+                                      : const Color(0xFF4CAF50).withValues(
+                                          alpha: 0.3), // Inactive border
                                   width: currentPhase?.isBreak == true ? 2 : 1,
                                 ),
                               ),
                               child: Column(
                                 children: [
                                   Text(
-                                    currentPhase?.isBreak == true ? 'Current: Break Time' : 'Break Time',
+                                    currentPhase?.isBreak == true
+                                        ? 'Current: Break Time'
+                                        : 'Break Time',
                                     style: const TextStyle(
                                       color: Color(0xFF4CAF50),
                                       fontSize: 12,
@@ -1542,12 +1592,17 @@ class _TimerScreenState extends State<TimerScreen> {
                                   const SizedBox(height: 8),
                                   Text(
                                     // Show countdown if currently break time, otherwise show duration
-                                    currentPhase?.isBreak == true 
-                                      ? timerProvider.getFormattedTime()
-                                      : _formatTime(activeSession.phases.firstWhere((p) => p.isBreak).seconds),
+                                    currentPhase?.isBreak == true
+                                        ? timerProvider.getFormattedTime()
+                                        : _formatTime(activeSession.phases
+                                            .firstWhere((p) => p.isBreak)
+                                            .seconds),
                                     style: TextStyle(
-                                      color: const Color(0xFFD9D9D9), // Dashboard primary text
-                                      fontSize: currentPhase?.isBreak == true ? 24 : 20,
+                                      color: const Color(
+                                          0xFFD9D9D9), // Dashboard primary text
+                                      fontSize: currentPhase?.isBreak == true
+                                          ? 24
+                                          : 20,
                                       fontWeight: FontWeight.bold,
                                       fontFamily: 'monospace',
                                     ),
@@ -1556,7 +1611,8 @@ class _TimerScreenState extends State<TimerScreen> {
                                   Text(
                                     'Take a break and recharge.',
                                     style: const TextStyle(
-                                      color: Color(0xFF888888), // Dashboard secondary text
+                                      color: Color(
+                                          0xFF888888), // Dashboard secondary text
                                       fontSize: 10,
                                     ),
                                     textAlign: TextAlign.center,
@@ -1570,31 +1626,35 @@ class _TimerScreenState extends State<TimerScreen> {
                         ],
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Status indicator
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: timerState == TimerState.paused 
-                          ? const Color(0xFF1A1A1A) // Dark background for paused
-                          : const Color(0xFF1A1A1A), // Dark background for active
+                        color: timerState == TimerState.paused
+                            ? const Color(
+                                0xFF1A1A1A) // Dark background for paused
+                            : const Color(
+                                0xFF1A1A1A), // Dark background for active
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: timerState == TimerState.paused 
-                            ? const Color(0xFF6FB8E9) // Blue for paused
-                            : const Color(0xFF4CAF50), // Green for active
+                          color: timerState == TimerState.paused
+                              ? const Color(0xFF6FB8E9) // Blue for paused
+                              : const Color(0xFF4CAF50), // Green for active
                           width: 1,
                         ),
                       ),
                       child: Text(
-                        timerState == TimerState.paused ? 'Focus Session Paused' : 'Focus Session Active',
+                        timerState == TimerState.paused
+                            ? 'Focus Session Paused'
+                            : 'Focus Session Active',
                         style: TextStyle(
-                          color: timerState == TimerState.paused 
-                            ? const Color(0xFF6FB8E9) // Blue for paused
-                            : const Color(0xFF4CAF50), // Green for active
+                          color: timerState == TimerState.paused
+                              ? const Color(0xFF6FB8E9) // Blue for paused
+                              : const Color(0xFF4CAF50), // Green for active
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 1,
@@ -1605,18 +1665,18 @@ class _TimerScreenState extends State<TimerScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Control buttons
               Row(
                 children: [
                   // Pause/Resume button
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: timerState == TimerState.paused 
-                        ? _resumeTimer 
-                        : _pauseTimer,
+                      onPressed: timerState == TimerState.paused
+                          ? _resumeTimer
+                          : _pauseTimer,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF6FB8E9),
                         foregroundColor: Colors.white,
@@ -1629,14 +1689,16 @@ class _TimerScreenState extends State<TimerScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            timerState == TimerState.paused 
-                              ? Icons.play_arrow 
-                              : Icons.pause,
+                            timerState == TimerState.paused
+                                ? Icons.play_arrow
+                                : Icons.pause,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            timerState == TimerState.paused ? 'Resume' : 'Pause',
+                            timerState == TimerState.paused
+                                ? 'Resume'
+                                : 'Pause',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -1646,16 +1708,17 @@ class _TimerScreenState extends State<TimerScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(width: 12),
-                  
+
                   // Cancel button
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _stopTimer,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFEF5350),
-                        side: const BorderSide(color: Color(0xFFEF5350), width: 2),
+                        side: const BorderSide(
+                            color: Color(0xFFEF5350), width: 2),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -1793,15 +1856,16 @@ class _TimerScreenState extends State<TimerScreen> {
       (phase) => !phase.isBreak,
       orElse: () => session.phases.first,
     );
-    final breakPhase = session.phases.where((phase) => phase.isBreak).firstOrNull;
-    
+    final breakPhase =
+        session.phases.where((phase) => phase.isBreak).firstOrNull;
+
     // Count how many complete cycles (study + break pairs)
     int cycleCount = 0;
     if (breakPhase != null) {
       // Count study phases to determine cycles
       cycleCount = session.phases.where((phase) => !phase.isBreak).length;
     }
-    
+
     // Format the display string
     if (breakPhase != null && cycleCount > 0) {
       return '${studyPhase.seconds ~/ 60}m study - ${breakPhase.seconds ~/ 60}m break (x$cycleCount)';
@@ -2302,10 +2366,12 @@ class _TimerScreenState extends State<TimerScreen> {
     }
 
     final label = _labelController.text.trim();
-    final timerLabel = label.isEmpty ? 'Custom Timer ${_savedTimers.where((t) => t.id != null).length + 1}' : label;
+    final timerLabel = label.isEmpty
+        ? 'Custom Timer ${_savedTimers.where((t) => t.id != null).length + 1}'
+        : label;
     final firestoreService = FirestoreService();
     final messenger = ScaffoldMessenger.of(context);
-    
+
     // Check if we're editing an existing timer or creating a new one
     if (_editingTimerId != null) {
       // Update existing timer in Firebase
@@ -2319,10 +2385,10 @@ class _TimerScreenState extends State<TimerScreen> {
         breakMinutes: _breakMinutes,
         cycles: _iterationCount,
       );
-      
+
       if (success) {
         debugPrint('✅ Timer updated in Firebase: $_editingTimerId');
-        
+
         // Reload timers from Firebase to ensure consistency
         await _loadSavedTimers();
 
@@ -2355,10 +2421,10 @@ class _TimerScreenState extends State<TimerScreen> {
         breakMinutes: _breakMinutes,
         cycles: _iterationCount,
       );
-      
+
       if (timerId != null) {
         debugPrint('✅ Timer saved to Firebase with ID: $timerId');
-        
+
         // Reload timers from Firebase to ensure consistency
         await _loadSavedTimers();
 

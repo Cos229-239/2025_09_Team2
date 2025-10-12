@@ -28,16 +28,17 @@ class TutorSession {
 
   /// Convert to JSON for Firestore storage
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'userId': userId,
-    'subject': subject,
-    'difficulty': difficulty,
-    'messageIds': messageIds,
-    'startTime': Timestamp.fromDate(startTime), // Save as Timestamp for Firestore
-    'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null,
-    'sessionMetrics': sessionMetrics,
-    'isActive': isActive,
-  };
+        'id': id,
+        'userId': userId,
+        'subject': subject,
+        'difficulty': difficulty,
+        'messageIds': messageIds,
+        'startTime':
+            Timestamp.fromDate(startTime), // Save as Timestamp for Firestore
+        'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null,
+        'sessionMetrics': sessionMetrics,
+        'isActive': isActive,
+      };
 
   /// Create from JSON from Firestore
   factory TutorSession.fromJson(Map<String, dynamic> json) {
@@ -47,14 +48,15 @@ class TutorSession {
       subject: json['subject'] as String,
       difficulty: json['difficulty'] as String,
       messageIds: (json['messageIds'] as List?)?.cast<String>() ?? [],
-      startTime: json['startTime'] is Timestamp 
-        ? (json['startTime'] as Timestamp).toDate()
-        : DateTime.parse(json['startTime'] as String), // Support both formats for migration
-      endTime: json['endTime'] != null 
-        ? (json['endTime'] is Timestamp
-            ? (json['endTime'] as Timestamp).toDate()
-            : DateTime.parse(json['endTime'] as String))
-        : null,
+      startTime: json['startTime'] is Timestamp
+          ? (json['startTime'] as Timestamp).toDate()
+          : DateTime.parse(json['startTime']
+              as String), // Support both formats for migration
+      endTime: json['endTime'] != null
+          ? (json['endTime'] is Timestamp
+              ? (json['endTime'] as Timestamp).toDate()
+              : DateTime.parse(json['endTime'] as String))
+          : null,
       sessionMetrics: json['sessionMetrics'] as Map<String, dynamic>? ?? {},
       isActive: json['isActive'] as bool? ?? true,
     );

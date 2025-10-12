@@ -15,7 +15,7 @@ class StudyAnalytics {
   final int totalQuizzesTaken;
   final int currentStreak; // days
   final int longestStreak; // days
-  
+
   // Answer tracking for accurate incremental updates
   final int totalAnswersGiven;
   final int totalCorrectAnswers;
@@ -513,7 +513,7 @@ class AnalyticsCalculator {
         // Improved matching: try direct subject match first, fallback to deck matching
         try {
           final deckId = (quiz as dynamic).deckId;
-          
+
           // First try: Direct subject match (if QuizSession has subject field)
           try {
             final quizSubject = (quiz as dynamic).subject;
@@ -523,12 +523,13 @@ class AnalyticsCalculator {
           } catch (_) {
             // subject field doesn't exist, that's fine - continue to deck matching
           }
-          
+
           // Fallback: Match by deckId if the deck was used in this subject's sessions
-          if (deckId != null && subjectSessionList.any((s) => s.deckId == deckId)) {
+          if (deckId != null &&
+              subjectSessionList.any((s) => s.deckId == deckId)) {
             return true;
           }
-          
+
           return false;
         } catch (e) {
           return false;
@@ -577,7 +578,8 @@ class AnalyticsCalculator {
               if (diffValue <= 2) {
                 difficultyMap['easy'] = (difficultyMap['easy'] ?? 0) + 1;
               } else if (diffValue <= 3) {
-                difficultyMap['moderate'] = (difficultyMap['moderate'] ?? 0) + 1;
+                difficultyMap['moderate'] =
+                    (difficultyMap['moderate'] ?? 0) + 1;
               } else {
                 difficultyMap['hard'] = (difficultyMap['hard'] ?? 0) + 1;
               }
@@ -594,7 +596,9 @@ class AnalyticsCalculator {
           .toList();
 
       final averageResponseTime = responseTimes.isNotEmpty
-          ? responseTimes.reduce((a, b) => a + b) / responseTimes.length / 1000.0 // Convert to seconds
+          ? responseTimes.reduce((a, b) => a + b) /
+              responseTimes.length /
+              1000.0 // Convert to seconds
           : 0.0;
 
       subjectPerformance[subject] = SubjectPerformance(
@@ -677,18 +681,23 @@ class AnalyticsCalculator {
               topicSessionList.length
           : 0.0;
       final avgActivities = topicSessionList.isNotEmpty
-          ? topicSessionList.map((s) => s.activities.length).fold(0, (sum, count) => sum + count) /
+          ? topicSessionList
+                  .map((s) => s.activities.length)
+                  .fold(0, (sum, count) => sum + count) /
               topicSessionList.length
           : 0.0;
 
       // Normalize to 0-1 scale
       final maxFrequency = sessions.length.toDouble();
       final normalizedFrequency = frequency / maxFrequency;
-      final normalizedLength = avgLength > 0 ? (avgLength / 60.0).clamp(0.0, 1.0) : 0.0;
-      final normalizedActivities = avgActivities > 0 ? (avgActivities / 50.0).clamp(0.0, 1.0) : 0.0;
+      final normalizedLength =
+          avgLength > 0 ? (avgLength / 60.0).clamp(0.0, 1.0) : 0.0;
+      final normalizedActivities =
+          avgActivities > 0 ? (avgActivities / 50.0).clamp(0.0, 1.0) : 0.0;
 
-      topicInterest[topic] =
-          (normalizedFrequency * 0.3) + (normalizedLength * 0.3) + (normalizedActivities * 0.4);
+      topicInterest[topic] = (normalizedFrequency * 0.3) +
+          (normalizedLength * 0.3) +
+          (normalizedActivities * 0.4);
     }
 
     // Analyze common mistake patterns
@@ -702,7 +711,8 @@ class AnalyticsCalculator {
       final mistakesByCard = <String, int>{};
       for (final answer in incorrectAnswers) {
         if (answer.cardId != null) {
-          mistakesByCard[answer.cardId!] = (mistakesByCard[answer.cardId!] ?? 0) + 1;
+          mistakesByCard[answer.cardId!] =
+              (mistakesByCard[answer.cardId!] ?? 0) + 1;
         }
       }
 
@@ -714,12 +724,14 @@ class AnalyticsCalculator {
 
       // Create pattern descriptions
       if (frequentMistakes.isNotEmpty) {
-        commonMistakePatterns.add('Repeated errors on ${frequentMistakes.length} cards');
+        commonMistakePatterns
+            .add('Repeated errors on ${frequentMistakes.length} cards');
       }
 
       // Analyze mistake timing
       final recentMistakes = incorrectAnswers
-          .where((a) => a.timestamp.isAfter(DateTime.now().subtract(const Duration(days: 7))))
+          .where((a) => a.timestamp
+              .isAfter(DateTime.now().subtract(const Duration(days: 7))))
           .length;
       final totalMistakes = incorrectAnswers.length;
 
@@ -828,17 +840,18 @@ class AnalyticsCalculator {
       if (weeksWithData.length >= 2) {
         // Calculate linear regression for accuracy trend
         final accuracies = weeksWithData.map((w) => w.averageAccuracy).toList();
-        
+
         // Simple trend calculation: compare first half to second half
         final firstHalf = accuracies.take(accuracies.length ~/ 2).toList();
         final secondHalf = accuracies.skip(accuracies.length ~/ 2).toList();
 
         if (firstHalf.isNotEmpty && secondHalf.isNotEmpty) {
           final firstAvg = firstHalf.reduce((a, b) => a + b) / firstHalf.length;
-          final secondAvg = secondHalf.reduce((a, b) => a + b) / secondHalf.length;
+          final secondAvg =
+              secondHalf.reduce((a, b) => a + b) / secondHalf.length;
 
           final difference = secondAvg - firstAvg;
-          
+
           // Calculate percentage change per week
           if (firstAvg > 0) {
             changeRate = (difference / firstAvg) * 100 / weeksToAnalyze;
@@ -870,7 +883,8 @@ class AnalyticsCalculator {
     if (sessions.isNotEmpty) {
       // Get unique study dates (date only, no time)
       final studyDates = sessions
-          .map((s) => DateTime(s.startTime.year, s.startTime.month, s.startTime.day))
+          .map((s) =>
+              DateTime(s.startTime.year, s.startTime.month, s.startTime.day))
           .toSet()
           .toList()
         ..sort((a, b) => b.compareTo(a)); // Sort descending (newest first)
@@ -884,7 +898,8 @@ class AnalyticsCalculator {
         if (studyDates.first.isAtSameMomentAs(today) ||
             studyDates.first.isAtSameMomentAs(yesterday)) {
           currentStreak = 1;
-          DateTime expectedDate = studyDates.first.subtract(const Duration(days: 1));
+          DateTime expectedDate =
+              studyDates.first.subtract(const Duration(days: 1));
 
           for (int i = 1; i < studyDates.length; i++) {
             if (studyDates[i].isAtSameMomentAs(expectedDate)) {
@@ -901,7 +916,8 @@ class AnalyticsCalculator {
         longestStreak = 1;
 
         for (int i = 1; i < studyDates.length; i++) {
-          final daysDifference = studyDates[i - 1].difference(studyDates[i]).inDays;
+          final daysDifference =
+              studyDates[i - 1].difference(studyDates[i]).inDays;
 
           if (daysDifference == 1) {
             tempStreak++;
@@ -951,11 +967,13 @@ class AnalyticsCalculator {
     final totalAnswers = newAnswers.length;
 
     // Use actual tracked counts for accurate calculation
-    final newTotalAnswersGiven = currentAnalytics.totalAnswersGiven + totalAnswers;
-    final newTotalCorrectAnswers = currentAnalytics.totalCorrectAnswers + newCorrect;
+    final newTotalAnswersGiven =
+        currentAnalytics.totalAnswersGiven + totalAnswers;
+    final newTotalCorrectAnswers =
+        currentAnalytics.totalCorrectAnswers + newCorrect;
 
-    final newOverallAccuracy = newTotalAnswersGiven > 0 
-        ? newTotalCorrectAnswers / newTotalAnswersGiven 
+    final newOverallAccuracy = newTotalAnswersGiven > 0
+        ? newTotalCorrectAnswers / newTotalAnswersGiven
         : currentAnalytics.overallAccuracy;
 
     // Update subject performance for the session's subject
@@ -970,14 +988,15 @@ class AnalyticsCalculator {
         // Update existing subject
         final subjectAnswers = newSession.activities
             .where((a) => a.type == 'answer' && a.wasCorrect != null);
-        final subjectCorrect = subjectAnswers.where((a) => a.wasCorrect == true).length;
-        
+        final subjectCorrect =
+            subjectAnswers.where((a) => a.wasCorrect == true).length;
+
         // Calculate new subject accuracy
         final prevTotal = (currentSubject.totalCards * 0.8).round();
         final prevCorrect = (prevTotal * currentSubject.accuracy).round();
         final newTotal = prevTotal + subjectAnswers.length;
-        final newSubjectAccuracy = newTotal > 0 
-            ? (prevCorrect + subjectCorrect) / newTotal 
+        final newSubjectAccuracy = newTotal > 0
+            ? (prevCorrect + subjectCorrect) / newTotal
             : currentSubject.accuracy;
 
         final newSubjectCards = currentSubject.totalCards +
@@ -993,7 +1012,9 @@ class AnalyticsCalculator {
             .toList();
 
         final newResponseTime = responseTimes.isNotEmpty
-            ? responseTimes.reduce((a, b) => a + b) / responseTimes.length / 1000.0
+            ? responseTimes.reduce((a, b) => a + b) /
+                responseTimes.length /
+                1000.0
             : currentSubject.averageResponseTime;
 
         // Weighted average of old and new response times
@@ -1020,14 +1041,14 @@ class AnalyticsCalculator {
         // Create new subject entry
         final subjectAnswers = newSession.activities
             .where((a) => a.type == 'answer' && a.wasCorrect != null);
-        final subjectCorrect = subjectAnswers.where((a) => a.wasCorrect == true).length;
+        final subjectCorrect =
+            subjectAnswers.where((a) => a.wasCorrect == true).length;
         final subjectAccuracy = subjectAnswers.isNotEmpty
             ? subjectCorrect / subjectAnswers.length
             : 0.0;
 
-        final subjectCards = newSession.activities
-            .where((a) => a.type == 'card_view')
-            .length;
+        final subjectCards =
+            newSession.activities.where((a) => a.type == 'card_view').length;
 
         final responseTimes = newSession.activities
             .where((a) => a.type == 'answer' && a.responseTimeMs != null)
@@ -1035,7 +1056,9 @@ class AnalyticsCalculator {
             .toList();
 
         final avgResponseTime = responseTimes.isNotEmpty
-            ? responseTimes.reduce((a, b) => a + b) / responseTimes.length / 1000.0
+            ? responseTimes.reduce((a, b) => a + b) /
+                responseTimes.length /
+                1000.0
             : 0.0;
 
         updatedSubjectPerformance[subject] = SubjectPerformance(
@@ -1043,7 +1066,8 @@ class AnalyticsCalculator {
           accuracy: subjectAccuracy,
           totalCards: subjectCards,
           totalQuizzes: 0,
-          studyTimeMinutes: newSession.endTime != null ? newSession.durationMinutes : 0,
+          studyTimeMinutes:
+              newSession.endTime != null ? newSession.durationMinutes : 0,
           lastStudied: newSession.startTime,
           recentScores: [],
           difficultyBreakdown: {'easy': 0, 'moderate': 0, 'hard': 0},
@@ -1053,10 +1077,11 @@ class AnalyticsCalculator {
     }
 
     // Update streak if this is a new day
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-    final sessionDate = DateTime(
-        newSession.startTime.year, newSession.startTime.month, newSession.startTime.day);
-    
+    final today =
+        DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final sessionDate = DateTime(newSession.startTime.year,
+        newSession.startTime.month, newSession.startTime.day);
+
     int newCurrentStreak = currentAnalytics.currentStreak;
     int newLongestStreak = currentAnalytics.longestStreak;
 
