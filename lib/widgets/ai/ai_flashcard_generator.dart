@@ -23,7 +23,7 @@ import 'ai_settings_widget.dart';
 class AIFlashcardGenerator extends StatefulWidget {
   final String? initialText;
   final String? initialTopic;
-  
+
   const AIFlashcardGenerator({
     super.key,
     this.initialText,
@@ -110,8 +110,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       debugPrint('Subject: $_selectedSubject');
       debugPrint('Card Count: $_cardCount');
 
-      // Get current user or create default user with selected learning style
-      final user = appState.currentUser ??
+      // Get current user or create default user, then apply selected learning style
+      final baseUser = appState.currentUser ??
           User(
             id: 'generator_user',
             email: 'user@studypals.com',
@@ -122,7 +122,69 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
             ),
           );
 
+      // Create a copy of the user with the selected learning style from the dropdown
+      // This ensures the AI uses the user's chosen style for this generation
+      final user = User(
+        id: baseUser.id,
+        email: baseUser.email,
+        name: baseUser.name,
+        username: baseUser.username,
+        profilePictureUrl: baseUser.profilePictureUrl,
+        phoneNumber: baseUser.phoneNumber,
+        dateOfBirth: baseUser.dateOfBirth,
+        bio: baseUser.bio,
+        location: baseUser.location,
+        school: baseUser.school,
+        major: baseUser.major,
+        graduationYear: baseUser.graduationYear,
+        isEmailVerified: baseUser.isEmailVerified,
+        isPhoneVerified: baseUser.isPhoneVerified,
+        isProfileComplete: baseUser.isProfileComplete,
+        isActive: baseUser.isActive,
+        createdAt: baseUser.createdAt,
+        lastActiveAt: baseUser.lastActiveAt,
+        lastLoginAt: baseUser.lastLoginAt,
+        privacySettings: baseUser.privacySettings,
+        preferences: UserPreferences(
+          learningStyle:
+              _selectedLearningStyle, // Use selected style from dropdown
+          difficultyPreference: baseUser.preferences.difficultyPreference,
+          showHints: baseUser.preferences.showHints,
+          studyStartHour: baseUser.preferences.studyStartHour,
+          studyEndHour: baseUser.preferences.studyEndHour,
+          studyDaysOfWeek: baseUser.preferences.studyDaysOfWeek,
+          maxCardsPerDay: baseUser.preferences.maxCardsPerDay,
+          maxMinutesPerDay: baseUser.preferences.maxMinutesPerDay,
+          breakInterval: baseUser.preferences.breakInterval,
+          breakDuration: baseUser.preferences.breakDuration,
+          autoPlayAudio: baseUser.preferences.autoPlayAudio,
+          cardReviewDelay: baseUser.preferences.cardReviewDelay,
+          studyReminders: baseUser.preferences.studyReminders,
+          achievementNotifications:
+              baseUser.preferences.achievementNotifications,
+          socialNotifications: baseUser.preferences.socialNotifications,
+          petCareReminders: baseUser.preferences.petCareReminders,
+          emailDigest: baseUser.preferences.emailDigest,
+          reminderTime: baseUser.preferences.reminderTime,
+          theme: baseUser.preferences.theme,
+          primaryColor: baseUser.preferences.primaryColor,
+          fontFamily: baseUser.preferences.fontFamily,
+          fontSize: baseUser.preferences.fontSize,
+          animations: baseUser.preferences.animations,
+          soundEffects: baseUser.preferences.soundEffects,
+          language: baseUser.preferences.language,
+          timezone: baseUser.preferences.timezone,
+          offline: baseUser.preferences.offline,
+          autoSync: baseUser.preferences.autoSync,
+          dataRetentionDays: baseUser.preferences.dataRetentionDays,
+        ),
+        loginCount: baseUser.loginCount,
+        metadata: baseUser.metadata,
+      );
+
       debugPrint('User learning style: ${user.preferences.learningStyle}');
+      debugPrint(
+          'Selected learning style from dropdown: $_selectedLearningStyle');
 
       final flashcards = await aiProvider.generateFlashcardsFromText(
         _textController.text.isNotEmpty
@@ -187,13 +249,13 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
       final aiProvider =
           Provider.of<StudyPalsAIProvider>(context, listen: false);
 
-      // Create a sample user for debugging (in production, get from user provider)
+      // Create a sample user for debugging with the selected learning style
       final sampleUser = User(
         id: 'debug_user',
         email: 'debug@studypals.com',
         name: 'Debug User',
         preferences: UserPreferences(
-          learningStyle: 'visual',
+          learningStyle: _selectedLearningStyle, // Use selected learning style
           difficultyPreference: 'moderate',
         ),
       );
@@ -316,14 +378,16 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     'AI Flashcard Generator',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFFD9D9D9), // Dashboard text color
+                          color:
+                              const Color(0xFFD9D9D9), // Dashboard text color
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'AI features are not available. Configure your AI settings to enable automatic flashcard generation.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Color(0xFFB0B0B0)), // Dimmer text color
+                    style: const TextStyle(
+                        color: Color(0xFFB0B0B0)), // Dimmer text color
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
@@ -343,7 +407,8 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
                     icon: const Icon(Icons.settings),
                     label: const Text('Configure AI'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
+                      backgroundColor:
+                          const Color(0xFF6FB8E9), // Dashboard accent color
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -357,311 +422,359 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
           decoration: BoxDecoration(
             color: const Color(0xFF242628), // Dashboard container color
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-              width: 1,
-            ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Icon(
-                      Icons.auto_awesome,
-                      color: const Color(0xFF6FB8E9), // Dashboard accent color
-                      size: 28,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'AI Flashcard Generator',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFD9D9D9), // Dashboard text color
-                              ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Topic input
-                TextField(
-                  controller: _topicController,
-                  style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
-                  decoration: InputDecoration(
-                    labelText: 'Topic or Subject',
-                    labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
-                    hintText: 'e.g., Photosynthesis, World War II, Calculus...',
-                    hintStyle: const TextStyle(color: Color(0xFF808080)),
-                    filled: true,
-                    fillColor: const Color(0xFF1A1A1A),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
-                    ),
-                    prefixIcon: const Icon(Icons.topic, color: Color(0xFF6FB8E9)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Text input for source material
-                TextField(
-                  controller: _textController,
-                  maxLines: 4,
-                  style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
-                  decoration: InputDecoration(
-                    labelText: 'Source Text (Optional)',
-                    labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
-                    hintText:
-                        'Paste notes, textbook excerpts, or any material to generate flashcards from...',
-                    hintStyle: const TextStyle(color: Color(0xFF808080)),
-                    filled: true,
-                    fillColor: const Color(0xFF1A1A1A),
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                    ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
-                    ),
-                    prefixIcon: const Icon(Icons.text_snippet, color: Color(0xFF6FB8E9)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Options row
-                Row(
-                  children: [
-                    // Subject dropdown
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedSubject,
-                        style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
-                        dropdownColor: const Color(0xFF242628), // Dashboard container color
-                        decoration: InputDecoration(
-                          labelText: 'Subject',
-                          labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
-                          filled: true,
-                          fillColor: const Color(0xFF1A1A1A),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
-                          ),
-                        ),
-                        items: _subjects.map((subject) {
-                          return DropdownMenuItem(
-                            value: subject,
-                            child: Text(subject, style: const TextStyle(color: Color(0xFFD9D9D9))),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedSubject = value;
-                            });
-                          }
-                        },
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Topic input (removed duplicate header since dialog has one)
+                  TextField(
+                    controller: _topicController,
+                    style: const TextStyle(
+                        color: Color(0xFFD9D9D9),
+                        fontSize: 14), // Dashboard text color
+                    decoration: InputDecoration(
+                      labelText: 'Topic or Subject',
+                      labelStyle: const TextStyle(
+                          color: Color(0xFFB0B0B0), fontSize: 12),
+                      hintText: 'e.g., Photosynthesis, World War II...',
+                      hintStyle: const TextStyle(
+                          color: Color(0xFF808080), fontSize: 12),
+                      filled: true,
+                      fillColor: const Color(0xFF1A1A1A),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
                       ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                      ),
+                      prefixIcon: const Icon(Icons.topic,
+                          color: Color(0xFF6FB8E9), size: 20),
                     ),
-                    const SizedBox(width: 16),
+                  ),
+                  const SizedBox(height: 4),
 
-                    // Learning style dropdown
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedLearningStyle,
-                        style: const TextStyle(color: Color(0xFFD9D9D9)), // Dashboard text color
-                        dropdownColor: const Color(0xFF242628), // Dashboard container color
-                        decoration: InputDecoration(
-                          labelText: 'Learning Style',
-                          labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
-                          filled: true,
-                          fillColor: const Color(0xFF1A1A1A),
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
-                          ),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF6FB8E9), width: 2),
-                          ),
-                        ),
-                        items: _learningStyles.map((style) {
-                          return DropdownMenuItem(
-                            value: style,
-                            child: Text(
-                              style.substring(0, 1).toUpperCase() + style.substring(1),
-                              style: const TextStyle(color: Color(0xFFD9D9D9)),
+                  // Text input for source material
+                  TextField(
+                    controller: _textController,
+                    maxLines: 1,
+                    style: const TextStyle(
+                        color: Color(0xFFD9D9D9),
+                        fontSize: 14), // Dashboard text color
+                    decoration: InputDecoration(
+                      labelText: 'Source Text (Optional)',
+                      labelStyle: const TextStyle(
+                          color: Color(0xFFB0B0B0), fontSize: 12),
+                      hintText: 'Paste notes or material...',
+                      hintStyle: const TextStyle(
+                          color: Color(0xFF808080), fontSize: 12),
+                      filled: true,
+                      fillColor: const Color(0xFF1A1A1A),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide:
+                            BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                      ),
+                      prefixIcon: const Icon(Icons.text_snippet,
+                          color: Color(0xFF6FB8E9), size: 20),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Options row
+                  Row(
+                    children: [
+                      // Subject dropdown
+                      Flexible(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _selectedSubject,
+                          style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 14), // Dashboard text color
+                          dropdownColor: const Color(
+                              0xFF242628), // Dashboard container color
+                          decoration: InputDecoration(
+                            labelText: 'Subject',
+                            labelStyle: const TextStyle(
+                                color: Color(0xFFB0B0B0), fontSize: 12),
+                            filled: true,
+                            fillColor: const Color(0xFF1A1A1A),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: const Color(0xFF6FB8E9)
+                                      .withValues(alpha: 0.3)),
                             ),
-                          );
-                        }).toList(),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: const Color(0xFF6FB8E9)
+                                      .withValues(alpha: 0.3)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: Color(0xFF6FB8E9), width: 2),
+                            ),
+                          ),
+                          items: _subjects.map((subject) {
+                            return DropdownMenuItem(
+                              value: subject,
+                              child: Text(subject,
+                                  style: const TextStyle(
+                                      color: Color(0xFFD9D9D9), fontSize: 14)),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedSubject = value;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Learning style dropdown
+                      Flexible(
+                        flex: 1,
+                        child: DropdownButtonFormField<String>(
+                          initialValue: _selectedLearningStyle,
+                          style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontSize: 14), // Dashboard text color
+                          dropdownColor: const Color(
+                              0xFF242628), // Dashboard container color
+                          decoration: InputDecoration(
+                            labelText: 'Learning Style',
+                            labelStyle: const TextStyle(
+                                color: Color(0xFFB0B0B0), fontSize: 12),
+                            filled: true,
+                            fillColor: const Color(0xFF1A1A1A),
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 8),
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: const Color(0xFF6FB8E9)
+                                      .withValues(alpha: 0.3)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: const Color(0xFF6FB8E9)
+                                      .withValues(alpha: 0.3)),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(
+                                  color: Color(0xFF6FB8E9), width: 2),
+                            ),
+                          ),
+                          items: _learningStyles.map((style) {
+                            return DropdownMenuItem(
+                              value: style,
+                              child: Text(
+                                style.substring(0, 1).toUpperCase() +
+                                    style.substring(1),
+                                style: const TextStyle(
+                                    color: Color(0xFFD9D9D9), fontSize: 14),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() {
+                                _selectedLearningStyle = value;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Card count slider
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Cards to Generate: $_cardCount',
+                        style: const TextStyle(
+                          color: Color(0xFFD9D9D9),
+                          fontSize: 13,
+                        ),
+                      ),
+                      Slider(
+                        value: _cardCount.toDouble(),
+                        min: 3,
+                        max: 15,
+                        divisions: 12,
+                        activeColor:
+                            const Color(0xFF6FB8E9), // Dashboard accent color
+                        inactiveColor:
+                            const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                         onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedLearningStyle = value;
-                            });
-                          }
+                          setState(() {
+                            _cardCount = value.round();
+                          });
                         },
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
+                    ],
+                  ),
 
-                // Card count slider
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Cards to Generate: $_cardCount',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: const Color(0xFFD9D9D9), // Dashboard text color
+                  // Error message
+                  if (_generationError != null)
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF5350)
+                            .withValues(alpha: 0.1), // Red with transparency
+                        border: Border.all(
+                            color:
+                                const Color(0xFFEF5350).withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline,
+                              color: Color(0xFFEF5350), size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _generationError!,
+                              style: const TextStyle(
+                                  color: Color(0xFFEF5350), fontSize: 13),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Slider(
-                      value: _cardCount.toDouble(),
-                      min: 3,
-                      max: 15,
-                      divisions: 12,
-                      activeColor: const Color(0xFF6FB8E9), // Dashboard accent color
-                      inactiveColor: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                      onChanged: (value) {
-                        setState(() {
-                          _cardCount = value.round();
-                        });
-                      },
-                    ),
-                  ],
-                ),
 
-                // Error message
-                if (_generationError != null)
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF5350).withValues(alpha: 0.1), // Red with transparency
-                      border: Border.all(color: const Color(0xFFEF5350).withValues(alpha: 0.3)),
-                      borderRadius: BorderRadius.circular(8),
+                  // Generate button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: isLoading ? null : _generateFlashcards,
+                      icon: isLoading
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.auto_awesome, size: 16),
+                      label: Text(
+                        isLoading ? 'Generating...' : 'Generate Flashcards',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color(0xFF6FB8E9), // Dashboard accent color
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                      ),
                     ),
-                    child: Row(
+                  ),
+
+                  // Debug button
+                  const SizedBox(height: 2),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: isLoading ? null : _debugAI,
+                      icon: const Icon(Icons.bug_report, size: 16),
+                      label: const Text('Debug AI Response',
+                          style: TextStyle(fontSize: 13)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            const Color(0xFF6FB8E9), // Dashboard accent color
+                        side: const BorderSide(
+                            color: Color(0xFF6FB8E9), width: 1),
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                      ),
+                    ),
+                  ),
+
+                  // Tips
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6FB8E9).withValues(
+                          alpha: 0.1), // Dashboard accent with transparency
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.error_outline, color: Color(0xFFEF5350)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _generationError!,
-                            style: const TextStyle(color: Color(0xFFEF5350)),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_outline,
+                              size: 14,
+                              color:
+                                  Color(0xFF6FB8E9), // Dashboard accent color
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Tips:',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                color:
+                                    Color(0xFF6FB8E9), // Dashboard accent color
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          '• Be specific with your topic for better results\n'
+                          '• Paste text from notes or textbooks for targeted cards\n'
+                          '• Choose the right subject to get relevant content\n'
+                          '• Start with fewer cards and generate more if needed',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFFD9D9D9), // Dashboard text color
                           ),
                         ),
                       ],
                     ),
                   ),
-
-                // Generate button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: isLoading ? null : _generateFlashcards,
-                    icon: isLoading
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : const Icon(Icons.auto_awesome),
-                    label: Text(
-                        isLoading ? 'Generating...' : 'Generate Flashcards'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-
-                // Debug button
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: isLoading ? null : _debugAI,
-                    icon: const Icon(Icons.bug_report),
-                    label: const Text('Debug AI Response'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF6FB8E9), // Dashboard accent color
-                      side: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                  ),
-                ),
-
-                // Tips
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.1), // Dashboard accent with transparency
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.lightbulb_outline,
-                            size: 16,
-                            color: Color(0xFF6FB8E9), // Dashboard accent color
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Tips:',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF6FB8E9), // Dashboard accent color
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        '• Be specific with your topic for better results\n'
-                        '• Paste text from notes or textbooks for targeted cards\n'
-                        '• Choose the right subject to get relevant content\n'
-                        '• Start with fewer cards and generate more if needed',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFFD9D9D9), // Dashboard text color
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
