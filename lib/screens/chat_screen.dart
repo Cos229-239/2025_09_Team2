@@ -194,12 +194,13 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           ElevatedButton.icon(
             onPressed: () async {
-              debugPrint('🎯 Answer button pressed - starting call answer flow');
-              
+              debugPrint(
+                  '🎯 Answer button pressed - starting call answer flow');
+
               // Store the call details before any async operations
               final callId = _webrtcService.currentCallId;
               final callType = _webrtcService.currentCallType ?? CallType.audio;
-              
+
               if (callId == null) {
                 debugPrint('❌ No call ID found - cannot answer');
                 Navigator.pop(context);
@@ -218,7 +219,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 if (mounted && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Failed to answer call. Please check your camera and microphone permissions.'),
+                      content: Text(
+                          'Failed to answer call. Please check your camera and microphone permissions.'),
                       backgroundColor: Colors.red,
                       duration: Duration(seconds: 5),
                     ),
@@ -235,10 +237,10 @@ class _ChatScreenState extends State<ChatScreen> {
               // 3. Widget tree is in a stable state
               if (mounted && context.mounted) {
                 await Future.delayed(const Duration(milliseconds: 100));
-                
+
                 if (mounted && context.mounted) {
                   debugPrint('🧭 Navigating to CallScreen...');
-                  
+
                   // Navigate to call screen with the answered call
                   Navigator.push(
                     context,
@@ -601,7 +603,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 12,
@@ -1308,9 +1312,9 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () async {
               final navigator = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
-              
+
               navigator.pop();
-              
+
               // Show loading indicator
               if (mounted) {
                 messenger.showSnackBar(
@@ -1332,7 +1336,8 @@ class _ChatScreenState extends State<ChatScreen> {
               }
 
               // Clear chat
-              final success = await widget.socialService.clearChat(widget.otherUser.id);
+              final success =
+                  await widget.socialService.clearChat(widget.otherUser.id);
 
               if (mounted) {
                 messenger.showSnackBar(
@@ -1373,7 +1378,7 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () async {
               final navigator = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
-              
+
               navigator.pop();
 
               // Show loading indicator
@@ -1397,7 +1402,8 @@ class _ChatScreenState extends State<ChatScreen> {
               }
 
               // Remove friend
-              final success = await widget.socialService.removeFriend(widget.otherUser.id);
+              final success =
+                  await widget.socialService.removeFriend(widget.otherUser.id);
 
               if (mounted) {
                 messenger.showSnackBar(
@@ -1423,7 +1429,8 @@ class _ChatScreenState extends State<ChatScreen> {
   /// Show confirmation dialog for blocking user
   void _showBlockUserDialog() async {
     // Check if user is already blocked
-    final isBlocked = await widget.socialService.isUserBlocked(widget.otherUser.id);
+    final isBlocked =
+        await widget.socialService.isUserBlocked(widget.otherUser.id);
 
     if (!mounted) return;
 
@@ -1445,7 +1452,7 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () async {
               final navigator = Navigator.of(context);
               final messenger = ScaffoldMessenger.of(context);
-              
+
               navigator.pop();
 
               // Show loading indicator
@@ -1460,7 +1467,9 @@ class _ChatScreenState extends State<ChatScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                         const SizedBox(width: 16),
-                        Text(isBlocked ? 'Unblocking user...' : 'Blocking user...'),
+                        Text(isBlocked
+                            ? 'Unblocking user...'
+                            : 'Blocking user...'),
                       ],
                     ),
                     duration: const Duration(seconds: 2),

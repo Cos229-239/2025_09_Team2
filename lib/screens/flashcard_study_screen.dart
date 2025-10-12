@@ -319,7 +319,9 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
           children: [
             Icon(
               results.isPerfectScore ? Icons.star : Icons.quiz,
-              color: results.isPerfectScore ? Colors.amber : const Color(0xFF6FB8E9),
+              color: results.isPerfectScore
+                  ? Colors.amber
+                  : const Color(0xFF6FB8E9),
             ),
             const SizedBox(width: 8),
             const Text(
@@ -705,12 +707,12 @@ class _FlashcardStudyScreenState extends State<FlashcardStudyScreen> {
     // Check if user is visual learner
     final bool isVisualLearner =
         user?.preferences.learningStyle.toLowerCase() == 'visual';
-    
+
     // Check if card was created for visual learning style
     final bool isVisualCard = _currentCard.visualMetadata != null &&
         _currentCard.visualMetadata!.isNotEmpty &&
         (_currentCard.visualMetadata!['learningStyle'] == 'visual' ||
-         _currentCard.visualMetadata!['learningStyle'] == 'adaptive');
+            _currentCard.visualMetadata!['learningStyle'] == 'adaptive');
 
     // Use visual widget only for visual learners or cards created for visual/adaptive learning
     if (isVisualLearner || isVisualCard) {

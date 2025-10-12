@@ -223,7 +223,7 @@ class TaskProvider extends ChangeNotifier {
 
     // Use the existing updateTask method to save the status change
     await updateTask(completedTask);
-    
+
     // Log activity
     try {
       final activityService = ActivityService();

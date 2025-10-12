@@ -48,10 +48,10 @@ class MathEngine {
     try {
       final issues = <String>[];
       final calculations = <String, dynamic>{};
-      
+
       // Extract mathematical expressions
       final expressions = _extractMathExpressions(text);
-      
+
       if (expressions.isEmpty) {
         return MathValidationResult(valid: true);
       }
@@ -67,7 +67,7 @@ class MathEngine {
         try {
           final result = _evaluateExpression(expr);
           calculations[expr] = result;
-          
+
           // Check if the answer in text matches calculated result
           final textAnswer = _findAnswerNear(text, expr);
           if (textAnswer != null) {
@@ -115,7 +115,7 @@ class MathEngine {
     try {
       // Parse equation (format: "expression = value" or just "expression")
       final parts = equation.split('=').map((p) => p.trim()).toList();
-      
+
       if (parts.length == 1) {
         // Just an expression to evaluate
         final result = _evaluateExpression(parts[0]);
@@ -129,7 +129,7 @@ class MathEngine {
         // Equation to solve
         final left = parts[0];
         final right = parts[1];
-        
+
         steps.add(MathStep(
           description: 'Original equation',
           expression: '$left = $right',
@@ -141,7 +141,7 @@ class MathEngine {
         try {
           final leftResult = _evaluateExpression(left);
           final rightResult = _evaluateExpression(right);
-          
+
           steps.add(MathStep(
             description: 'Evaluate left side',
             expression: left,
@@ -166,7 +166,8 @@ class MathEngine {
               description: 'Verification',
               expression: '$leftResult ≠ $rightResult',
               result: false,
-              explanation: 'Sides are not equal - equation may need solving for a variable',
+              explanation:
+                  'Sides are not equal - equation may need solving for a variable',
             ));
           }
         } catch (e) {
@@ -181,7 +182,6 @@ class MathEngine {
 
       developer.log('Generated ${steps.length} solution steps',
           name: 'MathEngine');
-      
     } catch (e) {
       developer.log('Error in solveAndShowSteps: $e',
           name: 'MathEngine', error: e);
@@ -199,7 +199,7 @@ class MathEngine {
   /// Extract mathematical expressions from text
   static List<String> _extractMathExpressions(String text) {
     final expressions = <String>[];
-    
+
     // Pattern for basic arithmetic expressions
     final patterns = [
       RegExp(r'\b(\d+\.?\d*)\s*([+\-*/^])\s*(\d+\.?\d*)\b'),
@@ -224,7 +224,8 @@ class MathEngine {
   static dynamic _evaluateExpression(String expr) {
     try {
       // Clean expression
-      var cleaned = expr.trim()
+      var cleaned = expr
+          .trim()
           .replaceAll('×', '*')
           .replaceAll('÷', '/')
           .replaceAll('^', '**'); // Power operator
@@ -252,27 +253,29 @@ class MathEngine {
   static double _simpleEval(String expr) {
     // Remove whitespace
     expr = expr.replaceAll(RegExp(r'\s+'), '');
-    
+
     // Handle parentheses recursively
     while (expr.contains('(')) {
       final openIdx = expr.lastIndexOf('(');
       final closeIdx = expr.indexOf(')', openIdx);
       if (closeIdx == -1) throw FormatException('Unmatched parentheses');
-      
+
       final innerExpr = expr.substring(openIdx + 1, closeIdx);
       final result = _simpleEval(innerExpr);
-      expr = expr.substring(0, openIdx) + result.toString() + expr.substring(closeIdx + 1);
+      expr = expr.substring(0, openIdx) +
+          result.toString() +
+          expr.substring(closeIdx + 1);
     }
-    
+
     // Handle power operations first
     expr = _handlePowerOperations(expr);
-    
+
     // Handle multiplication and division
     expr = _handleMultDiv(expr);
-    
+
     // Handle addition and subtraction
     expr = _handleAddSub(expr);
-    
+
     return double.parse(expr);
   }
 
@@ -281,14 +284,14 @@ class MathEngine {
     while (expr.contains('**')) {
       final match = RegExp(r'(-?\d+\.?\d*)\*\*(-?\d+\.?\d*)').firstMatch(expr);
       if (match == null) break;
-      
+
       final base = double.parse(match.group(1)!);
       final exp = double.parse(match.group(2)!);
       final result = math.pow(base, exp);
-      
-      expr = expr.substring(0, match.start) + 
-             result.toString() + 
-             expr.substring(match.end);
+
+      expr = expr.substring(0, match.start) +
+          result.toString() +
+          expr.substring(match.end);
     }
     return expr;
   }
@@ -296,18 +299,19 @@ class MathEngine {
   /// Handle multiplication and division
   static String _handleMultDiv(String expr) {
     while (expr.contains('*') || expr.contains('/')) {
-      final match = RegExp(r'(-?\d+\.?\d*)([*/])(-?\d+\.?\d*)').firstMatch(expr);
+      final match =
+          RegExp(r'(-?\d+\.?\d*)([*/])(-?\d+\.?\d*)').firstMatch(expr);
       if (match == null) break;
-      
+
       final a = double.parse(match.group(1)!);
       final op = match.group(2)!;
       final b = double.parse(match.group(3)!);
-      
+
       final result = op == '*' ? a * b : a / b;
-      
-      expr = expr.substring(0, match.start) + 
-             result.toString() + 
-             expr.substring(match.end);
+
+      expr = expr.substring(0, match.start) +
+          result.toString() +
+          expr.substring(match.end);
     }
     return expr;
   }
@@ -315,18 +319,19 @@ class MathEngine {
   /// Handle addition and subtraction
   static String _handleAddSub(String expr) {
     while (expr.contains('+') || RegExp(r'\d-').hasMatch(expr)) {
-      final match = RegExp(r'(-?\d+\.?\d*)([+\-])(-?\d+\.?\d*)').firstMatch(expr);
+      final match =
+          RegExp(r'(-?\d+\.?\d*)([+\-])(-?\d+\.?\d*)').firstMatch(expr);
       if (match == null) break;
-      
+
       final a = double.parse(match.group(1)!);
       final op = match.group(2)!;
       final b = double.parse(match.group(3)!);
-      
+
       final result = op == '+' ? a + b : a - b;
-      
-      expr = expr.substring(0, match.start) + 
-             result.toString() + 
-             expr.substring(match.end);
+
+      expr = expr.substring(0, match.start) +
+          result.toString() +
+          expr.substring(match.end);
     }
     return expr;
   }
@@ -334,15 +339,14 @@ class MathEngine {
   /// Replace math function names with evaluable expressions
   static String _replaceMathFunctions(String expr) {
     var result = expr;
-    
+
     // Square root
     result = result.replaceAllMapped(
-        RegExp(r'sqrt\(([^)]+)\)'),
-        (m) => 'pow(${m.group(1)}, 0.5)');
-    
+        RegExp(r'sqrt\(([^)]+)\)'), (m) => 'pow(${m.group(1)}, 0.5)');
+
     // Power
     result = result.replaceAll('**', '^');
-    
+
     return result;
   }
 
@@ -354,7 +358,7 @@ class MathEngine {
     // Look for "= number" pattern after expression
     final afterExpr = text.substring(exprIndex + expression.length);
     final answerMatch = RegExp(r'=\s*(-?\d+\.?\d*)').firstMatch(afterExpr);
-    
+
     return answerMatch?.group(1);
   }
 
@@ -362,11 +366,11 @@ class MathEngine {
   static bool _answersMatch(String answer1, String answer2) {
     final num1 = double.tryParse(answer1);
     final num2 = double.tryParse(answer2);
-    
+
     if (num1 != null && num2 != null) {
       return (num1 - num2).abs() < 0.0001; // Tolerance for floating point
     }
-    
+
     return answer1.trim() == answer2.trim();
   }
 

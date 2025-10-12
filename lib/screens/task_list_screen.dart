@@ -72,7 +72,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   ),
                 ),
               ),
-              
+
               // Create button at bottom matching notes page style
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
@@ -104,7 +104,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
   List<Task> _getTodayTasks(List<Task> allTasks) {
     final today = DateTime.now();
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      if (task.dueAt == null || task.status == TaskStatus.completed)
+        return false;
       return task.dueAt!.year == today.year &&
           task.dueAt!.month == today.month &&
           task.dueAt!.day == today.day;
@@ -116,16 +117,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final today = DateTime.now();
     final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
-    
+
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
+      if (task.dueAt == null || task.status == TaskStatus.completed)
+        return false;
       // Exclude today's tasks as they're shown in the today section
       final isToday = task.dueAt!.year == today.year &&
           task.dueAt!.month == today.month &&
           task.dueAt!.day == today.day;
       if (isToday) return false;
-      
-      return task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+
+      return task.dueAt!
+              .isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
           task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
     }).toList();
   }
@@ -135,18 +138,21 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final today = DateTime.now();
     final startOfMonth = DateTime(today.year, today.month, 1);
     final endOfMonth = DateTime(today.year, today.month + 1, 0);
-    
+
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed) return false;
-      
+      if (task.dueAt == null || task.status == TaskStatus.completed)
+        return false;
+
       // Exclude tasks already shown in today and this week sections
       final startOfWeek = today.subtract(Duration(days: today.weekday - 1));
       final endOfWeek = startOfWeek.add(const Duration(days: 6));
-      final isInCurrentWeek = task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-          task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
+      final isInCurrentWeek =
+          task.dueAt!.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+              task.dueAt!.isBefore(endOfWeek.add(const Duration(days: 1)));
       if (isInCurrentWeek) return false;
-      
-      return task.dueAt!.isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
+
+      return task.dueAt!
+              .isAfter(startOfMonth.subtract(const Duration(days: 1))) &&
           task.dueAt!.isBefore(endOfMonth.add(const Duration(days: 1)));
     }).toList();
   }
@@ -197,7 +203,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        
+
         // Task list or empty message
         if (tasks.isEmpty)
           Container(
@@ -277,7 +283,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Task content
                 Expanded(
                   child: Column(
@@ -301,20 +307,25 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         Wrap(
                           spacing: 6,
                           runSpacing: 4,
-                          children: task.tags.take(3).map((tag) => Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              tag,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6FB8E9),
-                              ),
-                            ),
-                          )).toList(),
+                          children: task.tags
+                              .take(3)
+                              .map((tag) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6FB8E9)
+                                          .withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      tag,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Color(0xFF6FB8E9),
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
                         ),
                       ],
                       if (task.dueAt != null) ...[
@@ -340,7 +351,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                     ],
                   ),
                 ),
-                
+
                 // More options menu
                 PopupMenuButton<String>(
                   onSelected: (value) {
@@ -421,7 +432,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final newStatus = task.status == TaskStatus.completed
         ? TaskStatus.pending
         : TaskStatus.completed;
-    
+
     // Create updated task
     final updatedTask = Task(
       id: task.id,
@@ -434,7 +445,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
       linkedNoteId: task.linkedNoteId,
       linkedDeckId: task.linkedDeckId,
     );
-    
+
     provider.updateTask(updatedTask);
   }
 
@@ -449,11 +460,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Estimated time: ${task.estMinutes} minutes'),
-            if (task.dueAt != null)
-              Text('Due: ${_formatDueDate(task.dueAt!)}'),
+            if (task.dueAt != null) Text('Due: ${_formatDueDate(task.dueAt!)}'),
             Text('Priority: ${_getPriorityText(task.priority)}'),
-            if (task.tags.isNotEmpty)
-              Text('Tags: ${task.tags.join(', ')}'),
+            if (task.tags.isNotEmpty) Text('Tags: ${task.tags.join(', ')}'),
           ],
         ),
         actions: [
@@ -483,7 +492,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
   /// Edit task
   void _editTask(Task task) {
     final titleController = TextEditingController(text: task.title);
-    final estMinutesController = TextEditingController(text: task.estMinutes.toString());
+    final estMinutesController =
+        TextEditingController(text: task.estMinutes.toString());
     final tagsController = TextEditingController(text: task.tags.join(', '));
     DateTime? selectedDueDate = task.dueAt;
     int selectedPriority = task.priority;
@@ -570,7 +580,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             context: context,
                             initialDate: selectedDueDate ?? DateTime.now(),
                             firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
                           );
                           if (date != null) {
                             setState(() {
@@ -599,10 +610,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   return;
                 }
 
-                final estMinutes = int.tryParse(estMinutesController.text.trim());
+                final estMinutes =
+                    int.tryParse(estMinutesController.text.trim());
                 if (estMinutes == null || estMinutes <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a valid time estimate')),
+                    const SnackBar(
+                        content: Text('Please enter a valid time estimate')),
                   );
                   return;
                 }
@@ -621,9 +634,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   dueAt: selectedDueDate,
                 );
 
-                Provider.of<TaskProvider>(context, listen: false).updateTask(updatedTask);
+                Provider.of<TaskProvider>(context, listen: false)
+                    .updateTask(updatedTask);
                 Navigator.pop(context);
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Task updated successfully'),
@@ -653,7 +667,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ),
           TextButton(
             onPressed: () {
-              Provider.of<TaskProvider>(context, listen: false).deleteTask(task.id);
+              Provider.of<TaskProvider>(context, listen: false)
+                  .deleteTask(task.id);
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Task deleted')),

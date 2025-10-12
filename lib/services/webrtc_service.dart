@@ -264,11 +264,11 @@ class WebRTCService {
         'offerToReceiveAudio': true,
         'offerToReceiveVideo': callType == CallType.video,
       };
-      
+
       debugPrint('📝 Creating offer with options: $offerOptions');
       RTCSessionDescription offer =
           await _peerConnection!.createOffer(offerOptions);
-      
+
       // CRITICAL: Set local description BEFORE sending to signaling
       await _peerConnection!.setLocalDescription(offer);
       debugPrint('✅ Set local description (offer)');
@@ -431,11 +431,12 @@ class WebRTCService {
 
       // Set remote description from offer
       final offerData = callData['offer'];
-      final offerSDP = RTCSessionDescription(offerData['sdp'], offerData['type']);
-      
+      final offerSDP =
+          RTCSessionDescription(offerData['sdp'], offerData['type']);
+
       debugPrint('📥 Received offer from caller, setting remote description');
       _logSDPMediaLines(offerSDP.sdp, 'RECEIVED OFFER');
-      
+
       await _peerConnection!.setRemoteDescription(offerSDP);
 
       // Mark remote description as set
@@ -447,11 +448,11 @@ class WebRTCService {
         'offerToReceiveAudio': true,
         'offerToReceiveVideo': _currentCallType == CallType.video,
       };
-      
+
       debugPrint('📝 Creating answer with options: $answerOptions');
       RTCSessionDescription answer =
           await _peerConnection!.createAnswer(answerOptions);
-      
+
       // CRITICAL: Set local description BEFORE sending to signaling
       await _peerConnection!.setLocalDescription(answer);
       debugPrint('✅ Set local description (answer)');
@@ -510,9 +511,10 @@ class WebRTCService {
         final answer =
             RTCSessionDescription(answerData['sdp'], answerData['type']);
 
-        debugPrint('📥 Received answer from callee, setting remote description');
+        debugPrint(
+            '📥 Received answer from callee, setting remote description');
         _logSDPMediaLines(answer.sdp, 'RECEIVED ANSWER');
-        
+
         await _peerConnection!.setRemoteDescription(answer);
 
         // Mark remote description as set
@@ -971,21 +973,21 @@ class WebRTCService {
   /// This helps identify if audio/video tracks are properly negotiated
   void _logSDPMediaLines(String? sdp, String type) {
     if (sdp == null) return;
-    
+
     debugPrint('🔍 Analyzing $type SDP:');
     final lines = sdp.split('\n');
-    
+
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       // Log media lines (m=audio, m=video)
       if (line.startsWith('m=')) {
         debugPrint('  📊 Media: $line');
-        
+
         // Check next few lines for direction attributes
         for (var j = i + 1; j < i + 10 && j < lines.length; j++) {
           final nextLine = lines[j].trim();
-          
+
           // Direction attributes: a=sendrecv, a=sendonly, a=recvonly, a=inactive
           if (nextLine.startsWith('a=sendrecv') ||
               nextLine.startsWith('a=sendonly') ||
@@ -994,7 +996,7 @@ class WebRTCService {
             debugPrint('    🎯 Direction: $nextLine');
             break;
           }
-          
+
           // Stop at next media line
           if (nextLine.startsWith('m=')) break;
         }

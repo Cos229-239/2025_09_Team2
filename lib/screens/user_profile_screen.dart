@@ -19,29 +19,31 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isLoadingAction = false;
   int? _friendCount; // Store the actual friend count
   int? _mutualFriendsCount; // Store the mutual friends count
-  
+
   @override
   void initState() {
     super.initState();
     _loadFriendCount();
     _loadMutualFriendsCount();
   }
-  
+
   /// Load the friend count for this user
   Future<void> _loadFriendCount() async {
-    final count = await widget.socialService.getFriendCountForUser(widget.userProfile.id);
+    final count =
+        await widget.socialService.getFriendCountForUser(widget.userProfile.id);
     if (mounted) {
       setState(() {
         _friendCount = count;
       });
     }
   }
-  
+
   /// Load the mutual friends count
   Future<void> _loadMutualFriendsCount() async {
     // Only load mutual friends if viewing someone else's profile
     if (!_isCurrentUser()) {
-      final count = await widget.socialService.getMutualFriendsCount(widget.userProfile.id);
+      final count = await widget.socialService
+          .getMutualFriendsCount(widget.userProfile.id);
       if (mounted) {
         setState(() {
           _mutualFriendsCount = count;
@@ -287,7 +289,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     }
 
     final isFriend = _isFriend();
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -328,7 +330,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
           const SizedBox(height: 12),
 
-            if (widget.userProfile.bio != null &&
+          if (widget.userProfile.bio != null &&
               widget.userProfile.bio!.isNotEmpty)
             Container(
               width: double.infinity,
@@ -363,7 +365,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   fontStyle: FontStyle.italic,
                 ),
               ),
-            ),          const SizedBox(height: 16),
+            ),
+          const SizedBox(height: 16),
 
           // Join date and mutual friends
           Row(
@@ -411,7 +414,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         ],
       );
     }
-    
+
     if (_mutualFriendsCount == 0) {
       // No mutual friends, hide the widget
       return const SizedBox.shrink();
@@ -546,7 +549,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             children: widget.userProfile.interests
                 .map((interest) => Chip(
                       label: Text(interest),
-                      backgroundColor: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                      backgroundColor:
+                          const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                       labelStyle: const TextStyle(
                         color: Color(0xFF6FB8E9),
                       ),
@@ -640,14 +644,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   bool _isFriend() {
     final currentUserId = widget.socialService.currentUserProfile?.id;
     if (currentUserId == null) return false;
-    
+
     // Check if there's an accepted friendship where:
     // - Current user sent request (userId == currentUserId) AND friend received it (friendId == viewedUserId)
     // - OR friend sent request (userId == viewedUserId) AND current user received it (friendId == currentUserId)
     return widget.socialService.friends.any((friendship) =>
-      (friendship.userId == currentUserId && friendship.friendId == widget.userProfile.id) ||
-      (friendship.userId == widget.userProfile.id && friendship.friendId == currentUserId)
-    );
+        (friendship.userId == currentUserId &&
+            friendship.friendId == widget.userProfile.id) ||
+        (friendship.userId == widget.userProfile.id &&
+            friendship.friendId == currentUserId));
   }
 
   String _formatJoinDate(DateTime date) {

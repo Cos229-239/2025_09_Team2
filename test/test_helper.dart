@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// Setup test environment
 Future<void> setupTestEnvironment() async {
   TestWidgetsFlutterBinding.ensureInitialized();
-  
+
   // Note: Most services don't require Firebase for unit testing
   // They work with in-memory data structures
 }

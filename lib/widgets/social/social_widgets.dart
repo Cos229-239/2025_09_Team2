@@ -139,9 +139,12 @@ class UserProfileCard extends StatelessWidget {
                                 color: Colors.amber, size: 16),
                             Text(
                               '${profile.totalXP}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFFD9D9D9),
-                              ),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
+                                    color: const Color(0xFFD9D9D9),
+                                  ),
                             ),
                           ],
                         ),
@@ -157,8 +160,8 @@ class UserProfileCard extends StatelessWidget {
                 Text(
                   profile.bio!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFFD9D9D9),
-                  ),
+                        color: const Color(0xFFD9D9D9),
+                      ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -178,7 +181,8 @@ class UserProfileCard extends StatelessWidget {
                         color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.5)),
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         interest,
@@ -321,8 +325,8 @@ class FriendRequestCard extends StatelessWidget {
                 child: Text(
                   friendship.requestMessage!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFFD9D9D9),
-                  ),
+                        color: const Color(0xFFD9D9D9),
+                      ),
                 ),
               ),
             ],
@@ -467,8 +471,8 @@ class StudyGroupCard extends StatelessWidget {
               Text(
                 group.description,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFFD9D9D9),
-                ),
+                      color: const Color(0xFFD9D9D9),
+                    ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -487,7 +491,8 @@ class StudyGroupCard extends StatelessWidget {
                         color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.5)),
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         subject,

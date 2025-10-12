@@ -63,10 +63,12 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search flashcard decks...',
                   hintStyle: const TextStyle(color: Color(0xFF888888)),
-                  prefixIcon: const Icon(Icons.search, color: Color(0xFF6FB8E9)),
+                  prefixIcon:
+                      const Icon(Icons.search, color: Color(0xFF6FB8E9)),
                   suffixIcon: _searchQuery.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, color: Color(0xFF888888)),
+                          icon:
+                              const Icon(Icons.clear, color: Color(0xFF888888)),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {
@@ -104,13 +106,13 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 },
               ),
             ),
-            
+
             // Deck list
             Expanded(
               child: Consumer<DeckProvider>(
                 builder: (context, deckProvider, child) {
                   final allDecks = deckProvider.decks;
-                  
+
                   // Filter decks based on search query
                   final filteredDecks = _searchQuery.isEmpty
                       ? allDecks
@@ -124,7 +126,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                         }).toList();
 
                   // Sort by most recently reviewed (updatedAt) first
-                  filteredDecks.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+                  filteredDecks
+                      .sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
                   if (filteredDecks.isEmpty) {
                     return Center(
@@ -219,9 +222,9 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                   size: 28,
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Deck info
               Expanded(
                 child: Column(
@@ -257,10 +260,12 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                              color: const Color(0xFF6FB8E9)
+                                  .withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                                color: const Color(0xFF6FB8E9)
+                                    .withValues(alpha: 0.3),
                               ),
                             ),
                             child: Text(
@@ -286,13 +291,13 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                   ],
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Quiz grade circular chart (always show - 0% if no quiz taken)
               _buildGradeCircularChart(deck.lastQuizGrade ?? 0.0),
               const SizedBox(width: 12),
-              
+
               // More options menu button (three dots)
               InkWell(
                 borderRadius: BorderRadius.circular(8),
@@ -323,10 +328,11 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
   }
 
   Widget _buildGradeCircularChart(double grade) {
-    final gradeColor = grade > 0 ? _getGradeColor(grade) : const Color(0xFF888888);
+    final gradeColor =
+        grade > 0 ? _getGradeColor(grade) : const Color(0xFF888888);
     final percentage = (grade * 100).round();
     final displayText = grade > 0 ? '$percentage%' : '—';
-    
+
     return SizedBox(
       width: 48,
       height: 48,
@@ -459,7 +465,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 },
               ),
               ListTile(
-                leading: Icon(Icons.calendar_today, color: Theme.of(context).colorScheme.primary),
+                leading: Icon(Icons.calendar_today,
+                    color: Theme.of(context).colorScheme.primary),
                 title: const Text('Add to Calendar'),
                 onTap: () {
                   Navigator.pop(context);
@@ -468,7 +475,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete Deck', style: TextStyle(color: Colors.red)),
+                title: const Text('Delete Deck',
+                    style: TextStyle(color: Colors.red)),
                 onTap: () {
                   Navigator.pop(context);
                   _showDeleteConfirmation(deck);
@@ -485,7 +493,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
   void _showAddToCalendarDialog(Deck deck) {
     // Default to tomorrow at 10 AM
     DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
-    selectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
+    selectedDate = DateTime(
+        selectedDate.year, selectedDate.month, selectedDate.day, 10, 0);
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
     int selectedDuration = 30; // Default 30 minutes
 
@@ -506,7 +515,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Date Picker
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -520,7 +529,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                           context: context,
                           initialDate: selectedDate,
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
                         );
                         if (picked != null) {
                           setState(() {
@@ -535,7 +545,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                         }
                       },
                     ),
-                    
+
                     // Time Picker
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -561,7 +571,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                         }
                       },
                     ),
-                    
+
                     // Duration Selector
                     ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -571,9 +581,12 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                         value: selectedDuration,
                         isExpanded: true,
                         items: const [
-                          DropdownMenuItem(value: 15, child: Text('15 minutes')),
-                          DropdownMenuItem(value: 30, child: Text('30 minutes')),
-                          DropdownMenuItem(value: 45, child: Text('45 minutes')),
+                          DropdownMenuItem(
+                              value: 15, child: Text('15 minutes')),
+                          DropdownMenuItem(
+                              value: 30, child: Text('30 minutes')),
+                          DropdownMenuItem(
+                              value: 45, child: Text('45 minutes')),
                           DropdownMenuItem(value: 60, child: Text('1 hour')),
                           DropdownMenuItem(value: 90, child: Text('1.5 hours')),
                           DropdownMenuItem(value: 120, child: Text('2 hours')),
@@ -587,7 +600,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                         },
                       ),
                     ),
-                    
+
                     const SizedBox(height: 10),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -597,7 +610,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                          const Icon(Icons.info_outline,
+                              color: Colors.blue, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -631,7 +645,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
     );
   }
 
-  void _addToCalendar(Deck deck, DateTime scheduledTime, int durationMinutes) async {
+  void _addToCalendar(
+      Deck deck, DateTime scheduledTime, int durationMinutes) async {
     try {
       // Create the calendar event from the deck
       final event = CalendarEvent.fromDeck(
@@ -641,7 +656,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
       );
 
       // Add to calendar provider
-      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      final calendarProvider =
+          Provider.of<CalendarProvider>(context, listen: false);
       final addedEvent = await calendarProvider.addFlashcardStudyEvent(event);
 
       if (addedEvent != null) {
@@ -649,7 +665,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added "${deck.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
+            content: Text(
+                'Added "${deck.title}" to calendar for ${scheduledTime.month}/${scheduledTime.day} at ${TimeOfDay.fromDateTime(scheduledTime).format(context)}'),
             duration: const Duration(seconds: 3),
             backgroundColor: Colors.green,
             action: SnackBarAction(
@@ -692,7 +709,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Delete Deck'),
-          content: Text('Are you sure you want to delete "${deck.title}"? This action cannot be undone.'),
+          content: Text(
+              'Are you sure you want to delete "${deck.title}"? This action cannot be undone.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -713,12 +731,12 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
 
   Future<void> _deleteDeck(Deck deck) async {
     final deckProvider = Provider.of<DeckProvider>(context, listen: false);
-    
+
     // Delete the deck
     final success = await deckProvider.deleteDeck(deck.id);
-    
+
     if (!mounted) return;
-    
+
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -739,7 +757,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
   /// Shows dialog for creating new deck or editing existing deck
   void _showDeckFormDialog({Deck? existingDeck}) {
     final isEditMode = existingDeck != null;
-    final titleController = TextEditingController(text: existingDeck?.title ?? '');
+    final titleController =
+        TextEditingController(text: existingDeck?.title ?? '');
     final tagsController = TextEditingController(
       text: existingDeck?.tags.join(', ') ?? '',
     );
@@ -774,7 +793,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                     autofocus: !isEditMode,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Tags Field
                   TextFormField(
                     controller: tagsController,
@@ -787,7 +806,7 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                     maxLines: 2,
                   ),
                   const SizedBox(height: 8),
-                  
+
                   Text(
                     isEditMode
                         ? 'Deck has ${existingDeck.cards.length} cards'
@@ -823,7 +842,8 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 // Capture context-dependent objects before async operations
                 final navigator = Navigator.of(context);
                 final messenger = ScaffoldMessenger.of(context);
-                final deckProvider = Provider.of<DeckProvider>(context, listen: false);
+                final deckProvider =
+                    Provider.of<DeckProvider>(context, listen: false);
 
                 if (isEditMode) {
                   // Update existing deck
@@ -853,7 +873,9 @@ class _FlashcardsListScreenState extends State<FlashcardsListScreen> {
                 messenger.showSnackBar(
                   SnackBar(
                     content: Text(
-                      isEditMode ? 'Deck updated successfully' : 'Deck created successfully',
+                      isEditMode
+                          ? 'Deck updated successfully'
+                          : 'Deck created successfully',
                     ),
                     backgroundColor: Colors.green,
                   ),
@@ -894,7 +916,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
   final _option2Controller = TextEditingController();
   final _option3Controller = TextEditingController();
   final _option4Controller = TextEditingController();
-  
+
   CardType _selectedType = CardType.basic;
   int _difficulty = 3;
   int _correctAnswerIndex = 0;
@@ -973,7 +995,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               // Front/Question
               TextFormField(
                 controller: _frontController,
@@ -993,7 +1015,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 },
               ),
               const SizedBox(height: 16),
-              
+
               if (_selectedType == CardType.basic) ...[
                 // Back/Answer for basic cards
                 TextFormField(
@@ -1018,7 +1040,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 8),
-                
+
                 _buildOptionField(_option1Controller, 'Option 1 *', 0),
                 const SizedBox(height: 8),
                 _buildOptionField(_option2Controller, 'Option 2 *', 1),
@@ -1027,7 +1049,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 const SizedBox(height: 8),
                 _buildOptionField(_option4Controller, 'Option 4 *', 3),
                 const SizedBox(height: 16),
-                
+
                 // Correct answer selector
                 Text(
                   'Correct Answer: Option ${_correctAnswerIndex + 1}',
@@ -1038,7 +1060,7 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                 ),
               ],
               const SizedBox(height: 16),
-              
+
               // Difficulty Selector
               Text(
                 'Difficulty',
@@ -1073,7 +1095,9 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.black87,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -1104,7 +1128,8 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
     );
   }
 
-  Widget _buildOptionField(TextEditingController controller, String label, int index) {
+  Widget _buildOptionField(
+      TextEditingController controller, String label, int index) {
     final isCorrect = _correctAnswerIndex == index;
     return Row(
       children: [
@@ -1173,7 +1198,8 @@ class _AddCardsDialogState extends State<_AddCardsDialog> {
               _option4Controller.text.trim(),
             ]
           : [],
-      correctAnswerIndex: _selectedType == CardType.multipleChoice ? _correctAnswerIndex : 0,
+      correctAnswerIndex:
+          _selectedType == CardType.multipleChoice ? _correctAnswerIndex : 0,
       difficulty: _difficulty,
     );
 

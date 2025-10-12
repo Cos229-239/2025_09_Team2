@@ -29,7 +29,7 @@ class ResponsiveSpacing {
   static double getHorizontalPadding(BuildContext context) {
     DeviceType deviceType = _getDeviceType(context);
     double width = _getScreenWidth(context);
-    
+
     switch (deviceType) {
       case DeviceType.phone:
         // For phones: 16px padding, scales slightly with width
@@ -47,7 +47,7 @@ class ResponsiveSpacing {
   static double getVerticalSpacing(BuildContext context) {
     DeviceType deviceType = _getDeviceType(context);
     double height = _getScreenHeight(context);
-    
+
     switch (deviceType) {
       case DeviceType.phone:
         // For phones: 16px spacing, scales with height
@@ -74,7 +74,7 @@ class ResponsiveSpacing {
   /// Gets header height based on device type
   static double getHeaderHeight(BuildContext context) {
     DeviceType deviceType = _getDeviceType(context);
-    
+
     switch (deviceType) {
       case DeviceType.phone:
         return 60.0;
@@ -88,7 +88,7 @@ class ResponsiveSpacing {
   /// Gets bottom navigation height based on device type
   static double getBottomNavHeight(BuildContext context) {
     DeviceType deviceType = _getDeviceType(context);
-    
+
     switch (deviceType) {
       case DeviceType.phone:
         return 70.0;
@@ -103,7 +103,7 @@ class ResponsiveSpacing {
   static double getComponentHeight(BuildContext context, ComponentType type) {
     DeviceType deviceType = _getDeviceType(context);
     double height = _getScreenHeight(context);
-    
+
     switch (type) {
       case ComponentType.calendar:
         switch (deviceType) {
@@ -148,7 +148,7 @@ class ResponsiveSpacing {
   static double getButtonSpacing(BuildContext context) {
     DeviceType deviceType = _getDeviceType(context);
     double width = _getScreenWidth(context);
-    
+
     switch (deviceType) {
       case DeviceType.phone:
         return width * 0.04; // 4% of screen width
@@ -171,7 +171,7 @@ class ResponsiveSpacing {
     MediaQueryData mediaQuery = MediaQuery.of(context);
     double horizontalPadding = getHorizontalPadding(context);
     double verticalSpacing = getVerticalSpacing(context);
-    
+
     return EdgeInsets.only(
       left: horizontalPadding,
       right: horizontalPadding,

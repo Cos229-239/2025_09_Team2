@@ -603,9 +603,9 @@ class _ProfilePanelState extends State<ProfilePanel> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF6FB8E9).withValues(alpha: 0.2),
-                            border: Border.all(
-                                color: const Color(0xFF6FB8E9)),
+                            color:
+                                const Color(0xFF6FB8E9).withValues(alpha: 0.2),
+                            border: Border.all(color: const Color(0xFF6FB8E9)),
                             borderRadius: BorderRadius.circular(15),
                           ),
                           child: Text(
@@ -1059,7 +1059,7 @@ class _ProfilePanelState extends State<ProfilePanel> {
   Future<void> _handleLogout() async {
     // Capture the AppState provider reference before any async operations
     final appState = Provider.of<AppState>(context, listen: false);
-    
+
     final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

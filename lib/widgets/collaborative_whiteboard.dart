@@ -14,17 +14,18 @@ class CollaborativeWhiteboard extends StatefulWidget {
   });
 
   @override
-  State<CollaborativeWhiteboard> createState() => _CollaborativeWhiteboardState();
+  State<CollaborativeWhiteboard> createState() =>
+      _CollaborativeWhiteboardState();
 }
 
 class _CollaborativeWhiteboardState extends State<CollaborativeWhiteboard> {
   final List<WhiteboardStroke> _strokes = [];
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
+
   Color _selectedColor = Colors.black;
   double _strokeWidth = 3.0;
   WhiteboardTool _selectedTool = WhiteboardTool.pen;
-  
+
   List<Offset> _currentStroke = [];
 
   @override
@@ -107,7 +108,7 @@ class _CollaborativeWhiteboardState extends State<CollaborativeWhiteboard> {
       children: [
         // Toolbar
         _buildToolbar(),
-        
+
         // Canvas
         Expanded(
           child: Container(
@@ -154,19 +155,24 @@ class _CollaborativeWhiteboardState extends State<CollaborativeWhiteboard> {
           // Pen tool
           IconButton(
             icon: const Icon(Icons.edit),
-            color: _selectedTool == WhiteboardTool.pen ? Colors.blue : Colors.black,
+            color: _selectedTool == WhiteboardTool.pen
+                ? Colors.blue
+                : Colors.black,
             onPressed: () => setState(() => _selectedTool = WhiteboardTool.pen),
           ),
-          
+
           // Eraser tool
           IconButton(
             icon: const Icon(Icons.auto_fix_high),
-            color: _selectedTool == WhiteboardTool.eraser ? Colors.blue : Colors.black,
-            onPressed: () => setState(() => _selectedTool = WhiteboardTool.eraser),
+            color: _selectedTool == WhiteboardTool.eraser
+                ? Colors.blue
+                : Colors.black,
+            onPressed: () =>
+                setState(() => _selectedTool = WhiteboardTool.eraser),
           ),
-          
+
           const SizedBox(width: 16),
-          
+
           // Color picker
           _buildColorButton(Colors.black),
           _buildColorButton(Colors.red),
@@ -174,9 +180,9 @@ class _CollaborativeWhiteboardState extends State<CollaborativeWhiteboard> {
           _buildColorButton(Colors.green),
           _buildColorButton(Colors.orange),
           _buildColorButton(Colors.purple),
-          
+
           const SizedBox(width: 16),
-          
+
           // Stroke width slider
           const Text('Width:'),
           SizedBox(
@@ -189,9 +195,9 @@ class _CollaborativeWhiteboardState extends State<CollaborativeWhiteboard> {
               onChanged: (value) => setState(() => _strokeWidth = value),
             ),
           ),
-          
+
           const Spacer(),
-          
+
           // Clear button
           ElevatedButton.icon(
             icon: const Icon(Icons.delete_outline),
@@ -253,7 +259,8 @@ class WhiteboardPainter extends CustomPainter {
         ..style = PaintingStyle.stroke;
 
       for (int i = 0; i < stroke.points.length - 1; i++) {
-        if (stroke.points[i] != Offset.zero && stroke.points[i + 1] != Offset.zero) {
+        if (stroke.points[i] != Offset.zero &&
+            stroke.points[i + 1] != Offset.zero) {
           canvas.drawLine(stroke.points[i], stroke.points[i + 1], paint);
         }
       }
@@ -311,7 +318,9 @@ class WhiteboardStroke {
 
   factory WhiteboardStroke.fromFirestore(Map<String, dynamic> data) {
     final pointsList = data['points'] as List<dynamic>;
-    final points = pointsList.map((p) => Offset(p['x'] as double, p['y'] as double)).toList();
+    final points = pointsList
+        .map((p) => Offset(p['x'] as double, p['y'] as double))
+        .toList();
 
     return WhiteboardStroke(
       id: data['id'] as String,
@@ -333,5 +342,5 @@ enum WhiteboardTool {
   pen,
   eraser,
   shapes, // Future: circles, rectangles, etc.
-  text,   // Future: text annotations
+  text, // Future: text annotations
 }

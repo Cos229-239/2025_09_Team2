@@ -83,18 +83,21 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               _usernameController.text = data['username'] ?? '';
               _bioController.text = data['bio'] ?? '';
               _avatarUrl = data['profilePicture'];
-              
+
               // Load interests
               if (data['interests'] != null) {
                 _interests = List<String>.from(data['interests']);
               }
-              
+
               // Load privacy settings
               final privacy = data['privacySettings'] as Map<String, dynamic>?;
               if (privacy != null) {
-                _profilePrivacy = _parsePrivacyLevel(privacy['profileVisibility']);
-                _progressPrivacy = _parsePrivacyLevel(privacy['progressVisibility']);
-                _friendsPrivacy = _parsePrivacyLevel(privacy['friendsVisibility']);
+                _profilePrivacy =
+                    _parsePrivacyLevel(privacy['profileVisibility']);
+                _progressPrivacy =
+                    _parsePrivacyLevel(privacy['progressVisibility']);
+                _friendsPrivacy =
+                    _parsePrivacyLevel(privacy['friendsVisibility']);
               }
             });
           }
@@ -165,7 +168,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 hintStyle: const TextStyle(color: Color(0xFF888888)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6FB8E9), width: 1),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -176,7 +180,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6FB8E9), width: 2),
                 ),
                 filled: true,
                 fillColor: const Color(0xFF242628),
@@ -204,7 +209,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 hintStyle: const TextStyle(color: Color(0xFF888888)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6FB8E9), width: 1),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -215,7 +221,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6FB8E9), width: 2),
                 ),
                 filled: true,
                 fillColor: const Color(0xFF242628),
@@ -246,7 +253,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 hintStyle: const TextStyle(color: Color(0xFF888888)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6FB8E9), width: 1),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -257,7 +265,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF6FB8E9), width: 2),
                 ),
                 filled: true,
                 fillColor: const Color(0xFF242628),
@@ -567,7 +576,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Future<void> _changeProfilePicture() async {
     try {
       debugPrint('📸 Starting profile picture change...');
-      
+
       setState(() {
         _isLoading = true;
       });
@@ -580,7 +589,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         });
         throw Exception('User not authenticated');
       }
-      
+
       debugPrint('✅ User authenticated: ${user.uid}');
 
       // Pick image with minimal compression first
@@ -599,45 +608,49 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         });
         return;
       }
-      
+
       debugPrint('✅ Image selected: ${pickedFile.name}');
-      
+
       // Read image as bytes
       Uint8List bytes = Uint8List.fromList(await pickedFile.readAsBytes());
-      debugPrint('📦 Initial image size: ${bytes.length} bytes (${(bytes.length / 1024).toStringAsFixed(1)} KB)');
-      
+      debugPrint(
+          '📦 Initial image size: ${bytes.length} bytes (${(bytes.length / 1024).toStringAsFixed(1)} KB)');
+
       // If image is too large, compress it further using the image package
       if (bytes.length > 300 * 1024) {
         debugPrint('🔄 Image too large, applying additional compression...');
-        
+
         // Decode the image
         img.Image? image = img.decodeImage(bytes);
         if (image == null) {
           throw Exception('Failed to decode image');
         }
-        
+
         // Resize to max 400x400 to ensure it fits
         img.Image resized = img.copyResize(image, width: 400, height: 400);
-        
+
         // Encode with quality adjustment to hit target size
         int quality = 75;
         do {
           bytes = Uint8List.fromList(img.encodeJpg(resized, quality: quality));
-          debugPrint('🔄 Compressed to ${bytes.length} bytes (${(bytes.length / 1024).toStringAsFixed(1)} KB) at quality $quality%');
+          debugPrint(
+              '🔄 Compressed to ${bytes.length} bytes (${(bytes.length / 1024).toStringAsFixed(1)} KB) at quality $quality%');
           quality -= 10;
         } while (bytes.length > 300 * 1024 && quality > 20);
-        
+
         if (bytes.length > 300 * 1024) {
-          throw Exception('Could not compress image to under 300 KB. Please select a smaller image.');
+          throw Exception(
+              'Could not compress image to under 300 KB. Please select a smaller image.');
         }
-        
-        debugPrint('✅ Successfully compressed to ${(bytes.length / 1024).toStringAsFixed(1)} KB');
+
+        debugPrint(
+            '✅ Successfully compressed to ${(bytes.length / 1024).toStringAsFixed(1)} KB');
       }
-      
+
       // Convert to Base64
       final base64Image = base64Encode(bytes);
       final dataUrl = 'data:image/jpeg;base64,$base64Image';
-      
+
       debugPrint('✅ Converted to Base64 (${dataUrl.length} characters)');
 
       // Save directly to Firestore
@@ -649,7 +662,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         'profilePicture': dataUrl,
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
-      
+
       debugPrint('✅ Firestore updated successfully');
 
       // Update avatar URL in state
@@ -657,7 +670,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         _avatarUrl = dataUrl;
         _isLoading = false;
       });
-      
+
       debugPrint('✅ UI state updated');
 
       // Update SocialLearningService if it has a profile
@@ -670,7 +683,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       } catch (e) {
         debugPrint('⚠️ Could not access SocialLearningService: $e');
       }
-      
+
       if (socialService != null) {
         try {
           if (socialService.currentUserProfile != null) {
@@ -771,7 +784,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       if (user == null) {
         throw Exception('User not authenticated');
       }
-      
+
       debugPrint('✅ User authenticated: ${user.uid}');
 
       // Prepare the data to save
@@ -802,7 +815,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           .collection('users')
           .doc(user.uid)
           .update(updateData);
-      
+
       debugPrint('✅ Firestore update successful');
 
       // Log activity
@@ -830,7 +843,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       } catch (e) {
         debugPrint('⚠️ Could not access SocialLearningService: $e');
       }
-      
+
       if (socialService != null && socialService.currentUserProfile != null) {
         await socialService.updateUserProfile(
           displayName: _displayNameController.text.trim(),

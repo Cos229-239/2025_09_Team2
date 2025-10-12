@@ -31,18 +31,18 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _messageController = TextEditingController();
-  
+
   // WebRTC Service - uses existing WebRTCService from lib/services/webrtc_service.dart
   final WebRTCService _webrtcService = WebRTCService();
-  
+
   // Firebase - for real-time participant and message sync
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
+
   // Session data - using extended participant with audio/video status
   final List<LiveSessionParticipant> _participants = [];
   final List<LiveSessionMessage> _messages = [];
-  
+
   // UI state
   bool _isMicEnabled = false;
   bool _isCameraEnabled = false;
@@ -50,19 +50,19 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   DateTime? _sessionStartTime;
   bool _isRecording = false;
   String _selectedQuality = 'auto'; // auto, high, medium, low
-  
+
   // WebRTC video renderers
   RTCVideoRenderer? _localRenderer;
   RTCVideoRenderer? _remoteRenderer;
   RTCVideoRenderer? _screenShareRenderer;
-  
+
   // Screen sharing
   MediaStream? _screenStream;
-  
+
   // Network quality monitoring
   Timer? _qualityMonitorTimer;
   String _networkQuality = 'good'; // excellent, good, fair, poor
-  
+
   // Analytics
   Map<String, dynamic> _sessionAnalytics = {
     'participantJoinTimes': <String, DateTime>{},
@@ -101,13 +101,13 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     try {
       // Initialize WebRTC service
       await _webrtcService.initialize();
-      
+
       // Setup video renderers
       _localRenderer = RTCVideoRenderer();
       _remoteRenderer = RTCVideoRenderer();
       await _localRenderer!.initialize();
       await _remoteRenderer!.initialize();
-      
+
       // Listen to WebRTC streams
       _webrtcService.localStreamStream.listen((stream) {
         if (stream != null && _localRenderer != null) {
@@ -115,29 +115,29 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
           setState(() {});
         }
       });
-      
+
       _webrtcService.remoteStreamStream.listen((stream) {
         if (stream != null && _remoteRenderer != null) {
           _remoteRenderer!.srcObject = stream;
           setState(() {});
         }
       });
-      
+
       // Join session in Firebase
       await _joinSessionInFirebase();
-      
+
       // Listen to participants
       _listenToParticipants();
-      
+
       // Listen to chat messages
       _listenToMessages();
-      
+
       // Start network quality monitoring
       _startQualityMonitoring();
-      
+
       // Initialize analytics
       _initializeAnalytics();
-      
+
       setState(() {});
     } catch (e) {
       debugPrint('❌ Error initializing session: $e');
@@ -156,7 +156,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   Future<void> _joinSessionInFirebase() async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
-    
+
     try {
       await _firestore
           .collection('social_sessions')
@@ -172,7 +172,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
         'isCameraOn': _isCameraEnabled,
         'isHost': widget.session.hostId == currentUser.uid,
       }, SetOptions(merge: true));
-      
+
       debugPrint('✅ Joined session in Firebase');
     } catch (e) {
       debugPrint('❌ Error joining session: $e');
@@ -183,11 +183,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   Future<void> _leaveSession() async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
-    
+
     try {
       // Save session analytics before leaving
       await _saveAnalytics();
-      
+
       await _firestore
           .collection('social_sessions')
           .doc(widget.session.id)
@@ -197,7 +197,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
         'isOnline': false,
         'leftAt': FieldValue.serverTimestamp(),
       });
-      
+
       debugPrint('✅ Left session in Firebase');
     } catch (e) {
       debugPrint('❌ Error leaving session: $e');
@@ -249,7 +249,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
             senderId: data['senderId'] ?? '',
             senderName: data['senderName'] ?? 'Unknown',
             message: data['message'] ?? '',
-            timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            timestamp:
+                (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
             isHost: data['isHost'] ?? false,
           ));
         }
@@ -390,30 +391,31 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                 color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: _remoteRenderer != null && _remoteRenderer!.srcObject != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: RTCVideoView(_remoteRenderer!),
-                    )
-                  : Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.videocam_off,
-                            size: 64,
-                            color: Colors.white54,
+              child:
+                  _remoteRenderer != null && _remoteRenderer!.srcObject != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: RTCVideoView(_remoteRenderer!),
+                        )
+                      : Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.videocam_off,
+                                size: 64,
+                                color: Colors.white54,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                _isScreenSharing
+                                    ? 'Screen Sharing Active'
+                                    : 'Waiting for participants...',
+                                style: const TextStyle(color: Colors.white54),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            _isScreenSharing
-                                ? 'Screen Sharing Active'
-                                : 'Waiting for participants...',
-                            style: const TextStyle(color: Colors.white54),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
             ),
           ),
           // Participant video grid - shows all participants including local user
@@ -436,7 +438,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   Widget _buildParticipantVideoTile(LiveSessionParticipant participant) {
     final currentUser = _auth.currentUser;
     final isCurrentUser = currentUser?.uid == participant.id;
-    
+
     return Container(
       width: 120,
       margin: const EdgeInsets.all(4),
@@ -447,7 +449,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       child: Stack(
         children: [
           // Show local video for current user, placeholder for others
-          if (isCurrentUser && _localRenderer != null && _localRenderer!.srcObject != null)
+          if (isCurrentUser &&
+              _localRenderer != null &&
+              _localRenderer!.srcObject != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: RTCVideoView(_localRenderer!, mirror: true),
@@ -797,7 +801,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
   String _getSessionDuration() {
     if (_sessionStartTime == null) return '00:00';
-    
+
     final duration = DateTime.now().difference(_sessionStartTime!);
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
@@ -808,10 +812,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     setState(() {
       _isMicEnabled = !_isMicEnabled;
     });
-    
+
     // Track analytics
     _trackAnalyticsEvent('audio_toggle');
-    
+
     // Update in Firebase
     final currentUser = _auth.currentUser;
     if (currentUser != null) {
@@ -822,19 +826,19 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
           .doc(currentUser.uid)
           .update({'isMicOn': _isMicEnabled});
     }
-    
+
     // Update WebRTC local stream
     if (_webrtcService.localStream != null) {
       _webrtcService.localStream!.getAudioTracks().forEach((track) {
         track.enabled = _isMicEnabled;
       });
     }
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text(_isMicEnabled ? 'Microphone enabled' : 'Microphone disabled'),
+          content: Text(
+              _isMicEnabled ? 'Microphone enabled' : 'Microphone disabled'),
           backgroundColor: _isMicEnabled ? Colors.green : Colors.red,
           duration: const Duration(seconds: 1),
         ),
@@ -846,10 +850,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     setState(() {
       _isCameraEnabled = !_isCameraEnabled;
     });
-    
+
     // Track analytics
     _trackAnalyticsEvent('video_toggle');
-    
+
     // Update in Firebase
     final currentUser = _auth.currentUser;
     if (currentUser != null) {
@@ -860,18 +864,19 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
           .doc(currentUser.uid)
           .update({'isCameraOn': _isCameraEnabled});
     }
-    
+
     // Update WebRTC local stream
     if (_webrtcService.localStream != null) {
       _webrtcService.localStream!.getVideoTracks().forEach((track) {
         track.enabled = _isCameraEnabled;
       });
     }
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_isCameraEnabled ? 'Camera enabled' : 'Camera disabled'),
+          content:
+              Text(_isCameraEnabled ? 'Camera enabled' : 'Camera disabled'),
           backgroundColor: _isCameraEnabled ? Colors.green : Colors.red,
           duration: const Duration(seconds: 1),
         ),
@@ -896,11 +901,11 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
       // Combine screen and audio streams for recording
       MediaStream? recordingStream;
-      
+
       if (_screenStream != null) {
         // If screen sharing, record screen + audio
         recordingStream = _screenStream;
-        
+
         // Add audio track if available
         if (_webrtcService.localStream != null) {
           final audioTracks = _webrtcService.localStream!.getAudioTracks();
@@ -930,7 +935,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Recording feature requires platform-specific implementation'),
+              content: Text(
+                  'Recording feature requires platform-specific implementation'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -940,7 +946,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Recording is currently only supported on web platform'),
+              content:
+                  Text('Recording is currently only supported on web platform'),
               backgroundColor: Colors.orange,
             ),
           );
@@ -970,7 +977,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
       // Stop MediaRecorder
       // Platform-specific implementation needed
-      
+
       setState(() {
         _isRecording = false;
       });
@@ -986,12 +993,13 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       // Calculate recording duration for analytics
       final recordingStart = _sessionAnalytics['recordingStartTime'];
       if (recordingStart != null) {
-        _sessionAnalytics['totalRecordingDuration'] = 
-            (_sessionAnalytics['totalRecordingDuration'] ?? 0) + 1; // Simplified
+        _sessionAnalytics['totalRecordingDuration'] =
+            (_sessionAnalytics['totalRecordingDuration'] ?? 0) +
+                1; // Simplified
       }
 
       debugPrint('✅ Recording stopped');
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1015,11 +1023,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
   // Quality monitoring methods
   Future<void> _startQualityMonitoring() async {
-    _qualityMonitorTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _qualityMonitorTimer =
+        Timer.periodic(const Duration(seconds: 5), (timer) async {
       try {
         // Monitor network quality based on WebRTC stats
         // Simplified implementation - full version would use getStats()
-        
+
         // For now, just maintain "good" quality
         // Production version would analyze packet loss, jitter, bitrate
         if (_networkQuality != 'good') {
@@ -1041,7 +1050,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     try {
       // Apply quality settings to video stream
       // This would involve modifying video constraints
-      
+
       switch (quality) {
         case 'high':
           debugPrint('✅ Quality set to high (720p, 30fps)');
@@ -1088,7 +1097,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       // Calculate total session duration
       final startTime = _sessionAnalytics['sessionStartTime'];
       if (startTime != null) {
-        _sessionAnalytics['totalDuration'] = DateTime.now().millisecondsSinceEpoch;
+        _sessionAnalytics['totalDuration'] =
+            DateTime.now().millisecondsSinceEpoch;
       }
 
       // Save to Firestore
@@ -1108,19 +1118,19 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   void _trackAnalyticsEvent(String event) {
     switch (event) {
       case 'message_sent':
-        _sessionAnalytics['messageCount'] = 
+        _sessionAnalytics['messageCount'] =
             (_sessionAnalytics['messageCount'] ?? 0) + 1;
         break;
       case 'video_toggle':
-        _sessionAnalytics['videoToggleCount'] = 
+        _sessionAnalytics['videoToggleCount'] =
             (_sessionAnalytics['videoToggleCount'] ?? 0) + 1;
         break;
       case 'audio_toggle':
-        _sessionAnalytics['audioToggleCount'] = 
+        _sessionAnalytics['audioToggleCount'] =
             (_sessionAnalytics['audioToggleCount'] ?? 0) + 1;
         break;
       case 'screen_share':
-        _sessionAnalytics['screenShareCount'] = 
+        _sessionAnalytics['screenShareCount'] =
             (_sessionAnalytics['screenShareCount'] ?? 0) + 1;
         break;
     }
@@ -1139,7 +1149,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   Future<void> _startScreenSharing() async {
     try {
       debugPrint('🖥️ Starting screen share...');
-      
+
       // Request screen capture
       final constraints = {
         'video': {
@@ -1154,12 +1164,13 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
       // Get display media stream (screen capture)
       _screenStream = await navigator.mediaDevices.getDisplayMedia(constraints);
-      
+
       if (_screenStream == null) {
         throw Exception('Failed to get screen stream');
       }
 
-      debugPrint('✅ Screen stream obtained: ${_screenStream!.getTracks().length} tracks');
+      debugPrint(
+          '✅ Screen stream obtained: ${_screenStream!.getTracks().length} tracks');
 
       // Initialize screen share renderer
       _screenShareRenderer = RTCVideoRenderer();
@@ -1188,7 +1199,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       }
 
       // Track analytics
-      _sessionAnalytics['screenShareCount'] = 
+      _sessionAnalytics['screenShareCount'] =
           (_sessionAnalytics['screenShareCount'] ?? 0) + 1;
 
       if (mounted) {
@@ -1204,7 +1215,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       debugPrint('✅ Screen sharing started successfully');
     } catch (e) {
       debugPrint('❌ Error starting screen share: $e');
-      
+
       setState(() {
         _isScreenSharing = false;
       });
@@ -1216,7 +1227,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
         } else if (e.toString().contains('NotAllowedError')) {
           errorMessage = 'Screen sharing not allowed by browser';
         }
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -1278,14 +1289,14 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
   void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
-    
+
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
-    
+
     try {
       // Track analytics
       _trackAnalyticsEvent('message_sent');
-      
+
       await _firestore
           .collection('social_sessions')
           .doc(widget.session.id)
@@ -1297,7 +1308,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
         'timestamp': FieldValue.serverTimestamp(),
         'isHost': widget.session.hostId == currentUser.uid,
       });
-      
+
       _messageController.clear();
     } catch (e) {
       debugPrint('❌ Error sending message: $e');
@@ -1345,7 +1356,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                 items: const [
                   DropdownMenuItem(value: 'auto', child: Text('Auto')),
                   DropdownMenuItem(value: 'high', child: Text('High (720p)')),
-                  DropdownMenuItem(value: 'medium', child: Text('Medium (480p)')),
+                  DropdownMenuItem(
+                      value: 'medium', child: Text('Medium (480p)')),
                   DropdownMenuItem(value: 'low', child: Text('Low (240p)')),
                 ],
                 onChanged: (value) {
@@ -1376,13 +1388,13 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   Future<void> _shareFile() async {
     try {
       final result = await FilePicker.platform.pickFiles();
-      
+
       if (result == null || result.files.isEmpty) {
         return; // User canceled
       }
 
       final file = result.files.first;
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1393,7 +1405,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       }
 
       // Track analytics
-      _sessionAnalytics['filesShared'] = 
+      _sessionAnalytics['filesShared'] =
           (_sessionAnalytics['filesShared'] ?? 0) + 1;
 
       // TODO: Upload to Firebase Storage and share link in chat
@@ -1401,7 +1413,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('File sharing: ${file.name} (${(file.size / 1024).toStringAsFixed(1)} KB)'),
+            content: Text(
+                'File sharing: ${file.name} (${(file.size / 1024).toStringAsFixed(1)} KB)'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
@@ -1420,7 +1433,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     }
   }
 
-  void _handleParticipantAction(String action, LiveSessionParticipant participant) {
+  void _handleParticipantAction(
+      String action, LiveSessionParticipant participant) {
     switch (action) {
       case 'mute':
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1443,7 +1457,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   void _showLeaveSessionDialog() {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

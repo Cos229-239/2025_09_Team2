@@ -48,7 +48,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
   Future<void> _loadGroupData() async {
     try {
       debugPrint('🔍 Loading group data for: ${widget.group.id}');
-      
+
       // Get current user ID
       final currentUserId = FirebaseAuth.instance.currentUser?.uid;
       if (currentUserId == null) {
@@ -58,10 +58,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         });
         return;
       }
-      
+
       // Fetch fresh group data from Firestore
-      final freshGroup = await _socialService!.getStudyGroupById(widget.group.id);
-      
+      final freshGroup =
+          await _socialService!.getStudyGroupById(widget.group.id);
+
       if (freshGroup == null) {
         debugPrint('❌ Could not load group data');
         setState(() {
@@ -69,32 +70,37 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
         });
         return;
       }
-      
+
       _currentGroup = freshGroup;
-      
+
       // Check if current user is the owner
       _isOwner = freshGroup.ownerId == currentUserId;
-      debugPrint('👑 Is owner: $_isOwner (Owner: ${freshGroup.ownerId}, Current: $currentUserId)');
-      
+      debugPrint(
+          '👑 Is owner: $_isOwner (Owner: ${freshGroup.ownerId}, Current: $currentUserId)');
+
       // Check if current user is a member (owner is always a member)
-      _isMember = _isOwner || freshGroup.members.any((member) => 
-        member.userId == currentUserId && member.status == service.MembershipStatus.active
-      );
+      _isMember = _isOwner ||
+          freshGroup.members.any((member) =>
+              member.userId == currentUserId &&
+              member.status == service.MembershipStatus.active);
       debugPrint('👥 Is member: $_isMember');
-      
+
       // Load member profiles
       _members = await _socialService!.getGroupMembers(freshGroup);
       debugPrint('✅ Loaded ${_members.length} member profiles');
-      
+
       // Load pending join requests (only for owner/moderator)
-      if (_isOwner || freshGroup.members.any((m) => 
-          m.userId == currentUserId && m.role == service.StudyGroupRole.moderator)) {
+      if (_isOwner ||
+          freshGroup.members.any((m) =>
+              m.userId == currentUserId &&
+              m.role == service.StudyGroupRole.moderator)) {
         final pendingMembers = _socialService!.getPendingMembers(freshGroup.id);
-        
+
         // Load user profiles for pending members
         _pendingRequests = [];
         for (final pendingMember in pendingMembers) {
-          final profile = await _socialService!.getUserProfile(pendingMember.userId);
+          final profile =
+              await _socialService!.getUserProfile(pendingMember.userId);
           if (profile != null) {
             _pendingRequests.add(profile);
           }
@@ -576,7 +582,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                       icon: const Icon(Icons.upload),
                       label: const Text('Upload Resource'),
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -698,7 +705,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     if (_socialService == null) return;
 
     String? password;
-    
+
     // If group is private and has a password, show password dialog
     if (widget.group.isPrivate && widget.group.password != null) {
       password = await _showPasswordDialog();
@@ -738,7 +745,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Failed to join group. Check your password or group availability.'),
+          content: Text(
+              'Failed to join group. Check your password or group availability.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -747,7 +755,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
 
   Future<String?> _showPasswordDialog() async {
     final TextEditingController passwordController = TextEditingController();
-    
+
     return showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -776,20 +784,21 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
 
   void _showInviteDialog() async {
     if (_socialService == null) return;
-    
+
     // Get all friends
     final friends = _socialService!.friends;
-    
+
     // Get current group members to filter them out
     final memberIds = widget.group.members.map((m) => m.userId).toSet();
-    
+
     // Filter friends who are not already members
     final availableFriends = <service.UserProfile>[];
     for (final friendship in friends) {
-      final friendId = friendship.userId == _socialService!.currentUserProfile?.id 
-          ? friendship.friendId 
-          : friendship.userId;
-      
+      final friendId =
+          friendship.userId == _socialService!.currentUserProfile?.id
+              ? friendship.friendId
+              : friendship.userId;
+
       if (!memberIds.contains(friendId)) {
         final friendProfile = await _socialService!.getUserProfile(friendId);
         if (friendProfile != null) {
@@ -835,13 +844,14 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                       groupId: widget.group.id,
                       friendId: friend.id,
                     );
-                    
+
                     if (!mounted || !context.mounted) return;
-                    
+
                     if (success) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Invited ${friend.displayName} to the group!'),
+                          content: Text(
+                              'Invited ${friend.displayName} to the group!'),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -987,8 +997,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen>
                         border: OutlineInputBorder(),
                       ),
                       items: const [
-                        DropdownMenuItem(value: 'PDF', child: Text('PDF Document')),
-                        DropdownMenuItem(value: 'Link', child: Text('Web Link')),
+                        DropdownMenuItem(
+                            value: 'PDF', child: Text('PDF Document')),
+                        DropdownMenuItem(
+                            value: 'Link', child: Text('Web Link')),
                         DropdownMenuItem(value: 'Video', child: Text('Video')),
                         DropdownMenuItem(value: 'Image', child: Text('Image')),
                         DropdownMenuItem(value: 'Other', child: Text('Other')),
@@ -1379,4 +1391,3 @@ class _GroupResource {
     required this.uploadDate,
   });
 }
-

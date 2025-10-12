@@ -48,13 +48,13 @@ class TimerProvider extends ChangeNotifier {
   Timer? _timer;
   int _remainingSeconds = 0;
   TimerState _timerState = TimerState.idle;
-  
+
   // Session state
   TimerSession? _activeSession;
   int _currentPhaseIndex = 0;
   int _sessionCycle = 1;
   int _totalSessionsCompleted = 0;
-  
+
   // Custom timer settings
   int _selectedHours = 0;
   int _selectedMinutes = 0;
@@ -62,7 +62,7 @@ class TimerProvider extends ChangeNotifier {
   bool _includeBreakTimer = false;
   int _breakMinutes = 5;
   String _customTimerName = ''; // Store custom timer name for simple timers
-  
+
   // Callback for timer completion (to show dialogs)
   Function()? _onTimerComplete;
   Function()? _onSessionComplete;
@@ -81,14 +81,17 @@ class TimerProvider extends ChangeNotifier {
   bool get includeBreakTimer => _includeBreakTimer;
   int get breakMinutes => _breakMinutes;
   String get customTimerName => _customTimerName;
-  
-  bool get isTimerRunning => _timerState == TimerState.running || _timerState == TimerState.breakTime;
+
+  bool get isTimerRunning =>
+      _timerState == TimerState.running || _timerState == TimerState.breakTime;
   bool get isTimerPaused => _timerState == TimerState.paused;
-  bool get isTimerActive => _timerState != TimerState.idle && _timerState != TimerState.completed;
+  bool get isTimerActive =>
+      _timerState != TimerState.idle && _timerState != TimerState.completed;
 
   // Get current phase if in a session
   SessionPhase? get currentPhase {
-    if (_activeSession != null && _currentPhaseIndex < _activeSession!.phases.length) {
+    if (_activeSession != null &&
+        _currentPhaseIndex < _activeSession!.phases.length) {
       return _activeSession!.phases[_currentPhaseIndex];
     }
     return null;
@@ -123,7 +126,8 @@ class TimerProvider extends ChangeNotifier {
 
   /// Start a custom timer with the configured time
   void startTimer({String name = 'Custom Timer'}) {
-    final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
+    final totalSeconds =
+        (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
 
     if (totalSeconds == 0) {
       debugPrint('Timer: Cannot start timer with 0 seconds');
@@ -151,7 +155,7 @@ class TimerProvider extends ChangeNotifier {
   /// Internal method to start the periodic timer tick
   void _startTimerTick() {
     _timer?.cancel(); // Cancel any existing timer
-    
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_remainingSeconds > 0) {
         _remainingSeconds--;
@@ -173,7 +177,7 @@ class TimerProvider extends ChangeNotifier {
   /// Resume a paused timer
   void resumeTimer() {
     if (_timerState != TimerState.paused) return;
-    
+
     _timerState = TimerState.running;
     _startTimerTick();
     notifyListeners();
@@ -200,7 +204,7 @@ class TimerProvider extends ChangeNotifier {
       _timerState = TimerState.completed;
       _onTimerComplete?.call();
       notifyListeners();
-      
+
       // Auto-reset after a moment
       Future.delayed(const Duration(seconds: 1), () {
         if (_timerState == TimerState.completed) {
@@ -221,7 +225,7 @@ class TimerProvider extends ChangeNotifier {
       _remainingSeconds = _activeSession!.phases[_currentPhaseIndex].seconds;
       _timerState = TimerState.breakTime;
       _onPhaseChange?.call();
-      
+
       // Auto-start the break phase
       _startTimerTick();
       notifyListeners();
@@ -237,7 +241,7 @@ class TimerProvider extends ChangeNotifier {
     _timerState = TimerState.completed;
     _onSessionComplete?.call();
     notifyListeners();
-    
+
     // Don't auto-reset session - let user decide to start another
   }
 
@@ -246,7 +250,7 @@ class TimerProvider extends ChangeNotifier {
     final hours = _remainingSeconds ~/ 3600;
     final minutes = (_remainingSeconds % 3600) ~/ 60;
     final seconds = _remainingSeconds % 60;
-    
+
     if (hours > 0) {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     } else {
@@ -259,8 +263,11 @@ class TimerProvider extends ChangeNotifier {
     if (_activeSession != null && currentPhase != null) {
       final totalSeconds = currentPhase!.seconds;
       return 1.0 - (_remainingSeconds / totalSeconds);
-    } else if (_selectedHours > 0 || _selectedMinutes > 0 || _selectedSeconds > 0) {
-      final totalSeconds = (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
+    } else if (_selectedHours > 0 ||
+        _selectedMinutes > 0 ||
+        _selectedSeconds > 0) {
+      final totalSeconds =
+          (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
       return 1.0 - (_remainingSeconds / totalSeconds);
     }
     return 0.0;

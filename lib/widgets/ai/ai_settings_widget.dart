@@ -194,7 +194,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     labelStyle: const TextStyle(color: Color(0xFF888888)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF6FB8E9), width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -205,11 +206,13 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF6FB8E9), width: 2),
                     ),
                     filled: true,
                     fillColor: const Color(0xFF242628),
-                    prefixIcon: const Icon(Icons.cloud, color: Color(0xFF6FB8E9)),
+                    prefixIcon:
+                        const Icon(Icons.cloud, color: Color(0xFF6FB8E9)),
                   ),
                   items: _aiProviders.map((provider) {
                     return DropdownMenuItem(
@@ -239,7 +242,8 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     hintStyle: const TextStyle(color: Color(0xFF888888)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 1),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF6FB8E9), width: 1),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -250,12 +254,14 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF6FB8E9), width: 2),
                     ),
                     filled: true,
                     fillColor: const Color(0xFF242628),
                     prefixIcon: const Icon(Icons.key, color: Color(0xFF6FB8E9)),
-                    suffixIcon: const Icon(Icons.visibility_off, color: Color(0xFF888888)),
+                    suffixIcon: const Icon(Icons.visibility_off,
+                        color: Color(0xFF888888)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -312,11 +318,10 @@ class _AISettingsWidgetState extends State<AISettingsWidget> {
                             ? const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child:
-                                    CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
                               )
                             : const Icon(Icons.wifi_protected_setup),
                         label: Text(_isTestingConnection

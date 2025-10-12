@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/competitive_learning_service.dart';
 import '../services/analytics_service.dart';
@@ -86,15 +86,17 @@ class _CompetitiveScreenState extends State<CompetitiveScreen>
   Future<void> _updateUserPerformanceFromAnalytics() async {
     try {
       // Get user analytics from Firebase
-      final analytics = await _analyticsService.getUserAnalytics(_currentUserId);
-      
+      final analytics =
+          await _analyticsService.getUserAnalytics(_currentUserId);
+
       if (analytics != null) {
         // Convert analytics data to competitive scores
         final analyticsData = {
           'totalStudyTimeMinutes': analytics.totalStudyTime.toDouble(),
           'averageAccuracy': analytics.overallAccuracy,
           'currentStreak': analytics.currentStreak.toDouble(),
-          'totalXp': (analytics.totalCardsStudied * 10).toDouble(), // Estimate XP
+          'totalXp':
+              (analytics.totalCardsStudied * 10).toDouble(), // Estimate XP
           'sessionsCompleted': analytics.totalQuizzesTaken.toDouble(),
           'questionsAnswered': analytics.totalCardsStudied.toDouble(),
           'subjectsMastered': analytics.subjectPerformance.length.toDouble(),

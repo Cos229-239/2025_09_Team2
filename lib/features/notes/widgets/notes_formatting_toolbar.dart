@@ -58,71 +58,71 @@ class NotesFormattingToolbar extends StatelessWidget {
             isActive: isBold,
             onPressed: onToggleBold,
           ),
-        
-        // Italic Button
-        _FormatButton(
-          icon: Icons.format_italic,
-          label: 'Italic',
-          tooltip: 'Italic (Ctrl+I)',
-          isActive: isItalic,
-          onPressed: onToggleItalic,
-        ),
-        
-        // Underline Button
-        _FormatButton(
-          icon: Icons.format_underlined,
-          label: 'Underline',
-          tooltip: 'Underline (Ctrl+U)',
-          isActive: isUnderline,
-          onPressed: onToggleUnderline,
-        ),
-        
-        // Highlight Button
-        _FormatButton(
-          icon: Icons.highlight,
-          label: 'Highlight',
-          tooltip: 'Highlight Text',
-          isActive: isHighlighted,
-          onPressed: onToggleHighlight,
-          activeColor: const Color(0xFFFFFF00),
-        ),
-        
-        // Bullet List Button
-        _FormatButton(
-          icon: Icons.format_list_bulleted,
-          label: 'Bullets',
-          tooltip: 'Bullet List',
-          isActive: isBulletList,
-          onPressed: onToggleBulletList,
-        ),
-        
-        // Divider
-        Container(
-          width: 1,
-          height: 40,
-          color: const Color(0xFF444444),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-        ),
-        
-        // Alignment Buttons
-        _AlignmentButtonGroup(
-          currentAlignment: currentAlignment,
-          onSetAlignment: onSetAlignment,
-        ),
-        
-        // Divider
-        Container(
-          width: 1,
-          height: 40,
-          color: const Color(0xFF444444),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-        ),
-        
-        // Font Size Dropdown
-        _FontSizeDropdown(
-          currentFontSize: currentFontSize,
-          onSetFontSize: onSetFontSize,
-        ),
+
+          // Italic Button
+          _FormatButton(
+            icon: Icons.format_italic,
+            label: 'Italic',
+            tooltip: 'Italic (Ctrl+I)',
+            isActive: isItalic,
+            onPressed: onToggleItalic,
+          ),
+
+          // Underline Button
+          _FormatButton(
+            icon: Icons.format_underlined,
+            label: 'Underline',
+            tooltip: 'Underline (Ctrl+U)',
+            isActive: isUnderline,
+            onPressed: onToggleUnderline,
+          ),
+
+          // Highlight Button
+          _FormatButton(
+            icon: Icons.highlight,
+            label: 'Highlight',
+            tooltip: 'Highlight Text',
+            isActive: isHighlighted,
+            onPressed: onToggleHighlight,
+            activeColor: const Color(0xFFFFFF00),
+          ),
+
+          // Bullet List Button
+          _FormatButton(
+            icon: Icons.format_list_bulleted,
+            label: 'Bullets',
+            tooltip: 'Bullet List',
+            isActive: isBulletList,
+            onPressed: onToggleBulletList,
+          ),
+
+          // Divider
+          Container(
+            width: 1,
+            height: 40,
+            color: const Color(0xFF444444),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+
+          // Alignment Buttons
+          _AlignmentButtonGroup(
+            currentAlignment: currentAlignment,
+            onSetAlignment: onSetAlignment,
+          ),
+
+          // Divider
+          Container(
+            width: 1,
+            height: 40,
+            color: const Color(0xFF444444),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+
+          // Font Size Dropdown
+          _FontSizeDropdown(
+            currentFontSize: currentFontSize,
+            onSetFontSize: onSetFontSize,
+          ),
         ],
       ),
     );
@@ -148,11 +148,9 @@ class _FormatButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonColor = isActive 
-        ? Colors.white
-        : const Color(0xFF888888);
-    
-    final backgroundColor = isActive 
+    final buttonColor = isActive ? Colors.white : const Color(0xFF888888);
+
+    final backgroundColor = isActive
         ? (activeColor ?? const Color(0xFF6FB8E9))
         : const Color(0xFF333333);
 
@@ -172,7 +170,9 @@ class _FormatButton extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isActive ? (activeColor ?? const Color(0xFF6FB8E9)) : const Color(0xFF555555),
+              color: isActive
+                  ? (activeColor ?? const Color(0xFF6FB8E9))
+                  : const Color(0xFF555555),
               width: 1,
             ),
           ),
@@ -261,17 +261,15 @@ class _AlignmentButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final buttonColor = isActive 
-        ? const Color(0xFF6FB8E9)
-        : const Color(0xFF666666);
-    
-    final backgroundColor = isActive 
+    final buttonColor =
+        isActive ? const Color(0xFF6FB8E9) : const Color(0xFF666666);
+
+    final backgroundColor = isActive
         ? const Color(0xFF6FB8E9).withValues(alpha: 0.2)
         : Colors.transparent;
 
-    final borderColor = isActive 
-        ? const Color(0xFF6FB8E9)
-        : const Color(0xFF444444);
+    final borderColor =
+        isActive ? const Color(0xFF6FB8E9) : const Color(0xFF444444);
 
     return Material(
       color: backgroundColor,

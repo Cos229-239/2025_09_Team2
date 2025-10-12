@@ -56,28 +56,29 @@ class SavedCustomTimer {
   });
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'label': label,
-    'studyMinutes': studyMinutes,
-    'breakMinutes': breakMinutes,
-    'iterations': iterations,
-    'hasBreakTimer': hasBreakTimer,
-    'createdAt': createdAt.toIso8601String(),
-  };
+        'id': id,
+        'label': label,
+        'studyMinutes': studyMinutes,
+        'breakMinutes': breakMinutes,
+        'iterations': iterations,
+        'hasBreakTimer': hasBreakTimer,
+        'createdAt': createdAt.toIso8601String(),
+      };
 
-  factory SavedCustomTimer.fromJson(Map<String, dynamic> json) => SavedCustomTimer(
-    id: json['id'],
-    label: json['label'],
-    studyMinutes: json['studyMinutes'],
-    breakMinutes: json['breakMinutes'],
-    iterations: json['iterations'],
-    hasBreakTimer: json['hasBreakTimer'],
-    createdAt: DateTime.parse(json['createdAt']),
-  );
+  factory SavedCustomTimer.fromJson(Map<String, dynamic> json) =>
+      SavedCustomTimer(
+        id: json['id'],
+        label: json['label'],
+        studyMinutes: json['studyMinutes'],
+        breakMinutes: json['breakMinutes'],
+        iterations: json['iterations'],
+        hasBreakTimer: json['hasBreakTimer'],
+        createdAt: DateTime.parse(json['createdAt']),
+      );
 
   TimerSession toTimerSession() {
     final phases = <SessionPhase>[];
-    
+
     // Generate phases for the custom timer
     for (int i = 0; i < iterations; i++) {
       // Add study phase
@@ -88,7 +89,7 @@ class SavedCustomTimer {
         instructions: 'Focus on your task for the set duration.',
         color: const Color(0xFF6FB8E9),
       ));
-      
+
       // Add break phase (except for the last iteration)
       if (hasBreakTimer && i < iterations - 1) {
         phases.add(SessionPhase(
@@ -100,10 +101,10 @@ class SavedCustomTimer {
         ));
       }
     }
-    
+
     return TimerSession(
       name: label,
-      description: hasBreakTimer 
+      description: hasBreakTimer
           ? '$studyMinutes min study + $breakMinutes min break × $iterations'
           : '$studyMinutes min study × $iterations',
       technique: 'Custom Timer',

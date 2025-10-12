@@ -182,8 +182,10 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
               shape: BoxShape.circle,
               gradient: RadialGradient(
                 colors: [
-                  const Color(0xFF6FB8E9).withValues(alpha: 0.3), // New blue color
-                  const Color(0xFF6FB8E9).withValues(alpha: 0.1), // New blue color
+                  const Color(0xFF6FB8E9)
+                      .withValues(alpha: 0.3), // New blue color
+                  const Color(0xFF6FB8E9)
+                      .withValues(alpha: 0.1), // New blue color
                   Colors.transparent,
                 ],
               ),
@@ -200,13 +202,16 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF6FB8E9).withValues(alpha: 0.6), // New blue color
-                  const Color(0xFF6FB8E9).withValues(alpha: 0.4), // New blue color
+                  const Color(0xFF6FB8E9)
+                      .withValues(alpha: 0.6), // New blue color
+                  const Color(0xFF6FB8E9)
+                      .withValues(alpha: 0.4), // New blue color
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3), // New blue color
+                  color: const Color(0xFF6FB8E9)
+                      .withValues(alpha: 0.3), // New blue color
                   blurRadius: 15,
                   spreadRadius: 5,
                 ),
@@ -262,7 +267,8 @@ class _PetDisplayWidgetState extends State<PetDisplayWidget>
         color: const Color(0xFF1C1F35).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: const Color(0xFF6FB8E9).withValues(alpha: 0.2), // New blue color
+          color:
+              const Color(0xFF6FB8E9).withValues(alpha: 0.2), // New blue color
           width: 1,
         ),
       ),

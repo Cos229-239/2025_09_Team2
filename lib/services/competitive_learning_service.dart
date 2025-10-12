@@ -356,52 +356,56 @@ class CompetitiveLearningService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
-  
+
   // Collection references
-  CollectionReference get _competitionsCollection => _firestore.collection('competitions');
-  CollectionReference get _leaderboardsCollection => _firestore.collection('leaderboards');
-  CollectionReference get _userStatsCollection => _firestore.collection('user_competitive_stats');
+  CollectionReference get _competitionsCollection =>
+      _firestore.collection('competitions');
+  CollectionReference get _leaderboardsCollection =>
+      _firestore.collection('leaderboards');
+  CollectionReference get _userStatsCollection =>
+      _firestore.collection('user_competitive_stats');
   CollectionReference get _usersCollection => _firestore.collection('users');
-  
+
   // Local cache
   static const String _leaderboardsKey = 'leaderboards_cache';
   static const String _competitionsKey = 'competitions_cache';
   static const String _competitiveStatsKey = 'competitive_stats_cache';
   static const String _peerComparisonsKey = 'peer_comparisons_cache';
-  
+
   SharedPreferences? _prefs;
   Map<String, List<LeaderboardEntry>> _leaderboards = {};
   List<Competition> _competitions = [];
   CompetitiveStats? _userStats;
   final List<PeerComparison> _peerComparisons = [];
-  
+
   // Stream subscriptions for real-time updates
   final Map<String, StreamSubscription> _subscriptions = {};
 
   /// Initialize the service with Firebase integration
   Future<void> initialize(String userId) async {
     _prefs = await SharedPreferences.getInstance();
-    
+
     // Load cached data first for instant UI
     await _loadCachedData();
-    
+
     // Then sync with Firebase
     await _syncWithFirebase(userId);
-    
+
     // Set up real-time listeners
     _setupRealtimeListeners(userId);
-    
+
     // Initialize default competitions if needed
     await _ensureDefaultCompetitions();
   }
-  
+
   /// Load cached data for instant UI
   Future<void> _loadCachedData() async {
     try {
       // Load leaderboards
       final leaderboardsData = _prefs?.getString(_leaderboardsKey);
       if (leaderboardsData != null) {
-        final Map<String, dynamic> leaderboardsMap = jsonDecode(leaderboardsData);
+        final Map<String, dynamic> leaderboardsMap =
+            jsonDecode(leaderboardsData);
         _leaderboards = leaderboardsMap.map((key, value) => MapEntry(key,
             (value as List).map((e) => LeaderboardEntry.fromJson(e)).toList()));
       }
@@ -410,7 +414,8 @@ class CompetitiveLearningService {
       final competitionsData = _prefs?.getString(_competitionsKey);
       if (competitionsData != null) {
         final List<dynamic> competitionsList = jsonDecode(competitionsData);
-        _competitions = competitionsList.map((c) => Competition.fromJson(c)).toList();
+        _competitions =
+            competitionsList.map((c) => Competition.fromJson(c)).toList();
       }
 
       // Load competitive stats
@@ -422,7 +427,7 @@ class CompetitiveLearningService {
       debugPrint('Error loading cached competitive data: $e');
     }
   }
-  
+
   /// Sync with Firebase to get latest data
   Future<void> _syncWithFirebase(String userId) async {
     try {
@@ -440,30 +445,30 @@ class CompetitiveLearningService {
         );
         await _userStatsCollection.doc(userId).set(_userStats!.toJson());
       }
-      
+
       // Load competitions from Firebase
       final competitionsSnapshot = await _competitionsCollection
           .orderBy('startDate', descending: true)
           .limit(50)
           .get();
-      
+
       _competitions = competitionsSnapshot.docs
           .map((doc) => Competition.fromJson({
                 ...doc.data() as Map<String, dynamic>,
                 'id': doc.id,
               }))
           .toList();
-      
+
       // Load leaderboards for all categories and periods
       await _loadLeaderboardsFromFirebase();
-      
+
       // Cache the data
       await _cacheData();
     } catch (e) {
       debugPrint('Error syncing with Firebase: $e');
     }
   }
-  
+
   /// Load leaderboards from Firebase
   Future<void> _loadLeaderboardsFromFirebase() async {
     for (final period in LeaderboardPeriod.values) {
@@ -471,12 +476,13 @@ class CompetitiveLearningService {
         try {
           final key = '${period.name}_${category.name}';
           final leaderboardDoc = await _leaderboardsCollection.doc(key).get();
-          
+
           if (leaderboardDoc.exists) {
             final data = leaderboardDoc.data() as Map<String, dynamic>;
             final entries = (data['entries'] as List?)
-                ?.map((e) => LeaderboardEntry.fromJson(e))
-                .toList() ?? [];
+                    ?.map((e) => LeaderboardEntry.fromJson(e))
+                    .toList() ??
+                [];
             _leaderboards[key] = entries;
           }
         } catch (e) {
@@ -485,14 +491,12 @@ class CompetitiveLearningService {
       }
     }
   }
-  
+
   /// Set up real-time listeners for competitions and leaderboards
   void _setupRealtimeListeners(String userId) {
     // Listen to user stats changes
-    _subscriptions['userStats'] = _userStatsCollection
-        .doc(userId)
-        .snapshots()
-        .listen((snapshot) {
+    _subscriptions['userStats'] =
+        _userStatsCollection.doc(userId).snapshots().listen((snapshot) {
       if (snapshot.exists) {
         _userStats = CompetitiveStats.fromJson(
           snapshot.data() as Map<String, dynamic>,
@@ -500,7 +504,7 @@ class CompetitiveLearningService {
         _cacheData();
       }
     });
-    
+
     // Listen to competitions changes
     _subscriptions['competitions'] = _competitionsCollection
         .where('isActive', isEqualTo: true)
@@ -515,16 +519,16 @@ class CompetitiveLearningService {
       _cacheData();
     });
   }
-  
+
   /// Ensure default competitions exist
   Future<void> _ensureDefaultCompetitions() async {
     try {
       final now = DateTime.now();
-      
+
       // Check if daily competition exists for today
       final dailyId = 'daily_xp_${now.year}_${now.month}_${now.day}';
       final dailyDoc = await _competitionsCollection.doc(dailyId).get();
-      
+
       if (!dailyDoc.exists) {
         final dailyComp = Competition(
           id: dailyId,
@@ -558,12 +562,13 @@ class CompetitiveLearningService {
         );
         await _competitionsCollection.doc(dailyId).set(dailyComp.toJson());
       }
-      
+
       // Check if weekly competition exists
       final weekStart = now.subtract(Duration(days: now.weekday - 1));
-      final weeklyId = 'weekly_time_${weekStart.year}_${weekStart.month}_${weekStart.day}';
+      final weeklyId =
+          'weekly_time_${weekStart.year}_${weekStart.month}_${weekStart.day}';
       final weeklyDoc = await _competitionsCollection.doc(weeklyId).get();
-      
+
       if (!weeklyDoc.exists) {
         final weeklyComp = Competition(
           id: weeklyId,
@@ -588,11 +593,11 @@ class CompetitiveLearningService {
         );
         await _competitionsCollection.doc(weeklyId).set(weeklyComp.toJson());
       }
-      
+
       // Check if monthly competition exists
       final monthlyId = 'monthly_accuracy_${now.year}_${now.month}';
       final monthlyDoc = await _competitionsCollection.doc(monthlyId).get();
-      
+
       if (!monthlyDoc.exists) {
         final monthStart = DateTime(now.year, now.month, 1);
         final monthlyComp = Competition(
@@ -623,7 +628,7 @@ class CompetitiveLearningService {
       debugPrint('Error ensuring default competitions: $e');
     }
   }
-  
+
   /// Cache data to SharedPreferences
   Future<void> _cacheData() async {
     try {
@@ -956,7 +961,7 @@ class CompetitiveLearningService {
     }
 
     _leaderboards[key] = leaderboard;
-    
+
     // Update in Firebase (limit to top 100 to save space)
     try {
       await _leaderboardsCollection.doc(key).set({
@@ -1034,11 +1039,13 @@ class CompetitiveLearningService {
       });
 
       if (comp.participants.contains(userId)) return false; // Already joined
-      if (comp.participants.length >= comp.maxParticipants) return false; // Full
+      if (comp.participants.length >= comp.maxParticipants)
+        return false; // Full
 
       // Update in Firebase using transaction to prevent race conditions
       await _firestore.runTransaction((transaction) async {
-        final freshDoc = await transaction.get(_competitionsCollection.doc(competitionId));
+        final freshDoc =
+            await transaction.get(_competitionsCollection.doc(competitionId));
         if (!freshDoc.exists) throw Exception('Competition not found');
 
         final freshComp = Competition.fromJson({
@@ -1178,7 +1185,7 @@ class CompetitiveLearningService {
   List<PeerComparison> getPeerComparisons(String userId) {
     return _peerComparisons.where((c) => c.userId == userId).toList();
   }
-  
+
   /// Update user scores from analytics data
   Future<void> updateScoresFromAnalytics({
     required String userId,
@@ -1189,24 +1196,24 @@ class CompetitiveLearningService {
   }) async {
     // Extract competitive scores from analytics
     final categoryScores = <CompetitionCategory, double>{
-      CompetitionCategory.studyTime: 
+      CompetitionCategory.studyTime:
           (analyticsData['totalStudyTimeMinutes'] as num?)?.toDouble() ?? 0.0,
-      CompetitionCategory.accuracy: 
+      CompetitionCategory.accuracy:
           (analyticsData['averageAccuracy'] as num?)?.toDouble() ?? 0.0,
-      CompetitionCategory.streaks: 
+      CompetitionCategory.streaks:
           (analyticsData['currentStreak'] as num?)?.toDouble() ?? 0.0,
-      CompetitionCategory.xpGained: 
+      CompetitionCategory.xpGained:
           (analyticsData['totalXp'] as num?)?.toDouble() ?? 0.0,
-      CompetitionCategory.sessionsCompleted: 
+      CompetitionCategory.sessionsCompleted:
           (analyticsData['sessionsCompleted'] as num?)?.toDouble() ?? 0.0,
-      CompetitionCategory.questionsAnswered: 
+      CompetitionCategory.questionsAnswered:
           (analyticsData['questionsAnswered'] as num?)?.toDouble() ?? 0.0,
-      CompetitionCategory.subjectMastery: 
+      CompetitionCategory.subjectMastery:
           (analyticsData['subjectsMastered'] as num?)?.toDouble() ?? 0.0,
-      CompetitionCategory.overallProgress: 
+      CompetitionCategory.overallProgress:
           (analyticsData['overallProgress'] as num?)?.toDouble() ?? 0.0,
     };
-    
+
     await updateUserPerformance(
       userId: userId,
       username: username,
@@ -1215,7 +1222,7 @@ class CompetitiveLearningService {
       categoryScores: categoryScores,
     );
   }
-  
+
   /// Award competition rewards to winner
   Future<void> awardCompetitionRewards({
     required String userId,
@@ -1225,7 +1232,7 @@ class CompetitiveLearningService {
     final applicableRewards = competition.rewards
         .where((r) => rank >= r.minRank && rank <= r.maxRank)
         .toList();
-    
+
     for (final reward in applicableRewards) {
       try {
         // Update user document with rewards
@@ -1235,7 +1242,7 @@ class CompetitiveLearningService {
             reward.type == 'xp' ? (reward.value as num).toInt() : 0,
           ),
         });
-        
+
         // Track analytics
         await _analytics.logEvent(
           name: 'competition_reward_earned',
@@ -1251,7 +1258,7 @@ class CompetitiveLearningService {
       }
     }
   }
-  
+
   /// Check and finalize ended competitions
   Future<void> finalizeEndedCompetitions() async {
     try {
@@ -1259,12 +1266,12 @@ class CompetitiveLearningService {
       final endedComps = _competitions
           .where((c) => c.isActive && c.endDate.isBefore(now))
           .toList();
-      
+
       for (final comp in endedComps) {
         // Get final leaderboard
         final key = '${LeaderboardPeriod.daily.name}_${comp.category.name}';
         final leaderboard = _leaderboards[key] ?? [];
-        
+
         // Award rewards to top participants
         for (final entry in leaderboard) {
           if (comp.participants.contains(entry.userId)) {
@@ -1273,7 +1280,7 @@ class CompetitiveLearningService {
               competition: comp,
               rank: entry.rank,
             );
-            
+
             // Update winner stats
             if (entry.rank == 1) {
               await _userStatsCollection.doc(entry.userId).update({
@@ -1283,12 +1290,12 @@ class CompetitiveLearningService {
             }
           }
         }
-        
+
         // Mark competition as inactive
         await _competitionsCollection.doc(comp.id).update({
           'isActive': false,
         });
-        
+
         // Track analytics
         await _analytics.logEvent(
           name: 'competition_finalized',
@@ -1299,14 +1306,14 @@ class CompetitiveLearningService {
           },
         );
       }
-      
+
       // Refresh competitions list
       await _syncWithFirebase(_auth.currentUser?.uid ?? '');
     } catch (e) {
       debugPrint('Error finalizing competitions: $e');
     }
   }
-  
+
   /// Get friend IDs from Firebase
   Future<List<String>> getFriendIds(String userId) async {
     try {
@@ -1321,7 +1328,7 @@ class CompetitiveLearningService {
     }
     return [];
   }
-  
+
   /// Cleanup method to cancel subscriptions
   void dispose() {
     for (final subscription in _subscriptions.values) {

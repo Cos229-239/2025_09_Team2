@@ -58,7 +58,7 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
 
   void _updateToolbarState() {
     final selection = _contentController.selection;
-    
+
     setState(() {
       // If there's a valid selection, check the formatting of the selected text
       if (selection.isValid && !selection.isCollapsed) {
@@ -70,7 +70,7 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
       }
       // For cursor position (no selection), keep current formatting states
       // This ensures buttons stay visually active for future typing
-      
+
       _currentAlignment = _getCurrentAlignment();
       _currentFontSize = _getCurrentFontSize();
     });
@@ -112,7 +112,7 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
 
   void _setFontSize(int fontSize) {
     _contentController.formatSelection(SizeAttribute(fontSize.toString()));
-    
+
     // Immediately update toolbar state after formatting
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateToolbarState();
@@ -121,13 +121,15 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
 
   void _toggleBulletList() {
     final isActive = _selectionHas(Attribute.list);
-    _contentController.formatSelection(isActive ? Attribute.clone(Attribute.list, null) : const ListAttribute('bullet'));
-    
+    _contentController.formatSelection(isActive
+        ? Attribute.clone(Attribute.list, null)
+        : const ListAttribute('bullet'));
+
     // Immediately update state for visual feedback
     setState(() {
       _isBulletList = !isActive;
     });
-    
+
     // Also update other states after formatting
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateToolbarState();
@@ -136,15 +138,16 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
 
   void _toggleInline(Attribute attribute) {
     final isActive = _selectionHas(attribute);
-    _contentController.formatSelection(isActive ? Attribute.clone(attribute, null) : attribute);
-    
+    _contentController.formatSelection(
+        isActive ? Attribute.clone(attribute, null) : attribute);
+
     // Immediately update state for visual feedback
     setState(() {
       if (attribute == Attribute.bold) _isBold = !isActive;
       if (attribute == Attribute.italic) _isItalic = !isActive;
       if (attribute == Attribute.underline) _isUnderline = !isActive;
     });
-    
+
     // Also update other states after formatting
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateToolbarState();
@@ -153,13 +156,15 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
 
   void _toggleHighlight() {
     final isActive = _selectionHas(Attribute.background);
-    _contentController.formatSelection(isActive ? Attribute.clone(Attribute.background, null) : const BackgroundAttribute('#FFFF00'));
-    
+    _contentController.formatSelection(isActive
+        ? Attribute.clone(Attribute.background, null)
+        : const BackgroundAttribute('#FFFF00'));
+
     // Immediately update state for visual feedback
     setState(() {
       _isHighlighted = !isActive;
     });
-    
+
     // Also update other states after formatting
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateToolbarState();
@@ -167,14 +172,17 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
   }
 
   void _setAlignment(Attribute alignmentAttribute) {
-    _contentController.formatSelection(Attribute.clone(Attribute.leftAlignment, null));
-    _contentController.formatSelection(Attribute.clone(Attribute.centerAlignment, null));
-    _contentController.formatSelection(Attribute.clone(Attribute.rightAlignment, null));
-    
+    _contentController
+        .formatSelection(Attribute.clone(Attribute.leftAlignment, null));
+    _contentController
+        .formatSelection(Attribute.clone(Attribute.centerAlignment, null));
+    _contentController
+        .formatSelection(Attribute.clone(Attribute.rightAlignment, null));
+
     if (alignmentAttribute != Attribute.leftAlignment) {
       _contentController.formatSelection(alignmentAttribute);
     }
-    
+
     // Immediately update toolbar state after formatting
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateToolbarState();
@@ -195,7 +203,7 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
       // Get the Quill document delta as JSON to preserve rich text formatting
       final delta = _contentController.document.toDelta();
       final contentJson = jsonEncode(delta.toJson());
-      
+
       // Validate content manually since it's not in a TextFormField
       final plainText = _contentController.document.toPlainText();
       if (plainText.trim().isEmpty) {
@@ -207,16 +215,18 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
         );
         return;
       }
-      
+
       final note = Note(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text.trim(),
-        contentMd: contentJson,  // Store as JSON string
-        tags: _selectedSubject != 'General' ? [_selectedSubject.toLowerCase()] : [],
+        contentMd: contentJson, // Store as JSON string
+        tags: _selectedSubject != 'General'
+            ? [_selectedSubject.toLowerCase()]
+            : [],
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      
+
       widget.onSaveNote(note);
     }
   }
@@ -285,7 +295,8 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
             items: _subjects.map((String subject) {
               return DropdownMenuItem<String>(
                 value: subject,
-                child: Text(subject, style: const TextStyle(color: Colors.white)),
+                child:
+                    Text(subject, style: const TextStyle(color: Colors.white)),
               );
             }).toList(),
             onChanged: (String? newValue) {
@@ -365,7 +376,8 @@ class _CreateNoteFormState extends State<CreateNoteForm> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6FB8E9),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

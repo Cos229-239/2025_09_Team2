@@ -425,9 +425,11 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                       value: 'view',
                       child: Row(
                         children: [
-                          const Icon(Icons.visibility, size: 16, color: Color(0xFF6FB8E9)),
+                          const Icon(Icons.visibility,
+                              size: 16, color: Color(0xFF6FB8E9)),
                           const SizedBox(width: 8),
-                          const Text('View Details', style: TextStyle(color: Color(0xFFD9D9D9))),
+                          const Text('View Details',
+                              style: TextStyle(color: Color(0xFFD9D9D9))),
                         ],
                       ),
                     ),
@@ -436,9 +438,11 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                         value: 'edit',
                         child: Row(
                           children: [
-                            const Icon(Icons.edit, size: 16, color: Color(0xFF6FB8E9)),
+                            const Icon(Icons.edit,
+                                size: 16, color: Color(0xFF6FB8E9)),
                             const SizedBox(width: 8),
-                            const Text('Edit', style: TextStyle(color: Color(0xFFD9D9D9))),
+                            const Text('Edit',
+                                style: TextStyle(color: Color(0xFFD9D9D9))),
                           ],
                         ),
                       ),
@@ -446,9 +450,11 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                       value: 'delete',
                       child: Row(
                         children: [
-                          const Icon(Icons.delete, size: 16, color: Color(0xFFEF5350)),
+                          const Icon(Icons.delete,
+                              size: 16, color: Color(0xFFEF5350)),
                           const SizedBox(width: 8),
-                          const Text('Delete', style: TextStyle(color: Color(0xFFEF5350))),
+                          const Text('Delete',
+                              style: TextStyle(color: Color(0xFFEF5350))),
                         ],
                       ),
                     ),
@@ -565,7 +571,8 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF242628),
-        title: const Text('Delete Event', style: TextStyle(color: Color(0xFFD9D9D9))),
+        title: const Text('Delete Event',
+            style: TextStyle(color: Color(0xFFD9D9D9))),
         content: Text(
           'Are you sure you want to delete "${event.title}"?',
           style: const TextStyle(color: Color(0xFF888888)),
@@ -573,16 +580,18 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Color(0xFF6FB8E9))),
+            child: const Text('Cancel',
+                style: TextStyle(color: Color(0xFF6FB8E9))),
           ),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context); // Close dialog first
-              
+
               // Delete the event from CalendarProvider and Firestore
-              final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+              final calendarProvider =
+                  Provider.of<CalendarProvider>(context, listen: false);
               final success = await calendarProvider.deleteEvent(event);
-              
+
               if (success && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -594,12 +603,13 @@ class _DayItineraryScreenState extends State<DayItineraryScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Failed to delete event'),
-                    backgroundColor:  Color(0xFFEF5350),
+                    backgroundColor: Color(0xFFEF5350),
                   ),
                 );
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFEF5350)),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF5350)),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -708,9 +718,10 @@ class _EventFormDialogState extends State<_EventFormDialog> {
                     Expanded(
                       child: Text(
                         widget.isEditMode ? 'Edit Event' : 'Create Event',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                     ),
                     IconButton(
@@ -767,7 +778,8 @@ class _EventFormDialogState extends State<_EventFormDialog> {
                       value: type,
                       child: Row(
                         children: [
-                          Icon(type.defaultIcon, size: 18, color: type.defaultColor),
+                          Icon(type.defaultIcon,
+                              size: 18, color: type.defaultColor),
                           const SizedBox(width: 8),
                           Text(type.displayName),
                         ],
@@ -865,7 +877,8 @@ class _EventFormDialogState extends State<_EventFormDialog> {
                   children: [
                     const Text(
                       'Priority',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -972,7 +985,7 @@ class _EventFormDialogState extends State<_EventFormDialog> {
         });
       } else {
         if (!mounted) return;
-        
+
         final time = await showTimePicker(
           context: this.context, // Use State's context
           initialTime: TimeOfDay.fromDateTime(_startTime),
@@ -1003,7 +1016,7 @@ class _EventFormDialogState extends State<_EventFormDialog> {
 
     if (date != null && mounted) {
       if (!mounted) return;
-      
+
       final time = await showTimePicker(
         context: this.context, // Use State's context
         initialTime: _endTime != null
@@ -1058,7 +1071,7 @@ class _EventFormDialogState extends State<_EventFormDialog> {
         );
 
         final result = await provider.updateEvent(updatedEvent);
-        
+
         if (result != null && navigator.mounted) {
           navigator.pop();
           messenger.showSnackBar(
@@ -1141,7 +1154,8 @@ class _EventDetailsDialog extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: event.color.withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1153,7 +1167,10 @@ class _EventDetailsDialog extends StatelessWidget {
                       Expanded(
                         child: Text(
                           event.title,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -1176,7 +1193,8 @@ class _EventDetailsDialog extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (event.description.isNotEmpty && event.description != event.title) ...[
+                  if (event.description.isNotEmpty &&
+                      event.description != event.title) ...[
                     _buildDetailRow(
                       Icons.description,
                       'Description',
@@ -1184,14 +1202,12 @@ class _EventDetailsDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   _buildDetailRow(
                     Icons.event,
                     'Type',
                     event.type.displayName,
                   ),
                   const SizedBox(height: 16),
-
                   _buildDetailRow(
                     Icons.access_time,
                     'Time',
@@ -1200,7 +1216,6 @@ class _EventDetailsDialog extends StatelessWidget {
                         : event.formattedTime,
                   ),
                   const SizedBox(height: 16),
-
                   if (event.estimatedMinutes != null) ...[
                     _buildDetailRow(
                       Icons.timer,
@@ -1209,14 +1224,12 @@ class _EventDetailsDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   _buildDetailRow(
                     Icons.flag,
                     'Priority',
                     _getPriorityText(event.priority),
                   ),
                   const SizedBox(height: 16),
-
                   if (event.location != null && event.location!.isNotEmpty) ...[
                     _buildDetailRow(
                       Icons.location_on,
@@ -1225,7 +1238,6 @@ class _EventDetailsDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   if (event.tags.isNotEmpty) ...[
                     _buildDetailRow(
                       Icons.label,
@@ -1234,13 +1246,11 @@ class _EventDetailsDialog extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                   ],
-
                   _buildDetailRow(
                     Icons.calendar_today,
                     'Created',
                     DateFormat('MMM d, y • h:mm a').format(event.createdAt),
                   ),
-
                   if (event.createdAt != event.updatedAt) ...[
                     const SizedBox(height: 16),
                     _buildDetailRow(

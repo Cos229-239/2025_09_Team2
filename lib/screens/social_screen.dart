@@ -114,15 +114,17 @@ class _SocialScreenState extends State<SocialScreen>
   Future<void> _updateUserPerformanceFromAnalytics() async {
     try {
       // Get user analytics from Firebase
-      final analytics = await _analyticsService.getUserAnalytics(_currentUserId);
-      
+      final analytics =
+          await _analyticsService.getUserAnalytics(_currentUserId);
+
       if (analytics != null && _competitiveService != null) {
         // Convert analytics data to competitive scores
         final analyticsData = {
           'totalStudyTimeMinutes': analytics.totalStudyTime.toDouble(),
           'averageAccuracy': analytics.overallAccuracy,
           'currentStreak': analytics.currentStreak.toDouble(),
-          'totalXp': (analytics.totalCardsStudied * 10).toDouble(), // Estimate XP
+          'totalXp':
+              (analytics.totalCardsStudied * 10).toDouble(), // Estimate XP
           'sessionsCompleted': analytics.totalQuizzesTaken.toDouble(),
           'questionsAnswered': analytics.totalCardsStudied.toDouble(),
           'subjectsMastered': analytics.subjectPerformance.length.toDouble(),
@@ -144,7 +146,7 @@ class _SocialScreenState extends State<SocialScreen>
   Future<void> _loadFriendComparisons() async {
     try {
       if (_competitiveService == null) return;
-      
+
       // Get friend IDs from Firebase
       final friendIds = await _competitiveService!.getFriendIds(_currentUserId);
 
@@ -577,18 +579,19 @@ class _SocialScreenState extends State<SocialScreen>
             itemCount: friends.length,
             itemBuilder: (context, index) {
               final friendship = friends[index];
-              
+
               // Determine the friend's ID (not the current user's ID)
               final currentUserId = _socialService!.currentUserProfile?.id;
-              final friendId = friendship.userId == currentUserId 
-                  ? friendship.friendId 
+              final friendId = friendship.userId == currentUserId
+                  ? friendship.friendId
                   : friendship.userId;
-              
+
               // Fetch the friend's actual profile
               // Using refresh key ensures FutureBuilder rebuilds when cache is cleared
               return FutureBuilder<service.UserProfile?>(
                 key: ValueKey('friend_${friendId}_$_profileRefreshKey'),
-                future: _socialService!.getUserProfile(friendId, forceRefresh: true),
+                future: _socialService!
+                    .getUserProfile(friendId, forceRefresh: true),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Card(
@@ -598,12 +601,12 @@ class _SocialScreenState extends State<SocialScreen>
                       ),
                     );
                   }
-                  
+
                   final friendProfile = snapshot.data;
                   if (friendProfile == null) {
                     return const SizedBox.shrink();
                   }
-                  
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: UserProfileCard(
@@ -663,23 +666,27 @@ class _SocialScreenState extends State<SocialScreen>
                       future: _socialService!.getUserProfile(request.userId),
                       builder: (context, snapshot) {
                         // Show loading indicator while fetching
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: FriendRequestCard(
                               friendship: request,
-                              requesterProfile: null, // Will show "Unknown User" while loading
+                              requesterProfile:
+                                  null, // Will show "Unknown User" while loading
                               onAccept: () => _acceptFriendRequest(request.id),
-                              onDecline: () => _declineFriendRequest(request.id),
+                              onDecline: () =>
+                                  _declineFriendRequest(request.id),
                             ),
                           );
                         }
-                        
+
                         // Show error state if fetch failed
                         if (snapshot.hasError) {
-                          debugPrint('Error loading profile for ${request.userId}: ${snapshot.error}');
+                          debugPrint(
+                              'Error loading profile for ${request.userId}: ${snapshot.error}');
                         }
-                        
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: FriendRequestCard(
@@ -900,7 +907,7 @@ class _SocialScreenState extends State<SocialScreen>
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        
+
         if (snapshot.hasError) {
           return Center(
             child: Column(
@@ -916,9 +923,9 @@ class _SocialScreenState extends State<SocialScreen>
             ),
           );
         }
-        
+
         final groups = snapshot.data ?? [];
-        
+
         if (groups.isEmpty) {
           return const Center(
             child: Column(
@@ -1142,9 +1149,10 @@ class _SocialScreenState extends State<SocialScreen>
   void _createStudyGroup() async {
     await showDialog(
       context: context,
-      builder: (context) => CreateStudyGroupDialog(socialService: _socialService!),
+      builder: (context) =>
+          CreateStudyGroupDialog(socialService: _socialService!),
     );
-    
+
     // Refresh the UI after the dialog closes to show the new group
     setState(() {});
   }
@@ -1832,7 +1840,7 @@ class _AddFriendDialogState extends State<_AddFriendDialog> {
 
 class CreateStudyGroupDialog extends StatefulWidget {
   final service.SocialLearningService socialService;
-  
+
   const CreateStudyGroupDialog({
     super.key,
     required this.socialService,
@@ -2202,7 +2210,7 @@ class _CreateStudyGroupDialogState extends State<CreateStudyGroupDialog> {
     } catch (e) {
       debugPrint('❌ Error creating study group in UI: $e');
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error creating study group: $e'),

@@ -153,14 +153,14 @@ class PetProvider extends ChangeNotifier {
 
     try {
       final pet = await _firestoreService.getUserPet();
-      
+
       if (pet != null) {
         _currentPet = pet;
         developer.log(
             'Pet loaded successfully: Level ${pet.level}, XP ${pet.xp}',
             name: 'PetProvider');
       } else {
-        developer.log('No pet found for user, user can create one from UI', 
+        developer.log('No pet found for user, user can create one from UI',
             name: 'PetProvider');
         // Don't auto-create here - let the UI handle it
         // This gives users the choice of which pet species to start with
