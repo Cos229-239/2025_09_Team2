@@ -1694,17 +1694,17 @@ class _LearningScreenState extends State<LearningScreen>
               width: 2,
             ),
           ),
-          child: Container(
-            constraints: const BoxConstraints(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
               maxWidth: 600,
-              maxHeight: 700,
+              maxHeight: MediaQuery.of(context).size.height * 0.85, // 85% of screen height
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(14),
@@ -1738,7 +1738,7 @@ class _LearningScreenState extends State<LearningScreen>
                               'AI Flashcard Generator',
                               style: TextStyle(
                                 color: Color(0xFFD9D9D9),
-                                fontSize: 20,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1746,7 +1746,7 @@ class _LearningScreenState extends State<LearningScreen>
                               'Create flashcards using AI',
                               style: TextStyle(
                                 color: Color(0xFFD9D9D9),
-                                fontSize: 14,
+                                fontSize: 13,
                               ),
                             ),
                           ],
@@ -1764,9 +1764,9 @@ class _LearningScreenState extends State<LearningScreen>
                 ),
                 
                 // Content area with AI Flashcard Generator
-                Expanded(
+                Flexible(
                   child: Container(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
                     child: const SingleChildScrollView(
                       child: AIFlashcardGenerator(),
                     ),
