@@ -2317,10 +2317,6 @@ class _DashboardHomeState extends State<DashboardHome>
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.white, // Changed to white color
-
-                    color:
-                        const Color(0xFF6FB8E9), // Match blue container borders
-
                   ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
