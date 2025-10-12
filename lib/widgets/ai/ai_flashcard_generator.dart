@@ -69,6 +69,17 @@ class _AIFlashcardGeneratorState extends State<AIFlashcardGenerator>
   @override
   void initState() {
     super.initState();
+    
+    // Initialize learning style from user's preferences
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final appState = Provider.of<AppState>(context, listen: false);
+      if (appState.currentUser != null) {
+        setState(() {
+          _selectedLearningStyle = appState.currentUser!.preferences.learningStyle;
+        });
+      }
+    });
+    
     // Pre-fill text fields if initial values are provided
     if (widget.initialTopic != null) {
       _topicController.text = widget.initialTopic!;
