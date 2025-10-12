@@ -345,8 +345,9 @@ Ask me anything - all responses will be validated!
 
   /// Send a message and get AI response
   Future<void> sendMessage(String content, {app_user.User? user}) async {
-    if (_currentSession == null || content.trim().isEmpty || _isGenerating)
+    if (_currentSession == null || content.trim().isEmpty || _isGenerating) {
       return;
+    }
 
     // Simple duplicate prevention: ignore identical messages sent within 2 seconds
     final now = DateTime.now();
@@ -870,24 +871,33 @@ Ask me anything - all responses will be validated!
     ];
 
     // Use case-insensitive matching for better accuracy
-    if (mathKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    if (mathKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.mathematics;
-    if (scienceKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (scienceKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.science;
-    if (historyKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (historyKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.history;
-    if (literatureKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (literatureKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.literature;
-    if (languageKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (languageKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.language;
-    if (philosophyKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (philosophyKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.philosophy;
-    if (artsKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (artsKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.arts;
-    if (techKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (techKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.technology;
-    if (socialKeywords.any((k) => contentLower.contains(k.toLowerCase())))
+    }
+    if (socialKeywords.any((k) => contentLower.contains(k.toLowerCase()))) {
       return SubjectType.socialStudies;
+    }
 
     _log(
         'Subject classification failed for: "$content" - defaulting to general',
@@ -1220,14 +1230,18 @@ Ask me anything - all responses will be validated!
       'sequence'
     ];
 
-    if (questioningIndicators.any((i) => content.contains(i)))
+    if (questioningIndicators.any((i) => content.contains(i))) {
       return LearningApproach.socratic;
-    if (exampleIndicators.any((i) => content.contains(i)))
+    }
+    if (exampleIndicators.any((i) => content.contains(i))) {
       return LearningApproach.exampleBased;
-    if (analogyIndicators.any((i) => content.contains(i)))
+    }
+    if (analogyIndicators.any((i) => content.contains(i))) {
       return LearningApproach.analogical;
-    if (stepIndicators.any((i) => content.contains(i)))
+    }
+    if (stepIndicators.any((i) => content.contains(i))) {
       return LearningApproach.scaffolded;
+    }
 
     return LearningApproach.direct;
   }

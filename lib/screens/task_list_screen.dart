@@ -104,8 +104,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
   List<Task> _getTodayTasks(List<Task> allTasks) {
     final today = DateTime.now();
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed)
+      if (task.dueAt == null || task.status == TaskStatus.completed) {
         return false;
+      }
       return task.dueAt!.year == today.year &&
           task.dueAt!.month == today.month &&
           task.dueAt!.day == today.day;
@@ -119,8 +120,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed)
+      if (task.dueAt == null || task.status == TaskStatus.completed) {
         return false;
+      }
       // Exclude today's tasks as they're shown in the today section
       final isToday = task.dueAt!.year == today.year &&
           task.dueAt!.month == today.month &&
@@ -140,8 +142,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final endOfMonth = DateTime(today.year, today.month + 1, 0);
 
     return allTasks.where((task) {
-      if (task.dueAt == null || task.status == TaskStatus.completed)
+      if (task.dueAt == null || task.status == TaskStatus.completed) {
         return false;
+      }
 
       // Exclude tasks already shown in today and this week sections
       final startOfWeek = today.subtract(Duration(days: today.weekday - 1));

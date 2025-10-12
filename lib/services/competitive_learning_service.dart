@@ -1039,8 +1039,9 @@ class CompetitiveLearningService {
       });
 
       if (comp.participants.contains(userId)) return false; // Already joined
-      if (comp.participants.length >= comp.maxParticipants)
+      if (comp.participants.length >= comp.maxParticipants) {
         return false; // Full
+      }
 
       // Update in Firebase using transaction to prevent race conditions
       await _firestore.runTransaction((transaction) async {
