@@ -47,6 +47,7 @@ import 'package:studypals/widgets/ai/ai_flashcard_generator.dart'; // AI-powered
 import 'package:studypals/widgets/ai/ai_tutor_chat.dart'; // AI Tutor chat interface
 import 'package:studypals/screens/unified_planner_screen.dart'; // Unified planner screen
 import 'package:studypals/screens/progress_screen.dart'; // Progress screen
+import 'package:studypals/screens/spotify_integration_screen.dart'; // Spotify integration screen
 
 // Import state providers for loading data from different app modules
 import 'package:studypals/providers/task_provider.dart'; // Task management state
@@ -2019,6 +2020,104 @@ class _DashboardHomeState extends State<DashboardHome>
         mainAxisAlignment: MainAxisAlignment
             .spaceEvenly, // Distribute items evenly across full height
         children: [
+
+        // Menu items
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.emoji_events,
+          title: 'Badges',
+          color: Colors.orange,
+          onTap: () {
+            _closeAllPanels();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AchievementScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.timer,
+          title: 'Timer',
+          color: Colors.red,
+          onTap: () {
+            _closeAllPanels();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TimerScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.shopping_bag,
+          title: 'Shop',
+          color: Colors.green,
+          onTap: () {
+            _closeAllPanels();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Shop feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.music_note,
+          title: 'Music',
+          color: Colors.purple,
+          onTap: () {
+            _closeAllPanels();
+            // Navigate to Spotify Integration Screen
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SpotifyIntegrationScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.feedback,
+          title: 'Feedback',
+          color: Colors.teal,
+          onTap: () {
+            _closeAllPanels();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Feedback feature coming soon!')),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.settings,
+          title: 'Settings',
+          color: Colors.grey,
+          onTap: () {
+            _closeAllPanels();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
+              ),
+            );
+          },
+        ),
+        _buildHamburgerMenuItem(
+          context,
+          icon: Icons.help,
+          title: 'Help',
+          color: Colors.blueGrey,
+          onTap: () {
+            _closeAllPanels();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Help feature coming soon!')),
+            );
+          },
+        ),
           // Menu items
           _buildHamburgerMenuItem(
             context,
@@ -2217,8 +2316,11 @@ class _DashboardHomeState extends State<DashboardHome>
               'Study Pals',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: Colors.white, // Changed to white color
+
                     color:
                         const Color(0xFF6FB8E9), // Match blue container borders
+
                   ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
