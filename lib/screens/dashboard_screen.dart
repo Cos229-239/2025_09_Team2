@@ -1322,23 +1322,24 @@ class _DashboardHomeState extends State<DashboardHome>
                                 child: const CalendarDisplayWidget(),
                               ),
                             ),
-
-                            const SizedBox(height: 0),
-
-                            // Progress Graph Widget with responsive height
-                            Semantics(
-                              label: 'Progress Graph',
-                              hint: 'Displays your study progress and statistics',
-                              child: SizedBox(
-                                height: ResponsiveSpacing.getComponentHeight(context, ComponentType.graph) * 1.35 + ResponsiveSpacing.getVerticalSpacing(context) * 0.0,
-                                child: const ProgressGraphWidget(),
+                            
+                            // Progress Graph Widget with responsive height - moved extremely close to calendar with larger negative margin
+                            Transform.translate(
+                              offset: const Offset(0, -40), // Move up by 40 logical pixels (increased from -24)
+                              child: Semantics(
+                                label: 'Progress Graph',
+                                hint: 'Displays your study progress and statistics',
+                                child: SizedBox(
+                                  height: ResponsiveSpacing.getComponentHeight(context, ComponentType.graph) * 1.35 + ResponsiveSpacing.getVerticalSpacing(context) * 0.0,
+                                  child: const ProgressGraphWidget(),
+                                ),
                               ),
                             ),
 
-                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 0.7),
-
-                          // Calendar and Progress buttons row with responsive spacing
-                          Row(
+                          // Calendar and Progress buttons row with responsive spacing - moved closer to graph
+                          Transform.translate(
+                            offset: const Offset(0, -20), // Increased offset from -10 to -20 to move buttons up
+                            child: Row(
                             children: [
                               Expanded(
                                 child: _buildActionButton(
@@ -1375,13 +1376,14 @@ class _DashboardHomeState extends State<DashboardHome>
                               ),
                             ],
                           ),
-
-                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 0.7),
-
-                          // Pets Coming Soon Container
-                          Container(
-                            height: 120,
-                            margin: const EdgeInsets.symmetric(horizontal: 0),
+                          ), // Close Transform.translate for buttons row
+                          
+                          // Pets Coming Soon Container - enlarged to extend closer to toolbar
+                          Transform.translate(
+                            offset: const Offset(0, -2), // Maintains minimal spacing adjustment
+                            child: Container(
+                              height: 220, // Increased from 120 to 220 to extend closer to the toolbar
+                              margin: const EdgeInsets.symmetric(horizontal: 0),
                             decoration: BoxDecoration(
                               color: Colors.transparent,
                               borderRadius: BorderRadius.circular(16),
@@ -1411,9 +1413,10 @@ class _DashboardHomeState extends State<DashboardHome>
                               ),
                             ),
                           ),
+                          ), // Close Transform.translate for Pets container
 
-                          // Extra bottom spacing to account for floating navigation
-                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 1.5),
+                          // Reduced bottom spacing to bring container closer to toolbar
+                          SizedBox(height: ResponsiveSpacing.getVerticalSpacing(context) * 0.5), // Reduced from 1.5 to 0.5
                         ],
                       ),
                     ),
