@@ -33,6 +33,14 @@ class SchedulePredictionWidget extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.all(16),
       elevation: 4,
+      color: const Color(0xFF242628),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9).withAlpha((0.3 * 255).round()),
+          width: 1,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -58,9 +66,9 @@ class SchedulePredictionWidget extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Icon(
+        const Icon(
           Icons.schedule,
-          color: Theme.of(context).primaryColor,
+          color: Color(0xFF6FB8E9),
           size: 28,
         ),
         const SizedBox(width: 12),
@@ -68,17 +76,20 @@ class SchedulePredictionWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Optimal Study Time',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Color(0xFFD9D9D9),
+                ),
               ),
               Text(
                 'AI-Predicted Schedule',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -114,15 +125,17 @@ class SchedulePredictionWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(
+          color: const Color(0xFF6FB8E9).withAlpha((0.3 * 255).round()),
+        ),
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.access_time,
-            color: Colors.blue.shade700,
+            color: Color(0xFF6FB8E9),
             size: 24,
           ),
           const SizedBox(width: 12),
@@ -135,14 +148,14 @@ class SchedulePredictionWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.blue,
+                    color: Color(0xFF6FB8E9),
                   ),
                 ),
                 Text(
                   'Duration: ${_formatDuration(prediction.estimatedDuration)}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: Colors.blue.shade700,
+                    color: Color(0xFF6FB8E9),
                   ),
                 ),
               ],
@@ -151,15 +164,15 @@ class SchedulePredictionWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.blue.shade100,
+              color: const Color(0xFF6FB8E9).withAlpha((0.2 * 255).round()),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               '${(prediction.confidenceScore * 100).round()}% confident',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.blue.shade800,
+                color: Color(0xFF6FB8E9),
               ),
             ),
           ),
@@ -177,6 +190,7 @@ class SchedulePredictionWidget extends StatelessWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
+            color: Color(0xFFD9D9D9),
           ),
         ),
         const SizedBox(height: 8),
@@ -187,14 +201,16 @@ class SchedulePredictionWidget extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: const Color(0xFF4CAF50).withAlpha((0.2 * 255).round()),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.green.shade200),
+                border: Border.all(
+                  color: const Color(0xFF4CAF50).withAlpha((0.5 * 255).round()),
+                ),
               ),
               child: Text(
                 subject,
-                style: TextStyle(
-                  color: Colors.green.shade700,
+                style: const TextStyle(
+                  color: Color(0xFF4CAF50),
                   fontWeight: FontWeight.w500,
                   fontSize: 14,
                 ),
@@ -210,27 +226,29 @@ class SchedulePredictionWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.shade50,
+        color: const Color(0xFFFFA726).withAlpha((0.15 * 255).round()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.shade200),
+        border: Border.all(
+          color: const Color(0xFFFFA726).withAlpha((0.4 * 255).round()),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.psychology,
-                color: Colors.amber.shade700,
+                color: Color(0xFFFFA726),
                 size: 20,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'AI Reasoning',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Colors.amber.shade800,
+                  color: Color(0xFFFFA726),
                 ),
               ),
             ],
@@ -238,9 +256,9 @@ class SchedulePredictionWidget extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             prediction.reasoning,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14,
-              color: Colors.amber.shade700,
+              color: Color(0xFFFFA726),
               height: 1.4,
             ),
           ),
@@ -252,9 +270,9 @@ class SchedulePredictionWidget extends StatelessWidget {
   Widget _buildConfidenceIndicator() {
     final confidence = prediction.confidenceScore;
     final color = confidence > 0.7
-        ? Colors.green
+        ? const Color(0xFF4CAF50)
         : confidence > 0.4
-            ? Colors.orange
+            ? const Color(0xFFFFA726)
             : Colors.red;
 
     return Column(
@@ -267,6 +285,7 @@ class SchedulePredictionWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
+                color: Color(0xFFD9D9D9),
               ),
             ),
             const Spacer(),
@@ -283,16 +302,16 @@ class SchedulePredictionWidget extends StatelessWidget {
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: confidence,
-          backgroundColor: Colors.grey.shade200,
+          backgroundColor: const Color(0xFF1A1A1A),
           valueColor: AlwaysStoppedAnimation<Color>(color),
           minHeight: 6,
         ),
         const SizedBox(height: 4),
         Text(
           _getConfidenceDescription(confidence),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
-            color: Colors.grey.shade600,
+            color: Color(0xFF888888),
           ),
         ),
       ],
@@ -308,6 +327,8 @@ class SchedulePredictionWidget extends StatelessWidget {
             icon: const Icon(Icons.schedule),
             label: const Text('Schedule This'),
             style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6FB8E9),
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -322,6 +343,11 @@ class SchedulePredictionWidget extends StatelessWidget {
             icon: const Icon(Icons.tune),
             label: const Text('Customize'),
             style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF6FB8E9),
+              side: const BorderSide(
+                color: Color(0xFF6FB8E9),
+                width: 2,
+              ),
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),

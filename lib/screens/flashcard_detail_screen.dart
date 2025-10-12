@@ -447,33 +447,34 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(); // Return to deck list
-            },
-            child: const Text(
-              'Done',
-              style: TextStyle(color: Color(0xFF888888)),
-            ),
-          ),
-          if (results.scorePercentage <
-              0.8) // Allow retry if score is below 80%
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1A1A1A),
-                foregroundColor: const Color(0xFFD9D9D9),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                _exitDeckQuizMode();
-              },
-              child: const Text('Study More'),
-            ),
+          // Schedule Next - Left side, hollow with blue trim
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A1A1A),
-              foregroundColor: const Color(0xFFD9D9D9),
+              backgroundColor: Colors.transparent,
+              foregroundColor: const Color(0xFF6FB8E9),
+              side: const BorderSide(
+                color: Color(0xFF6FB8E9),
+                width: 2,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _triggerSchedulePrediction();
+            },
+            child: const Text('Schedule Next'),
+          ),
+          
+          // Try Again - Center/left, hollow with blue trim
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: const Color(0xFF6FB8E9),
+              side: const BorderSide(
+                color: Color(0xFF6FB8E9),
+                width: 2,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
@@ -481,16 +482,21 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
             },
             child: const Text('Try Again'),
           ),
+          
+          const Spacer(), // Push Done button to the right
+          
+          // Done - Right side, solid blue
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF6FB8E9),
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
-              _triggerSchedulePrediction();
+              Navigator.of(context).pop(); // Return to deck list
             },
-            child: const Text('Schedule Next'),
+            child: const Text('Done'),
           ),
         ],
       ),
@@ -614,18 +620,30 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF242628),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(
+            color: Color(0xFF6FB8E9),
+            width: 2,
+          ),
+        ),
         child: Container(
           constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               AppBar(
-                title: const Text('Next Study Session'),
+                backgroundColor: const Color(0xFF242628),
+                title: const Text(
+                  'Next Study Session',
+                  style: TextStyle(color: Color(0xFFD9D9D9)),
+                ),
                 automaticallyImplyLeading: false,
                 actions: [
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.close, color: Color(0xFFD9D9D9)),
                   ),
                 ],
               ),
