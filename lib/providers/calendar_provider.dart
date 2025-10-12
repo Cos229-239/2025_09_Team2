@@ -107,12 +107,14 @@ class CalendarProvider with ChangeNotifier {
       if (user == null) return false; // Default to disabled for guest users
 
       final userProfile = await _firestoreService.getUserProfile(user.uid);
-      if (userProfile == null)
+      if (userProfile == null) {
         return false; // Default to disabled if no profile
+      }
 
       final preferences = userProfile['preferences'] as Map<String, dynamic>?;
-      if (preferences == null)
+      if (preferences == null) {
         return false; // Default to disabled if no preferences
+      }
 
       return preferences['petCareReminders'] as bool? ??
           false; // Default to disabled

@@ -7,7 +7,7 @@ import '../../screens/detailed_progress_screen.dart';
 
 /// A card widget for the dashboard that shows a summarized view of learning progress
 class LearningProgressCard extends StatelessWidget {
-  const LearningProgressCard({Key? key}) : super(key: key);
+  const LearningProgressCard({super.key});
 
   @override
   Widget build(BuildContext context) {

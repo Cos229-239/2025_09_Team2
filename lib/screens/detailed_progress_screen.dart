@@ -6,7 +6,7 @@ import '../providers/study_analytics_provider.dart';
 
 /// A detailed screen showing comprehensive learning progress analytics
 class DetailedProgressScreen extends StatefulWidget {
-  const DetailedProgressScreen({Key? key}) : super(key: key);
+  const DetailedProgressScreen({super.key});
 
   @override
   State<DetailedProgressScreen> createState() => _DetailedProgressScreenState();
