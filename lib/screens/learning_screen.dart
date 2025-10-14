@@ -137,8 +137,17 @@ class _LearningScreenState extends State<LearningScreen>
     // Sync tab controller with page controller
     _tabController.addListener(_onTabChanged);
 
-    // Load all necessary data
+    // Load all necessary data and initialize calendar provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Initialize CalendarProvider with TaskProvider so it can listen for task changes
+      final calendarProvider = Provider.of<CalendarProvider>(context, listen: false);
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      
+      // Initialize calendar provider with task provider reference
+      calendarProvider.initialize(
+        taskProvider: taskProvider,
+      );
+      
       _reloadAllData();
     });
   }
@@ -1679,6 +1688,52 @@ class _LearningScreenState extends State<LearningScreen>
                     ],
                   ),
                 ),
+
+                // Action menu
+                PopupMenuButton(
+                  color: const Color(0xFF242628),
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: Color(0xFF888888),
+                    size: 18,
+                  ),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit,
+                              size: 16, color: Color(0xFF6FB8E9)),
+                          const SizedBox(width: 8),
+                          const Text('Edit',
+                              style: TextStyle(color: Color(0xFFD9D9D9))),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete,
+                              size: 16, color: Color(0xFFEF5350)),
+                          const SizedBox(width: 8),
+                          const Text('Delete',
+                              style: TextStyle(color: Color(0xFFEF5350))),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) {
+                    switch (value) {
+                      case 'edit':
+                        _editTaskInline(task);
+                        break;
+                      case 'delete':
+                        _deleteTaskInline(task);
+                        break;
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -1769,6 +1824,305 @@ class _LearningScreenState extends State<LearningScreen>
       default:
         return 'Unknown';
     }
+  }
+
+  /// Edit task inline
+  void _editTaskInline(Task task) {
+    final titleController = TextEditingController(text: task.title);
+    final tagsController = TextEditingController(text: task.tags.join(', '));
+    final estMinutesController =
+        TextEditingController(text: task.estMinutes.toString());
+    int selectedPriority = task.priority;
+    DateTime? selectedDueDate = task.dueAt;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF242628),
+              title: const Text('Edit Task',
+                  style: TextStyle(color: Color(0xFFD9D9D9))),
+              content: SizedBox(
+                width: 400,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                        decoration: const InputDecoration(
+                          labelText: 'Title',
+                          labelStyle: TextStyle(color: Color(0xFF888888)),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF888888)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF6FB8E9)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<int>(
+                              value: selectedPriority,
+                              dropdownColor: const Color(0xFF242628),
+                              style: const TextStyle(color: Color(0xFFD9D9D9)),
+                              decoration: const InputDecoration(
+                                labelText: 'Priority',
+                                labelStyle: TextStyle(color: Color(0xFF888888)),
+                                border: OutlineInputBorder(),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFF888888)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFF6FB8E9)),
+                                ),
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                    value: 1,
+                                    child: Row(children: [
+                                      Icon(Icons.low_priority,
+                                          color: Color(0xFF4CAF50), size: 16),
+                                      SizedBox(width: 8),
+                                      Text('Low')
+                                    ])),
+                                DropdownMenuItem(
+                                    value: 2,
+                                    child: Row(children: [
+                                      Icon(Icons.priority_high,
+                                          color: Color(0xFFFF9800), size: 16),
+                                      SizedBox(width: 8),
+                                      Text('Medium')
+                                    ])),
+                                DropdownMenuItem(
+                                    value: 3,
+                                    child: Row(children: [
+                                      Icon(Icons.priority_high,
+                                          color: Color(0xFFEF5350), size: 16),
+                                      SizedBox(width: 8),
+                                      Text('High')
+                                    ])),
+                              ],
+                              onChanged: (value) {
+                                setState(() {
+                                  selectedPriority = value!;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextField(
+                              controller: estMinutesController,
+                              style: const TextStyle(color: Color(0xFFD9D9D9)),
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Est. Minutes',
+                                labelStyle: TextStyle(color: Color(0xFF888888)),
+                                border: OutlineInputBorder(),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFF888888)),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Color(0xFF6FB8E9)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDueDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                            builder: (context, child) {
+                              return Theme(
+                                data: ThemeData.dark().copyWith(
+                                  colorScheme: const ColorScheme.dark(
+                                    primary: Color(0xFF6FB8E9),
+                                    surface: Color(0xFF242628),
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedDueDate = picked;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFF888888)),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today,
+                                  color: Color(0xFF888888), size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                selectedDueDate != null
+                                    ? 'Due: ${selectedDueDate!.year}-${selectedDueDate!.month.toString().padLeft(2, '0')}-${selectedDueDate!.day.toString().padLeft(2, '0')}'
+                                    : 'Set due date',
+                                style: const TextStyle(color: Color(0xFFD9D9D9)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: tagsController,
+                        style: const TextStyle(color: Color(0xFFD9D9D9)),
+                        decoration: const InputDecoration(
+                          labelText: 'Tags (comma-separated)',
+                          labelStyle: TextStyle(color: Color(0xFF888888)),
+                          border: OutlineInputBorder(),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF888888)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF6FB8E9)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel',
+                      style: TextStyle(color: Color(0xFF6FB8E9))),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final updatedTask = Task(
+                      id: task.id,
+                      title: titleController.text,
+                      estMinutes: int.tryParse(estMinutesController.text) ?? 60,
+                      dueAt: selectedDueDate,
+                      priority: selectedPriority,
+                      tags: tagsController.text
+                          .split(',')
+                          .map((tag) => tag.trim())
+                          .where((tag) => tag.isNotEmpty)
+                          .toList(),
+                      status: task.status,
+                      linkedNoteId: task.linkedNoteId,
+                      linkedDeckId: task.linkedDeckId,
+                    );
+
+                    Provider.of<TaskProvider>(context, listen: false)
+                        .updateTask(updatedTask);
+
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Task updated'),
+                        backgroundColor: Color(0xFF6FB8E9),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9)),
+                  child:
+                      const Text('Save', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Delete task inline
+  void _deleteTaskInline(Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF242628),
+        title: const Text('Delete Task',
+            style: TextStyle(color: Color(0xFFD9D9D9))),
+        content: Text(
+          'Are you sure you want to delete "${task.title}"?',
+          style: const TextStyle(color: Color(0xFF888888)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel',
+                style: TextStyle(color: Color(0xFF6FB8E9))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog first
+
+              // Get providers
+              final taskProvider =
+                  Provider.of<TaskProvider>(context, listen: false);
+              final calendarProvider =
+                  Provider.of<CalendarProvider>(context, listen: false);
+              
+              try {
+                // Find and delete the calendar event first (if it exists)
+                // Calendar events created from the calendar have the same ID as their tasks
+                final allEvents = calendarProvider.filteredEvents;
+                final matchingEvent = allEvents.cast<CalendarEvent?>().firstWhere(
+                  (event) => event?.id == task.id,
+                  orElse: () => null,
+                );
+                
+                if (matchingEvent != null) {
+                  await calendarProvider.deleteEvent(matchingEvent);
+                }
+                
+                // Then delete the task from TaskProvider and Firestore
+                await taskProvider.deleteTask(task.id);
+                
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Deleted: ${task.title}'),
+                      backgroundColor: const Color(0xFFEF5350),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to delete task'),
+                      backgroundColor: Color(0xFFEF5350),
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF5350)),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Format time ago for display (e.g., "2 hours ago", "3 days ago")
