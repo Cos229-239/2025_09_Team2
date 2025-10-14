@@ -66,6 +66,9 @@ class CalendarProvider with ChangeNotifier {
   SocialSessionProvider? _socialProvider;
   PetProvider? _petProvider;
 
+  // Track if listeners have been set up to prevent duplicates
+  bool _listenersInitialized = false;
+
   // Getters
   DateTime get selectedDay => _selectedDay;
   CalendarFormat get calendarFormat => _calendarFormat;
@@ -86,6 +89,26 @@ class CalendarProvider with ChangeNotifier {
     SocialSessionProvider? socialProvider,
     PetProvider? petProvider,
   }) {
+    // Prevent duplicate initialization
+    if (_listenersInitialized &&
+        taskProvider == _taskProvider &&
+        questProvider == _questProvider &&
+        socialProvider == _socialProvider &&
+        petProvider == _petProvider) {
+      debugPrint('⏭️ CalendarProvider already initialized with same providers, skipping');
+      return;
+    }
+
+    // Remove old listeners if re-initializing
+    if (_listenersInitialized) {
+      _taskProvider?.removeListener(_onTasksChanged);
+      _questProvider?.removeListener(_onQuestsChanged);
+      _socialProvider?.removeListener(_onSocialChanged);
+      _petProvider?.removeListener(_onPetChanged);
+    }
+
+    final bool firstInitialization = !_listenersInitialized;
+    
     _taskProvider = taskProvider;
     _questProvider = questProvider;
     _socialProvider = socialProvider;
@@ -93,12 +116,15 @@ class CalendarProvider with ChangeNotifier {
 
     // Set up listeners for real-time updates
     _setupProviderListeners();
+    _listenersInitialized = true;
 
-    // Initial data load
-    refreshAllEvents();
+    // Initial data load (only on first initialization)
+    if (firstInitialization) {
+      refreshAllEvents();
+    }
 
-    // Set up auto-refresh if enabled
-    if (_autoRefresh) {
+    // Set up auto-refresh if enabled (only on first initialization)
+    if (_autoRefresh && firstInitialization) {
       _setupAutoRefresh();
     }
   }
@@ -259,8 +285,12 @@ class CalendarProvider with ChangeNotifier {
     _clearError();
 
     try {
+      // Load calendar events from Firestore FIRST before refreshing derived events
+      // This ensures existingCalendarEventIds includes Firestore events
+      await _refreshCalendarEvents();
+      
+      // Then refresh all derived events in parallel
       await Future.wait([
-        _refreshCalendarEvents(), // Load from Firestore
         _refreshTaskEvents(),
         _refreshQuestEvents(),
         _refreshSocialEvents(),
@@ -650,6 +680,7 @@ class CalendarProvider with ChangeNotifier {
       debugPrint('⏸️ Skipping task refresh (currently updating source objects)');
       return;
     }
+    debugPrint('🔔 Task provider changed - refreshing calendar task events');
     _refreshTaskEvents();
   }
 
@@ -680,22 +711,60 @@ class CalendarProvider with ChangeNotifier {
     
     debugPrint('   Existing calendar event IDs: $existingCalendarEventIds');
     
-    // Remove only task-derived calendar events (those with 'task_' prefix)
-    // Keep calendar events that were created directly (share same ID as task)
+    // Get all current task IDs
+    final currentTaskIds = tasks.map((task) => task.id).toSet();
+    
+    // Track all event IDs from previous refresh to detect deletions
+    // We need to delete calendar events when their corresponding task is deleted
+    final eventsToDeleteFromFirestore = <CalendarEvent>[];
+    
+    for (final day in _events.keys.toList()) {
+      for (final event in _events[day]!) {
+        // Check if this calendar event should be deleted because its task was deleted
+        // This handles two cases:
+        // 1. Task-derived events (type=task, ID starts with 'task_') - standalone tasks
+        // 2. Calendar events that created tasks (any type, ID matches deleted task)
+        
+        final isTaskDerivedEvent = event.type == CalendarEventType.task;
+        final taskNoLongerExists = !currentTaskIds.contains(event.id);
+        
+        if (isTaskDerivedEvent && taskNoLongerExists) {
+          // Standalone task was deleted, remove its calendar representation
+          eventsToDeleteFromFirestore.add(event);
+        }
+      }
+    }
+    
+    // Delete from Firestore first (for events that correspond to deleted tasks)
+    for (final event in eventsToDeleteFromFirestore) {
+      debugPrint('   🗑️ Deleting calendar event from Firestore for deleted task: ${event.title} (ID: ${event.id})');
+      await _firestoreService.deleteCalendarEvent(event.id);
+    }
+    
+    // Remove task-derived calendar events (those with 'task_' prefix)
+    // AND remove calendar events that correspond to deleted tasks
     int removedCount = 0;
     for (final day in _events.keys.toList()) {
       final beforeCount = _events[day]!.length;
-      _events[day]!.removeWhere((event) => 
-        event.type == CalendarEventType.task && 
-        event.id.startsWith('task_')
-      );
+      _events[day]!.removeWhere((event) {
+        // Remove if it's a task-derived event with 'task_' prefix
+        if (event.type == CalendarEventType.task && event.id.startsWith('task_')) {
+          return true;
+        }
+        // Remove if it's a task event and the corresponding task no longer exists
+        if (event.type == CalendarEventType.task && !currentTaskIds.contains(event.id)) {
+          debugPrint('   🗑️ Removing calendar event from memory for deleted task: ${event.title}');
+          return true;
+        }
+        return false;
+      });
       removedCount += beforeCount - _events[day]!.length;
       if (_events[day]!.isEmpty) {
         _events.remove(day);
       }
     }
     
-    debugPrint('   Removed $removedCount task-derived calendar events');
+    debugPrint('   Removed $removedCount calendar events from memory');
 
     // Create calendar events only for tasks that don't have a calendar event
     int createdCount = 0;
@@ -713,6 +782,9 @@ class CalendarProvider with ChangeNotifier {
     }
     
     debugPrint('   Created $createdCount new calendar events from tasks');
+    
+    // Update filtered events to reflect changes
+    _updateFilteredEvents();
   }
 
   Future<void> _refreshQuestEvents() async {
