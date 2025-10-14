@@ -1806,7 +1806,7 @@ class _LearningScreenState extends State<LearningScreen>
               children: [
                 // Header
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: const BoxDecoration(
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(14),
@@ -1831,7 +1831,7 @@ class _LearningScreenState extends State<LearningScreen>
                           size: 24,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       const Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1840,7 +1840,7 @@ class _LearningScreenState extends State<LearningScreen>
                               'AI Flashcard Generator',
                               style: TextStyle(
                                 color: Color(0xFFD9D9D9),
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1848,7 +1848,7 @@ class _LearningScreenState extends State<LearningScreen>
                               'Create flashcards using AI',
                               style: TextStyle(
                                 color: Color(0xFFD9D9D9),
-                                fontSize: 13,
+                                fontSize: 12,
                               ),
                             ),
                           ],
@@ -1868,7 +1868,7 @@ class _LearningScreenState extends State<LearningScreen>
                 // Content area with AI Flashcard Generator
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.fromLTRB(6, 0, 6, 6),
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                     child: const SingleChildScrollView(
                       child: AIFlashcardGenerator(),
                     ),
