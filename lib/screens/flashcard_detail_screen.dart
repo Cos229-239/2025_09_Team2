@@ -69,6 +69,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
   int _lastDisplayedXP = 0; // Track last XP amount shown for fade animation
   double _xpOpacity = 0.0; // Opacity for XP fade animation
   Timer? _xpFadeTimer; // Timer for XP fade out
+  bool _isProcessingAnswer = false; // Prevent double-clicking during transition
+  int? _selectedAnswerIndex; // Track which answer button was clicked
 
   // Animation controller for flip effect
   late AnimationController _flipController;
@@ -253,10 +255,22 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
 
   /// Handles answering a question in deck quiz mode
   Future<void> _answerDeckQuizQuestion(int selectedIndex) async {
-    if (_currentQuizSession == null || _quizSessionId == null) return;
+    if (_currentQuizSession == null || _quizSessionId == null || _isProcessingAnswer) return;
+
+    // Set the flag to prevent double-clicking and record selected answer
+    setState(() {
+      _isProcessingAnswer = true;
+      _selectedAnswerIndex = selectedIndex; // Track which button was clicked
+    });
 
     final currentCard = _getCurrentQuizCard();
-    if (currentCard == null) return;
+    if (currentCard == null) {
+      setState(() {
+        _isProcessingAnswer = false;
+        _selectedAnswerIndex = null;
+      });
+      return;
+    }
 
     // Handle skipped questions (selectedIndex = -1)
     final isSkipped = selectedIndex == -1;
@@ -305,21 +319,27 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
       }
     }
 
-    if (mounted) {
-      setState(() {
-        _currentQuizSession = updatedSession;
-      });
-    }
-
+    // Store the updated session but don't update UI yet
+    // This prevents the question counter from jumping ahead immediately
+    
     // Note: Quest progress is updated when the entire quiz session completes,
     // not for each individual question
 
-    // Auto-advance to next question after delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted && updatedSession.hasMoreQuestions) {
-        _nextDeckQuizQuestion();
-      } else if (mounted && updatedSession.isCompleted) {
-        _showDeckQuizResults(updatedSession);
+    // Auto-advance to next question after 3 second delay
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        // Now update the session and advance to next question
+        setState(() {
+          _currentQuizSession = updatedSession;
+          _isProcessingAnswer = false; // Reset the flag after transition
+          _selectedAnswerIndex = null; // Clear selected answer for next question
+        });
+        
+        if (updatedSession.hasMoreQuestions) {
+          _nextDeckQuizQuestion();
+        } else if (updatedSession.isCompleted) {
+          _showDeckQuizResults(updatedSession);
+        }
       }
     });
   }
@@ -949,10 +969,10 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
             itemCount: currentCard.multipleChoiceOptions.length,
             itemBuilder: (context, index) {
               final option = currentCard.multipleChoiceOptions[index];
-              final isSelected =
-                  hasAnswered && currentAnswer!.selectedOptionIndex == index;
+              // Show immediate feedback based on selected answer
+              final isSelected = _selectedAnswerIndex == index;
               final isCorrect = index == currentCard.correctAnswerIndex;
-              final showResult = hasAnswered;
+              final showResult = _selectedAnswerIndex != null;
 
               Color? buttonColor;
               Color? textColor;
@@ -981,7 +1001,7 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ElevatedButton(
-                  onPressed: !hasAnswered
+                  onPressed: _selectedAnswerIndex == null
                       ? () => _answerDeckQuizQuestion(index)
                       : null,
                   style: ElevatedButton.styleFrom(
@@ -991,10 +1011,12 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: showResult && isCorrect
-                            ? const Color(0xFF4CAF50)
-                            : const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                        width: 1,
+                        color: showResult && isSelected && !isCorrect
+                            ? const Color(0xFFEF5350) // Red border for wrong answer
+                            : showResult && isCorrect
+                            ? const Color(0xFF4CAF50) // Green border for correct answer
+                            : const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Default blue
+                        width: showResult && (isSelected || isCorrect) ? 3 : 1,
                       ),
                     ),
                   ),
@@ -1331,6 +1353,24 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                       ..setEntry(3, 2, 0.001)
                       ..rotateY(correctedAngle);
 
+                    // Determine border color for quiz mode
+                    Color borderColor = const Color(0xFF6FB8E9).withValues(alpha: 0.3);
+                    double borderWidth = 1;
+                    
+                    if (_isDeckQuizMode && _currentQuizSession != null) {
+                      final currentAnswerIndex = _currentQuizSession!.currentQuestionIndex;
+                      final hasAnswered = _currentQuizSession!.answers.length > currentAnswerIndex;
+                      
+                      if (hasAnswered) {
+                        final currentAnswer = _currentQuizSession!.answers[currentAnswerIndex];
+                        // Green border for correct, red for incorrect
+                        borderColor = currentAnswer.isCorrect 
+                            ? const Color(0xFF4CAF50) // Green
+                            : const Color(0xFFEF5350); // Red
+                        borderWidth = 3; // Make it more visible
+                      }
+                    }
+
                     return Transform(
                       transform: transform,
                       alignment: Alignment.center,
@@ -1341,9 +1381,8 @@ class _FlashcardDetailScreenState extends State<FlashcardDetailScreen>
                             color: const Color(0xFF242628),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: const Color(0xFF6FB8E9)
-                                  .withValues(alpha: 0.3),
-                              width: 1,
+                              color: borderColor,
+                              width: borderWidth,
                             ),
                           ),
                           width: double.infinity,
