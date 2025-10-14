@@ -207,7 +207,7 @@ class _DetailedProgressScreenState extends State<DetailedProgressScreen> with Si
             Text(
               'Track your mastery across different subjects',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.7),
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 16),
@@ -225,7 +225,7 @@ class _DetailedProgressScreenState extends State<DetailedProgressScreen> with Si
                     horizontalInterval: 20,
                     getDrawingHorizontalLine: (value) {
                       return FlLine(
-                        color: colorScheme.onSurface.withOpacity(0.2),
+                        color: colorScheme.onSurface.withValues(alpha: 0.2),
                         strokeWidth: 1,
                       );
                     },
@@ -250,7 +250,7 @@ class _DetailedProgressScreenState extends State<DetailedProgressScreen> with Si
                             child: Text(
                               '${date.month}/${date.day}',
                               style: TextStyle(
-                                color: colorScheme.onSurface.withOpacity(0.7),
+                                color: colorScheme.onSurface.withValues(alpha: 0.7),
                                 fontSize: 11,
                               ),
                             ),
@@ -269,7 +269,7 @@ class _DetailedProgressScreenState extends State<DetailedProgressScreen> with Si
                             child: Text(
                               '${value.toInt()}%',
                               style: TextStyle(
-                                color: colorScheme.onSurface.withOpacity(0.7),
+                                color: colorScheme.onSurface.withValues(alpha: 0.7),
                                 fontSize: 11,
                               ),
                             ),
@@ -290,7 +290,7 @@ class _DetailedProgressScreenState extends State<DetailedProgressScreen> with Si
                         dotData: FlDotData(show: false),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: colors[i % colors.length].withOpacity(0.15),
+                          color: colors[i % colors.length].withValues(alpha: 0.15),
                         ),
                       ),
                   ],
@@ -379,7 +379,7 @@ class _DetailedProgressScreenState extends State<DetailedProgressScreen> with Si
             Text(
               'How you allocate your study time across subjects',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.7),
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
