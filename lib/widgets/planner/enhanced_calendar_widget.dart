@@ -90,11 +90,11 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
       opacity: _fadeAnimation,
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: const Color(0xFF242628),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: const Color(0xFF6FB8E9).withOpacity(0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -116,9 +116,15 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
       builder: (context, provider, child) {
         return Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          decoration: const BoxDecoration(
+            color: Color(0xFF242628),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            border: Border(
+              bottom: BorderSide(
+                color: Color(0xFF6FB8E9),
+                width: 0.5,
+              ),
+            ),
           ),
           child: Column(
             children: [
@@ -126,9 +132,13 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     'Calendar View',
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFD9D9D9),
+                      fontSize: 14,
+                    ),
                   ),
                   Row(
                     children: [
@@ -147,7 +157,15 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: CalendarEventType.values.map((type) {
+                children: CalendarEventType.values
+                    .where((type) =>
+                        type != CalendarEventType.breakReminder &&
+                        type != CalendarEventType.meeting &&
+                        type != CalendarEventType.custom &&
+                        type != CalendarEventType.dailyQuest &&
+                        type != CalendarEventType.petCare &&
+                        type != CalendarEventType.deadline)
+                    .map((type) {
                   final isActive = provider.activeFilters.contains(type);
                   return FilterChip(
                     label: Text(type.displayName),
@@ -157,11 +175,18 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                     avatar: Icon(
                       type.defaultIcon,
                       size: 16,
-                      color: isActive ? Colors.white : type.defaultColor,
+                      color: isActive ? Colors.white : const Color(0xFF6FB8E9),
                     ),
-                    backgroundColor: type.defaultColor.withValues(alpha: 0.1),
-                    selectedColor: type.defaultColor,
+                    backgroundColor: const Color(0xFF242628),
+                    selectedColor: const Color(0xFF6FB8E9),
                     checkmarkColor: Colors.white,
+                    side: BorderSide(
+                      color: isActive ? const Color(0xFF6FB8E9) : const Color(0xFF6FB8E9).withOpacity(0.3),
+                      width: isActive ? 2 : 1,
+                    ),
+                    labelStyle: TextStyle(
+                      color: isActive ? Colors.white : const Color(0xFFD9D9D9),
+                    ),
                   );
                 }).toList(),
               ),
@@ -176,22 +201,41 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                       Expanded(
                         child: TextField(
                           onChanged: provider.setSearchQuery,
+                          style: const TextStyle(color: Color(0xFFD9D9D9)),
                           decoration: InputDecoration(
                             hintText: 'Search events...',
-                            prefixIcon: const Icon(Icons.search),
+                            hintStyle: TextStyle(color: const Color(0xFFD9D9D9).withOpacity(0.5)),
+                            prefixIcon: const Icon(Icons.search, color: Color(0xFF6FB8E9)),
                             suffixIcon: provider.searchQuery.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear),
+                                    icon: const Icon(Icons.clear, color: Color(0xFF6FB8E9)),
                                     onPressed: () =>
                                         provider.setSearchQuery(''),
                                   )
                                 : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                              borderSide: const BorderSide(
+                                color: Color(0xFF6FB8E9),
+                                width: 1,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: const Color(0xFF6FB8E9).withOpacity(0.3),
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF6FB8E9),
+                                width: 2,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Theme.of(context).cardColor,
+                            fillColor: const Color(0xFF242628),
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 12,
@@ -202,7 +246,7 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                       const SizedBox(width: 8),
                       IconButton(
                         onPressed: provider.clearFilters,
-                        icon: const Icon(Icons.filter_alt_off),
+                        icon: const Icon(Icons.filter_alt_off, color: Color(0xFF6FB8E9)),
                         tooltip: 'Clear filters',
                       ),
                     ],
@@ -225,17 +269,27 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
             onPressed: () => provider.setCalendarFormat(format),
             style: OutlinedButton.styleFrom(
               backgroundColor: isSelected
-                  ? Theme.of(context).primaryColor
+                  ? const Color(0xFF6FB8E9)
                   : Colors.transparent,
-              foregroundColor:
-                  isSelected ? Colors.white : Theme.of(context).primaryColor,
+              foregroundColor: isSelected
+                  ? Colors.white
+                  : const Color(0xFF6FB8E9),
               side: BorderSide(
-                color: Theme.of(context).primaryColor,
+                color: const Color(0xFF6FB8E9),
                 width: isSelected ? 2 : 1,
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: Text(label, style: const TextStyle(fontSize: 12)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
           ),
         );
       },
@@ -248,7 +302,9 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
         if (provider.isLoading) {
           return const SizedBox(
             height: 400,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6FB8E9)),
+            )),
           );
         }
 
@@ -259,25 +315,36 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.error_outline,
                   size: 48,
-                  color: Theme.of(context).colorScheme.error,
+                  color: Color(0xFFEF5350),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'Error loading calendar',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   provider.errorMessage!,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: const TextStyle(
+                    color: Color(0xFFD9D9D9),
+                    fontSize: 14,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: provider.refreshAllEvents,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6FB8E9),
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('Retry'),
                 ),
               ],
@@ -305,18 +372,21 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
           // Styling
           calendarStyle: CalendarStyle(
             outsideDaysVisible: true,
-            weekendTextStyle: TextStyle(
-              color: Theme.of(context).colorScheme.error,
+            weekendTextStyle: const TextStyle(
+              color: Color(0xFFD9D9D9),
             ),
-            holidayTextStyle: TextStyle(
-              color: Theme.of(context).colorScheme.error,
+            holidayTextStyle: const TextStyle(
+              color: Color(0xFFD9D9D9),
             ),
-            selectedDecoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
+            defaultTextStyle: const TextStyle(
+              color: Color(0xFFD9D9D9),
+            ),
+            selectedDecoration: const BoxDecoration(
+              color: Color(0xFF6FB8E9),
               shape: BoxShape.circle,
             ),
             todayDecoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+              color: const Color(0xFF6FB8E9).withOpacity(0.5),
               shape: BoxShape.circle,
             ),
             markersMaxCount: 4,
@@ -325,22 +395,25 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
             markersAlignment: Alignment.bottomCenter,
           ),
 
-          headerStyle: HeaderStyle(
+          headerStyle: const HeaderStyle(
             formatButtonVisible: false,
             titleCentered: true,
-            headerPadding: const EdgeInsets.symmetric(vertical: 16),
-            titleTextStyle: Theme.of(context).textTheme.titleLarge!.copyWith(
+            headerPadding: EdgeInsets.symmetric(vertical: 16),
+            titleTextStyle: TextStyle(
                   fontWeight: FontWeight.bold,
+                  color: Color(0xFFD9D9D9),
+                  fontSize: 18,
                 ),
           ),
 
-          daysOfWeekStyle: DaysOfWeekStyle(
-            weekdayStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
+          daysOfWeekStyle: const DaysOfWeekStyle(
+            weekdayStyle: TextStyle(
                   fontWeight: FontWeight.bold,
+                  color: Color(0xFFD9D9D9),
                 ),
-            weekendStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
+            weekendStyle: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.error,
+                  color: Color(0xFFD9D9D9),
                 ),
           ),
 
@@ -358,8 +431,8 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                       margin: const EdgeInsets.symmetric(horizontal: 1),
                       width: 6,
                       height: 6,
-                      decoration: BoxDecoration(
-                        color: event.color,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF6FB8E9),
                         shape: BoxShape.circle,
                       ),
                     );
@@ -372,8 +445,8 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF6FB8E9),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -397,8 +470,8 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                           ),
                           child: Text(
                             '${events.length}',
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
+                            style: const TextStyle(
+                              color: Color(0xFF6FB8E9),
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -414,7 +487,7 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
               return Container(
                 margin: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                  color: const Color(0xFF6FB8E9).withOpacity(0.5),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -440,8 +513,8 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                           child: Center(
                             child: Text(
                               '${events.length}',
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
+                              style: const TextStyle(
+                                color: Color(0xFF6FB8E9),
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -463,17 +536,13 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                 'Sat',
                 'Sun'
               ];
-              final isWeekend = day.weekday == DateTime.saturday ||
-                  day.weekday == DateTime.sunday;
 
               return Center(
                 child: Text(
                   weekdayName[day.weekday - 1],
-                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: isWeekend
-                            ? Theme.of(context).colorScheme.error
-                            : null,
+                        color: Color(0xFFD9D9D9),
                       ),
                 ),
               );
@@ -497,29 +566,23 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                 Icon(
                   Icons.event_available,
                   size: 48,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.3),
+                  color: const Color(0xFFD9D9D9).withOpacity(0.3),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No events for this day',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.6),
+                  style: TextStyle(
+                        color: const Color(0xFFD9D9D9).withOpacity(0.6),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Tap the + button to create a new event',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.5),
+                  style: TextStyle(
+                        color: const Color(0xFFD9D9D9).withOpacity(0.5),
+                        fontSize: 14,
                       ),
                 ),
                 if (widget.enableQuickCreate) ...[
@@ -527,6 +590,10 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                   ElevatedButton.icon(
                     onPressed: () =>
                         _showQuickCreateDialog(provider.selectedDay),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6FB8E9),
+                      foregroundColor: Colors.white,
+                    ),
                     icon: const Icon(Icons.add),
                     label: const Text('Create Event'),
                   ),
@@ -548,15 +615,17 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                   children: [
                     Text(
                       'Events (${events.length})',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: const TextStyle(
                             fontWeight: FontWeight.bold,
+                            color: Color(0xFFD9D9D9),
+                            fontSize: 16,
                           ),
                     ),
                     if (widget.enableQuickCreate)
                       IconButton(
                         onPressed: () =>
                             _showQuickCreateDialog(provider.selectedDay),
-                        icon: const Icon(Icons.add),
+                        icon: const Icon(Icons.add, color: Color(0xFF6FB8E9)),
                         tooltip: 'Create new event',
                       ),
                   ],
@@ -586,13 +655,11 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: event.color.withValues(alpha: 0.1),
+          color: const Color(0xFF242628),
           borderRadius: BorderRadius.circular(8),
-          border: Border(
-            left: BorderSide(
-              width: 4,
-              color: event.color,
-            ),
+          border: Border.all(
+            color: const Color(0xFF6FB8E9).withOpacity(0.3),
+            width: 1,
           ),
         ),
         child: Row(
@@ -612,9 +679,10 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                       Expanded(
                         child: Text(
                           event.title,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          style: const TextStyle(
                                     fontWeight: FontWeight.w600,
+                                    color: Color(0xFFD9D9D9),
+                                    fontSize: 14,
                                   ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -646,11 +714,9 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                   const SizedBox(height: 2),
                   Text(
                     event.formattedTime,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.7),
+                    style: TextStyle(
+                          color: const Color(0xFFD9D9D9).withOpacity(0.7),
+                          fontSize: 12,
                         ),
                   ),
                   if (event.description.isNotEmpty &&
@@ -659,11 +725,9 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
                         event.description,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.6),
+                        style: TextStyle(
+                              color: const Color(0xFFD9D9D9).withOpacity(0.6),
+                              fontSize: 12,
                             ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -709,11 +773,8 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                           ? Icons.check_circle
                           : Icons.check_circle_outline,
                       color: event.status == CalendarEventStatus.completed
-                          ? Colors.green
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.5),
+                          ? const Color(0xFF4CAF50)
+                          : const Color(0xFFD9D9D9).withOpacity(0.5),
                     ),
                     onPressed: () => _toggleEventCompletion(event),
                     tooltip: event.status == CalendarEventStatus.completed
@@ -725,7 +786,7 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: const Color(0xFF4CAF50),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -742,7 +803,7 @@ class _EnhancedCalendarWidgetState extends State<EnhancedCalendarWidget>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: const Color(0xFFEF5350),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -852,7 +913,8 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Create New Event'),
+      backgroundColor: const Color(0xFF242628),
+      title: const Text('Create New Event', style: TextStyle(color: Color(0xFFD9D9D9))),
       content: SizedBox(
         width: MediaQuery.of(context).size.width * 0.8,
         child: Form(
@@ -863,17 +925,41 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
               // Event type selection
               DropdownButtonFormField<CalendarEventType>(
                 initialValue: _selectedType,
-                decoration: const InputDecoration(
+                dropdownColor: const Color(0xFF242628),
+                style: const TextStyle(color: Color(0xFFD9D9D9)),
+                decoration: InputDecoration(
                   labelText: 'Event Type',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Color(0xFF6FB8E9)),
+                  filled: true,
+                  fillColor: const Color(0xFF242628),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: const Color(0xFF6FB8E9).withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                  ),
                 ),
-                items: CalendarEventType.values.map((type) {
+                items: CalendarEventType.values
+                    .where((type) =>
+                        type != CalendarEventType.breakReminder &&
+                        type != CalendarEventType.meeting &&
+                        type != CalendarEventType.custom &&
+                        type != CalendarEventType.dailyQuest &&
+                        type != CalendarEventType.petCare &&
+                        type != CalendarEventType.deadline)
+                    .map((type) {
                   return DropdownMenuItem(
                     value: type,
                     child: Row(
                       children: [
                         Icon(type.defaultIcon,
-                            size: 16, color: type.defaultColor),
+                            size: 16, color: const Color(0xFF6FB8E9)),
                         const SizedBox(width: 8),
                         Text(type.displayName),
                       ],
@@ -890,27 +976,24 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
 
               // Date selection
               ListTile(
-                title: const Text('Event Date'),
+                title: const Text('Event Date', style: TextStyle(color: Color(0xFFD9D9D9))),
                 subtitle: Text(
                   DateFormat('EEEE, MMMM d, y').format(_selectedDate),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).primaryColor,
+                  style: const TextStyle(
+                        color: Color(0xFF6FB8E9),
                         fontWeight: FontWeight.w500,
                       ),
                 ),
-                leading: Icon(
+                leading: const Icon(
                   Icons.calendar_today,
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF6FB8E9),
                 ),
                 onTap: () => _selectDate(),
                 dense: true,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                   side: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withValues(alpha: 0.5),
+                    color: const Color(0xFF6FB8E9).withOpacity(0.5),
                   ),
                 ),
               ),
@@ -919,9 +1002,32 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
               // Title
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Color(0xFFD9D9D9)),
+                decoration: InputDecoration(
                   labelText: 'Title',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Color(0xFF6FB8E9)),
+                  filled: true,
+                  fillColor: const Color(0xFF242628),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: const Color(0xFF6FB8E9).withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFEF5350)),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFEF5350), width: 2),
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -935,9 +1041,24 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
               // Description
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
+                style: const TextStyle(color: Color(0xFFD9D9D9)),
+                decoration: InputDecoration(
                   labelText: 'Description (optional)',
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Color(0xFF6FB8E9)),
+                  filled: true,
+                  fillColor: const Color(0xFF242628),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF6FB8E9)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: const Color(0xFF6FB8E9).withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF6FB8E9), width: 2),
+                  ),
                 ),
                 maxLines: 2,
               ),
@@ -945,8 +1066,10 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
 
               // All day toggle
               CheckboxListTile(
-                title: const Text('All Day Event'),
+                title: const Text('All Day Event', style: TextStyle(color: Color(0xFFD9D9D9))),
                 value: _isAllDay,
+                activeColor: const Color(0xFF6FB8E9),
+                checkColor: Colors.white,
                 onChanged: (value) {
                   setState(() => _isAllDay = value ?? false);
                 },
@@ -959,16 +1082,16 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
                   children: [
                     Expanded(
                       child: ListTile(
-                        title: const Text('Start Time'),
-                        subtitle: Text(_startTime.format(context)),
+                        title: const Text('Start Time', style: TextStyle(color: Color(0xFFD9D9D9), fontSize: 13)),
+                        subtitle: Text(_startTime.format(context), style: const TextStyle(color: Color(0xFF6FB8E9))),
                         onTap: () => _selectTime(true),
                         dense: true,
                       ),
                     ),
                     Expanded(
                       child: ListTile(
-                        title: const Text('End Time'),
-                        subtitle: Text(_endTime?.format(context) ?? 'Not set'),
+                        title: const Text('End Time', style: TextStyle(color: Color(0xFFD9D9D9), fontSize: 13)),
+                        subtitle: Text(_endTime?.format(context) ?? 'Not set', style: const TextStyle(color: Color(0xFF6FB8E9))),
                         onTap: () => _selectTime(false),
                         dense: true,
                       ),
@@ -981,7 +1104,7 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Text('Priority: '),
+                  const Text('Priority: ', style: TextStyle(color: Color(0xFFD9D9D9))),
                   const SizedBox(width: 8),
                   ...List.generate(3, (index) {
                     final priority = index + 1;
@@ -995,19 +1118,21 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
                             setState(() => _priority = priority);
                           }
                         },
-                        backgroundColor: [
-                          Colors.blue,
-                          Colors.orange,
-                          Colors.red
-                        ][index]
-                            .withValues(alpha: 0.1),
+                        backgroundColor: const Color(0xFF242628),
                         selectedColor: [
-                          Colors.blue,
+                          const Color(0xFF6FB8E9),
                           Colors.orange,
-                          Colors.red
+                          const Color(0xFFEF5350)
                         ][index],
+                        side: BorderSide(
+                          color: [
+                            const Color(0xFF6FB8E9),
+                            Colors.orange,
+                            const Color(0xFFEF5350)
+                          ][index],
+                        ),
                         labelStyle: TextStyle(
-                          color: _priority == priority ? Colors.white : null,
+                          color: _priority == priority ? Colors.white : const Color(0xFFD9D9D9),
                         ),
                       ),
                     );
@@ -1021,10 +1146,17 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
+          style: TextButton.styleFrom(
+            foregroundColor: const Color(0xFFD9D9D9),
+          ),
           child: const Text('Cancel'),
         ),
         ElevatedButton(
           onPressed: _createEvent,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF6FB8E9),
+            foregroundColor: Colors.white,
+          ),
           child: const Text('Create'),
         ),
       ],
@@ -1111,7 +1243,7 @@ class _QuickCreateEventDialogState extends State<QuickCreateEventDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Event "${event.title}" created successfully'),
-            backgroundColor: Colors.green,
+            backgroundColor: const Color(0xFF4CAF50),
           ),
         );
       }

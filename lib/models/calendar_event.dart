@@ -888,7 +888,7 @@ extension CalendarEventTypeExtension on CalendarEventType {
   String get displayName {
     switch (this) {
       case CalendarEventType.task:
-        return 'Task';
+        return 'General';
       case CalendarEventType.dailyQuest:
         return 'Daily Quest';
       case CalendarEventType.socialSession:

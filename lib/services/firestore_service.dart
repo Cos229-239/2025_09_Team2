@@ -599,7 +599,6 @@ class FirestoreService {
       final querySnapshot = await tasksCollection
           .where('uid', isEqualTo: uid)
           .where('isArchived', isEqualTo: false)
-          .orderBy('createdAt', descending: true)
           .get();
 
       final tasks = querySnapshot.docs.map((doc) {
@@ -607,6 +606,30 @@ class FirestoreService {
         data['id'] = doc.id;
         return data;
       }).toList();
+      
+      // Sort by createdAt in memory instead of in the query
+      tasks.sort((a, b) {
+        final aCreated = a['createdAt'];
+        final bCreated = b['createdAt'];
+        if (aCreated == null && bCreated == null) return 0;
+        if (aCreated == null) return 1;
+        if (bCreated == null) return -1;
+        
+        // Handle both Timestamp and String formats
+        DateTime aDate;
+        DateTime bDate;
+        if (aCreated is String) {
+          aDate = DateTime.parse(aCreated);
+        } else {
+          aDate = (aCreated as Timestamp).toDate();
+        }
+        if (bCreated is String) {
+          bDate = DateTime.parse(bCreated);
+        } else {
+          bDate = (bCreated as Timestamp).toDate();
+        }
+        return bDate.compareTo(aDate); // Descending order
+      });
 
       if (kDebugMode) {
         print('✅ Retrieved ${tasks.length} full tasks for user: $uid');
