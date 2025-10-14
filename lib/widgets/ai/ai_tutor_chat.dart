@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
-import 'dart:math' as math;
 import '../../providers/enhanced_ai_tutor_provider.dart';
 import '../../providers/app_state.dart';
 import '../../models/chat_message.dart';
@@ -466,11 +465,6 @@ class _AITutorChatState extends State<AITutorChat>
 
               // Start button
               _buildStartButton(provider),
-              const SizedBox(height: 16),
-
-              // Recent badges
-              if (provider.unlockedBadges.isNotEmpty)
-                _buildRecentBadges(provider),
             ],
           ),
         ),
@@ -850,80 +844,6 @@ class _AITutorChatState extends State<AITutorChat>
                   ),
                 ],
               ),
-      ),
-    );
-  }
-
-  Widget _buildRecentBadges(EnhancedAITutorProvider provider) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Text('🎖️', style: TextStyle(fontSize: 20)),
-                const SizedBox(width: 8),
-                Text(
-                  'Recent Achievements',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 60,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: math.min(5, provider.unlockedBadges.length),
-                itemBuilder: (context, index) {
-                  final badge = provider.unlockedBadges[
-                      provider.unlockedBadges.length - 1 - index];
-                  final details = provider.getBadgeDetails(badge);
-
-                  return Container(
-                    margin: const EdgeInsets.only(right: 12),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.amber.withValues(alpha: 0.2),
-                          Colors.orange.withValues(alpha: 0.2),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.amber.withValues(alpha: 0.5),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          details['name'] ?? badge,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

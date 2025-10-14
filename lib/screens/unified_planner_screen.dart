@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/calendar_provider.dart';
 import '../models/calendar_event.dart';
 import '../widgets/planner/enhanced_calendar_widget.dart';
+import 'day_itinerary_screen.dart';
 
 /// Enhanced planner screen with unified calendar system
 class UnifiedPlannerScreen extends StatefulWidget {
@@ -82,7 +83,18 @@ class _UnifiedPlannerScreenState extends State<UnifiedPlannerScreen>
           child: SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 80),
             child: EnhancedCalendarWidget(
-              onDaySelected: (date, events) {},
+              onDaySelected: (date, events) {
+                provider.setSelectedDay(date);
+                // Navigate to day itinerary view
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DayItineraryScreen(
+                      selectedDate: date,
+                    ),
+                  ),
+                );
+              },
               onEventTapped: _showEventDetails,
               enableQuickCreate: true,
               showFilters: true,

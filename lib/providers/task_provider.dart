@@ -74,13 +74,24 @@ class TaskProvider extends ChangeNotifier {
       final user = _auth.currentUser;
 
       if (user != null) {
+        debugPrint('🔄 Loading tasks for user: ${user.uid}');
         // Fetch tasks from Firestore for the current user
         final taskMaps = await _firestoreService.getUserFullTasks(user.uid);
+        debugPrint('📥 Retrieved ${taskMaps.length} tasks from Firestore');
+        
         _tasks = taskMaps
             .map((taskMap) => _convertFirestoreToTask(taskMap))
             .toList();
+            
+        debugPrint('✅ Converted ${_tasks.length} tasks successfully');
+        
+        // Log each task's details
+        for (final task in _tasks) {
+          debugPrint('  📌 Task: "${task.title}" - Due: ${task.dueAt} - Status: ${task.status}');
+        }
       } else {
         // No user logged in, use empty list
+        debugPrint('❌ No user logged in, cannot load tasks');
         _tasks = [];
       }
 
@@ -89,6 +100,7 @@ class TaskProvider extends ChangeNotifier {
       // Log any errors that occur during loading for debugging
       // Using developer.log instead of print for better debugging tools
       developer.log('Error loading tasks: $e', name: 'TaskProvider');
+      debugPrint('❌ Error loading tasks: $e');
     } finally {
       // Always clear loading state, whether successful or not
       _isLoading = false; // Clear loading flag
@@ -98,13 +110,20 @@ class TaskProvider extends ChangeNotifier {
 
   /// Helper method to convert Firestore document data to Task object
   Task _convertFirestoreToTask(Map<String, dynamic> data) {
+    // Helper function to parse dueAt field which can be either Timestamp or ISO string
+    DateTime? parseDueAt(dynamic dueAtValue) {
+      if (dueAtValue == null) return null;
+      if (dueAtValue is String) {
+        return DateTime.parse(dueAtValue);
+      }
+      return (dueAtValue as dynamic).toDate() as DateTime;
+    }
+
     return Task(
       id: data['id'] as String,
       title: data['title'] as String,
       estMinutes: data['estMinutes'] as int,
-      dueAt: data['dueAt'] != null
-          ? (data['dueAt'] as dynamic).toDate() as DateTime
-          : null,
+      dueAt: parseDueAt(data['dueAt']),
       priority: data['priority'] as int? ?? 1,
       tags: List<String>.from(data['tags'] ?? []),
       status: TaskStatus.values.firstWhere(
@@ -192,19 +211,27 @@ class TaskProvider extends ChangeNotifier {
   /// @throws Exception if database deletion fails
   Future<void> deleteTask(String taskId) async {
     try {
+      debugPrint('🗑️ Deleting task: $taskId');
+      
       // Delete from Firestore (soft delete - archives the task)
       final success = await _firestoreService.deleteFullTask(taskId);
       if (!success) {
+        debugPrint('❌ Failed to archive task in Firestore');
         throw Exception('Failed to delete task in Firestore');
       }
+
+      debugPrint('✅ Task archived in Firestore successfully');
 
       // Remove from local list only after successful database deletion
       _tasks.removeWhere(
           (task) => task.id == taskId); // Filter out the deleted task
+      
+      debugPrint('✅ Task removed from local list');
       notifyListeners(); // Update UI to hide deleted task
     } catch (e) {
       // Log the error for debugging purposes
       developer.log('Error deleting task: $e', name: 'TaskProvider');
+      debugPrint('❌ Error deleting task: $e');
 
       // Rethrow the exception so calling code can handle the error
       rethrow;
