@@ -858,84 +858,86 @@ class _TimerScreenState extends State<TimerScreen> {
   Widget _buildStudyPresets() {
     return Stack(
       children: [
-        // Main content - always visible
-        Column(
-          children: [
-            // Section header
-            const Text(
-              'Study Techniques',
-              style: TextStyle(
-                color: Color(0xFFD9D9D9),
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+        // Main content - always visible (wrapped in scroll view to prevent overflow)
+        SingleChildScrollView(
+          child: Column(
+            children: [
+              // Section header
+              const Text(
+                'Study Techniques',
+                style: TextStyle(
+                  color: Color(0xFFD9D9D9),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Centered row of study technique cards
-            Center(
-              child: Wrap(
-                spacing: 16, // Horizontal spacing between cards
-                runSpacing: 16, // Vertical spacing if cards wrap
-                alignment: WrapAlignment.center,
-                children: _timerSessions.map((session) {
-                  return _buildHorizontalSessionCard(session);
-                }).toList(),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Section header for saved timers
-            const Text(
-              'Saved Timer Presets',
-              style: TextStyle(
-                color: Color(0xFFD9D9D9),
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Saved timer options displayed as wrapped cards (only show when details NOT selected)
-            // Filter out preset timers that are shown in Study Techniques section
-            if (_selectedTimerDetails == null) ...[
-              if (_savedTimers
-                  .where((timer) =>
-                      timer.label != 'Pomodoro Focus' &&
-                      timer.label != 'Deep Work Session' &&
-                      timer.label != 'Time-Box Focus')
-                  .isNotEmpty) ...[
-                Wrap(
+              // Centered row of study technique cards
+              Center(
+                child: Wrap(
                   spacing: 16, // Horizontal spacing between cards
-                  runSpacing: 16, // Vertical spacing between rows
-                  children: _savedTimers
-                      .where((timer) =>
-                          timer.label != 'Pomodoro Focus' &&
-                          timer.label != 'Deep Work Session' &&
-                          timer.label != 'Time-Box Focus')
-                      .toList()
-                      .asMap()
-                      .entries
-                      .map((entry) {
-                    final index = entry.key;
-                    final timer = entry.value;
-                    return _buildSavedTimerPresetCard(timer, index);
+                  runSpacing: 16, // Vertical spacing if cards wrap
+                  alignment: WrapAlignment.center,
+                  children: _timerSessions.map((session) {
+                    return _buildHorizontalSessionCard(session);
                   }).toList(),
                 ),
-              ] else ...[
-                const Text(
-                  'No saved timers yet. Create some in the Custom Timer section!',
-                  style: TextStyle(
-                    color: Color(0xFFB0B0B0),
-                    fontSize: 16,
-                  ),
-                  textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Section header for saved timers
+              const Text(
+                'Saved Timer Presets',
+                style: TextStyle(
+                  color: Color(0xFFD9D9D9),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
                 ),
+              ),
+              const SizedBox(height: 20),
+
+              // Saved timer options displayed as wrapped cards (only show when details NOT selected)
+              // Filter out preset timers that are shown in Study Techniques section
+              if (_selectedTimerDetails == null) ...[
+                if (_savedTimers
+                    .where((timer) =>
+                        timer.label != 'Pomodoro Focus' &&
+                        timer.label != 'Deep Work Session' &&
+                        timer.label != 'Time-Box Focus')
+                    .isNotEmpty) ...[
+                  Wrap(
+                    spacing: 16, // Horizontal spacing between cards
+                    runSpacing: 16, // Vertical spacing between rows
+                    children: _savedTimers
+                        .where((timer) =>
+                            timer.label != 'Pomodoro Focus' &&
+                            timer.label != 'Deep Work Session' &&
+                            timer.label != 'Time-Box Focus')
+                        .toList()
+                        .asMap()
+                        .entries
+                        .map((entry) {
+                      final index = entry.key;
+                      final timer = entry.value;
+                      return _buildSavedTimerPresetCard(timer, index);
+                    }).toList(),
+                  ),
+                ] else ...[
+                  const Text(
+                    'No saved timers yet. Create some in the Custom Timer section!',
+                    style: TextStyle(
+                      color: Color(0xFFB0B0B0),
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                const SizedBox(height: 30),
               ],
-              const SizedBox(height: 30),
             ],
-          ],
+          ),
         ),
 
         // Overlay: Timer details view (shows on top when a timer is selected)
@@ -1116,45 +1118,98 @@ class _TimerScreenState extends State<TimerScreen> {
           // Action buttons
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Start the timer directly
-                    setState(() {
-                      _selectedHours = timer.hours;
-                      _selectedMinutes = timer.minutes;
-                      _selectedSeconds = timer.seconds;
-                      _includeBreakTimer = timer.includeBreakTimer;
-                      _breakMinutes = timer.breakMinutes;
-                      _iterationCount = timer.cycles;
-                      _labelController.text = timer.label;
-                      _selectedTimerDetails = null;
-                      _timerStartedFromSavedTimers =
-                          true; // Mark as started from saved timers
-                    });
-                    _startCustomTimer();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6FB8E9),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              // Show Delete/Edit buttons for custom timers
+              if (!isPresetTimer) ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      // Find the index of this timer in the saved list
+                      final timerIndex = _savedTimers.indexOf(timer);
+
+                      // Show confirmation dialog before deleting
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          backgroundColor: const Color(0xFF242628),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: const BorderSide(
+                                color: Color(0xFFEF5350), width: 2),
+                          ),
+                          title: const Text(
+                            'Delete Timer?',
+                            style: TextStyle(
+                              color: Color(0xFFD9D9D9),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          content: Text(
+                            'Are you sure you want to delete "${timer.label}"?',
+                            style: const TextStyle(
+                              color: Color(0xFFD9D9D9),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: Color(0xFF888888)),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                final navigator = Navigator.of(context);
+
+                                navigator.pop();
+                                if (timerIndex != -1) {
+                                  // Only delete from Firebase if it has an ID (not a preset)
+                                  if (timer.id != null) {
+                                    final firestoreService = FirestoreService();
+                                    final success = await firestoreService
+                                        .deleteTimer(timer.id!);
+
+                                    if (success) {
+                                      setState(() {
+                                        _savedTimers.removeAt(timerIndex);
+                                        _selectedTimerDetails = null;
+                                      });
+                                    }
+                                  }
+                                }
+                              },
+                              child: const Text(
+                                'Delete',
+                                style: TextStyle(
+                                  color: Color(0xFFEF5350),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFEF5350),
+                      side:
+                          const BorderSide(color: Color(0xFFEF5350), width: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: const Text(
-                    'Start Timer',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                    icon: const Icon(Icons.delete, size: 18),
+                    label: const Text(
+                      'Delete',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-
-              // Show Edit button for custom timers, Customize for preset timers
-              if (!isPresetTimer) ...[
+                const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
@@ -1211,158 +1266,44 @@ class _TimerScreenState extends State<TimerScreen> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Find the index of this timer in the saved list
-                      final timerIndex = _savedTimers.indexOf(timer);
-
-                      // Show confirmation dialog before deleting
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          backgroundColor: const Color(0xFF242628),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: const BorderSide(
-                                color: Color(0xFFEF5350), width: 2),
-                          ),
-                          title: const Text(
-                            'Delete Timer?',
-                            style: TextStyle(
-                              color: Color(0xFFD9D9D9),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          content: Text(
-                            'Are you sure you want to delete "${timer.label}"?',
-                            style: const TextStyle(
-                              color: Color(0xFFD9D9D9),
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(color: Color(0xFF888888)),
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                final navigator = Navigator.of(context);
-                                final messenger = ScaffoldMessenger.of(context);
-
-                                navigator.pop();
-                                if (timerIndex != -1) {
-                                  // Only delete from Firebase if it has an ID (not a preset)
-                                  if (timer.id != null) {
-                                    final firestoreService = FirestoreService();
-                                    final success = await firestoreService
-                                        .deleteTimer(timer.id!);
-
-                                    if (success) {
-                                      setState(() {
-                                        _savedTimers.removeAt(timerIndex);
-                                        _selectedTimerDetails = null;
-                                      });
-                                      messenger.showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'Deleted timer "${timer.label}"'),
-                                          backgroundColor:
-                                              const Color(0xFFEF5350),
-                                        ),
-                                      );
-                                    } else {
-                                      messenger.showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              'Failed to delete timer. Please try again.'),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  } else {
-                                    // Can't delete preset timers
-                                    messenger.showSnackBar(
-                                      const SnackBar(
-                                        content:
-                                            Text('Cannot delete preset timers'),
-                                        backgroundColor: Colors.orange,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              child: const Text(
-                                'Delete',
-                                style: TextStyle(
-                                  color: Color(0xFFEF5350),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFFEF5350),
-                      side:
-                          const BorderSide(color: Color(0xFFEF5350), width: 2),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.delete, size: 18),
-                    label: const Text(
-                      'Delete',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                // Show Customize button for preset timers
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      // Load timer settings and switch to custom timer view
-                      setState(() {
-                        _selectedHours = timer.hours;
-                        _selectedMinutes = timer.minutes;
-                        _selectedSeconds = timer.seconds;
-                        _includeBreakTimer = timer.includeBreakTimer;
-                        _breakMinutes = timer.breakMinutes;
-                        _iterationCount = timer.cycles;
-                        _labelController.text = timer.label;
-                        _selectedTimerDetails = null;
-                        _showPresets = false;
-                      });
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF6FB8E9),
-                      side:
-                          const BorderSide(color: Color(0xFF6FB8E9), width: 2),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Customize',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
               ],
+
+              // Start Timer button (always on the right)
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Start the timer directly
+                    setState(() {
+                      _selectedHours = timer.hours;
+                      _selectedMinutes = timer.minutes;
+                      _selectedSeconds = timer.seconds;
+                      _includeBreakTimer = timer.includeBreakTimer;
+                      _breakMinutes = timer.breakMinutes;
+                      _iterationCount = timer.cycles;
+                      _labelController.text = timer.label;
+                      _selectedTimerDetails = null;
+                      _timerStartedFromSavedTimers =
+                          true; // Mark as started from saved timers
+                    });
+                    _startCustomTimer();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6FB8E9),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Start Timer',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
@@ -2356,12 +2297,6 @@ class _TimerScreenState extends State<TimerScreen> {
 
   void _saveCustomTimer() async {
     if (_selectedHours == 0 && _selectedMinutes == 0 && _selectedSeconds == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please set a timer duration before saving'),
-          backgroundColor: Colors.red,
-        ),
-      );
       return;
     }
 
@@ -2370,7 +2305,6 @@ class _TimerScreenState extends State<TimerScreen> {
         ? 'Custom Timer ${_savedTimers.where((t) => t.id != null).length + 1}'
         : label;
     final firestoreService = FirestoreService();
-    final messenger = ScaffoldMessenger.of(context);
 
     // Check if we're editing an existing timer or creating a new one
     if (_editingTimerId != null) {
@@ -2392,23 +2326,22 @@ class _TimerScreenState extends State<TimerScreen> {
         // Reload timers from Firebase to ensure consistency
         await _loadSavedTimers();
 
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Timer "$timerLabel" updated!'),
-            backgroundColor: const Color(0xFF6FB8E9),
-          ),
+        // Find the updated timer and show its details
+        final updatedTimer = _savedTimers.firstWhere(
+          (t) => t.id == _editingTimerId,
+          orElse: () => _savedTimers.first,
         );
 
         // Reset custom timer to default settings after saving
         _resetCustomTimerSettings();
+
+        // Navigate to Saved Timers tab and show the timer details
+        setState(() {
+          _showPresets = true;
+          _selectedTimerDetails = updatedTimer;
+        });
       } else {
         debugPrint('❌ Failed to update timer in Firebase');
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update timer. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     } else {
       // Save new timer to Firebase
@@ -2428,23 +2361,22 @@ class _TimerScreenState extends State<TimerScreen> {
         // Reload timers from Firebase to ensure consistency
         await _loadSavedTimers();
 
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text('Timer "$timerLabel" saved!'),
-            backgroundColor: const Color(0xFF6FB8E9),
-          ),
+        // Find the newly saved timer and show its details
+        final savedTimer = _savedTimers.firstWhere(
+          (t) => t.id == timerId,
+          orElse: () => _savedTimers.last,
         );
 
         // Reset custom timer to default settings after saving
         _resetCustomTimerSettings();
+
+        // Navigate to Saved Timers tab and show the timer details
+        setState(() {
+          _showPresets = true;
+          _selectedTimerDetails = savedTimer;
+        });
       } else {
         debugPrint('❌ Failed to save timer to Firebase');
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save timer. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -2453,12 +2385,6 @@ class _TimerScreenState extends State<TimerScreen> {
     final totalSeconds =
         (_selectedHours * 3600) + (_selectedMinutes * 60) + _selectedSeconds;
     if (totalSeconds == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please set a time greater than 0'),
-          backgroundColor: Color(0xFFEF5350),
-        ),
-      );
       return;
     }
 
