@@ -57,6 +57,9 @@ class CalendarProvider with ChangeNotifier {
   // Auto-refresh settings
   bool _autoRefresh = true;
 
+  // Flag to prevent recursive refreshes when creating/updating events
+  bool _isUpdatingSourceObjects = false;
+
   // Reference to other providers for data synchronization
   TaskProvider? _taskProvider;
   DailyQuestProvider? _questProvider;
@@ -641,6 +644,12 @@ class CalendarProvider with ChangeNotifier {
   }
 
   void _onTasksChanged() {
+    // Don't refresh if we're currently creating/updating source objects
+    // This prevents duplicate events when we create a calendar event -> task -> calendar event
+    if (_isUpdatingSourceObjects) {
+      debugPrint('⏸️ Skipping task refresh (currently updating source objects)');
+      return;
+    }
     _refreshTaskEvents();
   }
 
@@ -660,12 +669,50 @@ class CalendarProvider with ChangeNotifier {
     if (_taskProvider == null) return;
 
     final tasks = _taskProvider!.tasks;
-    _removeEventsByType(CalendarEventType.task);
-
-    for (final task in tasks) {
-      final event = CalendarEvent.fromTask(task);
-      _addEventToMap(event);
+    
+    debugPrint('🔄 Refreshing task events (${tasks.length} tasks)');
+    
+    // Get all existing calendar event IDs (to avoid creating duplicates)
+    final existingCalendarEventIds = _events.values
+        .expand((events) => events)
+        .map((event) => event.id)
+        .toSet();
+    
+    debugPrint('   Existing calendar event IDs: $existingCalendarEventIds');
+    
+    // Remove only task-derived calendar events (those with 'task_' prefix)
+    // Keep calendar events that were created directly (share same ID as task)
+    int removedCount = 0;
+    for (final day in _events.keys.toList()) {
+      final beforeCount = _events[day]!.length;
+      _events[day]!.removeWhere((event) => 
+        event.type == CalendarEventType.task && 
+        event.id.startsWith('task_')
+      );
+      removedCount += beforeCount - _events[day]!.length;
+      if (_events[day]!.isEmpty) {
+        _events.remove(day);
+      }
     }
+    
+    debugPrint('   Removed $removedCount task-derived calendar events');
+
+    // Create calendar events only for tasks that don't have a calendar event
+    int createdCount = 0;
+    for (final task in tasks) {
+      // Skip if there's already a calendar event with this task's ID
+      // (calendar event was created first, then task was created with same ID)
+      if (!existingCalendarEventIds.contains(task.id)) {
+        final event = CalendarEvent.fromTask(task);
+        _addEventToMap(event);
+        createdCount++;
+        debugPrint('   ✅ Created calendar event for task: ${task.title}');
+      } else {
+        debugPrint('   ⏭️ Skipped task (already has calendar event): ${task.title}');
+      }
+    }
+    
+    debugPrint('   Created $createdCount new calendar events from tasks');
   }
 
   Future<void> _refreshQuestEvents() async {
@@ -785,136 +832,166 @@ class CalendarProvider with ChangeNotifier {
   }
 
   Future<void> _createSourceObject(CalendarEvent event) async {
-    // Create task for all calendar events so they appear in the Tasks tab
-    // This ensures events created in calendars show up under Today/Week/Month tasks
-    if (_taskProvider != null) {
-      try {
-        final user = _auth.currentUser;
-        if (user == null) {
-          debugPrint('❌ Cannot create task: No user logged in');
-          return;
-        }
-
-        final task = Task(
-          id: event.id, // Use the same ID as the calendar event for sync
-          title: event.title,
-          estMinutes: event.estimatedMinutes ?? 60,
-          dueAt: event.endTime ?? event.startTime, // Use startTime if endTime is null
-          priority: event.priority,
-          tags: event.tags,
-          status: TaskStatus.pending,
-        );
-        
-        // Save task directly to Firestore with the calendar event's ID
-        final taskData = task.toJson();
-        taskData['uid'] = user.uid;
-        taskData['createdAt'] = DateTime.now().toIso8601String();
-        taskData['updatedAt'] = DateTime.now().toIso8601String();
-        taskData['isArchived'] = false;
-        
-        await _firestoreService.tasksCollection.doc(event.id).set(taskData);
-        
-        // Add to task provider's local list
-        _taskProvider!.tasks.add(task);
-        _taskProvider!.notifyListeners();
-        
-        debugPrint('✅ Created Task from calendar event: ${task.title} (type: ${event.type})');
-      } catch (e) {
-        debugPrint('❌ Error creating task from calendar event: $e');
-      }
-    }
+    // Set flag to prevent listener from triggering duplicate event creation
+    _isUpdatingSourceObjects = true;
     
-    // Additional source object creation for specific event types
-    switch (event.type) {
-      case CalendarEventType.studySession:
-        // Create study session (implementation depends on study session provider)
-        break;
-      case CalendarEventType.flashcardStudy:
-        // Flashcard events don't need additional source objects - the Deck is already stored in sourceObject field
-        break;
-      default:
-        // Other event types already handled by task creation above
-        break;
+    try {
+      // Create task for all calendar events so they appear in the Tasks tab
+      // This ensures events created in calendars show up under Today/Week/Month tasks
+      if (_taskProvider != null) {
+        try {
+          final user = _auth.currentUser;
+          if (user == null) {
+            debugPrint('❌ Cannot create task: No user logged in');
+            return;
+          }
+
+          final task = Task(
+            id: event.id, // Use the same ID as the calendar event for sync
+            title: event.title,
+            estMinutes: event.estimatedMinutes ?? 60,
+            dueAt: event.endTime ?? event.startTime, // Use startTime if endTime is null
+            priority: event.priority,
+            tags: event.tags,
+            status: TaskStatus.pending,
+          );
+          
+          debugPrint('📅 Creating task from calendar event: "${task.title}"');
+          debugPrint('   Due Date: ${task.dueAt}');
+          debugPrint('   Event ID: ${event.id}');
+          
+          // Save task directly to Firestore with the calendar event's ID
+          final taskData = task.toJson();
+          taskData['uid'] = user.uid;
+          taskData['createdAt'] = DateTime.now().toIso8601String();
+          taskData['updatedAt'] = DateTime.now().toIso8601String();
+          taskData['isArchived'] = false;
+          
+          debugPrint('   Task data to save: $taskData');
+          
+          await _firestoreService.tasksCollection.doc(event.id).set(taskData);
+          
+          // Add to task provider's local list
+          _taskProvider!.tasks.add(task);
+          _taskProvider!.notifyListeners();
+          
+          debugPrint('✅ Created Task from calendar event: ${task.title} (type: ${event.type})');
+        } catch (e) {
+          debugPrint('❌ Error creating task from calendar event: $e');
+        }
+      }
+      
+      // Additional source object creation for specific event types
+      switch (event.type) {
+        case CalendarEventType.studySession:
+          // Create study session (implementation depends on study session provider)
+          break;
+        case CalendarEventType.flashcardStudy:
+          // Flashcard events don't need additional source objects - the Deck is already stored in sourceObject field
+          break;
+        default:
+          // Other event types already handled by task creation above
+          break;
+      }
+    } finally {
+      // Always reset the flag when done
+      _isUpdatingSourceObjects = false;
     }
   }
 
   Future<void> _updateSourceObject(CalendarEvent event) async {
-    // Update task for all calendar events
-    if (_taskProvider != null) {
-      try {
-        final user = _auth.currentUser;
-        if (user == null) {
-          debugPrint('❌ Cannot update task: No user logged in');
-          return;
-        }
-
-        final task = Task(
-          id: event.id,
-          title: event.title,
-          estMinutes: event.estimatedMinutes ?? 60,
-          dueAt: event.endTime ?? event.startTime,
-          priority: event.priority,
-          tags: event.tags,
-          status: event.status == CalendarEventStatus.completed 
-              ? TaskStatus.completed 
-              : TaskStatus.pending,
-        );
-        
-        // Update task directly in Firestore
-        final taskData = task.toJson();
-        taskData['uid'] = user.uid;
-        taskData['updatedAt'] = DateTime.now().toIso8601String();
-        taskData['isArchived'] = false;
-        
-        await _firestoreService.tasksCollection.doc(event.id).update(taskData);
-        
-        // Update in task provider's local list
-        final index = _taskProvider!.tasks.indexWhere((t) => t.id == event.id);
-        if (index != -1) {
-          _taskProvider!.tasks[index] = task;
-          _taskProvider!.notifyListeners();
-        }
-        
-        debugPrint('✅ Updated Task from calendar event: ${task.title} (type: ${event.type})');
-      } catch (e) {
-        debugPrint('❌ Error updating task from calendar event: $e');
-      }
-    }
+    // Set flag to prevent listener from triggering duplicate event updates
+    _isUpdatingSourceObjects = true;
     
-    // Additional source object updates for specific event types
-    switch (event.type) {
-      case CalendarEventType.studySession:
-        // Update study session if needed
-        break;
-      default:
-        break;
+    try {
+      // Update task for all calendar events
+      if (_taskProvider != null) {
+        try {
+          final user = _auth.currentUser;
+          if (user == null) {
+            debugPrint('❌ Cannot update task: No user logged in');
+            return;
+          }
+
+          final task = Task(
+            id: event.id,
+            title: event.title,
+            estMinutes: event.estimatedMinutes ?? 60,
+            dueAt: event.endTime ?? event.startTime,
+            priority: event.priority,
+            tags: event.tags,
+            status: event.status == CalendarEventStatus.completed 
+                ? TaskStatus.completed 
+                : TaskStatus.pending,
+          );
+          
+          // Update task directly in Firestore
+          final taskData = task.toJson();
+          taskData['uid'] = user.uid;
+          taskData['updatedAt'] = DateTime.now().toIso8601String();
+          taskData['isArchived'] = false;
+          
+          await _firestoreService.tasksCollection.doc(event.id).update(taskData);
+          
+          // Update in task provider's local list
+          final index = _taskProvider!.tasks.indexWhere((t) => t.id == event.id);
+          if (index != -1) {
+            _taskProvider!.tasks[index] = task;
+            _taskProvider!.notifyListeners();
+          }
+          
+          debugPrint('✅ Updated Task from calendar event: ${task.title} (type: ${event.type})');
+        } catch (e) {
+          debugPrint('❌ Error updating task from calendar event: $e');
+        }
+      }
+      
+      // Additional source object updates for specific event types
+      switch (event.type) {
+        case CalendarEventType.studySession:
+          // Update study session if needed
+          break;
+        default:
+          break;
+      }
+    } finally {
+      // Always reset the flag when done
+      _isUpdatingSourceObjects = false;
     }
   }
 
   Future<void> _deleteSourceObject(CalendarEvent event) async {
-    // Delete task for all calendar events
-    if (_taskProvider != null) {
-      try {
-        // Delete task from Firestore
-        await _firestoreService.tasksCollection.doc(event.id).delete();
-        
-        // Remove from task provider's local list
-        _taskProvider!.tasks.removeWhere((t) => t.id == event.id);
-        _taskProvider!.notifyListeners();
-        
-        debugPrint('✅ Deleted Task from calendar event: ${event.title} (type: ${event.type})');
-      } catch (e) {
-        debugPrint('❌ Error deleting task from calendar event: $e');
-      }
-    }
+    // Set flag to prevent listener from triggering duplicate event deletions
+    _isUpdatingSourceObjects = true;
     
-    // Additional source object deletion for specific event types
-    switch (event.type) {
-      case CalendarEventType.studySession:
-        // Delete study session if needed
-        break;
-      default:
-        break;
+    try {
+      // Delete task for all calendar events
+      if (_taskProvider != null) {
+        try {
+          // Delete task from Firestore
+          await _firestoreService.tasksCollection.doc(event.id).delete();
+          
+          // Remove from task provider's local list
+          _taskProvider!.tasks.removeWhere((t) => t.id == event.id);
+          _taskProvider!.notifyListeners();
+          
+          debugPrint('✅ Deleted Task from calendar event: ${event.title} (type: ${event.type})');
+        } catch (e) {
+          debugPrint('❌ Error deleting task from calendar event: $e');
+        }
+      }
+      
+      // Additional source object deletion for specific event types
+      switch (event.type) {
+        case CalendarEventType.studySession:
+          // Delete study session if needed
+          break;
+        default:
+          break;
+      }
+    } finally {
+      // Always reset the flag when done
+      _isUpdatingSourceObjects = false;
     }
   }
 

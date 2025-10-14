@@ -666,18 +666,36 @@ class FirestoreService {
   /// Delete (archive) a task using the full Task model
   Future<bool> deleteFullTask(String taskId) async {
     try {
+      if (kDebugMode) {
+        print('🗑️ Attempting to archive task: $taskId');
+      }
+      
+      // First check if the document exists
+      final docSnapshot = await tasksCollection.doc(taskId).get();
+      
+      if (!docSnapshot.exists) {
+        if (kDebugMode) {
+          print('⚠️ Task does not exist in Firestore: $taskId');
+          print('   This task may have been created locally and never saved to the database.');
+        }
+        // Return true since the task doesn't exist anyway (idempotent delete)
+        return true;
+      }
+      
+      // Archive the task by setting isArchived to true
       await tasksCollection.doc(taskId).update({
         'isArchived': true,
         'archivedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      
       if (kDebugMode) {
         print('✅ Archived full task: $taskId');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error archiving full task: $e');
+        print('❌ Error archiving full task $taskId: $e');
       }
       return false;
     }
@@ -998,18 +1016,36 @@ class FirestoreService {
   /// Delete (archive) a calendar event
   Future<bool> deleteCalendarEvent(String eventId) async {
     try {
+      if (kDebugMode) {
+        print('🗑️ Attempting to archive calendar event: $eventId');
+      }
+      
+      // First check if the document exists
+      final docSnapshot = await calendarEventsCollection.doc(eventId).get();
+      
+      if (!docSnapshot.exists) {
+        if (kDebugMode) {
+          print('⚠️ Calendar event does not exist in Firestore: $eventId');
+          print('   This event may have been created locally and never saved to the database.');
+        }
+        // Return true since the event doesn't exist anyway (idempotent delete)
+        return true;
+      }
+      
+      // Archive the event
       await calendarEventsCollection.doc(eventId).update({
         'isArchived': true,
         'archivedAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      
       if (kDebugMode) {
         print('✅ Archived calendar event: $eventId');
       }
       return true;
     } catch (e) {
       if (kDebugMode) {
-        print('❌ Error archiving calendar event: $e');
+        print('❌ Error archiving calendar event $eventId: $e');
       }
       return false;
     }

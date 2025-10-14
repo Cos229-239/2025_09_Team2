@@ -139,10 +139,27 @@ class _LearningScreenState extends State<LearningScreen>
 
     // Load all necessary data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<TaskProvider>(context, listen: false).loadTasks();
-      Provider.of<NoteProvider>(context, listen: false).loadNotes();
-      Provider.of<DeckProvider>(context, listen: false).loadDecks();
+      _reloadAllData();
     });
+  }
+
+  /// Reload all data from Firestore
+  void _reloadAllData() {
+    Provider.of<TaskProvider>(context, listen: false).loadTasks();
+    Provider.of<NoteProvider>(context, listen: false).loadNotes();
+    Provider.of<DeckProvider>(context, listen: false).loadDecks();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload data whenever the screen becomes active
+    // Use post-frame callback to avoid calling during build
+    if (ModalRoute.of(context)?.isCurrent == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _reloadAllData();
+      });
+    }
   }
 
   @override
@@ -522,13 +539,19 @@ class _LearningScreenState extends State<LearningScreen>
 
   /// Build tasks tab with learning tasks section
   Widget _buildTasksTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildTasksSection(),
-        ],
+    return RefreshIndicator(
+      onRefresh: () async {
+        await Provider.of<TaskProvider>(context, listen: false).loadTasks();
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildTasksSection(),
+          ],
+        ),
       ),
     );
   }
@@ -1201,9 +1224,28 @@ class _LearningScreenState extends State<LearningScreen>
   Widget _buildTasksSection() {
     return Consumer<TaskProvider>(
       builder: (context, taskProvider, child) {
+        // Debug: Log all tasks
+        debugPrint('📋 Total tasks loaded: ${taskProvider.tasks.length}');
+        for (final task in taskProvider.tasks) {
+          debugPrint('  Task: "${task.title}" - Due: ${task.dueAt} - Status: ${task.status}');
+        }
+        
+        final overdueTasks = _getOverdueTasks(taskProvider.tasks);
+        
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Show overdue tasks at the top if there are any
+            if (overdueTasks.isNotEmpty) ...[
+              _buildTaskSectionInline(
+                title: "Overdue Tasks",
+                tasks: overdueTasks,
+                icon: Icons.warning_amber_rounded,
+                emptyMessage: "",
+                isOverdue: true,
+              ),
+              const SizedBox(height: 24),
+            ],
             _buildTaskSectionInline(
               title: "Today's Tasks",
               tasks: _getTodayTasks(taskProvider.tasks),
@@ -1243,6 +1285,33 @@ class _LearningScreenState extends State<LearningScreen>
           task.dueAt!.month == today.month &&
           task.dueAt!.day == today.day;
     }).toList();
+  }
+
+  /// Get overdue tasks (past due date and not completed)
+  List<Task> _getOverdueTasks(List<Task> allTasks) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    final overdueTasks = allTasks.where((task) {
+      if (task.dueAt == null || task.status == TaskStatus.completed) {
+        return false;
+      }
+      // Task is overdue if due date is before today (comparing dates only, ignoring time)
+      final taskDate = DateTime(task.dueAt!.year, task.dueAt!.month, task.dueAt!.day);
+      return taskDate.isBefore(today);
+    }).toList();
+    
+    // Debug logging
+    if (overdueTasks.isNotEmpty) {
+      debugPrint('🔴 Found ${overdueTasks.length} overdue tasks:');
+      for (final task in overdueTasks) {
+        debugPrint('  - ${task.title} (Due: ${task.dueAt})');
+      }
+    } else {
+      debugPrint('✅ No overdue tasks found');
+    }
+    
+    return overdueTasks;
   }
 
   /// Get tasks due this week
@@ -1307,7 +1376,11 @@ class _LearningScreenState extends State<LearningScreen>
     required List<Task> tasks,
     required IconData icon,
     required String emptyMessage,
+    bool isOverdue = false,
   }) {
+    // Use red/orange colors for overdue tasks
+    final accentColor = isOverdue ? const Color(0xFFEF5350) : const Color(0xFF6FB8E9);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1316,30 +1389,30 @@ class _LearningScreenState extends State<LearningScreen>
           children: [
             Icon(
               icon,
-              color: const Color(0xFF6FB8E9),
+              color: accentColor,
               size: 24,
             ),
             const SizedBox(width: 12),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFD9D9D9), // Light text for dark theme
+                color: isOverdue ? accentColor : const Color(0xFFD9D9D9), // Red for overdue
               ),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFF6FB8E9).withValues(alpha: 0.1),
+                color: accentColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '${tasks.length}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Color(0xFF6FB8E9),
+                  color: accentColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1357,14 +1430,14 @@ class _LearningScreenState extends State<LearningScreen>
               color: const Color(0xFF242628), // Match dashboard header color
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3)),
+                  color: accentColor.withValues(alpha: 0.3)),
             ),
             child: Column(
               children: [
                 Icon(
                   Icons.task_alt,
                   size: 40,
-                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.7),
+                  color: accentColor.withValues(alpha: 0.7),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -1379,7 +1452,7 @@ class _LearningScreenState extends State<LearningScreen>
             ),
           )
         else
-          ...tasks.take(3).map((task) => _buildInlineTaskCard(task)),
+          ...tasks.take(3).map((task) => _buildInlineTaskCard(task, isOverdue: isOverdue)),
 
         // Show more button if there are more than 3 tasks
         if (tasks.length > 3)
@@ -1397,8 +1470,8 @@ class _LearningScreenState extends State<LearningScreen>
                 },
                 child: Text(
                   'View all ${tasks.length} tasks',
-                  style: const TextStyle(
-                    color: Color(0xFF6FB8E9),
+                  style: TextStyle(
+                    color: accentColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1512,7 +1585,10 @@ class _LearningScreenState extends State<LearningScreen>
   }
 
   /// Build individual task card for inline display
-  Widget _buildInlineTaskCard(Task task) {
+  Widget _buildInlineTaskCard(Task task, {bool isOverdue = false}) {
+    // Use red color for overdue tasks
+    final accentColor = isOverdue ? const Color(0xFFEF5350) : const Color(0xFF6FB8E9);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Card(
@@ -1521,7 +1597,7 @@ class _LearningScreenState extends State<LearningScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
-            color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+            color: accentColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -1543,7 +1619,7 @@ class _LearningScreenState extends State<LearningScreen>
                       border: Border.all(
                         color: task.status == TaskStatus.completed
                             ? const Color(0xFF4CAF50)
-                            : const Color(0xFF6FB8E9),
+                            : accentColor,
                         width: 2,
                       ),
                       color: task.status == TaskStatus.completed
@@ -1585,18 +1661,16 @@ class _LearningScreenState extends State<LearningScreen>
                         Row(
                           children: [
                             Icon(
-                              Icons.schedule,
+                              isOverdue ? Icons.warning_amber_rounded : Icons.schedule,
                               size: 12,
-                              color: const Color(
-                                  0xFF888888), // Lighter grey for dark theme
+                              color: isOverdue ? accentColor : const Color(0xFF888888),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               _formatDueDateInline(task.dueAt!),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: Color(
-                                    0xFF888888), // Lighter grey for dark theme
+                                color: isOverdue ? accentColor : const Color(0xFF888888),
                               ),
                             ),
                           ],
