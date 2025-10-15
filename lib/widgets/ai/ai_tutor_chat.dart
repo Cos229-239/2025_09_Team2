@@ -603,39 +603,66 @@ class _AITutorChatState extends State<AITutorChat>
                 final mastery =
                     provider.userProfile?.subjectMastery[subject] ?? 0;
 
-                return ChoiceChip(
-                  label: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        subject,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : const Color(0xFFD9D9D9),
-                        ),
+                return InkWell(
+                  onTap: () => provider.updateSubject(subject),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent, // Make transparent
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF6FB8E9) // Selected - solid blue border
+                            : const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Unselected - faded blue border
+                        width: 2,
                       ),
-                      if (mastery > 0)
-                        Text(
-                          '${(mastery * 100).toInt()}%',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isSelected
-                                ? Colors.white
-                                : const Color(0xFF888888),
-                          ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected)
+                          const Icon(
+                            Icons.check, 
+                            size: 18, 
+                            color: Color(0xFF6FB8E9),
+                          ),
+                        if (isSelected) const SizedBox(width: 6),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              subject,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: isSelected
+                                    ? const Color(0xFFD9D9D9)
+                                    : const Color(0xFFD9D9D9).withValues(alpha: 0.7),
+                              ),
+                            ),
+                            if (mastery > 0)
+                              Text(
+                                '${(mastery * 100).toInt()}%',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isSelected
+                                      ? const Color(0xFF6FB8E9)
+                                      : const Color(0xFF888888),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  selected: isSelected,
-                  onSelected: (_) => provider.updateSubject(subject),
-                  selectedColor:
-                      const Color(0xFF6FB8E9), // Dashboard blue accent
-                  backgroundColor:
-                      const Color(0xFF16181A), // Match main background color
-                  avatar: isSelected
-                      ? const Icon(Icons.check, size: 18, color: Colors.white)
-                      : null,
                 );
               }).toList(),
             ),
@@ -686,28 +713,53 @@ class _AITutorChatState extends State<AITutorChat>
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ElevatedButton.icon(
-                      onPressed: () => provider.updateDifficulty(difficulty),
-                      icon: Icon(icon, size: 20),
-                      label: Text(difficulty),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isSelected
-                            ? const Color(0xFF6FB8E9) // Dashboard blue accent
-                            : const Color(
-                                0xFF16181A), // Match main background color
-                        foregroundColor: isSelected
-                            ? Colors.white
-                            : const Color(
-                                0xFFD9D9D9), // Light text for dark theme
-                        shape: RoundedRectangleBorder(
+                    child: InkWell(
+                      onTap: () => provider.updateDifficulty(difficulty),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.transparent, // Make transparent
                           borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color:
-                                const Color(0xFF6FB8E9).withValues(alpha: 0.3),
-                            width: 1,
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF6FB8E9) // Selected - solid blue border
+                                : const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Unselected - faded blue border
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                icon, 
+                                size: 20, 
+                                color: isSelected
+                                    ? const Color(0xFF6FB8E9)
+                                    : const Color(0xFFD9D9D9).withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                difficulty,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected
+                                      ? const Color(0xFFD9D9D9)
+                                      : const Color(0xFFD9D9D9).withValues(alpha: 0.7),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
                     ),
                   ),
@@ -755,29 +807,57 @@ class _AITutorChatState extends State<AITutorChat>
               children: _learningGoalOptions.map((goal) {
                 final isSelected = provider.learningGoals.contains(goal);
 
-                return ChoiceChip(
-                  label: Text(
-                    goal,
-                    style: TextStyle(
-                      color:
-                          isSelected ? Colors.white : const Color(0xFFD9D9D9),
-                    ),
-                  ),
-                  selected: isSelected,
-                  onSelected: (_) {
+                return InkWell(
+                  onTap: () {
                     if (isSelected) {
                       provider.removeLearningGoal(goal);
                     } else {
                       provider.addLearningGoal(goal);
                     }
                   },
-                  selectedColor:
-                      const Color(0xFF6FB8E9), // Dashboard blue accent
-                  backgroundColor:
-                      const Color(0xFF16181A), // Match main background color
-                  avatar: isSelected
-                      ? const Icon(Icons.check, size: 18, color: Colors.white)
-                      : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent, // Make transparent
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF6FB8E9) // Selected - solid blue border
+                            : const Color(0xFF6FB8E9).withValues(alpha: 0.3), // Unselected - faded blue border
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSelected)
+                          const Icon(
+                            Icons.check, 
+                            size: 18, 
+                            color: Color(0xFF6FB8E9),
+                          ),
+                        if (isSelected) const SizedBox(width: 6),
+                        Text(
+                          goal,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? const Color(0xFFD9D9D9)
+                                : const Color(0xFFD9D9D9).withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               }).toList(),
             ),
@@ -791,59 +871,72 @@ class _AITutorChatState extends State<AITutorChat>
     return SizedBox(
       width: double.infinity,
       height: 56,
-      child: ElevatedButton(
-        onPressed: provider.isStartingSession
+      child: InkWell(
+        onTap: provider.isStartingSession
             ? null
             : () async {
                 HapticFeedback.lightImpact();
                 await provider.startAdaptiveSession();
               },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF6FB8E9), // Dashboard blue accent
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
-          ),
-          elevation: 8,
-          shadowColor: const Color(0xFF6FB8E9)
-              .withValues(alpha: 0.5), // Dashboard blue shadow
-        ),
-        child: provider.isStartingSession
-            ? const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                  SizedBox(width: 12),
-                  Text(
-                    'Starting Session...',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              )
-            : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.rocket_launch, size: 24),
-                  SizedBox(width: 12),
-                  Text(
-                    'Start Learning Session',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            color: Colors.transparent, // Make transparent
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFF6FB8E9), // New blue color - solid border
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
               ),
+            ],
+          ),
+          child: Center(
+            child: provider.isStartingSession
+                ? const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6FB8E9)),
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Starting Session...',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFD9D9D9),
+                        ),
+                      ),
+                    ],
+                  )
+                : const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.rocket_launch, size: 24, color: Color(0xFF6FB8E9)),
+                      SizedBox(width: 12),
+                      Text(
+                        'Start Learning Session',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFD9D9D9),
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
       ),
     );
   }
@@ -1680,19 +1773,52 @@ class _AITutorChatState extends State<AITutorChat>
           'Your progress will be saved.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+          InkWell(
+            onTap: () => Navigator.pop(context),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.transparent, // Make transparent
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                  width: 2,
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFFD9D9D9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
+          InkWell(
+            onTap: () {
               Navigator.pop(context);
               provider.endSession();
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.transparent, // Make transparent
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.red,
+                  width: 2,
+                ),
+              ),
+              child: const Text(
+                'End Session',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            child: const Text('End Session'),
           ),
         ],
       ),
