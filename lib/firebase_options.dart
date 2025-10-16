@@ -41,53 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    //apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-    apiKey: 'AIzaSyALMGBRttLlv1E3kwXZNNZRgYfu-9wEKug',
-    appId: '1:251508884392:web:7a842b1e9867506d09539d',
-    messagingSenderId: '251508884392',
-    projectId: 'studypals-9f7e1',
-    authDomain: 'studypals-9f7e1.firebaseapp.com',
-    storageBucket: 'studypals-9f7e1.appspot.com',
-    measurementId: 'G-1J3NYP637K',
+    apiKey: 'AIzaSyCMtyyIza1Ic42BHBs6eCYJi4u0GyeHXTs',
+    appId: '1:832899771415:web:920bc56483b1fd452e4052',
+    messagingSenderId: '832899771415',
+    projectId: 'studypals-c4f44',
+    authDomain: 'studypals-c4f44.firebaseapp.com',
+    storageBucket: 'studypals-c4f44.firebasestorage.app',
+    measurementId: 'G-VTY0KVSEBM',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    //apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-    apiKey: 'AIzaSyALMGBRttLlv1E3kwXZNNZRgYfu-9wEKug',
-    appId: '1:251508884392:android:4d55ab8b067df67809539d',
-    messagingSenderId: '251508884392',
-    projectId: 'studypals-9f7e1',
-    storageBucket: 'studypals-9f7e1.firebasestorage.app',
+    apiKey: 'AIzaSyA3DtGyFslzAIMycwyGPbB0BIhc9Tm_AY8',
+    appId: '1:832899771415:android:3d28f38b8f240ba02e4052',
+    messagingSenderId: '832899771415',
+    projectId: 'studypals-c4f44',
+    storageBucket: 'studypals-c4f44.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    //apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-    apiKey: 'AIzaSyALMGBRttLlv1E3kwXZNNZRgYfu-9wEKug',
-    appId: '1:251508884392:ios:someappid09539d',
-    messagingSenderId: '251508884392',
-    projectId: 'studypals-9f7e1',
-    storageBucket: 'studypals-9f7e1.firebasestorage.app',
+    apiKey: 'AIzaSyA3DtGyFslzAIMycwyGPbB0BIhc9Tm_AY8',
+    appId: '1:832899771415:ios:3d28f38b8f240ba02e4052',
+    messagingSenderId: '832899771415',
+    projectId: 'studypals-c4f44',
+    storageBucket: 'studypals-c4f44.firebasestorage.app',
     iosBundleId: 'com.example.studypals',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    //apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-    apiKey: 'AIzaSyALMGBRttLlv1E3kwXZNNZRgYfu-9wEKug',
-    appId: '1:251508884392:ios:someappid09539d',
-    messagingSenderId: '251508884392',
-    projectId: 'studypals-9f7e1',
-    storageBucket: 'studypals-9f7e1.firebasestorage.app',
+    apiKey: 'AIzaSyA3DtGyFslzAIMycwyGPbB0BIhc9Tm_AY8',
+    appId: '1:832899771415:ios:3d28f38b8f240ba02e4052',
+    messagingSenderId: '832899771415',
+    projectId: 'studypals-c4f44',
+    storageBucket: 'studypals-c4f44.firebasestorage.app',
     iosBundleId: 'com.example.studypals',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    //apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-    apiKey: 'AIzaSyALMGBRttLlv1E3kwXZNNZRgYfu-9wEKug',
-    appId: '1:251508884392:web:7a842b1e9867506d09539d',
-    messagingSenderId: '251508884392',
-    projectId: 'studypals-9f7e1',
-    authDomain: 'studypals-9f7e1.firebaseapp.com',
-    storageBucket: 'studypals-9f7e1.appspot.com',
-    measurementId: 'G-1J3NYP637K',
+    apiKey: 'AIzaSyCMtyyIza1Ic42BHBs6eCYJi4u0GyeHXTs',
+    appId: '1:832899771415:web:d972b69e5f9308ab2e4052',
+    messagingSenderId: '832899771415',
+    projectId: 'studypals-c4f44',
+    authDomain: 'studypals-c4f44.firebaseapp.com',
+    storageBucket: 'studypals-c4f44.firebasestorage.app',
+    measurementId: 'G-LJHQSFXGB0',
   );
+
 }
