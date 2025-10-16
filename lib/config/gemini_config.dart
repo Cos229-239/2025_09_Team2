@@ -11,7 +11,7 @@ class GeminiConfig {
   /// 3. Copy the key and paste it below
   ///
   /// FREE TIER: 60 requests/minute, 1,500 requests/day
-  static const String apiKey = 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q';
+  static const String apiKey = 'AIzaSyAssbGQp-J912A5UVSHEJ6zNwISHjle_cs';
 
   /// Model to use for web-grounded searches
   ///
