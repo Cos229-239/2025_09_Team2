@@ -1,6 +1,8 @@
 // gemini_config.dart
 // Configuration for Google Gemini AI integration
 
+import 'env_config.dart';
+
 /// Configuration class for Gemini AI web search capabilities
 class GeminiConfig {
   /// Gemini API key
@@ -8,10 +10,10 @@ class GeminiConfig {
   /// TO GET YOUR FREE API KEY:
   /// 1. Go to https://makersuite.google.com/app/apikey
   /// 2. Click "Create API Key"
-  /// 3. Copy the key and paste it below
+  /// 3. Update EnvConfig.geminiApiKey in lib/config/env_config.dart
   ///
   /// FREE TIER: 60 requests/minute, 1,500 requests/day
-  static const String apiKey = 'AIzaSyAssbGQp-J912A5UVSHEJ6zNwISHjle_cs';
+  static String get apiKey => EnvConfig.geminiApiKey;
 
   /// Model to use for web-grounded searches
   ///
