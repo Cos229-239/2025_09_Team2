@@ -5,6 +5,7 @@ import '../models/user.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/firestore_service.dart';
 import '../services/ai_service.dart';
+import '../config/env_config.dart';
 import 'ai_provider.dart';
 
 class AppState extends ChangeNotifier {
@@ -195,10 +196,10 @@ class AppState extends ChangeNotifier {
   Future<void> _configureAIOnLogin() async {
     if (_aiProvider != null) {
       try {
+        // Import at top of file: import '../config/env_config.dart';
         await _aiProvider!.configureAI(
           provider: AIProvider.google,
-          apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-          //apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+          apiKey: EnvConfig.geminiApiKey,
         );
         debugPrint('Google AI automatically configured upon login');
       } catch (e) {

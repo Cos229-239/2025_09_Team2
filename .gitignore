@@ -10,6 +10,15 @@
 build/
 coverage/
 
+# Environment variables and secrets (CRITICAL - DO NOT COMMIT!)
+.env
+.env.local
+.env.*.local
+*.env
+secrets/
+**/*-key.json
+**/service-account*.json
+
 # Platform specific generated files
 **/ios/Flutter/ephemeral/
 **/linux/flutter/ephemeral/

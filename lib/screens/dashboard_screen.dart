@@ -62,6 +62,7 @@ import 'package:studypals/models/task.dart'; // Task model
 import 'package:studypals/providers/notification_provider.dart'; // Notification system state
 import 'package:studypals/utils/responsive_spacing.dart'; // Responsive spacing utility
 import 'package:studypals/services/ai_service.dart'; // AI service for provider enum
+import 'package:studypals/config/env_config.dart'; // Environment configuration for API keys
 // Import notification widgets for LinkedIn-style notifications
 import 'package:studypals/widgets/notifications/notification_panel.dart'; // Notification bell and panel
 // Import models for deck and card data
@@ -588,10 +589,10 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     // Auto-configure Google AI upon dashboard initialization
     try {
+      // Import at top of file: import '../config/env_config.dart';
       await aiProvider.configureAI(
         provider: AIProvider.google,
-        apiKey: 'AIzaSyCqWTq-SFuam7FTMe2OVcAiriqleRrf30Q',
-        //apiKey: 'AIzaSyAasLmobMCyBiDAm3x9PqT11WX5ck3OhMA',
+        apiKey: EnvConfig.geminiApiKey,
       );
       debugPrint('Google AI automatically configured on dashboard load');
     } catch (e) {
