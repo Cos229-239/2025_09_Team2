@@ -33,7 +33,14 @@ class NoteProvider extends ChangeNotifier {
 
   /// Loads all study notes from persistent storage (database)
   /// Sets loading state and handles errors gracefully with logging
-  Future<void> loadNotes() async {
+  /// @param forceRefresh If true, always reload. If false, only load if notes list is empty
+  Future<void> loadNotes({bool forceRefresh = false}) async {
+    // Skip loading if we already have notes and not forcing refresh
+    if (!forceRefresh && _notes.isNotEmpty) {
+      debugPrint('⏭️ Skipping loadNotes - already have ${_notes.length} notes (use forceRefresh: true to reload)');
+      return;
+    }
+
     _isLoading = true; // Set loading state to true
     notifyListeners(); // Notify UI to show loading indicators
 
@@ -47,16 +54,34 @@ class NoteProvider extends ChangeNotifier {
 
       // Load notes from Firestore
       final notesData = await _firestoreService.getUserNotes(currentUser.uid);
-      _notes.clear();
-      _notes.addAll(notesData.map((data) => _convertFirestoreToNote(data)));
-
-      debugPrint('✅ Loaded ${_notes.length} notes from Firestore');
+      
+      if (forceRefresh) {
+        // Full refresh - replace everything
+        _notes.clear();
+        _notes.addAll(notesData.map((data) => _convertFirestoreToNote(data)));
+        debugPrint('🔄 Force refreshed - loaded ${_notes.length} notes from Firestore');
+      } else {
+        // Smart merge - preserve local notes, add any new ones from Firestore
+        final firestoreNotes = notesData.map((data) => _convertFirestoreToNote(data)).toList();
+        final existingIds = _notes.map((n) => n.id).toSet();
+        
+        // Add notes from Firestore that aren't already local
+        for (final note in firestoreNotes) {
+          if (!existingIds.contains(note.id)) {
+            _notes.add(note);
+          }
+        }
+        
+        debugPrint('✅ Smart merge - now have ${_notes.length} total notes (${firestoreNotes.length} from Firestore)');
+      }
 
       // Sample notes removed - users start with a clean slate
     } catch (e) {
       // Log any errors that occur during note loading for debugging
       developer.log('Error loading notes: $e', name: 'NoteProvider');
-      _notes.clear(); // Clear notes on error
+      if (forceRefresh) {
+        _notes.clear(); // Only clear on error if doing full refresh
+      }
     } finally {
       _isLoading = false; // Always clear loading state
       notifyListeners(); // Notify UI that loading is complete
