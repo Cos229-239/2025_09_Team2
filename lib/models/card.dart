@@ -35,6 +35,12 @@ class FlashCard {
   // Whether the last quiz attempt was correct
   final bool? lastQuizCorrect;
 
+  // Multi-modal content fields for enhanced learning experiences
+  final String? imageUrl; // URL to generated visual representation
+  final String? audioUrl; // URL to generated audio content
+  final String? diagramData; // JSON data for interactive diagrams
+  final Map<String, String>? visualMetadata; // Additional visual content info
+
   /// Constructor for creating a FlashCard instance
   /// @param id - Unique identifier for the card
   /// @param deckId - ID of the parent deck containing this card
@@ -54,22 +60,27 @@ class FlashCard {
     required this.front, // Must provide front content
     required this.back, // Must provide back content
     this.clozeMask, // Optional cloze pattern (null for non-cloze cards)
-    this.multipleChoiceOptions = const [], // Default to empty list for existing cards
+    this.multipleChoiceOptions =
+        const [], // Default to empty list for existing cards
     this.correctAnswerIndex = 0, // Default to first option
     this.difficulty = 3, // Default to medium difficulty
     this.lastQuizAttempt, // No quiz attempt initially
     this.lastQuizCorrect, // No quiz result initially
+    this.imageUrl, // Optional visual content URL
+    this.audioUrl, // Optional audio content URL
+    this.diagramData, // Optional diagram JSON data
+    this.visualMetadata, // Optional visual metadata
   });
 
   /// Checks if quiz is available (not in cooldown period)
   /// @return true if user can take quiz, false if in cooldown
   bool get canTakeQuiz {
     if (lastQuizAttempt == null) return true; // Never attempted
-    
+
     // For both correct and incorrect answers, enforce a cooldown
     final oneHourAgo = DateTime.now().subtract(const Duration(hours: 1));
     final sixHoursAgo = DateTime.now().subtract(const Duration(hours: 6));
-    
+
     if (lastQuizCorrect == true) {
       // Correct answers have a 1-hour cooldown to prevent spam
       return lastQuizAttempt!.isBefore(oneHourAgo);
@@ -83,15 +94,17 @@ class FlashCard {
   /// @return Duration until quiz cooldown expires, or Duration.zero if available
   Duration get quizCooldownRemaining {
     if (lastQuizAttempt == null) return Duration.zero;
-    
+
     if (lastQuizCorrect == true) {
       // 1-hour cooldown for correct answers
-      final oneHourAfterAttempt = lastQuizAttempt!.add(const Duration(hours: 1));
+      final oneHourAfterAttempt =
+          lastQuizAttempt!.add(const Duration(hours: 1));
       final remaining = oneHourAfterAttempt.difference(DateTime.now());
       return remaining.isNegative ? Duration.zero : remaining;
     } else {
       // 6-hour cooldown for incorrect answers
-      final sixHoursAfterAttempt = lastQuizAttempt!.add(const Duration(hours: 6));
+      final sixHoursAfterAttempt =
+          lastQuizAttempt!.add(const Duration(hours: 6));
       final remaining = sixHoursAfterAttempt.difference(DateTime.now());
       return remaining.isNegative ? Duration.zero : remaining;
     }
@@ -134,11 +147,15 @@ class FlashCard {
       difficulty: difficulty,
       lastQuizAttempt: attempted,
       lastQuizCorrect: correct,
+      imageUrl: imageUrl,
+      audioUrl: audioUrl,
+      diagramData: diagramData,
+      visualMetadata: visualMetadata,
     );
   }
 
   /// Converts the FlashCard object to a JSON map for database storage or API transmission
-  /// @return Map<String, dynamic> containing all card data in JSON format
+  /// @return Map containing all card data in JSON format
   Map<String, dynamic> toJson() => {
         'id': id, // Store unique identifier
         'deckId': deckId, // Store parent deck reference
@@ -149,8 +166,13 @@ class FlashCard {
         'multipleChoiceOptions': multipleChoiceOptions, // Store quiz options
         'correctAnswerIndex': correctAnswerIndex, // Store correct answer index
         'difficulty': difficulty, // Store difficulty rating
-        'lastQuizAttempt': lastQuizAttempt?.toIso8601String(), // Store quiz attempt time
+        'lastQuizAttempt':
+            lastQuizAttempt?.toIso8601String(), // Store quiz attempt time
         'lastQuizCorrect': lastQuizCorrect, // Store quiz result
+        'imageUrl': imageUrl, // Store visual content URL
+        'audioUrl': audioUrl, // Store audio content URL
+        'diagramData': diagramData, // Store diagram JSON data
+        'visualMetadata': visualMetadata, // Store visual metadata
       };
 
   /// Factory constructor to create a FlashCard from JSON data (database or API)
@@ -166,16 +188,29 @@ class FlashCard {
         ),
         front: json['front'] as String, // Extract front content from JSON
         back: json['back'] as String, // Extract back content from JSON
-        clozeMask: json['clozeMask'] as String?, // Extract optional cloze pattern
+        clozeMask:
+            json['clozeMask'] as String?, // Extract optional cloze pattern
         multipleChoiceOptions: List<String>.from(
-          (json['multipleChoiceOptions'] as List?) ?? [], // Extract quiz options
+          (json['multipleChoiceOptions'] as List?) ??
+              [], // Extract quiz options
         ),
-        correctAnswerIndex: json['correctAnswerIndex'] as int? ?? 0, // Extract correct answer index
-        difficulty: json['difficulty'] as int? ?? 3, // Extract difficulty with default
+        correctAnswerIndex: json['correctAnswerIndex'] as int? ??
+            0, // Extract correct answer index
+        difficulty:
+            json['difficulty'] as int? ?? 3, // Extract difficulty with default
         lastQuizAttempt: json['lastQuizAttempt'] != null
-            ? DateTime.parse(json['lastQuizAttempt'] as String) // Parse quiz attempt time
+            ? DateTime.parse(
+                json['lastQuizAttempt'] as String) // Parse quiz attempt time
             : null,
-        lastQuizCorrect: json['lastQuizCorrect'] as bool?, // Extract quiz result
+        lastQuizCorrect:
+            json['lastQuizCorrect'] as bool?, // Extract quiz result
+        imageUrl: json['imageUrl'] as String?, // Extract visual content URL
+        audioUrl: json['audioUrl'] as String?, // Extract audio content URL
+        diagramData:
+            json['diagramData'] as String?, // Extract diagram JSON data
+        visualMetadata: json['visualMetadata'] != null
+            ? Map<String, String>.from(json['visualMetadata'] as Map)
+            : null, // Extract visual metadata
       );
 }
 
@@ -184,5 +219,21 @@ class FlashCard {
 enum CardType {
   basic, // Traditional front/back cards (question → answer)
   cloze, // Cloze deletion cards with fill-in-the-blank sections
-  reverse // Bidirectional cards that can be studied both ways
+  reverse, // Bidirectional cards that can be studied both ways
+  multipleChoice, // Multiple choice questions with 4 options
+  trueFalse, // True/false questions with explanations
+  comparison, // Compare and contrast questions
+  scenario, // Real-world application scenarios
+  causeEffect, // Cause and effect relationships
+  sequence, // Ordering or process questions
+  definitionExample, // Match definitions to examples
+  // Advanced question formats
+  caseStudy, // Multi-paragraph case studies with analysis
+  problemSolving, // Multi-step problem-solving chains
+  hypothesisTesting, // Evidence-based conclusion questions
+  decisionAnalysis, // Best approach evaluation questions
+  systemAnalysis, // Component interaction questions
+  prediction, // Pattern-based prediction questions
+  evaluation, // Effectiveness assessment questions
+  synthesis // Concept combination questions
 }

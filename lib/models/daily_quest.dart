@@ -130,7 +130,7 @@ class DailyQuest {
   }) {
     final now = DateTime.now();
     final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    
+
     return DailyQuest(
       id: id,
       title: 'Study Master',
@@ -151,7 +151,7 @@ class DailyQuest {
   }) {
     final now = DateTime.now();
     final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    
+
     return DailyQuest(
       id: id,
       title: 'Quiz Champion',
@@ -171,7 +171,7 @@ class DailyQuest {
   }) {
     final now = DateTime.now();
     final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    
+
     return DailyQuest(
       id: id,
       title: 'Streak Keeper',
@@ -191,7 +191,7 @@ class DailyQuest {
   }) {
     final now = DateTime.now();
     final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
-    
+
     return DailyQuest(
       id: id,
       title: 'Perfect Scholar',

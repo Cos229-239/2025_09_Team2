@@ -9,6 +9,20 @@ import 'package:studypals/providers/task_provider.dart';
 // Import Task model to create new task instances
 import 'package:studypals/models/task.dart';
 
+// TODO: Add Task Sheet - Missing Advanced Features
+// - No task template system for recurring task types
+// - Missing task categorization beyond tags
+// - No collaboration features (assign to study partner)
+// - Missing subtask creation capability
+// - No time tracking integration during task creation
+// - Missing calendar integration for automatic scheduling
+// - No attachment support (files, images, links)
+// - Missing location-based reminders
+// - No task dependency management
+// - Missing productivity analytics integration
+// - No AI suggestions for task optimization
+// - No voice input for hands-free task creation
+
 /// Modal bottom sheet widget for creating new tasks
 /// Provides form interface for task title, duration, due date, priority, and tags
 /// Used throughout the app wherever users need to quickly add tasks

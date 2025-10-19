@@ -10,6 +10,24 @@ import 'package:studypals/models/pet.dart';
 /// Widget displaying the virtual pet with interactive gamification features
 /// Shows pet avatar, level progress, mood, study streak, and interaction buttons
 /// Core component of the gamification system to motivate study engagement
+///
+/// TODO: PET WIDGET IMPLEMENTATION IMPROVEMENTS NEEDED
+/// - Current implementation has basic UI but missing advanced pet interactions
+/// - Need to implement pet animation system for mood and activity states
+/// - Missing pet customization options (colors, accessories, names)
+/// - Need to implement proper pet evolution and growth visualization
+/// - Missing integration with study session real-time feedback
+/// - Need to implement pet mini-games and interactive activities
+/// - Missing pet care mechanics (feeding, playing, grooming)
+/// - Need to implement social pet features (pet play dates, competitions)
+/// - Missing pet personality traits and behavior variations
+/// - Need to implement seasonal and event-based pet appearances
+/// - Missing pet achievement badges and milestone celebrations
+/// - Need to implement proper pet sound effects and audio feedback
+/// - Missing integration with haptic feedback for pet interactions
+/// - Need to implement pet augmented reality (AR) features
+/// - Missing pet memory system and user interaction history
+/// - Need to implement proper accessibility features for pet interactions
 class PetWidget extends StatelessWidget {
   // Constructor with optional key for widget identification
   const PetWidget({super.key});
@@ -24,6 +42,25 @@ class PetWidget extends StatelessWidget {
       builder: (context, petProvider, child) {
         final pet =
             petProvider.currentPet; // Get current pet data from provider
+
+        if (pet == null) {
+          return Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Loading your Study Pal...',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
 
         // Card container providing elevation and material design appearance
         return Card(

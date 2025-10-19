@@ -1,15 +1,12 @@
 // Import Flutter's material design components for UI elements
 import 'package:flutter/material.dart';
-// Import Provider package for accessing global app state
-import 'package:provider/provider.dart';
-// Import app state provider to manage authentication status
-import 'package:studypals/providers/app_state.dart';
-// Import User model for creating user objects
+// Import Firebase services
+import 'package:studypals/services/firebase_auth_service.dart';
+import 'package:studypals/services/firestore_service.dart';
+import 'package:studypals/screens/auth/email_verification_screen.dart';
 
-/// Modern login screen with cat mascot design
-/// Matches the beautiful UI provided in the design mockup
+/// Modern signup screen that matches the app's Material 3 design system
 class SignupScreenNew extends StatefulWidget {
-  // Defines a stateful widget for the signup screen
   const SignupScreenNew({super.key});
 
   @override
@@ -17,629 +14,620 @@ class SignupScreenNew extends StatefulWidget {
 }
 
 class _SignupScreenNewState extends State<SignupScreenNew> {
-  void _handleSignup() {
-    // TODO: Implement signup logic here
-    // For now, just print to console
-    print('Signup button pressed');
-  }
-  // State class for LoginScreen to manage mutable data
   final _formKey = GlobalKey<FormState>();
-  // Unique key for the form to validate input fields
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  // Controller for the email input field
   final _passwordController = TextEditingController();
-  // Controller for the password input field
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
-  // Tracks if a login operation is in progress
   bool _obscurePassword = true;
-  // Toggles visibility of the password field
+  bool _obscureConfirmPassword = true;
+  bool _agreeToTerms = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Builds the UI for the login screen
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1a2332),
-              Color(0xFF253142),
-              Color(0xFF2a3543),
-            ],
+      backgroundColor:
+          const Color(0xFF16181A), // Dark background matching login screen
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Color(0xFF6FB8E9), // Match learning screen accent color
           ),
+          onPressed: () => Navigator.pop(context),
         ),
-        child: SafeArea(
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF365069),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Stack(
-                children: [
-                  // Main content with orange border and form
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.transparent,
-                      border: Border.all(
-                        color: const Color(0xFFe67e22),
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Color(0xFF1a2332),
-                            Color(0xFF253142),
-                            Color(0xFF2a3543),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                        child: Column(
-                          children: [
-                            const SizedBox(height: 60),
-                            Expanded(
-                              flex: 2,
-                              child: _buildMascotSection(),
-                            ),
-                            const Spacer(),
-                            _buildLoginForm(),
-                            const SizedBox(height: 40),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Return to Login button at top left of orange border
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Color(0xFFe67e22), size: 32),
-                      tooltip: 'Return to Login',
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
+
+              // App branding section
+              _buildBrandingSection(context),
+
+              const SizedBox(height: 40),
+
+              // Signup form card
+              _buildSignupCard(context),
+
+              const SizedBox(height: 24),
+
+              // Bottom links
+              _buildBottomLinks(context),
+
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMascotSection() {
-    // Builds the cat mascot and app branding section
+  Widget _buildBrandingSection(BuildContext context) {
     return Column(
-      // Column to stack mascot and text
       children: [
-        // Cat mascot container with the provided image
+        // App logo/icon
         Container(
-          // Container for the mascot graphic
-          width: 200,  // Reduced size to fit better on screen
-          height: 200, // Reduced size to fit better on screen
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
-            // Styling for the mascot container
-            color: const Color(0xFF3d4a5c), // Medium blue-gray for container background
-            borderRadius: BorderRadius.circular(20),
-            // Rounded corners
-            border: Border.all(
-              color: const Color.fromARGB(255, 202, 199, 199).withValues(alpha: 0.9),  // Slightly grayish white
-              width: 12.0,                           // Border thickness
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFF6FB8E9), // Match learning screen accent color
+                const Color(0xFF6FB8E9).withValues(alpha: 0.7),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
-              // Shadow for depth
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                // Shadow color with transparency
-                blurRadius: 10,
-                // Blur radius for shadow
-                offset: const Offset(0, 5),
-                // Shadow offset
+                color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: ClipRRect(
-            // Clips the image to the container's rounded corners
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              // Add padding around the image
-              padding: const EdgeInsets.all(11.0),
-              child: Image.asset(
-                // Display the cat mascot image
-                'FirstStudyPal.png', // Path to your cat image asset
-                fit: BoxFit.contain, // Maintain aspect ratio while fitting in container
-                errorBuilder: (context, error, stackTrace) {
-                  // Fallback if image fails to load
-                  return const Icon(
-                    Icons.pets,
-                    size: 80,
-                    color: Color(0xFF4ecdc4),
-                  );
-                },
+          child: const Icon(
+            Icons.school,
+            size: 40,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Title
+        Text(
+          'Join StudyPals',
+          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: const Color(
+                    0xFF6FB8E9), // Match learning screen accent color
               ),
-            ),
-          ),
         ),
-        const SizedBox(height: 32),
-        // Spacer below mascot
-        // App name
+        const SizedBox(height: 8),
+
+        // Subtitle
         Text(
-          // Text widget for app name
-          'STUDYPALS',
-          // App name text
-          style: TextStyle(
-            // Styling for text
-            color: Colors.white.withValues(alpha: 0.85),
-            // Text color with transparency
-            fontSize: 40, // Increased font size to 40
-            // Font size
-            fontWeight: FontWeight.bold,
-            // Bold text
-            letterSpacing: 2.5,
-            // Letter spacing
-          ),
+          'Start your AI-powered learning journey',
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: const Color(0xFFD9D9D9)
+                    .withValues(alpha: 0.7), // Match learning screen text
+              ),
+          textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8), // Optional: add spacing
-        Text(
-          'Sign Up',
-          style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.7),
-          fontSize: 24,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.2,
-  ),
-),
-        // Removed 'Sign Up' text below 'STUDYPALS'
       ],
     );
   }
 
-  Widget _buildLoginForm() {
-    // Builds the login form with email, password, and login button
-    return Form(
-      // Form widget for input validation
-      key: _formKey,
-      // Associates form with global key
-      child: Column(
-        // Column to stack form fields
-        children: [
-          _buildEmailField(),
-          // Email input field
-          const SizedBox(height: 16),
-          // Spacer between fields
-          _buildPasswordField(),
-          // Password input field
-          const SizedBox(height: 32),
-          // Spacer before button
-          _buildSignupButton(),
-          // Signup button
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmailField() {
-    // Builds the email input field
-    final FocusNode emailFocusNode = FocusNode();
-    // Focus node to track email field focus
-    return Container(
-      // Container for email field styling
-      height: 50,
-      // Fixed height
-      decoration: BoxDecoration(
-        // Styling for container
-        color: const Color(0xFF3d4a5c), // Medium blue-gray
-        borderRadius: BorderRadius.circular(8),
-        // Rounded corners
-        border: Border.all(color: Colors.white, width: 1), // White border
-        boxShadow: [
-          // Shadows for depth
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3), // Black drop shadow
-            blurRadius: 10,
-            // Blur radius
-            spreadRadius: 1,
-            // Spread radius
-            offset: const Offset(2, 2),
-            // Shadow offset
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2), // Black inner shadow
-            blurRadius: 8,
-            // Blur radius
-            spreadRadius: -2,
-            // Negative spread for inner shadow
-            offset: const Offset(0, 0),
-            // No offset
-          ),
-        ],
-      ),
-      child: TextFormField(
-        // Text input field for email
-        controller: _emailController,
-        // Associates with email controller
-        focusNode: emailFocusNode,
-        // Associates with focus node
-        style: const TextStyle(color: Colors.white, fontSize: 14),
-        // Text style
-        textAlign: emailFocusNode.hasFocus ? TextAlign.right : TextAlign.center,
-        // Aligns text based on focus
-        decoration: InputDecoration(
-          // Input field styling
-          hintText: 'Enter Your Email',
-          // Placeholder text
-          hintStyle: TextStyle(
-            // Styling for hint text
-            color: Colors.white, // Bright white
-            fontSize: 12,
-            // Font size
-            fontWeight: FontWeight.bold,
-            // Bold text
-            letterSpacing: 1.2,
-            // Letter spacing
-            shadows: [
-              // Shadows for hint text
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.4), // Drop shadow
-                blurRadius: 8,
-                // Blur radius
-                offset: const Offset(1.5, 1.5),
-                // Shadow offset
-              ),
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.3), // Inner shadow
-                blurRadius: 6,
-                // Blur radius
-                offset: const Offset(0, 0),
-                // No offset
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(0.5, 0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(-0.5, -0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(0.5, -0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(-0.5, 0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-            ],
-          ),
-          border: InputBorder.none,
-          // No default border
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          // Padding inside field
+  Widget _buildSignupCard(BuildContext context) {
+    return Card(
+      elevation: 1,
+      color:
+          const Color(0xFF242628), // Match learning screen task card background
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: const Color(0xFF6FB8E9)
+              .withValues(alpha: 0.3), // Match learning screen border
+          width: 1,
         ),
-        keyboardType: TextInputType.emailAddress,
-        // Optimizes keyboard for email input
-        validator: (value) {
-          // Validates email input
-          if (value == null || value.isEmpty) {
-            // Checks if field is empty
-            return 'Please enter your email';
-            // Error message for empty field
-          }
-          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-            // Validates email format
-            return 'Please enter a valid email address';
-            // Error message for invalid email
-          }
-          return null;
-          // No error if valid
-        },
-        onTap: () => setState(() {}),
-        // Updates UI on tap
-        onEditingComplete: () => setState(() {}),
-        // Updates UI on editing complete
       ),
-    );
-  }
-
-  Widget _buildPasswordField() {
-    // Builds the password input field
-    final FocusNode passwordFocusNode = FocusNode();
-    // Focus node to track password field focus
-    return Container(
-      // Container for password field styling
-      height: 50,
-      // Fixed height
-      decoration: BoxDecoration(
-        // Styling for container
-        color: const Color(0xFF3d4a5c), // Medium blue-gray
-        borderRadius: BorderRadius.circular(8),
-        // Rounded corners
-        border: Border.all(color: Colors.white, width: 1), // White border
-        boxShadow: [
-          // Shadows for depth
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3), // Black drop shadow
-            blurRadius: 10,
-            // Blur radius
-            spreadRadius: 1,
-            // Spread radius
-            offset: const Offset(2, 2),
-            // Shadow offset
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2), // Black inner shadow
-            blurRadius: 8,
-            // Blur radius
-            spreadRadius: -2,
-            // Negative spread for inner shadow
-            offset: const Offset(0, 0),
-            // No offset
-          ),
-        ],
-      ),
-      child: TextFormField(
-        // Text input field for password
-        controller: _passwordController,
-        // Associates with password controller
-        focusNode: passwordFocusNode,
-        // Associates with focus node
-        obscureText: _obscurePassword,
-        // Hides password text
-        style: const TextStyle(color: Colors.white, fontSize: 14),
-        // Text style
-        textAlign: passwordFocusNode.hasFocus ? TextAlign.right : TextAlign.center,
-        // Aligns text based on focus
-        decoration: InputDecoration(
-          // Input field styling
-          hintText: 'Create Your password',
-          // Placeholder text
-          hintStyle: TextStyle(
-            // Styling for hint text
-            color: Colors.white, // Bright white
-            fontSize: 12,
-            // Font size
-            fontWeight: FontWeight.bold,
-            // Bold text
-            letterSpacing: 1.2,
-            // Letter spacing
-            shadows: [
-              // Shadows for hint text
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.4), // Drop shadow
-                blurRadius: 8,
-                // Blur radius
-                offset: const Offset(1.5, 1.5),
-                // Shadow offset
-              ),
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.3), // Inner shadow
-                blurRadius: 6,
-                // Blur radius
-                offset: const Offset(0, 0),
-                // No offset
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(0.5, 0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(-0.5, -0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(0.5, -0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-              const Shadow(
-                color: Colors.black, // Thin black outline
-                offset: Offset(-0.5, 0.5),
-                // Outline offset
-                blurRadius: 0.5,
-                // Minimal blur
-              ),
-            ],
-          ),
-          border: InputBorder.none,
-          // No default border
-          contentPadding: const EdgeInsets.only(left: 40, right: 16, top: 16, bottom: 16), // Slightly increased left offset
-          suffixIcon: IconButton(
-            // Button to toggle password visibility
-            icon: Icon(
-              // Icon for visibility toggle
-              _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-              // Switches icon based on visibility
-              color: const Color(0xFF4ecdc4), // Teal color
-              size: 18,
-              // Icon size
-            ),
-            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-            // Toggles password visibility
-          ),
-        ),
-        validator: (value) {
-          // Validates password input
-          if (value == null || value.isEmpty) {
-            // Checks if field is empty
-            return 'Please enter your password';
-            // Error message for empty field
-          }
-          return null;
-          // No error if valid
-        },
-        onTap: () => setState(() {}),
-        // Updates UI on tap
-        onEditingComplete: () => setState(() {}),
-        // Updates UI on editing complete
-      ),
-    );
-  }
-
-  Widget _buildSignupButton() {
-    // Builds the signup button
-    return Container(
-      // Container for button styling
-      width: double.infinity,
-      // Full width
-      height: 50,
-      // Fixed height
-      decoration: BoxDecoration(
-        // Styling for container
-        color: const Color(0xFF69ACBD),
-        // Button color
-        borderRadius: BorderRadius.circular(8),
-        // Rounded corners
-        border: Border.all(color: Colors.white, width: 1), // White border
-        boxShadow: [
-          // Shadows for depth
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3), // Black drop shadow
-            blurRadius: 10,
-            // Blur radius
-            spreadRadius: 1,
-            // Spread radius
-            offset: const Offset(2, 2),
-            // Shadow offset
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2), // Black inner shadow
-            blurRadius: 8,
-            // Blur radius
-            spreadRadius: -2,
-            // Negative spread for inner shadow
-            offset: const Offset(0, 0),
-            // No offset
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        // Button widget for signup
-        onPressed: _isLoading ? null : _handleSignup,
-        // Disables button during loading
-        style: ElevatedButton.styleFrom(
-          // Custom button styling
-          backgroundColor: Colors.transparent,
-          // Transparent background
-          shadowColor: Colors.transparent,
-          // No shadow
-          elevation: 0,
-          // No elevation
-          shape: RoundedRectangleBorder(
-            // Button shape
-            borderRadius: BorderRadius.circular(8),
-            // Rounded corners
-          ),
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                // Loading indicator
-                height: 20,
-                // Indicator height
-                width: 20,
-                // Indicator width
-                child: CircularProgressIndicator(
-                  // Circular loading animation
-                  strokeWidth: 2,
-                  // Line thickness
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  // White color
-                ),
-              )
-            : Text(
-                // Button text
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
                 'Create Account',
-                // Text content
-                style: TextStyle(
-                  // Text styling
-                  color: const Color.fromARGB(255, 255, 140, 0),
-                  // Orange text
-                  fontSize: 15,
-                  // Font size
-                  fontWeight: FontWeight.bold,
-                  // Bold text
-                  letterSpacing: 1.5,
-                  // Letter spacing
-                  shadows: [
-                    // Shadows for text
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.4), // Drop shadow
-                      blurRadius: 8,
-                      // Blur radius
-                      offset: const Offset(1.5, 1.5),
-                      // Shadow offset
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: const Color(
+                          0xFFD9D9D9), // Match learning screen text color
                     ),
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.3), // Inner shadow
-                      blurRadius: 6,
-                      // Blur radius
-                      offset: const Offset(0, 0),
-                      // No offset
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Fill in your details to get started',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFFD9D9D9)
+                          .withValues(alpha: 0.7), // Match learning screen text
                     ),
-                    const Shadow(
-                      color: Colors.black, // Thin black outline
-                      offset: Offset(0.5, 0.5),
-                      // Outline offset
-                      blurRadius: 0.5,
-                      // Minimal blur
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+
+              // Name field
+              TextFormField(
+                controller: _nameController,
+                textCapitalization: TextCapitalization.words,
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  labelStyle: const TextStyle(
+                      color: Color(0xFFB0B0B0)), // Lighter gray for label
+                  hintText: 'Enter your full name',
+                  hintStyle: TextStyle(
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color:
+                        Color(0xFF6FB8E9), // Match learning screen accent color
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
-                    const Shadow(
-                      color: Colors.black, // Thin black outline
-                      offset: Offset(-0.5, -0.5),
-                      // Outline offset
-                      blurRadius: 0.5,
-                      // Minimal blur
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
-                    const Shadow(
-                      color: Colors.black, // Thin black outline
-                      offset: Offset(0.5, -0.5),
-                      // Outline offset
-                      blurRadius: 0.5,
-                      // Minimal blur
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(
+                          0xFF6FB8E9), // Match learning screen accent color
+                      width: 2,
                     ),
-                    const Shadow(
-                      color: Colors.black, // Thin black outline
-                      offset: Offset(-0.5, 0.5),
-                      // Outline offset
-                      blurRadius: 0.5,
-                      // Minimal blur
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  if (value.length < 2) {
+                    return 'Name must be at least 2 characters';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Email field
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: const TextStyle(
+                      color: Color(0xFFB0B0B0)), // Lighter gray for label
+                  hintText: 'Enter your email address',
+                  hintStyle: TextStyle(
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color:
+                        Color(0xFF6FB8E9), // Match learning screen accent color
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
                     ),
-                  ],
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(
+                          0xFF6FB8E9), // Match learning screen accent color
+                      width: 2,
+                    ),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email address';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Password field
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: const TextStyle(
+                      color: Color(0xFFB0B0B0)), // Lighter gray for label
+                  hintText: 'Create a strong password',
+                  hintStyle: TextStyle(
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
+                    Icons.lock_outlined,
+                    color:
+                        Color(0xFF6FB8E9), // Match learning screen accent color
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: const Color(
+                          0xFF6FB8E9), // Match learning screen accent color
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(
+                          0xFF6FB8E9), // Match learning screen accent color
+                      width: 2,
+                    ),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a password';
+                  }
+                  if (value.length < 8) {
+                    return 'Password must be at least 8 characters';
+                  }
+                  if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)')
+                      .hasMatch(value)) {
+                    return 'Password must contain uppercase, lowercase, and number';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Confirm password field
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: _obscureConfirmPassword,
+                style: const TextStyle(
+                    color: Color(0xFFD9D9D9)), // Match learning screen text
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  labelStyle: const TextStyle(
+                      color: Color(0xFFB0B0B0)), // Lighter gray for label
+                  hintText: 'Re-enter your password',
+                  hintStyle: TextStyle(
+                      color: const Color(0xFFD9D9D9).withValues(alpha: 0.5)),
+                  prefixIcon: const Icon(
+                    Icons.lock_outlined,
+                    color:
+                        Color(0xFF6FB8E9), // Match learning screen accent color
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: const Color(
+                          0xFF6FB8E9), // Match learning screen accent color
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A), // Darker fill color
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(
+                          0xFF6FB8E9), // Match learning screen accent color
+                      width: 2,
+                    ),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please confirm your password';
+                  }
+                  if (value != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+
+              // Terms and conditions checkbox
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: _agreeToTerms,
+                    onChanged: (value) {
+                      setState(() {
+                        _agreeToTerms = value ?? false;
+                      });
+                    },
+                    activeColor: const Color(
+                        0xFF6FB8E9), // Match learning screen accent color
+                    checkColor: Colors.white,
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _agreeToTerms = !_agreeToTerms;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: RichText(
+                          text: const TextSpan(
+                            style: TextStyle(
+                              color: Color(
+                                  0xFFD9D9D9), // Match learning screen text
+                              fontSize: 12,
+                            ),
+                            children: [
+                              TextSpan(text: 'I agree to the '),
+                              TextSpan(
+                                text: 'Terms of Service',
+                                style: TextStyle(
+                                  color: Color(
+                                      0xFF6FB8E9), // Match learning screen accent color
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              TextSpan(text: ' and '),
+                              TextSpan(
+                                text: 'Privacy Policy',
+                                style: TextStyle(
+                                  color: Color(
+                                      0xFF6FB8E9), // Match learning screen accent color
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 32),
+
+              // Signup button
+              SizedBox(
+                height: 56,
+                child: ElevatedButton(
+                  onPressed:
+                      (_isLoading || !_agreeToTerms) ? null : _handleSignup,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(
+                        0xFF6FB8E9), // Match learning screen accent color
+                    foregroundColor: Colors.white,
+                    elevation: 4,
+                    shadowColor: const Color(0xFF6FB8E9).withValues(alpha: 0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.person_add,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Create Account',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
                 ),
               ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildBottomLinks(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'Already have an account? ',
+          style: TextStyle(
+            color: Color(0xFFD9D9D9), // Match learning screen text
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          child: const Text(
+            'Sign In',
+            style: TextStyle(
+              color: Color(0xFF6FB8E9), // Match learning screen accent color
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _handleSignup() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final firebaseAuthService = FirebaseAuthService();
+      final firestoreService = FirestoreService();
+
+      // Sign up with Firebase
+      final result = await firebaseAuthService.signUpWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        displayName: _nameController.text.trim(),
+      );
+
+      if (result.success && result.user != null) {
+        // Create user profile in Firestore
+        await firestoreService.createUserProfile(
+          uid: result.user!.uid,
+          email: _emailController.text.trim(),
+          displayName: _nameController.text.trim(),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created! Please verify your email.'),
+              backgroundColor: null,
+            ),
+          );
+
+          // Navigate to email verification screen
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EmailVerificationScreen(
+                email: _emailController.text.trim(),
+                displayName: _nameController.text.trim(),
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registration failed: ${e.toString()}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

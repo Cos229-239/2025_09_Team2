@@ -1,3 +1,17 @@
+// TODO: Auth Wrapper - Missing Authentication Features
+// - No integration with Firebase Authentication
+// - Missing persistent login state management
+// - No proper loading states during authentication checks
+// - Missing biometric authentication support
+// - No session timeout handling
+// - Missing proper error handling for authentication failures
+// - No integration with social login providers (Google, Apple, Facebook)
+// - Missing password reset functionality routing
+// - No user role-based navigation
+// - Missing secure token management
+// - No offline authentication state handling
+// - Missing authentication analytics and security monitoring
+
 // Import Flutter's material design components for UI
 import 'package:flutter/material.dart';
 // Import Provider for accessing app state across widgets

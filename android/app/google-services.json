@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "832899771415",
+    "project_id": "studypals-c4f44",
+    "storage_bucket": "studypals-c4f44.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:832899771415:android:3d28f38b8f240ba02e4052",
+        "android_client_info": {
+          "package_name": "com.example.studypals"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3DtGyFslzAIMycwyGPbB0BIhc9Tm_AY8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

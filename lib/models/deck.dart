@@ -26,6 +26,9 @@ class Deck {
   // Timestamp when the deck was last modified (updated when cards added/removed)
   final DateTime updatedAt;
 
+  // Last quiz grade as percentage (0.0 to 1.0), null if never quizzed
+  final double? lastQuizGrade;
+
   /// Constructor for creating a Deck instance
   /// @param id - Unique identifier for the deck
   /// @param title - Display title for the deck
@@ -34,6 +37,7 @@ class Deck {
   /// @param cards - Optional list of cards (defaults to empty list)
   /// @param createdAt - Creation timestamp (defaults to current time)
   /// @param updatedAt - Last modified timestamp (defaults to current time)
+  /// @param lastQuizGrade - Last quiz score as percentage (null if never quizzed)
   Deck({
     required this.id, // Must provide unique identifier
     required this.title, // Must provide title for display
@@ -42,13 +46,14 @@ class Deck {
     this.cards = const [], // Default to empty card list (const for performance)
     DateTime? createdAt, // Optional, will use current time if null
     DateTime? updatedAt, // Optional, will use current time if null
+    this.lastQuizGrade, // Optional, null if never taken quiz
   })  : createdAt = createdAt ??
             DateTime.now(), // Set creation time to now if not provided
         updatedAt = updatedAt ??
             DateTime.now(); // Set update time to now if not provided
 
   /// Converts the Deck object to a JSON map for database storage or API transmission
-  /// @return Map<String, dynamic> containing all deck data in JSON format
+  /// @return Map containing all deck data in JSON format
   Map<String, dynamic> toJson() => {
         'id': id, // Store unique identifier
         'title': title, // Store display title
@@ -60,6 +65,7 @@ class Deck {
             createdAt.toIso8601String(), // Store creation time as ISO string
         'updatedAt':
             updatedAt.toIso8601String(), // Store update time as ISO string
+        'lastQuizGrade': lastQuizGrade, // Store last quiz grade (can be null)
       };
 
   /// Factory constructor to create a Deck from JSON data (database or API)
@@ -82,6 +88,8 @@ class Deck {
         createdAt: DateTime.parse(json['createdAt'] as String),
         // Parse ISO date string back to DateTime object for update time
         updatedAt: DateTime.parse(json['updatedAt'] as String),
+        // Extract last quiz grade (can be null if never quizzed)
+        lastQuizGrade: json['lastQuizGrade'] as double?,
       );
 
   /// Creates a copy of this Deck with optionally updated fields
@@ -93,6 +101,7 @@ class Deck {
   /// @param cards - New card list (optional, keeps current if not provided)
   /// @param createdAt - New creation time (optional, keeps current if not provided)
   /// @param updatedAt - New update time (optional, keeps current if not provided)
+  /// @param lastQuizGrade - New quiz grade (optional, keeps current if not provided)
   /// @return New Deck instance with updated fields
   Deck copyWith({
     String? id, // Optional new ID
@@ -102,6 +111,7 @@ class Deck {
     List<FlashCard>? cards, // Optional new card list
     DateTime? createdAt, // Optional new creation time
     DateTime? updatedAt, // Optional new update time
+    double? lastQuizGrade, // Optional new quiz grade
   }) {
     return Deck(
       id: id ?? this.id, // Use new ID or keep current
@@ -113,6 +123,8 @@ class Deck {
           createdAt ?? this.createdAt, // Use new creation time or keep current
       updatedAt:
           updatedAt ?? this.updatedAt, // Use new update time or keep current
+      lastQuizGrade:
+          lastQuizGrade ?? this.lastQuizGrade, // Use new grade or keep current
     );
   }
 }

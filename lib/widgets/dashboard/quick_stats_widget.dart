@@ -14,6 +14,22 @@ import 'package:studypals/providers/deck_provider.dart';
 /// Widget displaying key study statistics and progress metrics
 /// Shows task completion, deck count, review progress, pet level, and study streak
 /// Provides at-a-glance overview of user's study progress and engagement
+///
+/// TODO: QUICK STATS WIDGET IMPLEMENTATION IMPROVEMENTS NEEDED
+/// - Current implementation shows basic statistics but missing advanced analytics
+/// - Need to implement real-time statistics updates with WebSocket connections
+/// - Missing time-based statistics (daily, weekly, monthly progress)
+/// - Need to implement interactive statistics with drill-down capabilities
+/// - Missing personalized goal tracking and progress visualization
+/// - Need to implement statistics export and sharing functionality
+/// - Missing comparison statistics (vs. friends, vs. previous periods)
+/// - Need to implement proper loading states and error handling for statistics
+/// - Missing accessibility features for statistics display
+/// - Need to implement statistics caching and offline display
+/// - Missing visual graphs and charts for better data representation
+/// - Need to implement statistics filtering and customization options
+/// - Missing integration with achievement system for milestone notifications
+/// - Need to implement proper statistics animations and transitions
 class QuickStatsWidget extends StatelessWidget {
   // Constructor with optional key for widget identification
   const QuickStatsWidget({super.key});
@@ -33,14 +49,14 @@ class QuickStatsWidget extends StatelessWidget {
             .length;
         final totalTasks = taskProvider.tasks.length;
 
-        // Get review statistics from SRS provider
-        final reviewStats = srsProvider.getReviewStats();
-
         // Get deck count from deck provider
         final totalDecks = deckProvider.decks.length;
 
         // Get current pet data for level display
         final pet = petProvider.currentPet;
+
+        // Get review statistics (using local stats for immediate display)
+        final dueReviews = srsProvider.dueCount;
 
         // Card container providing elevation and material design appearance
         return Card(
@@ -95,8 +111,7 @@ class QuickStatsWidget extends StatelessWidget {
                         context,
                         icon: Icons.quiz, // Quiz icon for reviews
                         label: 'Reviews Today', // Label for daily review count
-                        value:
-                            '${reviewStats['reviewedToday']}', // Reviews completed today
+                        value: '$dueReviews', // Reviews due today
                         color:
                             Colors.orange, // Orange color for review progress
                       ),
@@ -108,7 +123,7 @@ class QuickStatsWidget extends StatelessWidget {
                         context,
                         icon: Icons.pets, // Pet paw icon for gamification
                         label: 'Pet Level', // Label for pet progression
-                        value: '${pet.level}', // Current pet level
+                        value: '${pet?.level ?? 0}', // Current pet level
                         color: Colors.purple, // Purple color for pet stats
                       ),
                     ),
