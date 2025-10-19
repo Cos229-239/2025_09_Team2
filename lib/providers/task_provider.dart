@@ -4,8 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 // Import the Task model representing individual to-do items
 import 'package:studypals/models/task.dart';
-// Import the repository for database operations on tasks
-import 'package:studypals/services/task_repository.dart';
+// Import Firebase Auth for user authentication
+import 'package:firebase_auth/firebase_auth.dart';
+// Import Firestore service for database operations
+import 'package:studypals/services/firestore_service.dart';
+// Import Activity service for tracking user activities
+import 'package:studypals/services/activity_service.dart';
+import 'package:studypals/models/activity.dart';
 
 /// Task management provider handling all task-related state and operations
 /// This class manages the list of tasks, loading states, and provides filtered views
@@ -18,6 +23,12 @@ class TaskProvider extends ChangeNotifier {
   // Private boolean tracking whether an async operation is in progress
   // Used to show loading indicators in the UI
   bool _isLoading = false;
+
+  // Firestore service instance for database operations
+  final FirestoreService _firestoreService = FirestoreService();
+
+  // Firebase Auth instance for user authentication
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   /// Public getter providing read-only access to all tasks
   /// UI widgets use this to display task lists
@@ -55,24 +66,73 @@ class TaskProvider extends ChangeNotifier {
   /// This is typically called when the app starts or when refreshing data
   /// Shows loading state during the operation and handles errors gracefully
   Future<void> loadTasks() async {
-    // Test SharedPreferences first
-    await TaskRepository.testSharedPreferences();
-    
     _isLoading = true; // Set loading flag to show UI indicators
     notifyListeners(); // Update UI to show loading state
 
     try {
-      // Attempt to fetch all tasks from the database repository
-      _tasks = await TaskRepository.getAllTasks();
+      // Get current user
+      final user = _auth.currentUser;
+
+      if (user != null) {
+        debugPrint('🔄 Loading tasks for user: ${user.uid}');
+        // Fetch tasks from Firestore for the current user
+        final taskMaps = await _firestoreService.getUserFullTasks(user.uid);
+        debugPrint('📥 Retrieved ${taskMaps.length} tasks from Firestore');
+        
+        _tasks = taskMaps
+            .map((taskMap) => _convertFirestoreToTask(taskMap))
+            .toList();
+            
+        debugPrint('✅ Converted ${_tasks.length} tasks successfully');
+        
+        // Log each task's details
+        for (final task in _tasks) {
+          debugPrint('  📌 Task: "${task.title}" - Due: ${task.dueAt} - Status: ${task.status}');
+        }
+      } else {
+        // No user logged in, use empty list
+        debugPrint('❌ No user logged in, cannot load tasks');
+        _tasks = [];
+      }
+
+      // Sample tasks removed - now only shows tasks from Firestore
     } catch (e) {
       // Log any errors that occur during loading for debugging
       // Using developer.log instead of print for better debugging tools
       developer.log('Error loading tasks: $e', name: 'TaskProvider');
+      debugPrint('❌ Error loading tasks: $e');
     } finally {
       // Always clear loading state, whether successful or not
       _isLoading = false; // Clear loading flag
       notifyListeners(); // Update UI to hide loading state
     }
+  }
+
+  /// Helper method to convert Firestore document data to Task object
+  Task _convertFirestoreToTask(Map<String, dynamic> data) {
+    // Helper function to parse dueAt field which can be either Timestamp or ISO string
+    DateTime? parseDueAt(dynamic dueAtValue) {
+      if (dueAtValue == null) return null;
+      if (dueAtValue is String) {
+        return DateTime.parse(dueAtValue);
+      }
+      return (dueAtValue as dynamic).toDate() as DateTime;
+    }
+
+    return Task(
+      id: data['id'] as String,
+      title: data['title'] as String,
+      estMinutes: data['estMinutes'] as int,
+      dueAt: parseDueAt(data['dueAt']),
+      priority: data['priority'] as int? ?? 1,
+      tags: List<String>.from(data['tags'] ?? []),
+      status: TaskStatus.values.firstWhere(
+        (e) => e.toString() == data['status'],
+        orElse: () => TaskStatus.pending,
+      ),
+      linkedNoteId: data['linkedNoteId'] as String?,
+      linkedDeckId: data['linkedDeckId'] as String?,
+    );
   }
 
   /// Adds a new task to both the database and local task list
@@ -81,11 +141,25 @@ class TaskProvider extends ChangeNotifier {
   /// @throws Exception if database insertion fails
   Future<void> addTask(Task task) async {
     try {
-      // First save to database to ensure persistence
-      await TaskRepository.insertTask(task);
+      // Get current user
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('No user logged in');
+      }
 
-      // Add to local list only after successful database insertion
-      _tasks.add(task); // Add to local task list
+      // Convert Task to Firestore-compatible data
+      final taskData = task.toJson();
+      taskData.remove('id'); // Remove ID as Firestore will generate it
+
+      // Save to Firestore
+      final docId = await _firestoreService.createFullTask(user.uid, taskData);
+      if (docId == null) {
+        throw Exception('Failed to create task in Firestore');
+      }
+
+      // Create task with Firestore-generated ID and add to local list
+      final taskWithId = task.copyWith(id: docId);
+      _tasks.add(taskWithId); // Add to local task list
       notifyListeners(); // Update UI to show new task
     } catch (e) {
       // Log the error for debugging purposes
@@ -103,8 +177,15 @@ class TaskProvider extends ChangeNotifier {
   /// @throws Exception if database update fails
   Future<void> updateTask(Task task) async {
     try {
-      // First update in database to ensure persistence
-      await TaskRepository.updateTask(task);
+      // Convert Task to Firestore-compatible data
+      final taskData = task.toJson();
+      taskData.remove('id'); // Remove ID as it shouldn't be updated
+
+      // Update in Firestore
+      final success = await _firestoreService.updateFullTask(task.id, taskData);
+      if (!success) {
+        throw Exception('Failed to update task in Firestore');
+      }
 
       // Find the task in local list by matching ID
       final index = _tasks.indexWhere((t) => t.id == task.id);
@@ -130,16 +211,27 @@ class TaskProvider extends ChangeNotifier {
   /// @throws Exception if database deletion fails
   Future<void> deleteTask(String taskId) async {
     try {
-      // First delete from database to ensure permanent removal
-      await TaskRepository.deleteTask(taskId);
+      debugPrint('🗑️ Deleting task: $taskId');
+      
+      // Delete from Firestore (soft delete - archives the task)
+      final success = await _firestoreService.deleteFullTask(taskId);
+      if (!success) {
+        debugPrint('❌ Failed to archive task in Firestore');
+        throw Exception('Failed to delete task in Firestore');
+      }
+
+      debugPrint('✅ Task archived in Firestore successfully');
 
       // Remove from local list only after successful database deletion
       _tasks.removeWhere(
           (task) => task.id == taskId); // Filter out the deleted task
+      
+      debugPrint('✅ Task removed from local list');
       notifyListeners(); // Update UI to hide deleted task
     } catch (e) {
       // Log the error for debugging purposes
       developer.log('Error deleting task: $e', name: 'TaskProvider');
+      debugPrint('❌ Error deleting task: $e');
 
       // Rethrow the exception so calling code can handle the error
       rethrow;
@@ -158,5 +250,42 @@ class TaskProvider extends ChangeNotifier {
 
     // Use the existing updateTask method to save the status change
     await updateTask(completedTask);
+
+    // Log activity
+    try {
+      final activityService = ActivityService();
+      await activityService.logActivity(
+        type: ActivityType.taskCompleted,
+        description: 'Completed task: ${task.title}',
+        metadata: {'taskId': taskId, 'taskTitle': task.title},
+      );
+    } catch (e) {
+      debugPrint('Failed to log task completion activity: $e');
+    }
+  }
+
+  /// Searches tasks by title, tags, or linked content using case-insensitive matching
+  /// Returns all tasks if query is empty, filtered tasks otherwise
+  /// @param query - Search string to match against task data
+  /// @return List of Task objects matching the search criteria
+  List<Task> searchTasks(String query) {
+    // Return all tasks if no search query provided
+    if (query.isEmpty) return _tasks;
+
+    // Filter tasks based on title or tag matches
+    return _tasks.where((task) {
+      // Convert query to lowercase for case-insensitive search
+      final lowerQuery = query.toLowerCase();
+
+      // Check if title contains the search query
+      final titleMatch = task.title.toLowerCase().contains(lowerQuery);
+
+      // Check if any tag contains the search query
+      final tagMatch =
+          task.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
+
+      // Return true if any field matches the search query
+      return titleMatch || tagMatch;
+    }).toList();
   }
 }

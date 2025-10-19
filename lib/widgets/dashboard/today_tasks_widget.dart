@@ -16,6 +16,20 @@ import 'package:studypals/widgets/common/add_task_sheet.dart';
 import 'package:studypals/screens/quest_list_screen.dart';
 import 'package:studypals/screens/task_list_screen.dart';
 
+// TODO: Today Tasks Widget - Missing Advanced Task Management Features
+// - No task drag-and-drop reordering functionality
+// - Missing task time tracking integration
+// - No bulk actions (complete multiple tasks at once)
+// - Missing task dependency visualization
+// - No smart task suggestions based on user patterns
+// - Missing task progress animations and celebrations
+// - No integration with calendar for time blocking
+// - Missing task reminder notifications
+// - No collaborative task sharing with study partners
+// - Missing task templates for recurring activities
+// - No task analytics and productivity insights
+// - Missing integration with focus/Pomodoro timer
+
 /// Widget displaying today's tasks with quick completion actions
 /// Shows up to 3 tasks due today with add task functionality
 /// Part of the dashboard providing immediate task visibility and management
@@ -31,7 +45,8 @@ class TodayTasksWidget extends StatelessWidget {
     // Multiple consumers to listen to both regular tasks and daily quests
     return Consumer2<TaskProvider, DailyQuestProvider>(
       builder: (context, taskProvider, questProvider, child) {
-        final todayTasks = taskProvider.todayTasks; // Get regular tasks due today
+        final todayTasks =
+            taskProvider.todayTasks; // Get regular tasks due today
         final dailyQuests = questProvider.quests; // Get daily quests
 
         // Card container providing elevation and material design appearance
@@ -39,11 +54,13 @@ class TodayTasksWidget extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16), // Internal spacing for content
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // Align content to left
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // Align content to left
               children: [
                 // Header row with title and add task button
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between title and button
+                  mainAxisAlignment: MainAxisAlignment
+                      .spaceBetween, // Space between title and button
                   children: [
                     // Widget title
                     Text(
@@ -52,25 +69,28 @@ class TodayTasksWidget extends StatelessWidget {
                     ),
                     // Add task button - opens task creation modal
                     IconButton(
-                      onPressed: () => _showAddTaskSheet(context), // Show add task modal
+                      onPressed: () =>
+                          _showAddTaskSheet(context), // Show add task modal
                       icon: const Icon(Icons.add), // Plus icon for adding
                     ),
                   ],
                 ),
-                const SizedBox(height: 12), // Spacing between header and content
+                const SizedBox(
+                    height: 12), // Spacing between header and content
 
                 // Daily Quests Section
                 if (dailyQuests.isNotEmpty) ...[
                   Text(
                     'Daily Quests',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.purple,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: Colors.purple,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 8),
-                  ...dailyQuests.take(3).map((quest) => _buildQuestItem(context, quest, questProvider)),
-                  
+                  ...dailyQuests.take(3).map((quest) =>
+                      _buildQuestItem(context, quest, questProvider)),
+
                   // Navigation buttons row
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -84,14 +104,16 @@ class TodayTasksWidget extends StatelessWidget {
                                 // Navigate to quest details screen
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => const QuestListScreen(),
+                                    builder: (context) =>
+                                        const QuestListScreen(),
                                   ),
                                 );
                               },
-                              child: Text('View ${dailyQuests.length - 3} more quest(s)'),
+                              child: Text(
+                                  'View ${dailyQuests.length - 3} more quest(s)'),
                             ),
                           ),
-                        
+
                         // Always show "View All Quests" button if no extra quests
                         if (dailyQuests.length <= 3)
                           Expanded(
@@ -99,16 +121,17 @@ class TodayTasksWidget extends StatelessWidget {
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => const QuestListScreen(),
+                                    builder: (context) =>
+                                        const QuestListScreen(),
                                   ),
                                 );
                               },
                               child: const Text('View All Quests'),
                             ),
                           ),
-                        
+
                         const SizedBox(width: 8),
-                        
+
                         // Always show "View Tasks" button
                         Expanded(
                           child: TextButton(
@@ -136,12 +159,13 @@ class TodayTasksWidget extends StatelessWidget {
                   Text(
                     'Regular Tasks',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w600,
-                    ),
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 8),
-                  ...todayTasks.take(3).map((task) => _buildTaskItem(context, task, taskProvider)),
+                  ...todayTasks.take(3).map(
+                      (task) => _buildTaskItem(context, task, taskProvider)),
                   if (todayTasks.length > 3)
                     Padding(
                       padding: const EdgeInsets.only(top: 4),
@@ -154,7 +178,8 @@ class TodayTasksWidget extends StatelessWidget {
                             ),
                           );
                         },
-                        child: Text('View ${todayTasks.length - 3} more task(s)'),
+                        child:
+                            Text('View ${todayTasks.length - 3} more task(s)'),
                       ),
                     ),
                 ],
@@ -162,7 +187,8 @@ class TodayTasksWidget extends StatelessWidget {
                 // Empty state when no tasks or quests exist
                 if (todayTasks.isEmpty && dailyQuests.isEmpty)
                   Container(
-                    padding: const EdgeInsets.all(24), // Generous padding for empty state
+                    padding: const EdgeInsets.all(
+                        24), // Generous padding for empty state
                     child: Column(
                       children: [
                         // Check circle icon indicating completion/empty state
@@ -171,20 +197,27 @@ class TodayTasksWidget extends StatelessWidget {
                           size: 48, // Large icon for visual impact
                           color: Colors.grey, // Muted color for empty state
                         ),
-                        const SizedBox(height: 8), // Spacing between icon and text
+                        const SizedBox(
+                            height: 8), // Spacing between icon and text
                         // Primary empty state message
                         Text(
                           'All tasks completed!',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Colors.grey, // Muted color for secondary text
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                    color: Colors
+                                        .grey, // Muted color for secondary text
+                                  ),
                         ),
                         const SizedBox(height: 8), // Spacing between messages
                         // Secondary message encouraging action
                         Text(
                           'New daily quests will appear tomorrow',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey, // Muted color for helper text
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color:
+                                    Colors.grey, // Muted color for helper text
                               ),
                         ),
                       ],
@@ -276,8 +309,8 @@ class TodayTasksWidget extends StatelessWidget {
   /// @param quest - Daily quest data to display
   /// @param questProvider - Provider for quest operations
   /// @return Widget representing a single quest item
-  Widget _buildQuestItem(
-      BuildContext context, DailyQuest quest, DailyQuestProvider questProvider) {
+  Widget _buildQuestItem(BuildContext context, DailyQuest quest,
+      DailyQuestProvider questProvider) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8), // Bottom spacing between quests
       padding: const EdgeInsets.all(12),
@@ -306,9 +339,11 @@ class TodayTasksWidget extends StatelessWidget {
                 child: Text(
                   quest.title,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    decoration: quest.isCompleted ? TextDecoration.lineThrough : null,
-                  ),
+                        fontWeight: FontWeight.w600,
+                        decoration: quest.isCompleted
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
                 ),
               ),
               // EXP reward
@@ -330,16 +365,16 @@ class TodayTasksWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          
+
           // Quest description
           Text(
             quest.description,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey.shade600,
-            ),
+                  color: Colors.grey.shade600,
+                ),
           ),
           const SizedBox(height: 8),
-          
+
           // Progress bar and text
           Row(
             children: [
@@ -358,8 +393,8 @@ class TodayTasksWidget extends StatelessWidget {
               Text(
                 quest.progressText,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
             ],
           ),

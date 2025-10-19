@@ -1,0 +1,464 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/calendar_provider.dart';
+import '../../services/firestore_service.dart';
+import '../../widgets/ai/ai_settings_widget.dart';
+import '../../widgets/notifications/notification_panel.dart'; // Import for custom bell icon
+import '../../widgets/common/themed_background_wrapper.dart';
+
+/// Application settings screen
+/// Provides access to all app configuration options including AI settings
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
+
+  /// Get preview color for theme dropdown
+  Color _getThemePreviewColor(String themeName) {
+    switch (themeName) {
+      case 'Light':
+        return Colors.blue;
+      case 'Dark':
+        return Colors.grey[800]!;
+      case 'Professional':
+        return const Color(0xFF1E3A8A);
+      case 'Nature':
+        return const Color(0xFF059669);
+      case 'Sunset':
+        return const Color(0xFFEA580C);
+      case 'Cosmic':
+        return const Color(0xFF7C3AED);
+      default:
+        return Colors.blue;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ThemedBackgroundWrapper(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Settings'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // AI Configuration Section
+              Text(
+                'AI Configuration',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Configure AI providers and settings for intelligent study features',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+              ),
+              const SizedBox(height: 16),
+
+              // AI Settings Widget
+              const AISettingsWidget(),
+
+              const SizedBox(height: 32),
+
+              // App Settings Section
+              Text(
+                'App Settings',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 16),
+
+              // Theme Settings
+              Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.palette,
+                            color: const Color(0xFF6FB8E9),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Appearance',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Consumer<ThemeProvider>(
+                        builder: (context, themeProvider, child) {
+                          return Row(
+                            children: [
+                              const Expanded(
+                                child: Text(
+                                  'Theme',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              DropdownButton<String>(
+                                value: themeProvider.currentThemeName,
+                                items: themeProvider.availableThemes
+                                    .map((themeName) {
+                                  return DropdownMenuItem(
+                                    value: themeName,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 16,
+                                          height: 16,
+                                          margin:
+                                              const EdgeInsets.only(right: 8),
+                                          decoration: BoxDecoration(
+                                            color: _getThemePreviewColor(
+                                                themeName),
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        Text(themeName),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? themeName) {
+                                  if (themeName != null) {
+                                    themeProvider.setTheme(themeName);
+                                  }
+                                },
+                                underline: Container(),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Notification Settings
+              Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: NotificationBellIcon(),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Notifications',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        title: const Text('Study Reminders'),
+                        subtitle: const Text(
+                            'Get notified about daily study sessions'),
+                        value: true,
+                        onChanged: (value) {
+                          // Future: Notification preferences
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content:
+                                  Text('Notification settings coming soon!'),
+                            ),
+                          );
+                        },
+                      ),
+                      SwitchListTile(
+                        title: const Text('Daily Quest Notifications'),
+                        subtitle:
+                            const Text('Get notified about new daily quests'),
+                        value: true,
+                        onChanged: (value) {
+                          // Future: Quest notification preferences
+                        },
+                      ),
+                      _buildPetCareRemindersSetting(context),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Data Management
+              Card(
+                elevation: 1,
+                color: const Color(0xFF242628),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: const Color(0xFF6FB8E9).withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.storage,
+                            color: const Color(0xFF6FB8E9),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Data Management',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        title: const Text('Export Data'),
+                        subtitle:
+                            const Text('Export your study data and decks'),
+                        trailing: const Icon(Icons.download),
+                        onTap: () {
+                          // Future: Data export
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Data export coming soon!'),
+                            ),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        title: const Text('Clear Cache'),
+                        subtitle:
+                            const Text('Clear app cache and temporary data'),
+                        trailing: const Icon(Icons.clear),
+                        onTap: () {
+                          // Show confirmation dialog
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Clear Cache'),
+                              content: const Text(
+                                'This will clear temporary data and cache. '
+                                'Your study progress and decks will not be affected.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content:
+                                            Text('Cache cleared successfully!'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Clear'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // App Info
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'StudyPals v2.3.5',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[500],
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Made with ❤️ for better studying',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey[500],
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build the pet care reminders setting widget
+  Widget _buildPetCareRemindersSetting(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _getUserPetCareRemindersPreference(),
+      builder: (context, snapshot) {
+        final isEnabled = snapshot.data ?? true; // Default to enabled
+
+        return SwitchListTile(
+          title: const Text('Pet Care Reminders'),
+          subtitle: const Text('Show automatic pet care events in calendar'),
+          value: isEnabled,
+          onChanged: snapshot.connectionState == ConnectionState.waiting
+              ? null // Disable while loading
+              : (value) => _updatePetCareRemindersPreference(context, value),
+        );
+      },
+    );
+  }
+
+  /// Get the current pet care reminders preference from Firestore
+  Future<bool> _getUserPetCareRemindersPreference() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return false; // Default to disabled
+
+      final userProfile = await FirestoreService().getUserProfile(user.uid);
+      if (userProfile == null) return false; // Default to disabled
+
+      final preferences = userProfile['preferences'] as Map<String, dynamic>?;
+      if (preferences == null) return false; // Default to disabled
+
+      return preferences['petCareReminders'] as bool? ??
+          false; // Default to disabled
+    } catch (e) {
+      debugPrint('Error getting pet care reminders preference: $e');
+      return false; // Default to disabled
+    }
+  }
+
+  /// Update the pet care reminders preference in Firestore
+  Future<void> _updatePetCareRemindersPreference(
+      BuildContext context, bool value) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please log in to change settings')),
+          );
+        }
+        return;
+      }
+
+      // Capture the calendar provider reference before any async operations
+      final calendarProvider =
+          Provider.of<CalendarProvider>(context, listen: false);
+
+      // Get current user profile to update preferences properly
+      final userProfile = await FirestoreService().getUserProfile(user.uid);
+      if (userProfile == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to load user profile')),
+          );
+        }
+        return;
+      }
+
+      // Get current preferences and update the pet care setting
+      final currentPreferences =
+          userProfile['preferences'] as Map<String, dynamic>? ?? {};
+      final updatedPreferences = Map<String, dynamic>.from(currentPreferences);
+      updatedPreferences['petCareReminders'] = value;
+
+      // Update the preference in Firestore
+      await FirestoreService().updateUserProfile(user.uid, {
+        'preferences': updatedPreferences,
+      });
+
+      // Refresh calendar events to apply the new setting
+      await calendarProvider.refreshAllEvents();
+
+      // Show feedback to user
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(value
+                ? 'Pet care reminders enabled'
+                : 'Pet care reminders disabled'),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error updating pet care reminders preference: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to update setting')),
+        );
+      }
+    }
+  }
+}

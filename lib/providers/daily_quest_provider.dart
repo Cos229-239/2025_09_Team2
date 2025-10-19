@@ -5,11 +5,14 @@ import '../services/daily_quest_service.dart';
 /// Provider for managing daily quest state and interactions
 class DailyQuestProvider with ChangeNotifier {
   final DailyQuestService _questService = DailyQuestService();
-  
+
   List<DailyQuest> _quests = [];
   bool _isLoading = false;
   String? _error;
   Map<String, dynamic> _questStats = {};
+
+  // Callback for quest completion notifications
+  Function(DailyQuest)? _onQuestCompleted;
 
   // Getters
   List<DailyQuest> get quests => _quests;
@@ -18,22 +21,23 @@ class DailyQuestProvider with ChangeNotifier {
   Map<String, dynamic> get questStats => _questStats;
 
   // Computed properties
-  List<DailyQuest> get completedQuests => 
+  List<DailyQuest> get completedQuests =>
       _quests.where((quest) => quest.isCompleted).toList();
-  
-  List<DailyQuest> get pendingQuests => 
+
+  List<DailyQuest> get pendingQuests =>
       _quests.where((quest) => !quest.isCompleted && !quest.isExpired).toList();
-  
-  int get totalExpToday => completedQuests.fold(0, (sum, quest) => sum + quest.expReward);
-  
-  double get completionRate => 
+
+  int get totalExpToday =>
+      completedQuests.fold(0, (sum, quest) => sum + quest.expReward);
+
+  double get completionRate =>
       _quests.isEmpty ? 0.0 : completedQuests.length / _quests.length;
 
   /// Initialize and load today's quests
   Future<void> loadTodaysQuests() async {
     _setLoading(true);
     _clearError();
-    
+
     try {
       _quests = await _questService.getTodaysQuests();
       _questStats = await _questService.getQuestStats();
@@ -50,26 +54,36 @@ class DailyQuestProvider with ChangeNotifier {
   Future<void> updateQuestProgress(String questId, int progress) async {
     try {
       await _questService.updateQuestProgress(questId, progress);
-      
+
       // Update local state
       final questIndex = _quests.indexWhere((q) => q.id == questId);
       if (questIndex != -1) {
         final quest = _quests[questIndex];
         final wasCompleted = quest.isCompleted;
-        
+
         _quests[questIndex] = quest.copyWith(
           currentProgress: progress,
           isCompleted: progress >= quest.targetCount,
         );
-        
-        // If quest was just completed, update stats
+
+        // If quest was just completed, update stats and notify
         if (!wasCompleted && _quests[questIndex].isCompleted) {
           _questStats = await _questService.getQuestStats();
-          
+
+          // Generate achievement notification
+          try {
+            // Note: In a real implementation, we'd inject NotificationProvider
+            // For now, we'll add a callback mechanism
+            _onQuestCompleted?.call(_quests[questIndex]);
+          } catch (e) {
+            debugPrint('Error generating quest completion notification: $e');
+          }
+
           // Notify completion
-          debugPrint('Quest completed: ${quest.title} (+${quest.expReward} EXP)');
+          debugPrint(
+              'Quest completed: ${quest.title} (+${quest.expReward} EXP)');
         }
-        
+
         notifyListeners();
       }
     } catch (e) {
@@ -82,7 +96,7 @@ class DailyQuestProvider with ChangeNotifier {
   Future<void> incrementQuestProgress(QuestType type) async {
     try {
       await _questService.incrementQuestProgress(type);
-      
+
       // Update local state for all quests of this type
       bool anyUpdated = false;
       for (int i = 0; i < _quests.length; i++) {
@@ -90,22 +104,23 @@ class DailyQuestProvider with ChangeNotifier {
         if (quest.type == type && !quest.isCompleted) {
           final newProgress = quest.currentProgress + 1;
           final wasCompleted = quest.isCompleted;
-          
+
           _quests[i] = quest.copyWith(
             currentProgress: newProgress,
             isCompleted: newProgress >= quest.targetCount,
           );
-          
+
           // If quest was just completed, update stats
           if (!wasCompleted && _quests[i].isCompleted) {
             _questStats = await _questService.getQuestStats();
-            debugPrint('Quest auto-completed: ${quest.title} (+${quest.expReward} EXP)');
+            debugPrint(
+                'Quest auto-completed: ${quest.title} (+${quest.expReward} EXP)');
           }
-          
+
           anyUpdated = true;
         }
       }
-      
+
       if (anyUpdated) {
         notifyListeners();
       }
@@ -118,7 +133,7 @@ class DailyQuestProvider with ChangeNotifier {
   Future<void> completeQuest(String questId) async {
     try {
       await _questService.completeQuest(questId);
-      
+
       // Update local state
       final questIndex = _quests.indexWhere((q) => q.id == questId);
       if (questIndex != -1) {
@@ -128,11 +143,12 @@ class DailyQuestProvider with ChangeNotifier {
             currentProgress: quest.targetCount,
             isCompleted: true,
           );
-          
+
           _questStats = await _questService.getQuestStats();
           notifyListeners();
-          
-          debugPrint('Quest manually completed: ${quest.title} (+${quest.expReward} EXP)');
+
+          debugPrint(
+              'Quest manually completed: ${quest.title} (+${quest.expReward} EXP)');
         }
       }
     } catch (e) {
@@ -186,7 +202,7 @@ class DailyQuestProvider with ChangeNotifier {
   }
 
   // Convenience methods for common quest types
-  
+
   /// Called when user studies a card
   Future<void> onCardStudied() async {
     await incrementQuestProgress(QuestType.study);
@@ -208,7 +224,7 @@ class DailyQuestProvider with ChangeNotifier {
   }
 
   // Private helper methods
-  
+
   void _setLoading(bool loading) {
     _isLoading = loading;
     notifyListeners();
@@ -221,5 +237,10 @@ class DailyQuestProvider with ChangeNotifier {
 
   void _clearError() {
     _error = null;
+  }
+
+  /// Set callback for quest completion notifications
+  void setQuestCompletionCallback(Function(DailyQuest)? callback) {
+    _onQuestCompleted = callback;
   }
 }

@@ -32,30 +32,33 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
       _videoController = VideoPlayerController.asset(
         'assets/LibraryCat.mp4',
       );
-      
+
       await _videoController!.initialize();
-      
+
       if (mounted) {
         setState(() {
           _isVideoInitialized = true;
         });
-        
+
         // Try to start autoplay with muted sound (works on most browsers)
-        await _videoController!.setVolume(0.0);  // Start muted
+        await _videoController!.setVolume(0.0); // Start muted
         await _videoController!.setLooping(true);
         await _videoController!.play();
-        
+
         // After a short delay, restore volume if playing
         await Future.delayed(const Duration(milliseconds: 100));
         if (_videoController!.value.isPlaying) {
           await _videoController!.setVolume(1.0);
-          developer.log("Video is playing automatically with sound restored", name: 'SignupSuccessfulScreen');
+          developer.log("Video is playing automatically with sound restored",
+              name: 'SignupSuccessfulScreen');
         } else {
-          developer.log("Video needs user interaction to play", name: 'SignupSuccessfulScreen');
+          developer.log("Video needs user interaction to play",
+              name: 'SignupSuccessfulScreen');
         }
       }
     } catch (e) {
-      developer.log('Error initializing video: $e', name: 'SignupSuccessfulScreen');
+      developer.log('Error initializing video: $e',
+          name: 'SignupSuccessfulScreen');
       if (mounted) {
         // Video initialization failed, user will need to tap to play
       }
@@ -84,6 +87,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
     // Builds the UI for the signup screen
     return Scaffold(
       // Provides basic app structure with app bar and body
+      backgroundColor:
+          const Color(0xFF16181A), // Solid background color from Figma
       body: Container(
         // Main container for the screen content
         width: double.infinity,
@@ -116,17 +121,19 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
             ),
             child: Padding(
               // Adds padding for the thick border effect - MATCHES LOGIN SCREEN
-              padding: const EdgeInsets.all(32.0), // Matches login screen padding
+              padding:
+                  const EdgeInsets.all(32.0), // Matches login screen padding
               child: Container(
                 // Inner container for form and mascot
                 width: double.infinity,
                 height: double.infinity,
                 decoration: BoxDecoration(
                   // Styling for the inner container
-                  color: Colors.transparent, // Transparent to show gradient background
+                  color: Colors
+                      .transparent, // Transparent to show gradient background
                   border: Border.all(
                     // Adds the original orange border
-                    color: const Color(0xFFe67e22), // Orange border
+                    color: const Color(0xFF49F9F7), // Orange border
                     width: 2,
                     // Border thickness
                   ),
@@ -147,7 +154,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                         Color(0xFF2a3543), // Slightly lighter dark blue-gray
                       ],
                     ),
-                    borderRadius: BorderRadius.all(Radius.circular(10)), // Slightly smaller radius to fit inside orange border
+                    borderRadius: BorderRadius.all(Radius.circular(
+                        10)), // Slightly smaller radius to fit inside orange border
                   ),
                   child: Stack(
                     // Stack to overlay the back arrow on the content
@@ -157,44 +165,66 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                         // Allow scrolling on smaller screens
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minHeight: MediaQuery.of(context).size.height - 64, // Account for padding
+                            minHeight: MediaQuery.of(context).size.height -
+                                64, // Account for padding
                           ),
                           child: Padding(
                             // Adds padding inside the container
-                            padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 40.0),
                             child: Column(
                               // Arranges children vertically in a column
                               mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 60 : 20),
-                            // Responsive top spacing
-                            _buildMascotSection(),
-                            // Builds the video mascot section
-                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 32 : 16),
-                            // Responsive space between video and text
-                            const Text(
-                              'Your account has been created successfully!',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2.5,
-                              ),
-                            ),
-                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 40 : 20),
-                            // Responsive space between text and button
-                            _buildReturnToLoginButton(),
-                            // Return to Login button
-                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 30 : 15),
-                            // Responsive space between button and smiley
-                            const Icon(
-                              Icons.sentiment_very_satisfied,
-                              color: Color(0xFFe67e22),
-                              size: 60,
-                            ),
-                            SizedBox(height: MediaQuery.of(context).size.height > 700 ? 60 : 20),
-                            // Responsive space at bottom
-                          ],
+                              children: [
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 60
+                                            : 20),
+                                // Responsive top spacing
+                                _buildMascotSection(),
+                                // Builds the video mascot section
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 32
+                                            : 16),
+                                // Responsive space between video and text
+                                const Text(
+                                  'Your account has been created successfully!',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2.5,
+                                  ),
+                                ),
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 40
+                                            : 20),
+                                // Responsive space between text and button
+                                _buildReturnToLoginButton(),
+                                // Return to Login button
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 30
+                                            : 15),
+                                // Responsive space between button and smiley
+                                const Icon(
+                                  Icons.sentiment_very_satisfied,
+                                  color: Color(0xFFe67e22),
+                                  size: 60,
+                                ),
+                                SizedBox(
+                                    height:
+                                        MediaQuery.of(context).size.height > 700
+                                            ? 60
+                                            : 20),
+                                // Responsive space at bottom
+                              ],
                             ),
                           ),
                         ),
@@ -230,7 +260,7 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
             // Rounded corners for modern look
             border: Border.all(
               // Border around the video
-              color: const Color(0xFFe67e22),
+              color: const Color(0xFF49F9F7),
               // Orange border to match theme
               width: 3,
               // Border thickness
@@ -269,7 +299,8 @@ class _SignupSuccessfulScreenState extends State<SignupSuccessfulScreen> {
                   )
                 : const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFe67e22)),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFFe67e22)),
                     ),
                   ),
           ),

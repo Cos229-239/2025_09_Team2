@@ -1,0 +1,38 @@
+{
+  "name": "studypals-spotify-integration",
+  "version": "1.0.0",
+  "description": "StudyPals Spotify Integration - Consolidated Version",
+  "main": "spotify-server.js",
+  "scripts": {
+    "start": "node spotify-server.js",
+    "dev": "node spotify-server.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "spotify",
+    "music",
+    "integration",
+    "oauth",
+    "api",
+    "studypals"
+  ],
+  "author": "StudyPals Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/studypals/spotify-integration.git"
+  },
+  "bugs": {
+    "url": "https://github.com/studypals/spotify-integration/issues"
+  },
+  "homepage": "https://github.com/studypals/spotify-integration#readme"
+}

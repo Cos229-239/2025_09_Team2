@@ -1,79 +1,212 @@
-// Import Flutter's core material design library for UI components
-import 'package:flutter/material.dart';
-// Import Provider package for state management across the app
-import 'package:provider/provider.dart';
-// Import all the state providers that manage different parts of app data
-import 'package:studypals/providers/app_state.dart'; // Global app state (auth, user session)
-import 'package:studypals/providers/task_provider.dart'; // Task management state
-import 'package:studypals/providers/note_provider.dart'; // Notes management state
-import 'package:studypals/providers/deck_provider.dart'; // Flashcard decks state
-import 'package:studypals/providers/pet_provider.dart'; // Virtual pet state
-import 'package:studypals/providers/srs_provider.dart'; // Spaced repetition system state
-import 'package:studypals/providers/ai_provider.dart'; // AI integration state
-import 'package:studypals/providers/daily_quest_provider.dart'; // Daily quest gamification state
-// Import authentication wrapper to handle login/logout flow
-import 'package:studypals/screens/auth/auth_wrapper.dart';
-// Import app theme configuration for consistent styling
-import 'package:studypals/theme/app_theme.dart';
-// Import database service for data persistence
-import 'package:studypals/services/database_service.dart';
+/// TODO: CRITICAL STUDYPALS APPLICATION ARCHITECTURE GAPS
+///
+/// MAJOR MISSING SERVICES (NOT IMPLEMENTED):
+/// - StudyService: Core study session management and analytics
+/// - FileService: File upload, sharing, and management
+/// - ImageService: Image processing, upload, and optimization
+/// - AudioService: Voice recording, audio processing, and playback
+/// - VideoService: Video recording, processing, and streaming
+/// - ExportService: Data export, backup, and migration
+/// - SearchService: Global search across all user content
+/// - AnalyticsService: User behavior tracking and insights
+/// - ReportingService: Progress reports and analytics dashboards
+/// - CalendarSyncService: External calendar integration (Google, Outlook)
+/// - WebRTCService: Real-time communication infrastructure
+/// - FCMService: Push notification management
+/// - UserService: Comprehensive user management and profiles
+/// - AdminService: Administrative functions and moderation
+/// - CacheService: Intelligent caching and offline support
+/// - SecurityService: Encryption, validation, and security monitoring
+/// - ConfigService: Dynamic configuration and feature flags
+/// - LoggingService: Comprehensive application logging and monitoring
+/// - BackupService: Automated data backup and recovery
+/// - MigrationService: Data migration and schema updates
+///
+/// MAJOR PLACEHOLDER/FAKE IMPLEMENTATIONS:
+/// - Spotify Service: 100% mock implementation, no real Spotify API integration
+/// - Live Session Features: Fake video calling and collaboration UI only
+/// - Chat System: Local UI only, no real messaging infrastructure
+/// - Social Features: Mock data only, no real user interactions
+/// - AI Features: Basic pattern matching, not true AI integration
+/// - Achievement System: Local storage only, no social gamification
+/// - Competition Features: Mock leaderboards, no real competitive systems
+/// - File Sharing: UI mockups only, no actual file handling
+/// - Notification System: Local notifications only, no push notifications
+/// - Real-time Features: No WebSocket or real-time synchronization
+///
+/// SECURITY AND COMPLIANCE GAPS:
+/// - Using Base64 instead of proper encryption
+/// - No data validation or sanitization
+/// - Missing user authentication for Google Sign-In
+/// - No privacy policy or terms of service integration
+/// - No GDPR compliance features
+/// - Missing user consent management
+/// - No data retention policies
+/// - Missing audit logging for security events
+///
+/// INFRASTRUCTURE AND SCALABILITY GAPS:
+/// - No load balancing or performance optimization
+/// - Missing error monitoring and crash reporting
+/// - No A/B testing framework
+/// - Missing automated testing and CI/CD
+/// - No database optimization or indexing strategy
+/// - Missing CDN integration for media files
+/// - No horizontal scaling preparation
+/// - Missing monitoring and alerting systems
+///
+/// CORE FEATURES NEEDING REAL IMPLEMENTATION:
+/// - Study effectiveness tracking and optimization
+/// - Personalized learning recommendations
+/// - Advanced spaced repetition algorithms
+/// - Real-time collaborative study features
+/// - Comprehensive social learning platform
+/// - Professional-grade video conferencing
+/// - Advanced AI tutoring and assistance
+/// - Cross-platform data synchronization
+/// - Offline-first architecture with smart sync
+/// - Advanced analytics and reporting dashboards
+library;
 
-/// Main entry point of the StudyPals application
-/// This function runs when the app starts up
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+// Import all providers
+import 'providers/app_state.dart';
+import 'providers/pet_provider.dart';
+import 'providers/notification_provider.dart';
+import 'providers/spotify_provider.dart';
+import 'providers/task_provider.dart';
+import 'providers/note_provider.dart';
+import 'providers/deck_provider.dart';
+import 'providers/srs_provider.dart';
+import 'providers/daily_quest_provider.dart';
+import 'providers/ai_provider.dart';
+import 'providers/theme_provider.dart';
+import 'providers/social_session_provider.dart';
+import 'providers/calendar_provider.dart';
+import 'providers/planner_provider.dart';
+import 'providers/enhanced_ai_tutor_provider.dart';
+import 'providers/timer_provider.dart';
+import 'providers/analytics_provider.dart'; 
+import 'providers/study_analytics_provider.dart';
+
+// Import services
+import 'services/social_learning_service.dart';
+import 'services/enhanced_ai_tutor_service.dart';
+import 'services/ai_service.dart';
+
+// Import auth wrapper for authentication flow
+import 'screens/auth/auth_wrapper.dart';
+
 void main() async {
-  // Ensure Flutter framework is initialized before running async operations
+  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize database service for storing user data locally
-  // This must complete before the app starts to ensure data is available
-  await DatabaseService.initialize();
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    if (kDebugMode) {
+      debugPrint('✅ Firebase initialized successfully');
+    }
 
-  // Launch the main app widget
-  runApp(const MyApp());
+    // Enable Firestore offline persistence for better connectivity
+    try {
+      // Note: This is only needed for mobile platforms, web handles it differently
+      if (!kIsWeb) {
+        // Import Firestore and enable persistence
+        // This will be handled by the FirestoreService when it's first used
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Firestore offline persistence setup issue: $e');
+      }
+    }
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('❌ Firebase initialization error: $e');
+    }
+    rethrow;
+  }
+
+  // Initialize theme provider
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+
+  runApp(MyApp(themeProvider: themeProvider));
 }
 
-/// Root widget of the StudyPals application
-/// This is a StatelessWidget because the root doesn't need to change
 class MyApp extends StatelessWidget {
-  // Constructor with optional key parameter for widget identification
-  const MyApp({super.key});
+  final ThemeProvider themeProvider;
 
-  /// Builds the widget tree for the entire application
-  /// @param context - Build context containing theme, media info, etc.
-  /// @return Widget tree representing the entire app
+  const MyApp({super.key, required this.themeProvider});
+
   @override
   Widget build(BuildContext context) {
-    // MultiProvider wraps the app to provide state management to all child widgets
     return MultiProvider(
-      // List of all state providers that will be available throughout the app
       providers: [
-        // Global app state provider for authentication and user session management
+        // Core app state - should be first as other providers may depend on it
         ChangeNotifierProvider(create: (_) => AppState()),
-        // Task provider for managing to-do items and assignments
-        ChangeNotifierProvider(create: (_) => TaskProvider()),
-        // Note provider for managing study notes and documents
-        ChangeNotifierProvider(create: (_) => NoteProvider()),
-        // Deck provider for managing flashcard collections
-        ChangeNotifierProvider(create: (_) => DeckProvider()),
-        // Pet provider for managing virtual pet progression and interactions
+
+        // Theme provider
+        ChangeNotifierProvider.value(value: themeProvider),
+
+        // Feature providers
         ChangeNotifierProvider(create: (_) => PetProvider()),
-        // SRS provider for spaced repetition scheduling algorithm
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => SpotifyProvider()),
+        ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProvider(create: (_) => NoteProvider()),
+        ChangeNotifierProvider(create: (_) => DeckProvider()),
         ChangeNotifierProvider(create: (_) => SRSProvider()),
-        // AI provider for artificial intelligence features and study assistance
-        ChangeNotifierProvider(create: (_) => StudyPalsAIProvider()),
-        // Daily quest provider for gamification and daily challenges
         ChangeNotifierProvider(create: (_) => DailyQuestProvider()),
+        ChangeNotifierProvider(create: (_) => StudyPalsAIProvider()),
+        ChangeNotifierProxyProvider<StudyPalsAIProvider,
+            EnhancedAITutorProvider>(
+          create: (_) =>
+              EnhancedAITutorProvider(EnhancedAITutorService(AIService())),
+          update: (_, aiProvider, tutorProvider) {
+            // Always use the working AI provider
+            if (tutorProvider == null) {
+              final newProvider = EnhancedAITutorProvider(
+                  EnhancedAITutorService(aiProvider.aiService));
+              newProvider.setAIProvider(aiProvider);
+              return newProvider;
+            }
+            // Update existing provider with the working AI provider
+            tutorProvider.setAIProvider(aiProvider);
+            return tutorProvider;
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => SocialSessionProvider()),
+        ChangeNotifierProvider(create: (_) => CalendarProvider()),
+        ChangeNotifierProvider(create: (_) => PlannerProvider()),
+        ChangeNotifierProvider(create: (_) => TimerProvider()),
+        ChangeNotifierProvider(create: (_) => AnalyticsProvider()),
+        ChangeNotifierProxyProvider2<AnalyticsProvider, DeckProvider, StudyAnalyticsProvider>(
+          create: (context) => StudyAnalyticsProvider(
+            Provider.of<AnalyticsProvider>(context, listen: false),
+            Provider.of<DeckProvider>(context, listen: false),
+          ),
+          update: (_, analyticsProvider, deckProvider, previous) => 
+            StudyAnalyticsProvider(analyticsProvider, deckProvider),
+        ),
+
+        // Services
+        Provider(create: (_) => SocialLearningService()),
       ],
-      // MaterialApp is the main app container with theme and routing
-      child: MaterialApp(
-        // App title shown in app switcher and browser tab
-        title: 'StudyPals',
-        // Light theme configuration for daytime usage
-        theme: AppTheme.lightTheme,
-        // Dark theme configuration for nighttime usage
-        darkTheme: AppTheme.darkTheme,
-        // Starting screen - authentication wrapper determines if user sees login or dashboard
-        home: const AuthWrapper(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'StudyPals',
+            theme: themeProvider.currentTheme,
+            home: const AuthWrapper(),
+          );
+        },
       ),
     );
   }
