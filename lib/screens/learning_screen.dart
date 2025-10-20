@@ -152,44 +152,23 @@ class _LearningScreenState extends State<LearningScreen>
     });
   }
 
-  /// Reload all data from Firestore - only loads if empty to prevent clearing recently created items
+  /// Reload all data from Firestore
   void _reloadAllData() {
-    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-    final noteProvider = Provider.of<NoteProvider>(context, listen: false);
-    final deckProvider = Provider.of<DeckProvider>(context, listen: false);
-    
-    // Only load if lists are empty (first time or after explicit refresh)
-    // This prevents clearing recently created notes/tasks/decks
-    if (taskProvider.tasks.isEmpty && !taskProvider.isLoading) {
-      taskProvider.loadTasks();
-    }
-    if (noteProvider.notes.isEmpty && !noteProvider.isLoading) {
-      noteProvider.loadNotes();
-    }
-    if (deckProvider.decks.isEmpty && !deckProvider.isLoading) {
-      deckProvider.loadDecks();
-    }
-  }
-
-  /// Force refresh all data from Firestore (manual refresh button)
-  Future<void> _forceRefreshAllData() async {
-    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
-    final noteProvider = Provider.of<NoteProvider>(context, listen: false);
-    final deckProvider = Provider.of<DeckProvider>(context, listen: false);
-    
-    // Force reload from Firestore
-    await Future.wait([
-      taskProvider.loadTasks(),
-      noteProvider.loadNotes(forceRefresh: true),
-      deckProvider.loadDecks(),
-    ]);
+    Provider.of<TaskProvider>(context, listen: false).loadTasks();
+    Provider.of<NoteProvider>(context, listen: false).loadNotes();
+    Provider.of<DeckProvider>(context, listen: false).loadDecks();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Note: We no longer reload on every navigation to prevent clearing recently created items
-    // Users can use the manual refresh button if needed
+    // Reload data whenever the screen becomes active
+    // Use post-frame callback to avoid calling during build
+    if (ModalRoute.of(context)?.isCurrent == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _reloadAllData();
+      });
+    }
   }
 
   @override
@@ -240,13 +219,6 @@ class _LearningScreenState extends State<LearningScreen>
           title: const Text('Learning'),
           elevation: 0,
           backgroundColor: Colors.transparent,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh all data',
-              onPressed: _forceRefreshAllData,
-            ),
-          ],
           bottom: TabBar(
             controller: _tabController,
             onTap: _onTabTapped, // Handle manual tab taps
@@ -942,13 +914,6 @@ class _LearningScreenState extends State<LearningScreen>
         // Filter notes based on search query
         final filteredNotes = noteProvider.notes.where((note) {
           final plainTextContent = _getPlainTextFromDelta(note.contentMd);
-          
-          // If search query is empty, show all notes (fixes "General" subject bug)
-          if (_noteSearchQuery.isEmpty) {
-            return true;
-          }
-          
-          // Otherwise, match against title, content, or tags
           return note.title
                   .toLowerCase()
                   .contains(_noteSearchQuery.toLowerCase()) ||
@@ -2647,13 +2612,10 @@ class _LearningScreenState extends State<LearningScreen>
                   child: Container(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                     child: simple.CreateNoteForm(
-                      onSaveNote: (Note note) async {
-                        // Await the save to ensure note is persisted before closing dialog
-                        await Provider.of<NoteProvider>(context, listen: false)
+                      onSaveNote: (Note note) {
+                        Provider.of<NoteProvider>(context, listen: false)
                             .addNote(note);
-                        if (context.mounted) {
-                          Navigator.of(context).pop();
-                        }
+                        Navigator.of(context).pop();
                       },
                     ),
                   ),
