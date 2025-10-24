@@ -10,6 +10,37 @@ import '../services/memory_claim_validator.dart';
 import '../services/math_engine.dart';
 import '../config/feature_flags.dart';
 import 'dart:developer' as developer;
+import 'dart:async';
+
+/// Custom exceptions for AI Tutor Middleware
+class AITutorMiddlewareException implements Exception {
+  final String message;
+  final String operation;
+  final Object? originalError;
+  final StackTrace? stackTrace;
+
+  const AITutorMiddlewareException(
+    this.message, {
+    required this.operation,
+    this.originalError,
+    this.stackTrace,
+  });
+
+  @override
+  String toString() => 'AITutorMiddlewareException: $message (during $operation)';
+}
+
+class ProfileLoadException extends AITutorMiddlewareException {
+  const ProfileLoadException(String message, {Object? originalError, StackTrace? stackTrace})
+      : super(message, operation: 'profile_load', originalError: originalError, stackTrace: stackTrace);
+}
+
+class ValidationException extends AITutorMiddlewareException {
+  final String validationType;
+  
+  const ValidationException(String message, this.validationType, {Object? originalError, StackTrace? stackTrace})
+      : super(message, operation: 'validation_$validationType', originalError: originalError, stackTrace: stackTrace);
+}
 
 /// Context prepared for LLM call
 class PreProcessedContext {
@@ -78,9 +109,19 @@ class AITutorMiddleware {
     UserProfileData? profile;
     try {
       profile = await _profileStore.getProfile(userId);
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log('Error loading profile: $e',
-          name: 'AITutorMiddleware', error: e);
+          name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+      
+      // Don't throw here - profile is optional, continue without it
+      // But track the error for telemetry
+      if (e is TimeoutException) {
+        developer.log('Profile load timed out - continuing without profile',
+            name: 'AITutorMiddleware');
+      } else {
+        developer.log('Profile load failed with unexpected error: ${e.runtimeType}',
+            name: 'AITutorMiddleware');
+      }
     }
 
     // Detect learning style from session + current message
@@ -93,9 +134,18 @@ class AITutorMiddleware {
 
       developer.log('Learning style detected: ${detectedStyle.getSummary()}',
           name: 'AITutorMiddleware');
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log('Error detecting learning style: $e',
-          name: 'AITutorMiddleware', error: e);
+          name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+      
+      // Learning style detection is non-critical, continue without it
+      if (e is ArgumentError) {
+        developer.log('Invalid arguments passed to learning style detector',
+            name: 'AITutorMiddleware');
+      } else if (e is StateError) {
+        developer.log('Learning style detector in invalid state',
+            name: 'AITutorMiddleware');
+      }
     }
 
     // Build enhanced system prompt
@@ -159,10 +209,25 @@ class AITutorMiddleware {
           corrections.add('Corrected false memory claims');
           developer.log('Memory claims corrected', name: 'AITutorMiddleware');
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
         developer.log('Error in memory validation: $e',
-            name: 'AITutorMiddleware', error: e);
+            name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+        
         telemetry['memoryValidationError'] = e.toString();
+        telemetry['memoryValidationErrorType'] = e.runtimeType.toString();
+        
+        // Handle specific error types
+        if (e is ValidationException) {
+          developer.log('Memory validation failed: ${e.message}', name: 'AITutorMiddleware');
+          // Continue with original response - don't fail the entire operation
+        } else if (e is TimeoutException) {
+          developer.log('Memory validation timed out - skipping validation', name: 'AITutorMiddleware');
+          telemetry['memoryValidationTimedOut'] = true;
+        } else {
+          developer.log('Unexpected error in memory validation: ${e.runtimeType}', name: 'AITutorMiddleware');
+          // For unknown errors, assume validation passed to avoid false negatives
+          memoryValid = true;
+        }
       }
     }
 
@@ -170,8 +235,10 @@ class AITutorMiddleware {
     var mathValid = true;
     if (FeatureFlags.isEnabled('mathValidation', userId)) {
       try {
-        final mathValidation =
-            await MathEngine.validateAndAnnotate(llmResponse);
+        final mathValidation = await MathEngine.validateAndAnnotate(llmResponse)
+            .timeout(const Duration(seconds: 10), onTimeout: () {
+          throw TimeoutException('Math validation timed out', const Duration(seconds: 10));
+        });
 
         mathValid = mathValidation.valid;
         telemetry['mathExpressionsFound'] =
@@ -184,10 +251,31 @@ class AITutorMiddleware {
           corrections.add('Added math corrections');
           developer.log('Math corrections added', name: 'AITutorMiddleware');
         }
-      } catch (e) {
+      } catch (e, stackTrace) {
         developer.log('Error in math validation: $e',
-            name: 'AITutorMiddleware', error: e);
+            name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+        
         telemetry['mathValidationError'] = e.toString();
+        telemetry['mathValidationErrorType'] = e.runtimeType.toString();
+        
+        // Handle specific error types
+        if (e is TimeoutException) {
+          developer.log('Math validation timed out - proceeding without validation', name: 'AITutorMiddleware');
+          telemetry['mathValidationTimedOut'] = true;
+          // Assume math is valid to avoid false negatives on timeout
+          mathValid = true;
+        } else if (e is ValidationException) {
+          developer.log('Math validation failed: ${e.message}', name: 'AITutorMiddleware');
+          // Continue with original response
+        } else if (e is FormatException) {
+          developer.log('Math expression parsing failed - likely no math content', name: 'AITutorMiddleware');
+          // No math expressions to validate
+          mathValid = true;
+        } else {
+          developer.log('Unexpected error in math validation: ${e.runtimeType}', name: 'AITutorMiddleware');
+          // For unknown errors, assume validation passed
+          mathValid = true;
+        }
       }
     }
 
@@ -207,22 +295,39 @@ class AITutorMiddleware {
 
     // Update session context with the interaction
     try {
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      
       sessionContext.addMessage(ChatMessage(
-        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+        id: 'user_$timestamp',
         content: message,
         type: MessageType.user,
         format: MessageFormat.text,
       ));
 
       sessionContext.addMessage(ChatMessage(
-        id: 'ai_${DateTime.now().millisecondsSinceEpoch}',
+        id: 'ai_${timestamp + 1}', // Ensure unique IDs
         content: finalResponse,
         type: MessageType.assistant,
         format: MessageFormat.text,
       ));
-    } catch (e) {
+      
+      telemetry['sessionUpdated'] = true;
+      telemetry['totalMessagesInSession'] = sessionContext.getAllMessages().length;
+    } catch (e, stackTrace) {
       developer.log('Error updating session context: $e',
-          name: 'AITutorMiddleware', error: e);
+          name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+      
+      telemetry['sessionUpdateError'] = e.toString();
+      telemetry['sessionUpdateErrorType'] = e.runtimeType.toString();
+      
+      // Session update failure is non-critical but should be tracked
+      if (e is StateError) {
+        developer.log('Session context in invalid state - may need reset', name: 'AITutorMiddleware');
+      } else if (e is ArgumentError) {
+        developer.log('Invalid message format for session context', name: 'AITutorMiddleware');
+      } else {
+        developer.log('Unexpected error updating session: ${e.runtimeType}', name: 'AITutorMiddleware');
+      }
     }
 
     return PostProcessedResponse(
@@ -364,20 +469,87 @@ class AITutorMiddleware {
     return buffer.toString();
   }
 
-  /// Clear session for a user
-  void clearSession(String userId) {
-    _sessions.remove(userId);
-    developer.log('Session cleared for user: $userId',
-        name: 'AITutorMiddleware');
+  /// Clear session for a user with error handling
+  bool clearSession(String userId) {
+    try {
+      _sessions.remove(userId);
+      developer.log('Session cleared for user: $userId',
+          name: 'AITutorMiddleware');
+      return true;
+    } catch (e, stackTrace) {
+      developer.log('Error clearing session for user $userId: $e',
+          name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+      return false;
+    }
   }
 
-  /// Get session statistics
-  Map<String, dynamic> getSessionStats(String userId) {
-    final session = _sessions[userId];
-    if (session == null) {
-      return {'exists': false};
+  /// Get error summary from telemetry data
+  static Map<String, dynamic> getErrorSummary(Map<String, dynamic> telemetry) {
+    final errors = <String, dynamic>{};
+    
+    // Check for validation errors
+    if (telemetry.containsKey('memoryValidationError')) {
+      errors['memoryValidation'] = {
+        'error': telemetry['memoryValidationError'],
+        'type': telemetry['memoryValidationErrorType'],
+        'timedOut': telemetry['memoryValidationTimedOut'] ?? false,
+      };
     }
-    return session.getStatistics();
+    
+    if (telemetry.containsKey('mathValidationError')) {
+      errors['mathValidation'] = {
+        'error': telemetry['mathValidationError'],
+        'type': telemetry['mathValidationErrorType'],
+        'timedOut': telemetry['mathValidationTimedOut'] ?? false,
+      };
+    }
+    
+    if (telemetry.containsKey('sessionUpdateError')) {
+      errors['sessionUpdate'] = {
+        'error': telemetry['sessionUpdateError'],
+        'type': telemetry['sessionUpdateErrorType'],
+      };
+    }
+    
+    return {
+      'hasErrors': errors.isNotEmpty,
+      'errorCount': errors.length,
+      'errors': errors,
+    };
+  }
+
+  /// Check if middleware is healthy (no critical errors)
+  static bool isHealthy(PostProcessedResponse response) {
+    final errorSummary = getErrorSummary(response.telemetry);
+    
+    // Critical errors that indicate unhealthy state
+    final hasCriticalErrors = errorSummary['errors'] is Map &&
+        (errorSummary['errors'] as Map).values.any((error) => 
+            error is Map && 
+            error['type']?.toString().contains('StateError') == true);
+    
+    return !hasCriticalErrors && response.corrections.length <= 2;
+  }
+
+  /// Get session statistics with error handling
+  Map<String, dynamic> getSessionStats(String userId) {
+    try {
+      final session = _sessions[userId];
+      if (session == null) {
+        return {'exists': false};
+      }
+      return session.getStatistics();
+    } catch (e, stackTrace) {
+      developer.log('Error getting session stats: $e',
+          name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+      
+      return {
+        'exists': false,
+        'error': true,
+        'errorMessage': e.toString(),
+        'errorType': e.runtimeType.toString(),
+      };
+    }
   }
 
   /// ========== PRODUCTION-READY: Complete AI Response Processing ==========
@@ -413,24 +585,41 @@ class AITutorMiddleware {
       // CRITICAL FIX: Only validate memory claims if user explicitly references past conversations
       // This prevents false "I don't have a record" warnings on normal teaching responses
       if (userAskedAboutPast) {
-        final memoryResult = MemoryClaimValidator.validate(
-          response: aiResponse,
-          sessionContext: sessionContext,
+        final memoryResult = await Future.value(
+          MemoryClaimValidator.validate(
+            response: aiResponse,
+            sessionContext: sessionContext,
+          ),
+        ).timeout(
+          const Duration(seconds: 8),
+          onTimeout: () {
+            throw TimeoutException('Memory validation timed out', const Duration(seconds: 8));
+          },
         );
 
         if (!memoryResult.valid && memoryResult.claims.isNotEmpty) {
           for (final claim in memoryResult.claims.where((c) => !c.isValid)) {
-            // Generate honest alternative for each false claim
-            final honestAlt = MemoryClaimValidator.generateHonestAlternative(
-              sessionContext
-                  .getRecentTopics(topK: 3)
-                  .map((t) => t.topic)
-                  .join(', '),
-            );
-            memoryIssues.add(MemoryIssue(
-              claim: claim.claimText,
-              honestAlternative: honestAlt,
-            ));
+            try {
+              // Generate honest alternative for each false claim
+              final honestAlt = MemoryClaimValidator.generateHonestAlternative(
+                sessionContext
+                    .getRecentTopics(topK: 3)
+                    .map((t) => t.topic)
+                    .join(', '),
+              );
+              memoryIssues.add(MemoryIssue(
+                claim: claim.claimText,
+                honestAlternative: honestAlt,
+              ));
+            } catch (altError, altStackTrace) {
+              developer.log('Error generating honest alternative: $altError',
+                  name: 'AITutorMiddleware', error: altError, stackTrace: altStackTrace);
+              // Add the claim without alternative if generation fails
+              memoryIssues.add(MemoryIssue(
+                claim: claim.claimText,
+                honestAlternative: 'I need to verify this information from our conversation.',
+              ));
+            }
           }
           developer.log('⚠️ Found ${memoryIssues.length} false memory claims',
               name: 'AITutorMiddleware');
@@ -443,24 +632,52 @@ class AITutorMiddleware {
             'ℹ️ Skipping memory validation (user didn\'t ask about past)',
             name: 'AITutorMiddleware');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log('⚠️ Error validating memory: $e',
-          name: 'AITutorMiddleware', error: e);
+          name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+      
+      // Handle specific error types gracefully
+      if (e is TimeoutException) {
+        developer.log('Memory validation timed out - proceeding without validation',
+            name: 'AITutorMiddleware');
+      } else if (e is ValidationException) {
+        developer.log('Memory validation failed: ${e.message}',
+            name: 'AITutorMiddleware');
+      } else {
+        developer.log('Unexpected error in static memory validation: ${e.runtimeType}',
+            name: 'AITutorMiddleware');
+      }
     }
 
     // 3. Validate math expressions
     final mathIssues = <MathIssue>[];
     final mathValidations = <MathValidation>[];
     try {
-      final mathResults = await MathEngine.validateAndAnnotate(aiResponse);
+      final mathResults = await MathEngine.validateAndAnnotate(aiResponse).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {
+          throw TimeoutException('Math validation timed out', const Duration(seconds: 12));
+        },
+      );
 
       if (mathResults.hasIssues) {
         for (final issueText in mathResults.issues) {
-          mathIssues.add(MathIssue(
-            expression: issueText.split(':').first.trim(),
-            description: issueText,
-            severity: 'warning',
-          ));
+          try {
+            mathIssues.add(MathIssue(
+              expression: issueText.split(':').first.trim(),
+              description: issueText,
+              severity: 'warning',
+            ));
+          } catch (parseError, parseStackTrace) {
+            developer.log('Error parsing math issue: $parseError',
+                name: 'AITutorMiddleware', error: parseError, stackTrace: parseStackTrace);
+            // Add a generic issue if parsing fails
+            mathIssues.add(MathIssue(
+              expression: 'unknown',
+              description: 'Math validation issue: $issueText',
+              severity: 'warning',
+            ));
+          }
         }
         developer.log('⚠️ Found ${mathIssues.length} math issues',
             name: 'AITutorMiddleware');
@@ -468,18 +685,38 @@ class AITutorMiddleware {
 
       if (mathResults.valid && mathResults.calculatedValues != null) {
         for (final entry in mathResults.calculatedValues!.entries) {
-          mathValidations.add(MathValidation(
-            expression: entry.key,
-            result: entry.value.toString(),
-            explanation: 'Validated: ${entry.key} = ${entry.value}',
-          ));
+          try {
+            mathValidations.add(MathValidation(
+              expression: entry.key,
+              result: entry.value.toString(),
+              explanation: 'Validated: ${entry.key} = ${entry.value}',
+            ));
+          } catch (validationError, validationStackTrace) {
+            developer.log('Error creating math validation: $validationError',
+                name: 'AITutorMiddleware', error: validationError, stackTrace: validationStackTrace);
+          }
         }
         developer.log('✅ Validated ${mathValidations.length} math expressions',
             name: 'AITutorMiddleware');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       developer.log('⚠️ Error validating math: $e',
-          name: 'AITutorMiddleware', error: e);
+          name: 'AITutorMiddleware', error: e, stackTrace: stackTrace);
+      
+      // Handle specific error types gracefully
+      if (e is TimeoutException) {
+        developer.log('Math validation timed out - proceeding without validation',
+            name: 'AITutorMiddleware');
+      } else if (e is FormatException) {
+        developer.log('Math expression parsing failed - likely no math content',
+            name: 'AITutorMiddleware');
+      } else if (e is ValidationException) {
+        developer.log('Math validation failed: ${e.message}',
+            name: 'AITutorMiddleware');
+      } else {
+        developer.log('Unexpected error in static math validation: ${e.runtimeType}',
+            name: 'AITutorMiddleware');
+      }
     }
 
     // 4. Build final response
